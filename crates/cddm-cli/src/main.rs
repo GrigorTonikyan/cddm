@@ -18,6 +18,8 @@ struct Cli {
     command: Commands,
 }
 
+mod serve;
+
 #[derive(Subcommand, Debug)]
 enum Commands {
     /// Scan target directory for code duplication & DRY health score
@@ -49,6 +51,17 @@ enum Commands {
         /// Enable in-process git blame author & line age annotation
         #[arg(long, default_value_t = false)]
         git_blame: bool,
+    },
+
+    /// Launch interactive WebUI HTTP server with embedded React app
+    Serve {
+        /// Port to bind WebUI HTTP server to (default: 3000)
+        #[arg(short, long, default_value_t = 3000)]
+        port: u16,
+
+        /// Automatically open browser tab
+        #[arg(short, long, default_value_t = true)]
+        open: bool,
     },
 }
 
@@ -125,6 +138,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     std::process::exit(1);
                 }
             }
+        }
+        Commands::Serve { port, open } => {
+            serve::start_server(port, open).await?;
         }
     }
 
