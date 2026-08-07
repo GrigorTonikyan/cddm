@@ -3,11 +3,14 @@ import { ScanConfigPanel } from "./components/ScanConfigPanel";
 import { ScanProgressBar } from "./components/ScanProgressBar";
 import { ScanResults } from "./components/ScanResults";
 import { Scissors, Terminal, Sparkles } from "lucide-react";
+import { useCDDMStore } from "./store/cddm-store";
 
 /**
  * Main Application Shell component for CDDM Studio WebUI.
  */
 export const App: React.FC = () => {
+  const { error } = useCDDMStore();
+
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100 flex flex-col font-sans">
       {/* Header Bar */}
@@ -41,6 +44,11 @@ export const App: React.FC = () => {
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-6 space-y-6">
+        {error && (
+          <div className="bg-rose-950/50 border border-rose-900 text-rose-400 px-4 py-3 rounded-lg flex items-center gap-2">
+            <span>{error}</span>
+          </div>
+        )}
         <ScanConfigPanel />
         <ScanProgressBar />
         <ScanResults />

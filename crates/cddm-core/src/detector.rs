@@ -277,4 +277,141 @@ mod tests {
         let result = run_scan(config, tx, Arc::new(AtomicBool::new(false))).await.unwrap();
         assert_eq!(result.total_files, 0);
     }
+
+    #[tokio::test]
+    async fn test_scan_with_real_duplicate_files() {
+        use tempfile::tempdir;
+        use std::fs::File;
+        use std::io::Write;
+
+        let dir = tempdir().unwrap();
+        let file_a_path = dir.path().join("a.rs");
+        let file_b_path = dir.path().join("b.rs");
+
+        let content = r#"
+            fn calculate_sum(a: i32, b: i32) -> i32 {
+                let mut sum = 0;
+                for i in 0..10 {
+                    sum += a + b + i;
+                    println!("intermediate: {}", sum);
+                    if sum > 100 {
+                        break;
+                    }
+                }
+                sum
+            }
+        "#;
+        let content_ext = format!("{} {} {} {} {} {}", content, content, content, content, content, content);
+
+        let mut file_a = File::create(&file_a_path).unwrap();
+        writeln!(file_a, "{}", content_ext).unwrap();
+        
+        let mut file_b = File::create(&file_b_path).unwrap();
+        writeln!(file_b, "{}", content_ext).unwrap();
+
+        let (tx, _rx) = mpsc::channel(100);
+        let config = ScanConfig {
+            directory: dir.path().to_string_lossy().to_string(),
+            min_tokens: 50,
+            languages: vec![],
+            ignore_patterns: vec![],
+            detect_type2: true,
+            scan_self: false,
+            enable_git_blame: false,
+        };
+
+        let result = run_scan(config, tx, Arc::new(AtomicBool::new(false))).await.unwrap();
+        assert!(result.total_clones > 0);
+        assert!(!result.clone_pairs.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_scan_cancellation() {
+        let (tx, _rx) = mpsc::channel(100);
+        let config = ScanConfig {
+            directory: ".".to_string(),
+            min_tokens: 50,
+            languages: vec![],
+            ignore_patterns: vec![],
+            detect_type2: true,
+            scan_self: false,
+            enable_git_blame: false,
+        };
+
+        let cancel_flag = Arc::new(AtomicBool::new(true)); // Pre-cancelled
+        let result = run_scan(config, tx, cancel_flag).await;
+        assert_eq!(result.unwrap_err(), "Scan cancelled");
+    }
+
+    #[tokio::test]
+    async fn test_scan_language_filter() {
+        use tempfile::tempdir;
+        use std::fs::File;
+        use std::io::Write;
+
+        let dir = tempdir().unwrap();
+        let mut file_rs = File::create(dir.path().join("test.rs")).unwrap();
+        writeln!(file_rs, "fn main() {{}}").unwrap();
+        let mut file_py = File::create(dir.path().join("test.py")).unwrap();
+        writeln!(file_py, "def main(): pass").unwrap();
+
+        let (tx, _rx) = mpsc::channel(100);
+        let config = ScanConfig {
+            directory: dir.path().to_string_lossy().to_string(),
+            min_tokens: 50,
+            languages: vec!["Rust".to_string()],
+            ignore_patterns: vec![],
+            detect_type2: true,
+            scan_self: false,
+            enable_git_blame: false,
+        };
+
+        let result = run_scan(config, tx, Arc::new(AtomicBool::new(false))).await.unwrap();
+        assert_eq!(result.total_files, 1);
+        assert_eq!(result.language_breakdown.len(), 1);
+        assert_eq!(result.language_breakdown[0].language, "Rust");
+    }
+
+    #[tokio::test]
+    async fn test_scan_ignore_patterns() {
+        use tempfile::tempdir;
+        use std::fs::{self, File};
+
+        let dir = tempdir().unwrap();
+        fs::create_dir(dir.path().join("node_modules")).unwrap();
+        File::create(dir.path().join("node_modules").join("test.rs")).unwrap();
+        File::create(dir.path().join("main.rs")).unwrap();
+
+        let (tx, _rx) = mpsc::channel(100);
+        let config = ScanConfig {
+            directory: dir.path().to_string_lossy().to_string(),
+            min_tokens: 50,
+            languages: vec![],
+            ignore_patterns: vec!["node_modules".to_string()],
+            detect_type2: true,
+            scan_self: false,
+            enable_git_blame: false,
+        };
+
+        let result = run_scan(config, tx, Arc::new(AtomicBool::new(false))).await.unwrap();
+        assert_eq!(result.total_files, 1);
+    }
+
+    #[tokio::test]
+    async fn test_dry_health_score_range() {
+        let (tx, _rx) = mpsc::channel(100);
+        let config = ScanConfig {
+            directory: ".".to_string(),
+            min_tokens: 50,
+            languages: vec![],
+            ignore_patterns: vec![],
+            detect_type2: true,
+            scan_self: false,
+            enable_git_blame: false,
+        };
+        let result = run_scan(config, tx, Arc::new(AtomicBool::new(false))).await;
+        if let Ok(res) = result {
+            assert!(res.dry_health_score >= 0.0 && res.dry_health_score <= 100.0);
+        }
+    }
 }

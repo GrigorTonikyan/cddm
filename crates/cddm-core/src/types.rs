@@ -160,3 +160,83 @@ pub struct ScanProgress {
     /// An informational message
     pub message: String,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_scan_config_default() {
+        let config = ScanConfig::default();
+        assert_eq!(config.directory, ".");
+        assert_eq!(config.min_tokens, 50);
+        assert!(config.languages.is_empty());
+        assert_eq!(config.ignore_patterns.len(), 6);
+        assert!(config.detect_type2);
+        assert!(config.scan_self);
+        assert!(!config.enable_git_blame);
+    }
+
+    #[test]
+    fn test_scan_config_serde_roundtrip() {
+        let config = ScanConfig::default();
+        let serialized = serde_json::to_string(&config).unwrap();
+        let deserialized: ScanConfig = serde_json::from_str(&serialized).unwrap();
+        assert_eq!(config, deserialized);
+    }
+
+    #[test]
+    fn test_clone_type_serde_variants() {
+        let variants = [CloneType::Exact, CloneType::Renamed, CloneType::NearMiss, CloneType::Semantic];
+        for variant in variants {
+            let serialized = serde_json::to_string(&variant).unwrap();
+            let deserialized: CloneType = serde_json::from_str(&serialized).unwrap();
+            assert_eq!(variant, deserialized);
+        }
+    }
+
+    #[test]
+    fn test_scan_result_serde_roundtrip() {
+        let result = ScanResult {
+            scan_id: "test-id".to_string(),
+            total_files: 10,
+            total_tokens: 1000,
+            total_clones: 5,
+            duplication_percentage: 2.5,
+            dry_health_score: 95.0,
+            clone_pairs: vec![ClonePair {
+                file_a: "a.rs".to_string(),
+                start_line_a: 1,
+                end_line_a: 10,
+                file_b: "b.rs".to_string(),
+                start_line_b: 2,
+                end_line_b: 11,
+                token_count: 50,
+                similarity: 1.0,
+                fragment_hash: "hash".to_string(),
+                clone_type: CloneType::Exact,
+                author_a: None,
+                author_b: None,
+            }],
+            duration_ms: 100,
+            language_breakdown: vec![LanguageStats {
+                language: "Rust".to_string(),
+                files: 10,
+                tokens: 1000,
+                clones: 5,
+            }],
+        };
+        let serialized = serde_json::to_string(&result).unwrap();
+        let deserialized: ScanResult = serde_json::from_str(&serialized).unwrap();
+        assert_eq!(result, deserialized);
+    }
+
+    #[test]
+    fn test_line_span_equality() {
+        let span1 = LineSpan { line_start: 1, line_end: 2, byte_offset: 0 };
+        let span2 = LineSpan { line_start: 1, line_end: 2, byte_offset: 0 };
+        let span3 = LineSpan { line_start: 1, line_end: 3, byte_offset: 0 };
+        assert_eq!(span1, span2);
+        assert_ne!(span1, span3);
+    }
+}

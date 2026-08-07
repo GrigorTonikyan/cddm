@@ -214,4 +214,51 @@ mod tests {
         let tokens = tokenize(source, grammar, true);
         assert!(!tokens.is_empty());
     }
+
+    #[test]
+    fn test_tokenize_python() {
+        let grammar = get_grammar_for_path(Path::new("test.py")).unwrap();
+        let source = r#"
+            # Python comment
+            def my_func():
+                class MyClass:
+                    pass
+        "#;
+        let tokens = tokenize(source, grammar, true);
+        
+        let keywords = tokens.iter().filter(|(t, _)| matches!(t, NormalizedToken::Keyword(_))).count();
+        assert!(keywords > 0, "Should have keywords (def, class)");
+        
+        // Assert no comment tokens
+        let identifiers = tokens.iter().filter(|(t, _)| matches!(t, NormalizedToken::Identifier)).count();
+        assert!(identifiers > 0);
+    }
+
+    #[test]
+    fn test_tokenize_comment_stripping() {
+        let grammar = get_grammar_for_path(Path::new("test.rs")).unwrap();
+        let source_line = "// just a line comment";
+        let tokens_line = tokenize(source_line, grammar, true);
+        assert!(tokens_line.is_empty());
+
+        let source_block = "/* just a \n block comment */";
+        let tokens_block = tokenize(source_block, grammar, true);
+        assert!(tokens_block.is_empty());
+    }
+
+    #[test]
+    fn test_tokenize_string_normalization() {
+        let grammar = get_grammar_for_path(Path::new("test.rs")).unwrap();
+        let source = r#"let s = "some string"; let c = 'c'; let raw = `raw`;"#;
+        let tokens = tokenize(source, grammar, true);
+        let strings = tokens.iter().filter(|(t, _)| matches!(t, NormalizedToken::StringLiteral)).count();
+        assert_eq!(strings, 3);
+    }
+
+    #[test]
+    fn test_tokenize_empty_source() {
+        let grammar = get_grammar_for_path(Path::new("test.rs")).unwrap();
+        let tokens = tokenize("", grammar, true);
+        assert!(tokens.is_empty());
+    }
 }

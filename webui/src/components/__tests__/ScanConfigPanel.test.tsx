@@ -22,4 +22,19 @@ describe("ScanConfigPanel Component", () => {
     fireEvent.change(dirInput, { target: { value: "./crates/cddm-core" } });
     expect(useCDDMStore.getState().config.directory).toBe("./crates/cddm-core");
   });
+
+  it("should update min tokens slider", () => {
+    render(<ScanConfigPanel />);
+    // The range input has min/max/step so we can find it by its role or just any range input.
+    // Actually we can find it by finding the input type range or the label.
+    // It's easier to find it by value or test-id, but we can just find it by type range.
+    const slider = document.querySelector('input[type="range"]') as HTMLInputElement;
+    fireEvent.change(slider, { target: { value: "100" } });
+    expect(useCDDMStore.getState().config.min_tokens).toBe(100);
+  });
+
+  it("should render git blame toggle", () => {
+    render(<ScanConfigPanel />);
+    expect(screen.getByText("Git Blame (Authors)")).toBeDefined();
+  });
 });

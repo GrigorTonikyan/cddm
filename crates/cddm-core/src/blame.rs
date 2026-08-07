@@ -31,4 +31,10 @@ mod tests {
         let path = Path::new("/tmp/non_existent_git_repo");
         assert!(get_line_author(path, "test.rs", 1).is_none());
     }
+
+    #[test]
+    fn test_blame_with_temp_dir() {
+        let temp_dir = std::env::temp_dir();
+        assert!(get_line_author(&temp_dir, "test.rs", 1).is_none());
+    }
 }

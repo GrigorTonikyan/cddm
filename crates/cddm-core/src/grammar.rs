@@ -211,4 +211,21 @@ mod tests {
         assert_eq!(py_grammar.line_comment, "#");
         assert_eq!(py_grammar.block_comment, None);
     }
+
+    #[test]
+    fn test_all_supported_extensions() {
+        for grammar in SUPPORTED_LANGUAGES {
+            for ext in grammar.extensions {
+                let filename = format!("test.{}", ext);
+                let path = Path::new(&filename);
+                let found = get_grammar_for_path(path).unwrap();
+                assert_eq!(found.name, grammar.name);
+            }
+        }
+    }
+
+    #[test]
+    fn test_supported_language_count() {
+        assert!(SUPPORTED_LANGUAGES.len() >= 12);
+    }
 }

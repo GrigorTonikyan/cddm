@@ -79,6 +79,7 @@ export interface ScanConfig {
   ignore_patterns: string[];
   detect_type2: boolean;
   scan_self: boolean;
+  git_blame?: boolean;
 }
 
 /**

@@ -56,4 +56,36 @@ mod tests {
         assert!(!cache.is_file_modified(path, hash1));
         assert!(cache.is_file_modified(path, hash2));
     }
+
+    #[test]
+    fn test_compute_file_hash_real_file() {
+        use tempfile::NamedTempFile;
+        use std::io::Write;
+        
+        let mut file = NamedTempFile::new().unwrap();
+        writeln!(file, "hello world").unwrap();
+        
+        let hash = FingerprintCache::compute_file_hash(file.path()).unwrap();
+        assert_eq!(hash.len(), 64);
+        assert!(hash.chars().all(|c| c.is_ascii_hexdigit()));
+    }
+
+    #[test]
+    fn test_compute_file_hash_nonexistent() {
+        let path = Path::new("does_not_exist_abc123.txt");
+        let hash = FingerprintCache::compute_file_hash(path);
+        assert!(hash.is_none());
+    }
+
+    #[test]
+    fn test_cache_multiple_files() {
+        let mut cache = FingerprintCache::new();
+        cache.update_file("f1".to_string(), "hash1".to_string());
+        cache.update_file("f2".to_string(), "hash2".to_string());
+        
+        assert!(!cache.is_file_modified("f1", "hash1"));
+        assert!(cache.is_file_modified("f1", "hash2"));
+        assert!(!cache.is_file_modified("f2", "hash2"));
+        assert!(cache.is_file_modified("f3", "hash1"));
+    }
 }
