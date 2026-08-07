@@ -33,6 +33,11 @@ sha2 = "^0.10"
 thiserror = "^2"
 tokio = { version = "^1", features = ["full"] }
 tower-http = { version = "^0.6", features = ["fs", "cors"] }
+tree-sitter = "0.24"
+tree-sitter-javascript = "0.23"
+tree-sitter-python = "0.23"
+tree-sitter-rust = "0.23"
+tree-sitter-typescript = "0.23"
 tracing = "^0.1"
 tracing-subscriber = "^0.3"
 uuid = { version = "^1", features = ["serde", "v4"] }
