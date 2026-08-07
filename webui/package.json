@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test ../tests/e2e/scan-workflow.spec.ts --config=../tests/e2e/playwright.config.ts",
     "lint": "vp lint",
     "check": "tsc -b",
     "preview": "vite preview"
@@ -21,11 +22,13 @@
     "zustand": "^5.0.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "@testing-library/react": "^16.2.0",
     "@types/node": "^22.13.4",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^4.3.4",
-    "@testing-library/react": "^16.2.0",
+    "@vitest/coverage-v8": "3.2.7",
     "jsdom": "^26.0.0",
     "typescript": "^5.8.2",
     "vite": "^6.1.1",
