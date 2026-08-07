@@ -45,6 +45,10 @@ enum Commands {
         /// Glob patterns to ignore (e.g. node_modules, target)
         #[arg(short, long)]
         ignore: Vec<String>,
+
+        /// Enable in-process git blame author & line age annotation
+        #[arg(long, default_value_t = false)]
+        git_blame: bool,
     },
 }
 
@@ -69,6 +73,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             fail_threshold,
             languages,
             ignore,
+            git_blame,
         } => {
             let config = ScanConfig {
                 directory: directory.to_string_lossy().to_string(),
@@ -81,6 +86,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 },
                 detect_type2: true,
                 scan_self: true,
+                enable_git_blame: git_blame,
             };
 
             let (tx, mut rx) = mpsc::channel::<cddm_core::ScanProgress>(100);

@@ -119,6 +119,8 @@ pub struct ScanConfig {
     pub detect_type2: bool,
     /// Whether to find clones within the exact same file
     pub scan_self: bool,
+    /// Whether to annotate clone pairs with in-process git blame author information
+    pub enable_git_blame: bool,
 }
 
 impl Default for ScanConfig {
@@ -137,6 +139,7 @@ impl Default for ScanConfig {
             ],
             detect_type2: true,
             scan_self: true,
+            enable_git_blame: false,
         }
     }
 }

@@ -12,6 +12,7 @@ anyhow.workspace = true
 async-trait.workspace = true
 blake3.workspace = true
 chrono.workspace = true
+gix.workspace = true
 ignore.workspace = true
 rayon.workspace = true
 serde.workspace = true

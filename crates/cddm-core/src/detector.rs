@@ -166,6 +166,16 @@ pub async fn run_scan(
                         continue;
                     }
 
+                    let repo_root = std::path::Path::new(&config.directory);
+                    let (author_a, author_b) = if config.enable_git_blame {
+                        (
+                            crate::blame::get_line_author(repo_root, &parsed_files[loc_a.file_idx].path, loc_a.span.line_start),
+                            crate::blame::get_line_author(repo_root, &parsed_files[loc_b.file_idx].path, loc_b.span.line_start),
+                        )
+                    } else {
+                        (None, None)
+                    };
+
                     raw_pairs.push(ClonePair {
                         file_a: parsed_files[loc_a.file_idx].path.clone(),
                         start_line_a: loc_a.span.line_start,
@@ -177,8 +187,8 @@ pub async fn run_scan(
                         similarity: 1.0,
                         fragment_hash: format!("{:x}-{:x}", hash.0, hash.1),
                         clone_type: CloneType::Exact,
-                        author_a: None,
-                        author_b: None,
+                        author_a,
+                        author_b,
                     });
                 }
             }
@@ -261,6 +271,7 @@ mod tests {
             ignore_patterns: vec![],
             detect_type2: true,
             scan_self: false,
+            enable_git_blame: false,
         };
 
         let result = run_scan(config, tx, Arc::new(AtomicBool::new(false))).await.unwrap();
