@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "lint": "vp lint",
     "check": "tsc -b",
     "preview": "vite preview"
@@ -23,7 +25,10 @@
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^4.3.4",
+    "@testing-library/react": "^16.2.0",
+    "jsdom": "^26.0.0",
     "typescript": "^5.8.2",
-    "vite": "^6.1.1"
+    "vite": "^6.1.1",
+    "vitest": "^3.0.5"
   }
 }
