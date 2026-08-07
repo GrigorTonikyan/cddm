@@ -1,0 +1,32 @@
+{
+  "name": "cddm",
+  "version": "0.1.0",
+  "description": "CDDM — Code De-Duplication Meister: High-Performance Polyglot Code Clone & Modularity Analyzer",
+  "bin": {
+    "cddm": "./bin/cddm.js"
+  },
+  "main": "./bin/cddm.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/GrigorTonikyan/cddm.git"
+  },
+  "keywords": [
+    "cddm",
+    "jscpd",
+    "duplicate-code",
+    "code-duplication",
+    "refactoring",
+    "code-quality",
+    "ast",
+    "dry",
+    "winnowing"
+  ],
+  "author": "Grigor Tonikyan <grigor@tonikyan.com>",
+  "license": "MIT OR Apache-2.0",
+  "optionalDependencies": {
+    "@cddm/win32-x64": "0.1.0",
+    "@cddm/linux-x64": "0.1.0",
+    "@cddm/darwin-x64": "0.1.0",
+    "@cddm/darwin-arm64": "0.1.0"
+  }
+}

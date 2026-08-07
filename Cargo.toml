@@ -3,6 +3,7 @@ resolver = "2"
 members = [
     "crates/cddm-core",
     "crates/cddm-cli",
+    "crates/cddm-mcp",
 ]
 
 [workspace.package]
