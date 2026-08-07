@@ -1,0 +1,269 @@
+use crate::fingerprint::{winnow, Fingerprint};
+use crate::grammar::get_grammar_for_path;
+use crate::tokenizer::tokenize;
+use crate::types::{ClonePair, CloneType, LanguageStats, ScanConfig, ScanProgress, ScanResult};
+use ignore::WalkBuilder;
+use rayon::prelude::*;
+use std::collections::HashMap;
+use std::sync::{atomic::{AtomicBool, Ordering}, Arc};
+use std::time::Instant;
+use tokio::sync::mpsc::Sender;
+
+/// Represents an intermediate parsed file
+struct ParsedFile {
+    path: String,
+    language: String,
+    token_count: usize,
+    fingerprints: Vec<Fingerprint>,
+}
+
+#[derive(Clone, Debug)]
+struct Location {
+    file_idx: usize,
+    span: crate::types::LineSpan,
+}
+
+/// Runs the complete code clone detection process.
+pub async fn run_scan(
+    config: ScanConfig,
+    progress_tx: Sender<ScanProgress>,
+    cancel_flag: Arc<AtomicBool>,
+) -> Result<ScanResult, String> {
+    let start_time = Instant::now();
+    let scan_id = uuid::Uuid::new_v4().to_string();
+
+    let _ = progress_tx.send(ScanProgress {
+        scan_id: scan_id.clone(),
+        phase: "Discovery".to_string(),
+        files_processed: 0,
+        total_files: 0,
+        progress: 0.0,
+        message: "Discovering files...".to_string(),
+    }).await;
+
+    let walker = WalkBuilder::new(&config.directory);
+    
+    let mut files_to_process = Vec::new();
+    for result in walker.build() {
+        if cancel_flag.load(Ordering::Relaxed) {
+            return Err("Scan cancelled".to_string());
+        }
+        if let Ok(entry) = result {
+            if entry.path().is_file() {
+                if let Some(grammar) = get_grammar_for_path(entry.path()) {
+                    if config.languages.is_empty() || config.languages.contains(&grammar.name.to_string()) {
+                        let path_str = entry.path().to_string_lossy().to_string();
+                        let mut ignored = false;
+                        for pat in &config.ignore_patterns {
+                            if path_str.contains(pat) {
+                                ignored = true;
+                                break;
+                            }
+                        }
+                        if !ignored {
+                            files_to_process.push(entry.path().to_path_buf());
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    let total_files = files_to_process.len();
+    if total_files == 0 {
+        return Ok(ScanResult {
+            scan_id,
+            total_files: 0,
+            total_tokens: 0,
+            total_clones: 0,
+            duplication_percentage: 0.0,
+            dry_health_score: 100.0,
+            clone_pairs: vec![],
+            duration_ms: start_time.elapsed().as_millis() as u64,
+            language_breakdown: vec![],
+        });
+    }
+
+    let _ = progress_tx.send(ScanProgress {
+        scan_id: scan_id.clone(),
+        phase: "Tokenization".to_string(),
+        files_processed: 0,
+        total_files,
+        progress: 0.1,
+        message: format!("Tokenizing {} files...", total_files),
+    }).await;
+
+    if cancel_flag.load(Ordering::Relaxed) {
+        return Err("Scan cancelled".to_string());
+    }
+
+    let parsed_files: Vec<ParsedFile> = files_to_process.par_iter().filter_map(|path| {
+        let grammar = get_grammar_for_path(path)?;
+        let content = std::fs::read_to_string(path).ok()?;
+        let tokens = tokenize(&content, grammar, config.detect_type2);
+        let token_count = tokens.len();
+        
+        let k = std::cmp::max(10, config.min_tokens / 2);
+        let w = k + 5;
+        let fingerprints = winnow(&tokens, k, w);
+
+        Some(ParsedFile {
+            path: path.to_string_lossy().to_string(),
+            language: grammar.name.to_string(),
+            token_count,
+            fingerprints,
+        })
+    }).collect();
+
+    let _ = progress_tx.send(ScanProgress {
+        scan_id: scan_id.clone(),
+        phase: "Indexing".to_string(),
+        files_processed: total_files,
+        total_files,
+        progress: 0.5,
+        message: "Indexing fingerprints...".to_string(),
+    }).await;
+
+    if cancel_flag.load(Ordering::Relaxed) {
+        return Err("Scan cancelled".to_string());
+    }
+
+    let mut index: HashMap<(u64, u64), Vec<Location>> = HashMap::new();
+    let mut total_tokens = 0;
+    
+    for (file_idx, pf) in parsed_files.iter().enumerate() {
+        total_tokens += pf.token_count;
+        for fp in &pf.fingerprints {
+            index.entry(fp.hash).or_default().push(Location {
+                file_idx,
+                span: fp.span.clone(),
+            });
+        }
+    }
+
+    let _ = progress_tx.send(ScanProgress {
+        scan_id: scan_id.clone(),
+        phase: "Merging".to_string(),
+        files_processed: total_files,
+        total_files,
+        progress: 0.8,
+        message: "Merging matching blocks...".to_string(),
+    }).await;
+
+    if cancel_flag.load(Ordering::Relaxed) {
+        return Err("Scan cancelled".to_string());
+    }
+
+    let mut raw_pairs = Vec::new();
+    for (hash, locations) in index {
+        if locations.len() > 1 {
+            for i in 0..locations.len() {
+                for j in (i + 1)..locations.len() {
+                    let loc_a = &locations[i];
+                    let loc_b = &locations[j];
+                    
+                    if !config.scan_self && loc_a.file_idx == loc_b.file_idx {
+                        continue;
+                    }
+
+                    raw_pairs.push(ClonePair {
+                        file_a: parsed_files[loc_a.file_idx].path.clone(),
+                        start_line_a: loc_a.span.line_start,
+                        end_line_a: loc_a.span.line_end,
+                        file_b: parsed_files[loc_b.file_idx].path.clone(),
+                        start_line_b: loc_b.span.line_start,
+                        end_line_b: loc_b.span.line_end,
+                        token_count: config.min_tokens,
+                        similarity: 1.0,
+                        fragment_hash: format!("{:x}-{:x}", hash.0, hash.1),
+                        clone_type: CloneType::Exact,
+                        author_a: None,
+                        author_b: None,
+                    });
+                }
+            }
+        }
+    }
+
+    raw_pairs.sort_by(|a, b| a.file_a.cmp(&b.file_a));
+
+    let mut lang_stats_map: HashMap<String, LanguageStats> = HashMap::new();
+    for pf in &parsed_files {
+        let stats = lang_stats_map.entry(pf.language.clone()).or_insert(LanguageStats {
+            language: pf.language.clone(),
+            files: 0,
+            tokens: 0,
+            clones: 0,
+        });
+        stats.files += 1;
+        stats.tokens += pf.token_count;
+    }
+
+    let mut cross_module_count = 0;
+    for pair in &raw_pairs {
+        let dir_a = pair.file_a.split('/').next().unwrap_or("");
+        let dir_b = pair.file_b.split('/').next().unwrap_or("");
+        if dir_a != dir_b {
+            cross_module_count += 1;
+        }
+    }
+
+    let language_breakdown: Vec<LanguageStats> = lang_stats_map.into_values().collect();
+    let duplication_percentage = if total_tokens > 0 {
+        ((raw_pairs.len() * config.min_tokens) as f64 / total_tokens as f64 * 100.0).min(100.0)
+    } else {
+        0.0
+    };
+    let cross_module_ratio = if !raw_pairs.is_empty() {
+        cross_module_count as f64 / raw_pairs.len() as f64
+    } else {
+        0.0
+    };
+    let dry_health_score = ((100.0 - duplication_percentage * 1.5) * (1.0 - 0.25 * cross_module_ratio))
+        .max(0.0)
+        .min(100.0);
+
+    let _ = progress_tx.send(ScanProgress {
+        scan_id: scan_id.clone(),
+        phase: "Complete".to_string(),
+        files_processed: total_files,
+        total_files,
+        progress: 1.0,
+        message: "Scan complete.".to_string(),
+    }).await;
+
+    Ok(ScanResult {
+        scan_id,
+        total_files,
+        total_tokens,
+        total_clones: raw_pairs.len(),
+        duplication_percentage,
+        dry_health_score,
+        clone_pairs: raw_pairs,
+        duration_ms: start_time.elapsed().as_millis() as u64,
+        language_breakdown,
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tokio::sync::mpsc;
+    use std::sync::atomic::AtomicBool;
+
+    #[tokio::test]
+    async fn test_empty_scan() {
+        let (tx, _rx) = mpsc::channel(100);
+        let config = ScanConfig {
+            directory: "non_existent_dir".to_string(),
+            min_tokens: 50,
+            languages: vec![],
+            ignore_patterns: vec![],
+            detect_type2: true,
+            scan_self: false,
+        };
+
+        let result = run_scan(config, tx, Arc::new(AtomicBool::new(false))).await.unwrap();
+        assert_eq!(result.total_files, 0);
+    }
+}

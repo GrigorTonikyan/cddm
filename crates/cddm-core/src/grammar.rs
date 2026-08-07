@@ -1,0 +1,214 @@
+use std::path::Path;
+
+/// Defines syntax properties for a programming language.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct LanguageGrammar {
+    /// Name of the language (e.g. "Rust")
+    pub name: &'static str,
+    /// File extensions associated with this language (without leading dot)
+    pub extensions: &'static [&'static str],
+    /// Language keywords
+    pub keywords: &'static [&'static str],
+    /// Prefix for single-line comments
+    pub line_comment: &'static str,
+    /// Delimiters for multi-line block comments (start, end)
+    pub block_comment: Option<(&'static str, &'static str)>,
+}
+
+/// A static registry of supported languages.
+pub const SUPPORTED_LANGUAGES: &[LanguageGrammar] = &[
+    LanguageGrammar {
+        name: "Rust",
+        extensions: &["rs"],
+        keywords: &[
+            "as", "break", "const", "continue", "crate", "else", "enum", "extern", "false", "fn",
+            "for", "if", "impl", "in", "let", "loop", "match", "mod", "move", "mut", "pub", "ref",
+            "return", "self", "Self", "static", "struct", "super", "trait", "true", "type", "unsafe",
+            "use", "where", "while", "async", "await", "dyn",
+        ],
+        line_comment: "//",
+        block_comment: Some(("/*", "*/")),
+    },
+    LanguageGrammar {
+        name: "TypeScript",
+        extensions: &["ts", "tsx"],
+        keywords: &[
+            "break", "case", "catch", "class", "const", "continue", "debugger", "default", "delete",
+            "do", "else", "enum", "export", "extends", "false", "finally", "for", "function", "if",
+            "import", "in", "instanceof", "new", "null", "return", "super", "switch", "this",
+            "throw", "true", "try", "typeof", "var", "void", "while", "with", "as", "implements",
+            "interface", "let", "package", "private", "protected", "public", "static", "yield",
+            "any", "boolean", "constructor", "declare", "get", "module", "require", "number",
+            "set", "string", "symbol", "type", "from", "of",
+        ],
+        line_comment: "//",
+        block_comment: Some(("/*", "*/")),
+    },
+    LanguageGrammar {
+        name: "JavaScript",
+        extensions: &["js", "jsx", "cjs", "mjs"],
+        keywords: &[
+            "break", "case", "catch", "class", "const", "continue", "debugger", "default", "delete",
+            "do", "else", "export", "extends", "finally", "for", "function", "if", "import", "in",
+            "instanceof", "new", "return", "super", "switch", "this", "throw", "try", "typeof",
+            "var", "void", "while", "with", "yield", "let", "await", "async", "null", "true", "false",
+        ],
+        line_comment: "//",
+        block_comment: Some(("/*", "*/")),
+    },
+    LanguageGrammar {
+        name: "Python",
+        extensions: &["py"],
+        keywords: &[
+            "False", "None", "True", "and", "as", "assert", "async", "await", "break", "class",
+            "continue", "def", "del", "elif", "else", "except", "finally", "for", "from", "global",
+            "if", "import", "in", "is", "lambda", "nonlocal", "not", "or", "pass", "raise", "return",
+            "try", "while", "with", "yield",
+        ],
+        line_comment: "#",
+        block_comment: None,
+    },
+    LanguageGrammar {
+        name: "Go",
+        extensions: &["go"],
+        keywords: &[
+            "break", "default", "func", "interface", "select", "case", "defer", "go", "map",
+            "struct", "chan", "else", "goto", "package", "switch", "const", "fallthrough", "if",
+            "range", "type", "continue", "for", "import", "return", "var",
+        ],
+        line_comment: "//",
+        block_comment: Some(("/*", "*/")),
+    },
+    LanguageGrammar {
+        name: "Java",
+        extensions: &["java"],
+        keywords: &[
+            "abstract", "continue", "for", "new", "switch", "assert", "default", "goto", "package",
+            "synchronized", "boolean", "do", "if", "private", "this", "break", "double", "implements",
+            "protected", "throw", "byte", "else", "import", "public", "throws", "case", "enum",
+            "instanceof", "return", "transient", "catch", "extends", "int", "short", "try", "char",
+            "final", "interface", "static", "void", "class", "finally", "long", "strictfp", "volatile",
+            "const", "float", "native", "super", "while", "null", "true", "false",
+        ],
+        line_comment: "//",
+        block_comment: Some(("/*", "*/")),
+    },
+    LanguageGrammar {
+        name: "C",
+        extensions: &["c", "h"],
+        keywords: &[
+            "auto", "break", "case", "char", "const", "continue", "default", "do", "double",
+            "else", "enum", "extern", "float", "for", "goto", "if", "inline", "int", "long",
+            "register", "restrict", "return", "short", "signed", "sizeof", "static", "struct",
+            "switch", "typedef", "union", "unsigned", "void", "volatile", "while",
+        ],
+        line_comment: "//",
+        block_comment: Some(("/*", "*/")),
+    },
+    LanguageGrammar {
+        name: "C++",
+        extensions: &["cpp", "hpp", "cc", "hh", "cxx", "hxx"],
+        keywords: &[
+            "alignas", "alignof", "and", "and_eq", "asm", "auto", "bitand", "bitor", "bool", "break",
+            "case", "catch", "char", "char16_t", "char32_t", "class", "compl", "concept", "const",
+            "constexpr", "const_cast", "continue", "decltype", "default", "delete", "do", "double",
+            "dynamic_cast", "else", "enum", "explicit", "export", "extern", "false", "float", "for",
+            "friend", "goto", "if", "inline", "int", "long", "mutable", "namespace", "new", "noexcept",
+            "not", "not_eq", "nullptr", "operator", "or", "or_eq", "private", "protected", "public",
+            "register", "reinterpret_cast", "requires", "return", "short", "signed", "sizeof",
+            "static", "static_assert", "static_cast", "struct", "switch", "template", "this",
+            "thread_local", "throw", "true", "try", "typedef", "typeid", "typename", "union",
+            "unsigned", "using", "virtual", "void", "volatile", "wchar_t", "while", "xor", "xor_eq",
+        ],
+        line_comment: "//",
+        block_comment: Some(("/*", "*/")),
+    },
+    LanguageGrammar {
+        name: "C#",
+        extensions: &["cs"],
+        keywords: &[
+            "abstract", "as", "base", "bool", "break", "byte", "case", "catch", "char", "checked",
+            "class", "const", "continue", "decimal", "default", "delegate", "do", "double", "else",
+            "enum", "event", "explicit", "extern", "false", "finally", "fixed", "float", "for",
+            "foreach", "goto", "if", "implicit", "in", "int", "interface", "internal", "is", "lock",
+            "long", "namespace", "new", "null", "object", "operator", "out", "override", "params",
+            "private", "protected", "public", "readonly", "ref", "return", "sbyte", "sealed",
+            "short", "sizeof", "stackalloc", "static", "string", "struct", "switch", "this", "throw",
+            "true", "try", "typeof", "uint", "ulong", "unchecked", "unsafe", "ushort", "using",
+            "virtual", "void", "volatile", "while",
+        ],
+        line_comment: "//",
+        block_comment: Some(("/*", "*/")),
+    },
+    LanguageGrammar {
+        name: "CSS",
+        extensions: &["css", "scss", "sass", "less"],
+        keywords: &[
+            "import", "media", "keyframes", "font-face", "page", "supports", "namespace",
+        ],
+        line_comment: "//",
+        block_comment: Some(("/*", "*/")),
+    },
+    LanguageGrammar {
+        name: "HTML",
+        extensions: &["html", "htm"],
+        keywords: &[],
+        line_comment: "",
+        block_comment: Some(("<!--", "-->")),
+    },
+    LanguageGrammar {
+        name: "JSON",
+        extensions: &["json"],
+        keywords: &["true", "false", "null"],
+        line_comment: "//",
+        block_comment: Some(("/*", "*/")),
+    },
+];
+
+/// Gets the grammar definition for a given file path based on its extension.
+///
+/// Returns `None` if the extension is not recognized.
+pub fn get_grammar_for_path(path: &Path) -> Option<&'static LanguageGrammar> {
+    let ext = path.extension()?.to_str()?;
+    let ext = ext.to_lowercase();
+    SUPPORTED_LANGUAGES.iter().find(|&grammar| grammar.extensions.contains(&ext.as_str()))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::Path;
+
+    #[test]
+    fn test_get_grammar_for_path() {
+        let rs_path = Path::new("src/main.rs");
+        let ts_path = Path::new("app/index.ts");
+        let py_path = Path::new("script.py");
+        let go_path = Path::new("server.go");
+        let css_path = Path::new("style.css");
+        let unknown_path = Path::new("file.xyz");
+        let no_ext_path = Path::new("Makefile");
+
+        assert_eq!(get_grammar_for_path(rs_path).unwrap().name, "Rust");
+        assert_eq!(get_grammar_for_path(ts_path).unwrap().name, "TypeScript");
+        assert_eq!(get_grammar_for_path(py_path).unwrap().name, "Python");
+        assert_eq!(get_grammar_for_path(go_path).unwrap().name, "Go");
+        assert_eq!(get_grammar_for_path(css_path).unwrap().name, "CSS");
+
+        assert!(get_grammar_for_path(unknown_path).is_none());
+        assert!(get_grammar_for_path(no_ext_path).is_none());
+    }
+
+    #[test]
+    fn test_grammar_properties() {
+        let rs_grammar = get_grammar_for_path(Path::new("test.rs")).unwrap();
+        assert!(rs_grammar.keywords.contains(&"fn"));
+        assert_eq!(rs_grammar.line_comment, "//");
+        assert_eq!(rs_grammar.block_comment, Some(("/*", "*/")));
+
+        let py_grammar = get_grammar_for_path(Path::new("test.py")).unwrap();
+        assert!(py_grammar.keywords.contains(&"def"));
+        assert_eq!(py_grammar.line_comment, "#");
+        assert_eq!(py_grammar.block_comment, None);
+    }
+}

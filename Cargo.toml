@@ -1,0 +1,32 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/cddm-core",
+    "crates/cddm-cli",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+authors = ["Grigor Tonikyan <grigor@tonikyan.com>"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/GrigorTonikyan/cddm"
+
+[workspace.dependencies]
+anyhow = "^1"
+async-trait = "^0.1"
+blake3 = "^1"
+chrono = { version = "^0.4", features = ["serde"] }
+clap = { version = "^4", features = ["derive", "env"] }
+comfy-table = "^7"
+ignore = "^0.4"
+notify = "^6"
+rayon = "^1"
+serde = { version = "^1", features = ["derive"] }
+serde_json = "^1"
+sha2 = "^0.10"
+thiserror = "^2"
+tokio = { version = "^1", features = ["full"] }
+tracing = "^0.1"
+tracing-subscriber = "^0.3"
+uuid = { version = "^1", features = ["serde", "v4"] }
