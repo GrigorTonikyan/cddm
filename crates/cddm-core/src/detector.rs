@@ -198,8 +198,39 @@ pub async fn run_scan(
                     }
                 }
             }
-            raw_pairs.sort_by(|a, b| a.file_a.cmp(&b.file_a));
-            (raw_pairs, total_tokens)
+            
+            // Merge overlapping and adjacent clone pairs
+            raw_pairs.sort_by(|a, b| {
+                a.file_a.cmp(&b.file_a)
+                    .then(a.file_b.cmp(&b.file_b))
+                    .then(a.start_line_a.cmp(&b.start_line_a))
+                    .then(a.start_line_b.cmp(&b.start_line_b))
+            });
+
+            let mut merged_pairs = Vec::new();
+            if !raw_pairs.is_empty() {
+                let mut current = raw_pairs[0].clone();
+                for next in raw_pairs.into_iter().skip(1) {
+                    if current.file_a == next.file_a 
+                        && current.file_b == next.file_b 
+                        && next.start_line_a <= current.end_line_a + 5
+                        && next.start_line_b <= current.end_line_b + 5
+                    {
+                        current.end_line_a = std::cmp::max(current.end_line_a, next.end_line_a);
+                        current.end_line_b = std::cmp::max(current.end_line_b, next.end_line_b);
+                        current.token_count += 5; // Heuristic token addition for merged blocks
+                    } else {
+                        merged_pairs.push(current);
+                        current = next;
+                    }
+                }
+                merged_pairs.push(current);
+            }
+            
+            // Sort by largest token count descending for the final report
+            merged_pairs.sort_by(|a, b| b.token_count.cmp(&a.token_count));
+
+            (merged_pairs, total_tokens)
         }).await.unwrap()
     };
 
