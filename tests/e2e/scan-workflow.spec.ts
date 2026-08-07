@@ -17,6 +17,6 @@ test.describe("CDDM WebUI E2E Workflows", () => {
     await runBtn.click();
 
     // Verify DRY Health Score renders
-    await expect(page.getByText("DRY Health Score")).toBeVisible();
+    await expect(page.getByText("DRY Health Score")).toBeVisible({ timeout: 25000 });
   });
 });

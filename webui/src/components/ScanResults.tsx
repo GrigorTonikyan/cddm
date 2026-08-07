@@ -138,9 +138,14 @@ export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
           </div>
         ) : (
           <div className="space-y-4">
-            {results.clone_pairs.map((pair, idx) => (
+            {results.clone_pairs.slice(0, 100).map((pair, idx) => (
               <ClonePairCard key={idx} pair={pair} index={idx + 1} />
             ))}
+            {results.clone_pairs.length > 100 && (
+              <div className="text-center text-gray-500 py-4 font-mono text-sm">
+                ... and {results.clone_pairs.length - 100} more clone pairs omitted for performance.
+              </div>
+            )}
           </div>
         )}
       </div>

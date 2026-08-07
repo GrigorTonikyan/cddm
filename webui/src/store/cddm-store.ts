@@ -35,6 +35,7 @@ const DEFAULT_CONFIG: ScanConfig = {
   ignore_patterns: ["node_modules", "target", ".git", "dist", "build"],
   detect_type2: true,
   scan_self: true,
+  enable_git_blame: true,
 };
 
 /**

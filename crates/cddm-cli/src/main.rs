@@ -60,7 +60,7 @@ enum Commands {
         port: u16,
 
         /// Automatically open browser tab
-        #[arg(short, long, default_value_t = true)]
+        #[arg(short, long, default_value_t = false)]
         open: bool,
     },
 }

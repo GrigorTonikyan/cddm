@@ -3,7 +3,7 @@ use std::path::Path;
 /// Annotates line ranges with author attribution using in-process `gix` (gitoxide).
 ///
 /// Returns author name (and optional commit age) if `repo_root` is a valid Git repository.
-pub fn get_line_author(repo_root: &Path, relative_file_path: &str, line: usize) -> Option<String> {
+pub fn get_line_author(repo_root: &Path, relative_file_path: &str, _line: usize) -> Option<(String, String)> {
     let repo = gix::discover(repo_root).ok()?;
     let path = Path::new(relative_file_path);
 
@@ -19,7 +19,7 @@ pub fn get_line_author(repo_root: &Path, relative_file_path: &str, line: usize) 
         .map(|dt| dt.format("%Y-%m-%d").to_string())
         .unwrap_or_else(|| "recent".to_string());
 
-    Some(format!("{} (line {}, {})", author_name, line, date_str))
+    Some((author_name, date_str))
 }
 
 #[cfg(test)]

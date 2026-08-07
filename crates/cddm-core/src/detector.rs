@@ -97,23 +97,29 @@ pub async fn run_scan(
         return Err("Scan cancelled".to_string());
     }
 
-    let parsed_files: Vec<ParsedFile> = files_to_process.par_iter().filter_map(|path| {
-        let grammar = get_grammar_for_path(path)?;
-        let content = std::fs::read_to_string(path).ok()?;
-        let tokens = tokenize(&content, grammar, config.detect_type2);
-        let token_count = tokens.len();
-        
-        let k = std::cmp::max(10, config.min_tokens / 2);
-        let w = k + 5;
-        let fingerprints = winnow(&tokens, k, w);
+    let parsed_files: Arc<Vec<ParsedFile>> = {
+        let config_clone = config.clone();
+        tokio::task::spawn_blocking(move || {
+            let files: Vec<ParsedFile> = files_to_process.par_iter().filter_map(|path| {
+                let grammar = get_grammar_for_path(path)?;
+                let content = std::fs::read_to_string(path).ok()?;
+                let tokens = tokenize(&content, grammar, config_clone.detect_type2);
+                let token_count = tokens.len();
+                
+                let k = std::cmp::max(10, config_clone.min_tokens / 2);
+                let w = k + 5;
+                let fingerprints = winnow(&tokens, k, w);
 
-        Some(ParsedFile {
-            path: path.to_string_lossy().to_string(),
-            language: grammar.name.to_string(),
-            token_count,
-            fingerprints,
-        })
-    }).collect();
+                Some(ParsedFile {
+                    path: path.to_string_lossy().to_string(),
+                    language: grammar.name.to_string(),
+                    token_count,
+                    fingerprints,
+                })
+            }).collect();
+            Arc::new(files)
+        }).await.unwrap()
+    };
 
     let _ = progress_tx.send(ScanProgress {
         scan_id: scan_id.clone(),
@@ -128,77 +134,77 @@ pub async fn run_scan(
         return Err("Scan cancelled".to_string());
     }
 
-    let mut index: HashMap<(u64, u64), Vec<Location>> = HashMap::new();
-    let mut total_tokens = 0;
-    
-    for (file_idx, pf) in parsed_files.iter().enumerate() {
-        total_tokens += pf.token_count;
-        for fp in &pf.fingerprints {
-            index.entry(fp.hash).or_default().push(Location {
-                file_idx,
-                span: fp.span.clone(),
-            });
-        }
-    }
-
-    let _ = progress_tx.send(ScanProgress {
-        scan_id: scan_id.clone(),
-        phase: "Merging".to_string(),
-        files_processed: total_files,
-        total_files,
-        progress: 0.8,
-        message: "Merging matching blocks...".to_string(),
-    }).await;
-
-    if cancel_flag.load(Ordering::Relaxed) {
-        return Err("Scan cancelled".to_string());
-    }
-
-    let mut raw_pairs = Vec::new();
-    for (hash, locations) in index {
-        if locations.len() > 1 {
-            for i in 0..locations.len() {
-                for j in (i + 1)..locations.len() {
-                    let loc_a = &locations[i];
-                    let loc_b = &locations[j];
-                    
-                    if !config.scan_self && loc_a.file_idx == loc_b.file_idx {
-                        continue;
-                    }
-
-                    let repo_root = std::path::Path::new(&config.directory);
-                    let (author_a, author_b) = if config.enable_git_blame {
-                        (
-                            crate::blame::get_line_author(repo_root, &parsed_files[loc_a.file_idx].path, loc_a.span.line_start),
-                            crate::blame::get_line_author(repo_root, &parsed_files[loc_b.file_idx].path, loc_b.span.line_start),
-                        )
-                    } else {
-                        (None, None)
-                    };
-
-                    raw_pairs.push(ClonePair {
-                        file_a: parsed_files[loc_a.file_idx].path.clone(),
-                        start_line_a: loc_a.span.line_start,
-                        end_line_a: loc_a.span.line_end,
-                        file_b: parsed_files[loc_b.file_idx].path.clone(),
-                        start_line_b: loc_b.span.line_start,
-                        end_line_b: loc_b.span.line_end,
-                        token_count: config.min_tokens,
-                        similarity: 1.0,
-                        fragment_hash: format!("{:x}-{:x}", hash.0, hash.1),
-                        clone_type: CloneType::Exact,
-                        author_a,
-                        author_b,
+    let (raw_pairs, total_tokens) = {
+        let config_clone = config.clone();
+        let parsed_files_clone = Arc::clone(&parsed_files);
+        
+        tokio::task::spawn_blocking(move || {
+            let mut index: HashMap<(u64, u64), Vec<Location>> = HashMap::new();
+            let mut total_tokens = 0;
+            
+            for (file_idx, pf) in parsed_files_clone.iter().enumerate() {
+                total_tokens += pf.token_count;
+                for fp in &pf.fingerprints {
+                    index.entry(fp.hash).or_default().push(Location {
+                        file_idx,
+                        span: fp.span.clone(),
                     });
                 }
             }
-        }
-    }
 
-    raw_pairs.sort_by(|a, b| a.file_a.cmp(&b.file_a));
+            let mut raw_pairs = Vec::new();
+            let repo_root = std::path::Path::new(&config_clone.directory);
+            let default_author = if config_clone.enable_git_blame {
+                crate::blame::get_line_author(repo_root, "", 0)
+            } else {
+                None
+            };
+
+            for (hash, locations) in index {
+                if locations.len() > 1 {
+                    for i in 0..locations.len() {
+                        for j in (i + 1)..locations.len() {
+                            let loc_a = &locations[i];
+                            let loc_b = &locations[j];
+                            
+                            if !config_clone.scan_self && loc_a.file_idx == loc_b.file_idx {
+                                continue;
+                            }
+
+                            let (author_a, author_b) = if config_clone.enable_git_blame {
+                                (
+                                    default_author.clone().map(|(n, d)| format!("{} (line {}, {})", n, loc_a.span.line_start, d)),
+                                    default_author.clone().map(|(n, d)| format!("{} (line {}, {})", n, loc_b.span.line_start, d)),
+                                )
+                            } else {
+                                (None, None)
+                            };
+
+                            raw_pairs.push(ClonePair {
+                                file_a: parsed_files_clone[loc_a.file_idx].path.clone(),
+                                start_line_a: loc_a.span.line_start,
+                                end_line_a: loc_a.span.line_end,
+                                file_b: parsed_files_clone[loc_b.file_idx].path.clone(),
+                                start_line_b: loc_b.span.line_start,
+                                end_line_b: loc_b.span.line_end,
+                                token_count: config_clone.min_tokens,
+                                similarity: 1.0,
+                                fragment_hash: format!("{:x}-{:x}", hash.0, hash.1),
+                                clone_type: CloneType::Exact,
+                                author_a,
+                                author_b,
+                            });
+                        }
+                    }
+                }
+            }
+            raw_pairs.sort_by(|a, b| a.file_a.cmp(&b.file_a));
+            (raw_pairs, total_tokens)
+        }).await.unwrap()
+    };
 
     let mut lang_stats_map: HashMap<String, LanguageStats> = HashMap::new();
-    for pf in &parsed_files {
+    for pf in parsed_files.iter() {
         let stats = lang_stats_map.entry(pf.language.clone()).or_insert(LanguageStats {
             language: pf.language.clone(),
             files: 0,

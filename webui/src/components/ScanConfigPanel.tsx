@@ -112,8 +112,8 @@ export const ScanConfigPanel: React.FC<ScanConfigPanelProps> = ({ className = ""
           <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer select-none">
             <input
               type="checkbox"
-              checked={config.git_blame ?? false}
-              onChange={(e) => setConfig({ git_blame: e.target.checked })}
+              checked={config.enable_git_blame ?? false}
+              onChange={(e) => setConfig({ enable_git_blame: e.target.checked })}
               className="w-4 h-4 rounded border-gray-800 bg-gray-950 text-indigo-500 focus:ring-indigo-500"
             />
             <span>Git Blame (Authors)</span>
