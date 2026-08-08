@@ -15,7 +15,7 @@ graph TD
     subgraph Core ["cddm-core Library Engine"]
         Grammar["Grammar Registry (30+ Languages)"]
         Tokenizer["Tokenization Engine (Normalizer)"]
-        Winnow["Winnowing Engine (Metersenne M₆₁)"]
+        Winnow["Winnowing Engine (Mersenne M61)"]
         AST["Tree-sitter AST Hasher (Blake3 Merkle)"]
         Index["Fingerprint Index (HashMap)"]
         Detector["Parallel Detector (Rayon)"]
@@ -45,7 +45,7 @@ The `run_scan()` function in `detector.rs` orchestrates the full code clone dete
 ```mermaid
 flowchart LR
     A["Phase 1: Discovery<br/>WalkBuilder, Globs, Ignores"] --> B["Phase 2: Tokenization<br/>Rayon par_iter(), Normalization"]
-    B --> C["Phase 3: Indexing<br/>Winnowing M₆₁ Hash Indexing"]
+    B --> C["Phase 3: Indexing<br/>Winnowing M61 Hash Indexing"]
     C --> D["Phase 4: Merging<br/>Pairwise Clone Pair Matching"]
     D --> E["Phase 5: Scoring<br/>DRY Health Score Computation"]
     E --> F["Phase 6: Output<br/>Console ANSI / JSON / Markdown / HTML"]
@@ -57,22 +57,24 @@ flowchart LR
 
 CDDM measures overall codebase modularity and DRY health using a continuous non-linear scoring function:
 
-$$S_{\text{DRY}} = \max\!\bigl(0,\; \min\!\bigl(100,\; (100 - 1.5 \cdot D_\%) \cdot (1 - 0.25 \cdot R_{\text{cross}})\bigr)\bigr)$$
+```text
+Score = max(0, min(100, (100 - 1.5 * Duplication_Percentage) * (1 - 0.25 * Cross_Module_Ratio)))
+```
 
 Where:
-- **$D_\%$**: Duplication percentage ($\frac{\text{Clone Tokens}}{\text{Total Tokens}} \times 100$).
-- **$R_{\text{cross}}$**: Cross-module clone ratio ($\frac{\text{Cross-Directory Clones}}{\text{Total Clones}}$).
+- **Duplication_Percentage**: Duplication percentage (`(Clone Tokens / Total Tokens) * 100`).
+- **Cross_Module_Ratio**: Cross-module clone ratio (`Cross-Directory Clones / Total Clones`).
 
 ---
 
 ## 4. Winnowing Algorithm Parameters
 
-The Winnowing fingerprinting engine uses Mersenne prime $M_{61} = 2^{61} - 1$ for collision-resistant rolling hashing:
+The Winnowing fingerprinting engine uses Mersenne prime M61 = 2^61 - 1 for collision-resistant rolling hashing:
 
-- **k-gram size**: $k = \max(10, \lfloor \text{min\_tokens} / 2 \rfloor)$
-- **Window size**: $w = k + 5$
-- **Hash bases**: $b_1 = 313$, $b_2 = 1{,}000{,}003$ (dual-base hashing for collision resistance)
-- **Rolling update**: $h' = ((h - \text{old} \cdot b^{k-1}) \cdot b + \text{new}) \bmod M_{61}$
+- **k-gram size**: `k = max(10, floor(min_tokens / 2))`
+- **Window size**: `w = k + 5`
+- **Hash bases**: `b1 = 313`, `b2 = 1000003` (dual-base hashing for collision resistance)
+- **Rolling update**: `h_next = ((h_curr - old_token * b^(k-1)) * b + new_token) mod M61`
 
 ---
 
@@ -92,9 +94,9 @@ cddm-core (library crate)
 cddm-cli (binary crate) ──depends──→ cddm-core
   ├── clap                 (CLI flag parsing)
   ├── axum, tower-http     (HTTP server & static asset serving)
-  ├── rust-embed           (embedding dist/ static WebUI files)
+  ├── rust-embed           (static asset embedding)
   ├── comfy-table          (ANSI console tables)
-  └── opener               (launching system browser)
+  └── opener               (launching browser)
 
 cddm-mcp (binary crate) ──depends──→ cddm-core
   ├── serde_json           (JSON-RPC 2.0 serialization)

@@ -4,10 +4,10 @@
 
 Security updates are applied to the latest release of **CDDM**.
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 0.1.x   | :white_check_mark: |
-| < 0.1.0 | :x:                |
+| Version | Supported |
+| ------- | --------- |
+| 0.1.x   | Yes       |
+| < 0.1.0 | No        |
 
 ## Reporting a Vulnerability
 

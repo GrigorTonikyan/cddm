@@ -4,14 +4,14 @@ First off, thank you for considering contributing to **CDDM** (*Code De-Duplicat
 
 ---
 
-## 🛠 Project Architecture Overview
+## Project Architecture Overview
 
 CDDM is structured as a Rust cargo workspace with an embedded React 19 WebUI:
 
 ```text
 cddm/
 ├── crates/
-│   ├── cddm-core/      # Core algorithm library (Winnowing M₆₁, Tree-sitter AST, gix blame)
+│   ├── cddm-core/      # Core algorithm library (Winnowing M61, Tree-sitter AST, gix blame)
 │   ├── cddm-cli/       # CLI application & Axum embedded WebUI server
 │   └── cddm-mcp/       # Model Context Protocol stdio server for AI agents
 ├── webui/              # React 19 + Vite + Tailwind CSS studio frontend (Bun)
@@ -23,7 +23,7 @@ For a deep dive into internal design, read [docs/ARCHITECTURE.md](docs/ARCHITECT
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -51,7 +51,7 @@ For a deep dive into internal design, read [docs/ARCHITECTURE.md](docs/ARCHITECT
 
 ---
 
-## 🧪 Running Tests & Quality Checks
+## Running Tests & Quality Checks
 
 ### Rust Crates
 
@@ -85,7 +85,7 @@ bun run build
 
 ---
 
-## 💡 How to Contribute
+## How to Contribute
 
 ### 1. Adding Support for a New Language
 To add a new language grammar to `cddm-core`:
@@ -109,12 +109,12 @@ To add a new language grammar to `cddm-core`:
 
 ---
 
-## 📜 Code of Conduct
+## Code of Conduct
 
 Please note that this project is released with a Contributor Code of Conduct. By participating in this project, you agree to abide by its terms. See [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
 ---
 
-## 📄 License
+## License
 
 By contributing, you agree that your contributions will be dual-licensed under the [MIT License](LICENSE-MIT) and [Apache 2.0 License](LICENSE-APACHE).
