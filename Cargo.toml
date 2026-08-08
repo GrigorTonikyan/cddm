@@ -12,6 +12,12 @@ edition = "2024"
 authors = ["Grigor Tonikyan <grigor@tonikyan.com>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/GrigorTonikyan/cddm"
+homepage = "https://github.com/GrigorTonikyan/cddm"
+documentation = "https://docs.rs/cddm-core"
+readme = "README.md"
+keywords = ["code-quality", "duplication", "ast", "tree-sitter", "mcp"]
+categories = ["development-tools", "command-line-utilities", "code-analysis"]
+
 
 [workspace.dependencies]
 anyhow = "^1"
