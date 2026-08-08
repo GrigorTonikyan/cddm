@@ -7,7 +7,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.1.1"
+version = "0.1.2"
 edition = "2024"
 authors = ["Grigor Tonikyan <grigor@tonikyan.com>"]
 license = "MIT OR Apache-2.0"
@@ -20,12 +20,12 @@ axum = "^0.8"
 blake3 = "^1"
 chrono = { version = "^0.4", features = ["serde"] }
 clap = { version = "^4", features = ["derive", "env"] }
-comfy-table = "^7"
-gix = "^0.67"
+comfy-table = "^8"
+gix = "^0.86"
 ignore = "^0.4"
 mime_guess = "^2"
-notify = "^6"
-opener = "^0.7"
+notify = "^8"
+opener = "^0.8"
 rayon = "^1"
 rust-embed = { version = "^8", features = ["axum"] }
 serde = { version = "^1", features = ["derive"] }
@@ -33,11 +33,11 @@ serde_json = "^1"
 sha2 = "^0.10"
 thiserror = "^2"
 tokio = { version = "^1", features = ["full"] }
-tower-http = { version = "^0.6", features = ["fs", "cors"] }
-tree-sitter = "0.24"
-tree-sitter-javascript = "0.23"
-tree-sitter-python = "0.23"
-tree-sitter-rust = "0.23"
+tower-http = { version = "^0.7", features = ["fs", "cors"] }
+tree-sitter = "0.26"
+tree-sitter-javascript = "0.25"
+tree-sitter-python = "0.25"
+tree-sitter-rust = "0.24"
 tree-sitter-typescript = "0.23"
 tracing = "^0.1"
 tracing-subscriber = "^0.3"

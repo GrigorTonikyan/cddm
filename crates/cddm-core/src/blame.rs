@@ -4,18 +4,20 @@ use std::path::Path;
 ///
 /// Returns author name (and optional commit age) if `repo_root` is a valid Git repository.
 pub fn get_line_author(repo_root: &Path, relative_file_path: &str, _line: usize) -> Option<(String, String)> {
-    let repo = gix::discover(repo_root).ok()?;
-    let path = Path::new(relative_file_path);
+    let repo = gix::discover_with_environment_overrides(repo_root).ok()?;
 
     // Open worktree index & head commit
-    let head_commit = repo.head_commit().ok()?;
+    let head_id = repo.head_id().ok()?;
+    let head_commit = head_id.object().ok()?.peel_to_commit().ok()?;
     let tree = head_commit.tree().ok()?;
-    let _entry = tree.lookup_entry_by_path(path).ok()??;
+    let bstr_path = gix::bstr::BStr::new(relative_file_path.as_bytes());
+    let _entry = tree.lookup_entry(std::iter::once(bstr_path.to_owned())).ok()??;
 
     // Retrieve git config or commit author as baseline fallback
-    let author_name = head_commit.author().ok()?.name.to_string();
-    let time = head_commit.time().ok()?;
-    let date_str = chrono::DateTime::from_timestamp(time.seconds, 0)
+    let author = head_commit.author().ok()?;
+    let author_name = author.name.to_string();
+    let seconds = author.time().ok()?.seconds;
+    let date_str = chrono::DateTime::from_timestamp(seconds, 0)
         .map(|dt| dt.format("%Y-%m-%d").to_string())
         .unwrap_or_else(|| "recent".to_string());
 
