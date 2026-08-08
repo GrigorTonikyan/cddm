@@ -1,15 +1,15 @@
 use axum::{
+    Router,
     body::Body,
     extract::Json,
-    http::{header, HeaderValue, StatusCode, Uri},
+    http::{HeaderValue, StatusCode, Uri, header},
     response::{IntoResponse, Response},
     routing::{get, post},
-    Router,
 };
-use cddm_core::{run_scan, ScanConfig, ScanResult};
+use cddm_core::{ScanConfig, ScanResult, run_scan};
 use rust_embed::RustEmbed;
 use std::net::SocketAddr;
-use std::sync::{atomic::AtomicBool, Arc};
+use std::sync::{Arc, atomic::AtomicBool};
 use tokio::sync::mpsc;
 use tower_http::cors::CorsLayer;
 
@@ -47,7 +47,9 @@ async fn health_handler() -> impl IntoResponse {
     }))
 }
 
-async fn scan_handler(Json(config): Json<ScanConfig>) -> Result<Json<ScanResult>, (StatusCode, String)> {
+async fn scan_handler(
+    Json(config): Json<ScanConfig>,
+) -> Result<Json<ScanResult>, (StatusCode, String)> {
     let (tx, _rx) = mpsc::channel(100);
     let cancel_flag = Arc::new(AtomicBool::new(false));
 
@@ -66,7 +68,10 @@ async fn static_asset_handler(uri: Uri) -> impl IntoResponse {
             let mime_type = mime_guess::from_path(asset_path).first_or_octet_stream();
             Response::builder()
                 .status(StatusCode::OK)
-                .header(header::CONTENT_TYPE, HeaderValue::from_str(mime_type.as_ref()).unwrap())
+                .header(
+                    header::CONTENT_TYPE,
+                    HeaderValue::from_str(mime_type.as_ref()).unwrap(),
+                )
                 .body(Body::from(content.data))
                 .unwrap()
         }

@@ -1,6 +1,6 @@
 use notify::{Config, Event, RecommendedWatcher, RecursiveMode, Watcher};
 use std::path::Path;
-use std::sync::mpsc::{channel, Receiver};
+use std::sync::mpsc::{Receiver, channel};
 
 /// Real-time file system change watcher built on `notify`.
 pub struct CddmWatcher {

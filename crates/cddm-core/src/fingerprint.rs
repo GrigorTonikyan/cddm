@@ -32,7 +32,7 @@ fn token_to_u64(token: &NormalizedToken) -> u64 {
 }
 
 /// Computes the sequence of Winnowing fingerprints for a list of tokens.
-/// 
+///
 /// `k`: size of the k-gram (number of tokens in a rolling window)
 /// `w`: size of the winnowing window
 pub fn winnow(tokens: &[(NormalizedToken, LineSpan)], k: usize, w: usize) -> Vec<Fingerprint> {
@@ -42,7 +42,7 @@ pub fn winnow(tokens: &[(NormalizedToken, LineSpan)], k: usize, w: usize) -> Vec
 
     let b1: u64 = 313;
     let b2: u64 = 1000003;
-    
+
     // Precompute b1^(k-1) and b2^(k-1) modulo M_61
     let mut b1_k_minus_1: u64 = 1;
     let mut b2_k_minus_1: u64 = 1;
@@ -61,7 +61,7 @@ pub fn winnow(tokens: &[(NormalizedToken, LineSpan)], k: usize, w: usize) -> Vec
         h1 = fast_mod_m61((h1 as u128) * (b1 as u128) + (val as u128));
         h2 = fast_mod_m61((h2 as u128) * (b2 as u128) + (val as u128));
     }
-    
+
     kgram_hashes.push((
         (h1, h2),
         tokens[0].1.line_start,
@@ -76,10 +76,18 @@ pub fn winnow(tokens: &[(NormalizedToken, LineSpan)], k: usize, w: usize) -> Vec
 
         // Remove old_val * b^(k-1)
         let sub1 = fast_mod_m61((old_val as u128) * (b1_k_minus_1 as u128));
-        h1 = if h1 >= sub1 { h1 - sub1 } else { h1 + ((1u64 << 61) - 1) - sub1 };
-        
+        h1 = if h1 >= sub1 {
+            h1 - sub1
+        } else {
+            h1 + ((1u64 << 61) - 1) - sub1
+        };
+
         let sub2 = fast_mod_m61((old_val as u128) * (b2_k_minus_1 as u128));
-        h2 = if h2 >= sub2 { h2 - sub2 } else { h2 + ((1u64 << 61) - 1) - sub2 };
+        h2 = if h2 >= sub2 {
+            h2 - sub2
+        } else {
+            h2 + ((1u64 << 61) - 1) - sub2
+        };
 
         // Multiply by b and add new_val
         h1 = fast_mod_m61((h1 as u128) * (b1 as u128) + (new_val as u128));
@@ -184,7 +192,7 @@ mod tests {
                 },
             ));
         }
-        
+
         let fp = winnow(&tokens, 5, 4);
         assert!(!fp.is_empty());
         assert!(fp.len() <= 20 - 5 + 1);
@@ -192,9 +200,14 @@ mod tests {
 
     #[test]
     fn test_winnow_too_few_tokens() {
-        let tokens = vec![
-            (NormalizedToken::Identifier, LineSpan { line_start: 1, line_end: 1, byte_offset: 0 })
-        ];
+        let tokens = vec![(
+            NormalizedToken::Identifier,
+            LineSpan {
+                line_start: 1,
+                line_end: 1,
+                byte_offset: 0,
+            },
+        )];
         let fp = winnow(&tokens, 5, 4);
         assert!(fp.is_empty());
     }
@@ -212,7 +225,7 @@ mod tests {
                 },
             ));
         }
-        
+
         let fp1 = winnow(&tokens, 5, 4);
         let fp2 = winnow(&tokens, 5, 4);
         assert_eq!(fp1, fp2);

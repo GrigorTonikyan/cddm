@@ -1,8 +1,8 @@
-use cddm_core::{run_scan, ScanConfig, ScanResult};
+use cddm_core::{ScanConfig, ScanResult, run_scan};
 use clap::{Parser, Subcommand, ValueEnum};
 use comfy_table::{Cell, Color, Table};
 use std::path::PathBuf;
-use std::sync::{atomic::AtomicBool, Arc};
+use std::sync::{Arc, atomic::AtomicBool};
 use tokio::sync::mpsc;
 
 #[derive(Parser, Debug)]
@@ -175,8 +175,7 @@ fn print_console_report(result: &ScanResult) {
                 Cell::new(&pair.file_b),
                 Cell::new(format!("{}-{}", pair.start_line_b, pair.end_line_b)),
                 Cell::new(pair.token_count),
-                Cell::new(format!("{:.1}%", pair.similarity * 100.0))
-                    .fg(Color::Yellow),
+                Cell::new(format!("{:.1}%", pair.similarity * 100.0)).fg(Color::Yellow),
             ]);
         }
 
@@ -198,8 +197,14 @@ fn print_markdown_report(result: &ScanResult) {
     println!("- **Total Files**: {}", result.total_files);
     println!("- **Total Tokens**: {}", result.total_tokens);
     println!("- **Total Clone Pairs**: {}", result.total_clones);
-    println!("- **Duplication Rate**: {:.2}%", result.duplication_percentage);
-    println!("- **DRY Health Score**: {:.1} / 100", result.dry_health_score);
+    println!(
+        "- **Duplication Rate**: {:.2}%",
+        result.duplication_percentage
+    );
+    println!(
+        "- **DRY Health Score**: {:.1} / 100",
+        result.dry_health_score
+    );
     println!("- **Scan Duration**: {} ms\n", result.duration_ms);
 
     if !result.clone_pairs.is_empty() {

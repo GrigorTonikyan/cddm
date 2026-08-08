@@ -64,7 +64,7 @@ pub fn tokenize(
             chars.next();
             let start_line = current_line;
             let mut escaped = false;
-            
+
             while let Some(&(_, c)) = chars.peek() {
                 chars.next();
                 if c == '\n' {
@@ -82,7 +82,7 @@ pub fn tokenize(
                     break;
                 }
             }
-            
+
             tokens.push((
                 NormalizedToken::StringLiteral,
                 LineSpan {
@@ -128,7 +128,7 @@ pub fn tokenize(
                 }
             }
             let word = &source[offset..end_offset];
-            
+
             let mut is_keyword = false;
             let mut keyword_id = 0;
             for (i, &kw) in grammar.keywords.iter().enumerate() {
@@ -190,15 +190,24 @@ mod tests {
                 println!(s);
             }
         "#;
-        
+
         let tokens = tokenize(source, grammar, true);
-        let keywords = tokens.iter().filter(|(t, _)| matches!(t, NormalizedToken::Keyword(_))).count();
+        let keywords = tokens
+            .iter()
+            .filter(|(t, _)| matches!(t, NormalizedToken::Keyword(_)))
+            .count();
         assert!(keywords > 0, "Should have keywords (fn, let)");
-        
-        let strings = tokens.iter().filter(|(t, _)| matches!(t, NormalizedToken::StringLiteral)).count();
+
+        let strings = tokens
+            .iter()
+            .filter(|(t, _)| matches!(t, NormalizedToken::StringLiteral))
+            .count();
         assert_eq!(strings, 1, "Should have one string literal");
-        
-        let numbers = tokens.iter().filter(|(t, _)| matches!(t, NormalizedToken::NumericLiteral)).count();
+
+        let numbers = tokens
+            .iter()
+            .filter(|(t, _)| matches!(t, NormalizedToken::NumericLiteral))
+            .count();
         assert_eq!(numbers, 1, "Should have one numeric literal");
     }
 
@@ -210,7 +219,7 @@ mod tests {
                 return a + b;
             }
         "#;
-        
+
         let tokens = tokenize(source, grammar, true);
         assert!(!tokens.is_empty());
     }
@@ -225,12 +234,18 @@ mod tests {
                     pass
         "#;
         let tokens = tokenize(source, grammar, true);
-        
-        let keywords = tokens.iter().filter(|(t, _)| matches!(t, NormalizedToken::Keyword(_))).count();
+
+        let keywords = tokens
+            .iter()
+            .filter(|(t, _)| matches!(t, NormalizedToken::Keyword(_)))
+            .count();
         assert!(keywords > 0, "Should have keywords (def, class)");
-        
+
         // Assert no comment tokens
-        let identifiers = tokens.iter().filter(|(t, _)| matches!(t, NormalizedToken::Identifier)).count();
+        let identifiers = tokens
+            .iter()
+            .filter(|(t, _)| matches!(t, NormalizedToken::Identifier))
+            .count();
         assert!(identifiers > 0);
     }
 
@@ -251,7 +266,10 @@ mod tests {
         let grammar = get_grammar_for_path(Path::new("test.rs")).unwrap();
         let source = r#"let s = "some string"; let c = 'c'; let raw = `raw`;"#;
         let tokens = tokenize(source, grammar, true);
-        let strings = tokens.iter().filter(|(t, _)| matches!(t, NormalizedToken::StringLiteral)).count();
+        let strings = tokens
+            .iter()
+            .filter(|(t, _)| matches!(t, NormalizedToken::StringLiteral))
+            .count();
         assert_eq!(strings, 3);
     }
 

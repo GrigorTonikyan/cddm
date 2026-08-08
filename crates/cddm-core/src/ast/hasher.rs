@@ -22,7 +22,12 @@ pub fn compute_ast_subtree_hashes(tree: &Tree, min_depth: usize) -> Vec<AstSubtr
     results
 }
 
-fn visit_node(node: Node, _depth: usize, min_depth: usize, results: &mut Vec<AstSubtreeHash>) -> String {
+fn visit_node(
+    node: Node,
+    _depth: usize,
+    min_depth: usize,
+    results: &mut Vec<AstSubtreeHash>,
+) -> String {
     let mut hasher = blake3::Hasher::new();
     hasher.update(node.kind().as_bytes());
 
@@ -44,7 +49,10 @@ fn visit_node(node: Node, _depth: usize, min_depth: usize, results: &mut Vec<Ast
     let hash_hex = hasher.finalize().to_hex().to_string();
 
     let node_depth = get_subtree_depth(node);
-    if node_depth >= min_depth && !node.kind().contains("comment") && !node.kind().contains("string") {
+    if node_depth >= min_depth
+        && !node.kind().contains("comment")
+        && !node.kind().contains("string")
+    {
         let start_pos = node.start_position();
         let end_pos = node.end_position();
 
@@ -91,6 +99,9 @@ mod tests {
 
         let tree = parse_ast_tree(code, "rs").expect("Failed to parse Rust AST");
         let subtrees = compute_ast_subtree_hashes(&tree, 2);
-        assert!(!subtrees.is_empty(), "Should extract subtrees of depth >= 2");
+        assert!(
+            !subtrees.is_empty(),
+            "Should extract subtrees of depth >= 2"
+        );
     }
 }

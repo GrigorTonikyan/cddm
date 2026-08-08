@@ -1,8 +1,8 @@
-use cddm_core::{run_scan, ScanConfig};
+use cddm_core::{ScanConfig, run_scan};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::io::{self, BufRead, Write};
-use std::sync::{atomic::AtomicBool, Arc};
+use std::sync::{Arc, atomic::AtomicBool};
 use tokio::sync::mpsc;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -46,7 +46,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     jsonrpc: "2.0".to_string(),
                     id: None,
                     result: None,
-                    error: Some(json!({ "code": -32700, "message": format!("Parse error: {}", e) })),
+                    error: Some(
+                        json!({ "code": -32700, "message": format!("Parse error: {}", e) }),
+                    ),
                 };
                 let _ = writeln!(handle, "{}", serde_json::to_string(&err_resp)?);
                 let _ = handle.flush();
@@ -96,16 +98,27 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             },
 
             "tools/call" => {
-                let tool_name = req.params.as_ref()
+                let tool_name = req
+                    .params
+                    .as_ref()
                     .and_then(|p| p.get("name"))
                     .and_then(|n| n.as_str())
                     .unwrap_or("");
 
                 if tool_name == "scan_codebase" {
                     let args = req.params.as_ref().and_then(|p| p.get("arguments"));
-                    let dir = args.and_then(|a| a.get("directory")).and_then(|d| d.as_str()).unwrap_or(".");
-                    let min_tokens = args.and_then(|a| a.get("min_tokens")).and_then(|t| t.as_u64()).unwrap_or(50) as usize;
-                    let git_blame = args.and_then(|a| a.get("enable_git_blame")).and_then(|b| b.as_bool()).unwrap_or(false);
+                    let dir = args
+                        .and_then(|a| a.get("directory"))
+                        .and_then(|d| d.as_str())
+                        .unwrap_or(".");
+                    let min_tokens = args
+                        .and_then(|a| a.get("min_tokens"))
+                        .and_then(|t| t.as_u64())
+                        .unwrap_or(50) as usize;
+                    let git_blame = args
+                        .and_then(|a| a.get("enable_git_blame"))
+                        .and_then(|b| b.as_bool())
+                        .unwrap_or(false);
 
                     let config = ScanConfig {
                         directory: dir.to_string(),
@@ -146,7 +159,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         jsonrpc: "2.0".to_string(),
                         id: req.id,
                         result: None,
-                        error: Some(json!({ "code": -32601, "message": "Method or tool not found" })),
+                        error: Some(
+                            json!({ "code": -32601, "message": "Method or tool not found" }),
+                        ),
                     }
                 }
             }

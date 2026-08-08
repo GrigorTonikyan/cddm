@@ -187,7 +187,12 @@ mod tests {
 
     #[test]
     fn test_clone_type_serde_variants() {
-        let variants = [CloneType::Exact, CloneType::Renamed, CloneType::NearMiss, CloneType::Semantic];
+        let variants = [
+            CloneType::Exact,
+            CloneType::Renamed,
+            CloneType::NearMiss,
+            CloneType::Semantic,
+        ];
         for variant in variants {
             let serialized = serde_json::to_string(&variant).unwrap();
             let deserialized: CloneType = serde_json::from_str(&serialized).unwrap();
@@ -233,9 +238,21 @@ mod tests {
 
     #[test]
     fn test_line_span_equality() {
-        let span1 = LineSpan { line_start: 1, line_end: 2, byte_offset: 0 };
-        let span2 = LineSpan { line_start: 1, line_end: 2, byte_offset: 0 };
-        let span3 = LineSpan { line_start: 1, line_end: 3, byte_offset: 0 };
+        let span1 = LineSpan {
+            line_start: 1,
+            line_end: 2,
+            byte_offset: 0,
+        };
+        let span2 = LineSpan {
+            line_start: 1,
+            line_end: 2,
+            byte_offset: 0,
+        };
+        let span3 = LineSpan {
+            line_start: 1,
+            line_end: 3,
+            byte_offset: 0,
+        };
         assert_eq!(span1, span2);
         assert_ne!(span1, span3);
     }

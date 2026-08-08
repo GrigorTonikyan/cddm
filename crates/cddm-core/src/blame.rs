@@ -3,7 +3,11 @@ use std::path::Path;
 /// Annotates line ranges with author attribution using in-process `gix` (gitoxide).
 ///
 /// Returns author name (and optional commit age) if `repo_root` is a valid Git repository.
-pub fn get_line_author(repo_root: &Path, relative_file_path: &str, _line: usize) -> Option<(String, String)> {
+pub fn get_line_author(
+    repo_root: &Path,
+    relative_file_path: &str,
+    _line: usize,
+) -> Option<(String, String)> {
     let repo = gix::discover_with_environment_overrides(repo_root).ok()?;
 
     // Open worktree index & head commit
@@ -11,7 +15,9 @@ pub fn get_line_author(repo_root: &Path, relative_file_path: &str, _line: usize)
     let head_commit = head_id.object().ok()?.peel_to_commit().ok()?;
     let tree = head_commit.tree().ok()?;
     let bstr_path = gix::bstr::BStr::new(relative_file_path.as_bytes());
-    let _entry = tree.lookup_entry(std::iter::once(bstr_path.to_owned())).ok()??;
+    let _entry = tree
+        .lookup_entry(std::iter::once(bstr_path.to_owned()))
+        .ok()??;
 
     // Retrieve git config or commit author as baseline fallback
     let author = head_commit.author().ok()?;

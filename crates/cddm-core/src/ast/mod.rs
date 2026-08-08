@@ -1,5 +1,5 @@
-pub mod parser;
 pub mod hasher;
+pub mod parser;
 
-pub use hasher::{compute_ast_subtree_hashes, AstSubtreeHash};
+pub use hasher::{AstSubtreeHash, compute_ast_subtree_hashes};
 pub use parser::parse_ast_tree;
