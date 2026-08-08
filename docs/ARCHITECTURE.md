@@ -2,117 +2,112 @@
 
 ## 1. High-Level Architecture
 
-CDDM is a pure Rust workspace consisting of three crates plus an embedded React 19 WebUI:
+CDDM (*Code De-Duplication Meister*) is a multi-threaded Rust workspace consisting of three primary crates, an embedded React 19 WebUI, and cross-platform npm/Cargo package wrappers:
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                    User Interfaces                       │
-│  ┌──────────┐  ┌──────────────┐  ┌───────────────────┐  │
-│  │ cddm CLI │  │ cddm serve   │  │ cddm-mcp (stdio)  │  │
-│  │ (clap)   │  │ (Axum+React) │  │ (JSON-RPC 2.0)    │  │
-│  └────┬─────┘  └──────┬───────┘  └─────────┬─────────┘  │
-│       │               │                    │             │
-│       └───────────────┼────────────────────┘             │
-│                       ▼                                  │
-│  ┌─────────────────────────────────────────────────────┐ │
-│  │                   cddm-core                         │ │
-│  │  ┌──────────┐ ┌────────────┐ ┌──────────────────┐   │ │
-│  │  │ grammar  │→│ tokenizer  │→│ fingerprint      │   │ │
-│  │  │ (12 lang)│ │ (normalize)│ │ (Winnow M₆₁)    │   │ │
-│  │  └──────────┘ └────────────┘ └────────┬─────────┘   │ │
-│  │                                       ▼             │ │
-│  │  ┌──────────┐ ┌────────────┐ ┌──────────────────┐   │ │
-│  │  │ blame    │←│ detector   │←│ index HashMap    │   │ │
-│  │  │ (gix)    │ │ (rayon par)│ │ (hash → locs)   │   │ │
-│  │  └──────────┘ └────────────┘ └──────────────────┘   │ │
-│  │                                                     │ │
-│  │  ┌──────────┐ ┌────────────┐ ┌──────────────────┐   │ │
-│  │  │ ast      │ │ cache      │ │ watcher          │   │ │
-│  │  │(tree-sit)│ │ (SHA-256)  │ │ (notify crate)   │   │ │
-│  │  └──────────┘ └────────────┘ └──────────────────┘   │ │
-│  └─────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────┘
+```mermaid
+graph TD
+    subgraph UI ["User Interfaces & APIs"]
+        CLI["cddm CLI (clap)"]
+        Serve["cddm serve (Axum + React 19)"]
+        MCP["cddm-mcp (stdio JSON-RPC 2.0)"]
+    end
+
+    subgraph Core ["cddm-core Library Engine"]
+        Grammar["Grammar Registry (30+ Languages)"]
+        Tokenizer["Tokenization Engine (Normalizer)"]
+        Winnow["Winnowing Engine (Metersenne M₆₁)"]
+        AST["Tree-sitter AST Hasher (Blake3 Merkle)"]
+        Index["Fingerprint Index (HashMap)"]
+        Detector["Parallel Detector (Rayon)"]
+        Blame["Git Blame Annotator (gix)"]
+        Cache["SHA-256 Incremental Cache"]
+        Watcher["FileSystem Watcher (notify)"]
+    end
+
+    CLI --> Core
+    Serve --> Core
+    MCP --> Core
+
+    Grammar --> Tokenizer
+    Tokenizer --> Winnow
+    Winnow --> Index
+    Index --> Detector
+    AST --> Detector
+    Detector --> Blame
 ```
 
 ---
 
 ## 2. Scan Execution Pipeline
 
-The `run_scan()` function in `detector.rs` orchestrates the full clone detection pipeline:
+The `run_scan()` function in `detector.rs` orchestrates the full code clone detection pipeline:
 
-```
-Phase 1: Discovery         Phase 2: Tokenization       Phase 3: Indexing
-┌──────────────────┐      ┌──────────────────────┐    ┌───────────────────┐
-│ WalkBuilder      │      │ Rayon par_iter()      │    │ HashMap<(u64,u64),│
-│ → File paths     │ ───→ │ → grammar lookup     │ ──→│   Vec<Location>>  │
-│ → Extension match│      │ → tokenize()         │    │ Fingerprint index │
-│ → Ignore filter  │      │ → winnow()           │    └────────┬──────────┘
-└──────────────────┘      └──────────────────────┘             │
-                                                               ▼
-Phase 4: Merging            Phase 5: Scoring         Phase 6: Output
-┌──────────────────┐      ┌──────────────────────┐    ┌───────────────────┐
-│ Pairwise compare │      │ DRY Health Score      │    │ ScanResult JSON   │
-│ → ClonePair emit │ ───→ │ = (100 - dup% * 1.5) │ ──→│ → Console table   │
-│ → Git blame ann. │      │   * (1 - 0.25 * xmod)│    │ → JSON reporter   │
-│ → scan_self flag │      │ Clamped [0.0, 100.0]  │    │ → Markdown report │
-└──────────────────┘      └──────────────────────┘    └───────────────────┘
+```mermaid
+flowchart LR
+    A["Phase 1: Discovery<br/>WalkBuilder, Globs, Ignores"] --> B["Phase 2: Tokenization<br/>Rayon par_iter(), Normalization"]
+    B --> C["Phase 3: Indexing<br/>Winnowing M₆₁ Hash Indexing"]
+    C --> D["Phase 4: Merging<br/>Pairwise Clone Pair Matching"]
+    D --> E["Phase 5: Scoring<br/>DRY Health Score Computation"]
+    E --> F["Phase 6: Output<br/>Console ANSI / JSON / Markdown / HTML"]
 ```
 
 ---
 
 ## 3. DRY Health Score Formula
 
+CDDM measures overall codebase modularity and DRY health using a continuous non-linear scoring function:
+
 $$S_{\text{DRY}} = \max\!\bigl(0,\; \min\!\bigl(100,\; (100 - 1.5 \cdot D_\%) \cdot (1 - 0.25 \cdot R_{\text{cross}})\bigr)\bigr)$$
 
 Where:
-- $D_\%$ = duplication percentage (clone tokens / total tokens × 100)
-- $R_{\text{cross}}$ = cross-module clone ratio (clones across different top-level dirs / total clones)
+- **$D_\%$**: Duplication percentage ($\frac{\text{Clone Tokens}}{\text{Total Tokens}} \times 100$).
+- **$R_{\text{cross}}$**: Cross-module clone ratio ($\frac{\text{Cross-Directory Clones}}{\text{Total Clones}}$).
 
 ---
 
 ## 4. Winnowing Algorithm Parameters
 
-The Winnowing fingerprinting engine uses Mersenne prime $M_{61} = 2^{61} - 1$ for collision-resistant rolling hash:
+The Winnowing fingerprinting engine uses Mersenne prime $M_{61} = 2^{61} - 1$ for collision-resistant rolling hashing:
 
 - **k-gram size**: $k = \max(10, \lfloor \text{min\_tokens} / 2 \rfloor)$
 - **Window size**: $w = k + 5$
-- **Hash bases**: $b_1 = 313$, $b_2 = 1{,}000{,}003$ (dual-hash for collision resistance)
+- **Hash bases**: $b_1 = 313$, $b_2 = 1{,}000{,}003$ (dual-base hashing for collision resistance)
 - **Rolling update**: $h' = ((h - \text{old} \cdot b^{k-1}) \cdot b + \text{new}) \bmod M_{61}$
 
 ---
 
 ## 5. Crate Dependency Graph
 
-```
-cddm-core (library)
+```text
+cddm-core (library crate)
   ├── blake3, sha2        (hashing)
-  ├── rayon                (parallelism)
-  ├── gix                  (git blame)
-  ├── ignore               (file discovery)
-  ├── tree-sitter-*        (AST parsing)
-  ├── notify               (file watching)
+  ├── rayon                (parallel CPU execution)
+  ├── gix                  (in-process git blame)
+  ├── ignore               (directory traversal & .gitignore parsing)
+  ├── tree-sitter-*        (AST CST parsing: Rust, TS, JS, Python)
+  ├── notify               (filesystem event watcher)
   ├── serde, serde_json    (serialization)
   └── tokio                (async runtime)
 
-cddm-cli (binary) ──depends──→ cddm-core
-  ├── clap                 (CLI parsing)
-  ├── axum, tower-http     (HTTP server)
-  ├── rust-embed           (static assets)
-  ├── comfy-table          (ANSI tables)
-  └── opener               (browser launch)
+cddm-cli (binary crate) ──depends──→ cddm-core
+  ├── clap                 (CLI flag parsing)
+  ├── axum, tower-http     (HTTP server & static asset serving)
+  ├── rust-embed           (embedding dist/ static WebUI files)
+  ├── comfy-table          (ANSI console tables)
+  └── opener               (launching system browser)
 
-cddm-mcp (binary) ──depends──→ cddm-core
-  ├── serde_json           (JSON-RPC)
-  └── tokio                (async runtime)
+cddm-mcp (binary crate) ──depends──→ cddm-core
+  ├── serde_json           (JSON-RPC 2.0 serialization)
+  └── tokio                (async stdio transport)
 ```
 
 ---
 
 ## 6. WebUI Embedding Architecture
 
-The React 19 WebUI is compiled to static assets at build time and embedded into the Rust binary:
+The React 19 WebUI is compiled to static assets at build time (`bun run build` in `webui/`) and embedded directly into the compiled Rust binary:
 
-```
+```text
 Build Time:                          Runtime:
 ┌────────────────┐                  ┌────────────────────────┐
 │ webui/src/     │  bun run build   │ cddm-cli binary        │
@@ -131,28 +126,19 @@ Build Time:                          Runtime:
 
 ---
 
-## 7. MCP Server Protocol
+## 7. Distribution Architecture
 
-The `cddm-mcp` binary implements Model Context Protocol v2024-11-05 over stdin/stdout:
+CDDM supports dual distribution channels:
 
-| Method | Direction | Description |
-|:-------|:----------|:------------|
-| `initialize` | Client → Server | Handshake, returns capabilities |
-| `tools/list` | Client → Server | Returns `scan_codebase` tool schema |
-| `tools/call` | Client → Server | Executes `scan_codebase`, returns `ScanResult` |
+1. **Cargo Crates (`crates.io`)**:
+   - `cddm-core`: Library crate published for Rust projects.
+   - `cddm-cli`: Binary crate installed via `cargo install cddm`.
+   - `cddm-mcp`: MCP stdio server binary.
 
-Tool schema for `scan_codebase`:
-```json
-{
-  "name": "scan_codebase",
-  "inputSchema": {
-    "type": "object",
-    "properties": {
-      "directory": { "type": "string" },
-      "min_tokens": { "type": "number" },
-      "enable_git_blame": { "type": "boolean" }
-    },
-    "required": ["directory"]
-  }
-}
-```
+2. **npm Registry (`npmjs.com`)**:
+   - `cddm`: Universal npm wrapper package with platform binary shims (`bin/cddm.js`).
+   - `@cddm/win32-x64`, `@cddm/linux-x64`, `@cddm/darwin-x64`, `@cddm/darwin-arm64`: Native pre-built release binaries.
+
+3. **GitHub Actions CI/CD Workflows**:
+   - `.github/workflows/ci.yml`: Matrix build testing (Ubuntu, Windows, macOS), `clippy`, `rustfmt`, and WebUI tests.
+   - `.github/workflows/release.yml`: Cross-compiling standalone release binaries on GitHub tag pushes (`v*`).
