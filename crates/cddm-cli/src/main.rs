@@ -119,7 +119,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 });
             }
 
-            let result = run_scan(config, tx, cancel_flag).await.map_err(|e| e)?;
+            let result = run_scan(config, tx, cancel_flag).await?;
 
             match format {
                 OutputFormat::Console => print_console_report(&result),
@@ -129,14 +129,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 OutputFormat::Markdown => print_markdown_report(&result),
             }
 
-            if let Some(threshold) = fail_threshold {
-                if result.duplication_percentage > threshold {
-                    eprintln!(
-                        "Error: Duplication percentage {:.2}% exceeds failure threshold {:.2}%",
-                        result.duplication_percentage, threshold
-                    );
-                    std::process::exit(1);
-                }
+            if let Some(threshold) = fail_threshold
+                && result.duplication_percentage > threshold
+            {
+                eprintln!(
+                    "Error: Duplication percentage {:.2}% exceeds failure threshold {:.2}%",
+                    result.duplication_percentage, threshold
+                );
+                std::process::exit(1);
             }
         }
         Commands::Serve { port, open } => {

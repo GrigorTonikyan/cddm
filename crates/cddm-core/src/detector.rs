@@ -14,6 +14,7 @@ struct ParsedFile {
     path: String,
     language: String,
     token_count: usize,
+    token_spans: Vec<crate::types::LineSpan>,
     fingerprints: Vec<Fingerprint>,
 }
 
@@ -21,6 +22,12 @@ struct ParsedFile {
 struct Location {
     file_idx: usize,
     span: crate::types::LineSpan,
+}
+
+fn count_tokens_in_line_span(spans: &[crate::types::LineSpan], start_line: usize, end_line: usize) -> usize {
+    spans.iter()
+        .filter(|s| s.line_start >= start_line && s.line_end <= end_line)
+        .count()
 }
 
 /// Runs the complete code clone detection process.
@@ -48,23 +55,21 @@ pub async fn run_scan(
         if cancel_flag.load(Ordering::Relaxed) {
             return Err("Scan cancelled".to_string());
         }
-        if let Ok(entry) = result {
-            if entry.path().is_file() {
-                if let Some(grammar) = get_grammar_for_path(entry.path()) {
-                    if config.languages.is_empty() || config.languages.contains(&grammar.name.to_string()) {
-                        let path_str = entry.path().to_string_lossy().to_string();
-                        let mut ignored = false;
-                        for pat in &config.ignore_patterns {
-                            if path_str.contains(pat) {
-                                ignored = true;
-                                break;
-                            }
-                        }
-                        if !ignored {
-                            files_to_process.push(entry.path().to_path_buf());
-                        }
-                    }
+        if let Ok(entry) = result
+            && entry.path().is_file()
+            && let Some(grammar) = get_grammar_for_path(entry.path())
+            && (config.languages.is_empty() || config.languages.contains(&grammar.name.to_string()))
+        {
+            let path_str = entry.path().to_string_lossy().to_string();
+            let mut ignored = false;
+            for pat in &config.ignore_patterns {
+                if path_str.contains(pat) {
+                    ignored = true;
+                    break;
                 }
+            }
+            if !ignored {
+                files_to_process.push(entry.path().to_path_buf());
             }
         }
     }
@@ -105,6 +110,7 @@ pub async fn run_scan(
                 let content = std::fs::read_to_string(path).ok()?;
                 let tokens = tokenize(&content, grammar, config_clone.detect_type2);
                 let token_count = tokens.len();
+                let token_spans: Vec<_> = tokens.iter().map(|(_, span)| span.clone()).collect();
                 
                 let k = std::cmp::max(10, config_clone.min_tokens / 2);
                 let w = k + 5;
@@ -114,6 +120,7 @@ pub async fn run_scan(
                     path: path.to_string_lossy().to_string(),
                     language: grammar.name.to_string(),
                     token_count,
+                    token_spans,
                     fingerprints,
                 })
             }).collect();
@@ -134,7 +141,7 @@ pub async fn run_scan(
         return Err("Scan cancelled".to_string());
     }
 
-    let (raw_pairs, total_tokens) = {
+    let (merged_pairs, total_tokens) = {
         let config_clone = config.clone();
         let parsed_files_clone = Arc::clone(&parsed_files);
         
@@ -160,6 +167,8 @@ pub async fn run_scan(
                 None
             };
 
+            let k = std::cmp::max(10, config_clone.min_tokens / 2);
+
             for (hash, locations) in index {
                 if locations.len() > 1 {
                     for i in 0..locations.len() {
@@ -167,8 +176,16 @@ pub async fn run_scan(
                             let loc_a = &locations[i];
                             let loc_b = &locations[j];
                             
-                            if !config_clone.scan_self && loc_a.file_idx == loc_b.file_idx {
-                                continue;
+                            if loc_a.file_idx == loc_b.file_idx {
+                                if !config_clone.scan_self {
+                                    continue;
+                                }
+                                // Skip overlapping spans in the same file to prevent self-cloning
+                                let spans_overlap = loc_a.span.line_start <= loc_b.span.line_end
+                                                 && loc_b.span.line_start <= loc_a.span.line_end;
+                                if spans_overlap {
+                                    continue;
+                                }
                             }
 
                             let (author_a, author_b) = if config_clone.enable_git_blame {
@@ -187,7 +204,7 @@ pub async fn run_scan(
                                 file_b: parsed_files_clone[loc_b.file_idx].path.clone(),
                                 start_line_b: loc_b.span.line_start,
                                 end_line_b: loc_b.span.line_end,
-                                token_count: config_clone.min_tokens,
+                                token_count: k,
                                 similarity: 1.0,
                                 fragment_hash: format!("{:x}-{:x}", hash.0, hash.1),
                                 clone_type: CloneType::Exact,
@@ -210,25 +227,65 @@ pub async fn run_scan(
             let mut merged_pairs = Vec::new();
             if !raw_pairs.is_empty() {
                 let mut current = raw_pairs[0].clone();
+                let mut curr_file_a_idx = parsed_files_clone.iter().position(|f| f.path == current.file_a).unwrap_or(0);
+                let mut curr_file_b_idx = parsed_files_clone.iter().position(|f| f.path == current.file_b).unwrap_or(0);
+
                 for next in raw_pairs.into_iter().skip(1) {
+                    let is_same_file = current.file_a == current.file_b;
+                    let candidate_end_a = std::cmp::max(current.end_line_a, next.end_line_a);
+                    let candidate_end_b = std::cmp::max(current.end_line_b, next.end_line_b);
+                    let (first_end, second_start) = if current.start_line_a <= current.start_line_b {
+                        (candidate_end_a, current.start_line_b)
+                    } else {
+                        (candidate_end_b, current.start_line_a)
+                    };
+                    let would_overlap = is_same_file && (first_end >= second_start);
+
                     if current.file_a == next.file_a 
                         && current.file_b == next.file_b 
-                        && next.start_line_a <= current.end_line_a + 5
-                        && next.start_line_b <= current.end_line_b + 5
+                        && next.start_line_a <= current.end_line_a + 3
+                        && next.start_line_b <= current.end_line_b + 3
+                        && !would_overlap
                     {
-                        current.end_line_a = std::cmp::max(current.end_line_a, next.end_line_a);
-                        current.end_line_b = std::cmp::max(current.end_line_b, next.end_line_b);
-                        current.token_count += 5; // Heuristic token addition for merged blocks
+                        current.end_line_a = candidate_end_a;
+                        current.end_line_b = candidate_end_b;
                     } else {
-                        merged_pairs.push(current);
+                        let count_a = count_tokens_in_line_span(&parsed_files_clone[curr_file_a_idx].token_spans, current.start_line_a, current.end_line_a);
+                        let count_b = count_tokens_in_line_span(&parsed_files_clone[curr_file_b_idx].token_spans, current.start_line_b, current.end_line_b);
+                        current.token_count = std::cmp::max(k, std::cmp::min(count_a, count_b));
+
+                        if current.token_count >= config_clone.min_tokens {
+                            merged_pairs.push(current);
+                        }
+
                         current = next;
+                        curr_file_a_idx = parsed_files_clone.iter().position(|f| f.path == current.file_a).unwrap_or(0);
+                        curr_file_b_idx = parsed_files_clone.iter().position(|f| f.path == current.file_b).unwrap_or(0);
                     }
                 }
-                merged_pairs.push(current);
+
+                let count_a = count_tokens_in_line_span(&parsed_files_clone[curr_file_a_idx].token_spans, current.start_line_a, current.end_line_a);
+                let count_b = count_tokens_in_line_span(&parsed_files_clone[curr_file_b_idx].token_spans, current.start_line_b, current.end_line_b);
+                current.token_count = std::cmp::max(k, std::cmp::min(count_a, count_b));
+
+                if current.token_count >= config_clone.min_tokens {
+                    merged_pairs.push(current);
+                }
             }
             
-            // Sort by largest token count descending for the final report
-            merged_pairs.sort_by(|a, b| b.token_count.cmp(&a.token_count));
+            merged_pairs.sort_by(|a, b| {
+                a.file_a.cmp(&b.file_a)
+                    .then(a.file_b.cmp(&b.file_b))
+                    .then(a.start_line_a.cmp(&b.start_line_a))
+                    .then(a.start_line_b.cmp(&b.start_line_b))
+                    .then(a.end_line_a.cmp(&b.end_line_a))
+                    .then(a.end_line_b.cmp(&b.end_line_b))
+            });
+            merged_pairs.dedup_by(|a, b| {
+                a.file_a == b.file_a && a.file_b == b.file_b && a.start_line_a == b.start_line_a && a.end_line_a == b.end_line_a && a.start_line_b == b.start_line_b && a.end_line_b == b.end_line_b
+            });
+
+            merged_pairs.sort_by_key(|b| std::cmp::Reverse(b.token_count));
 
             (merged_pairs, total_tokens)
         }).await.unwrap()
@@ -247,7 +304,7 @@ pub async fn run_scan(
     }
 
     let mut cross_module_count = 0;
-    for pair in &raw_pairs {
+    for pair in &merged_pairs {
         let dir_a = pair.file_a.split('/').next().unwrap_or("");
         let dir_b = pair.file_b.split('/').next().unwrap_or("");
         if dir_a != dir_b {
@@ -256,19 +313,19 @@ pub async fn run_scan(
     }
 
     let language_breakdown: Vec<LanguageStats> = lang_stats_map.into_values().collect();
+    let total_duplicated_tokens: usize = merged_pairs.iter().map(|p| p.token_count).sum();
     let duplication_percentage = if total_tokens > 0 {
-        ((raw_pairs.len() * config.min_tokens) as f64 / total_tokens as f64 * 100.0).min(100.0)
+        ((total_duplicated_tokens as f64) / (total_tokens as f64) * 100.0).clamp(0.0, 100.0)
     } else {
         0.0
     };
-    let cross_module_ratio = if !raw_pairs.is_empty() {
-        cross_module_count as f64 / raw_pairs.len() as f64
+    let cross_module_ratio = if !merged_pairs.is_empty() {
+        cross_module_count as f64 / merged_pairs.len() as f64
     } else {
         0.0
     };
     let dry_health_score = ((100.0 - duplication_percentage * 1.5) * (1.0 - 0.25 * cross_module_ratio))
-        .max(0.0)
-        .min(100.0);
+        .clamp(0.0, 100.0);
 
     let _ = progress_tx.send(ScanProgress {
         scan_id: scan_id.clone(),
@@ -283,10 +340,10 @@ pub async fn run_scan(
         scan_id,
         total_files,
         total_tokens,
-        total_clones: raw_pairs.len(),
+        total_clones: merged_pairs.len(),
         duplication_percentage,
         dry_health_score,
-        clone_pairs: raw_pairs,
+        clone_pairs: merged_pairs,
         duration_ms: start_time.elapsed().as_millis() as u64,
         language_breakdown,
     })
@@ -449,6 +506,40 @@ mod tests {
         let result = run_scan(config, tx, Arc::new(AtomicBool::new(false))).await;
         if let Ok(res) = result {
             assert!(res.dry_health_score >= 0.0 && res.dry_health_score <= 100.0);
+        }
+    }
+
+    #[tokio::test]
+    async fn test_no_self_overlapping_clones() {
+        use tempfile::tempdir;
+        use std::fs::File;
+        use std::io::Write;
+
+        let dir = tempdir().unwrap();
+        let file_path = dir.path().join("single.rs");
+        let content = "fn foo() { println!(\"hello world\"); }\n";
+        let mut f = File::create(&file_path).unwrap();
+        for _ in 0..20 {
+            writeln!(f, "{}", content).unwrap();
+        }
+
+        let (tx, _rx) = mpsc::channel(100);
+        let config = ScanConfig {
+            directory: dir.path().to_string_lossy().to_string(),
+            min_tokens: 20,
+            languages: vec![],
+            ignore_patterns: vec![],
+            detect_type2: true,
+            scan_self: true,
+            enable_git_blame: false,
+        };
+
+        let result = run_scan(config, tx, Arc::new(AtomicBool::new(false))).await.unwrap();
+        for pair in &result.clone_pairs {
+            if pair.file_a == pair.file_b {
+                let overlaps = pair.start_line_a <= pair.end_line_b && pair.start_line_b <= pair.end_line_a;
+                assert!(!overlaps, "Self clone pair should not overlap with itself: {:?}", pair);
+            }
         }
     }
 }

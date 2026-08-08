@@ -22,7 +22,7 @@ pub fn compute_ast_subtree_hashes(tree: &Tree, min_depth: usize) -> Vec<AstSubtr
     results
 }
 
-fn visit_node(node: Node, depth: usize, min_depth: usize, results: &mut Vec<AstSubtreeHash>) -> String {
+fn visit_node(node: Node, _depth: usize, min_depth: usize, results: &mut Vec<AstSubtreeHash>) -> String {
     let mut hasher = blake3::Hasher::new();
     hasher.update(node.kind().as_bytes());
 
@@ -33,7 +33,7 @@ fn visit_node(node: Node, depth: usize, min_depth: usize, results: &mut Vec<AstS
         if child.kind().contains("comment") {
             continue;
         }
-        let child_hash = visit_node(child, depth + 1, min_depth, results);
+        let child_hash = visit_node(child, _depth + 1, min_depth, results);
         children_hashes.push(child_hash);
     }
 

@@ -75,7 +75,9 @@ export const useCDDMStore = create<CDDMStoreState>((set, get) => ({
       set({ results, isScanning: false, activeScanId: results.scan_id });
     } catch (err) {
       // Fallback mock mode for static dev server preview
-      console.warn("API request failed, using demo fallback state:", err);
+      if (typeof process === "undefined" || process.env.NODE_ENV !== "test") {
+        console.warn("API request failed, using demo fallback state:", err);
+      }
       const mockResult: ScanResult = {
         scan_id: "demo-scan-123",
         total_files: 42,

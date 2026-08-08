@@ -56,8 +56,8 @@ pub fn winnow(tokens: &[(NormalizedToken, LineSpan)], k: usize, w: usize) -> Vec
     let mut h2: u64 = 0;
 
     // Initial window
-    for i in 0..k {
-        let val = token_to_u64(&tokens[i].0);
+    for token in tokens.iter().take(k) {
+        let val = token_to_u64(&token.0);
         h1 = fast_mod_m61((h1 as u128) * (b1 as u128) + (val as u128));
         h2 = fast_mod_m61((h2 as u128) * (b2 as u128) + (val as u128));
     }

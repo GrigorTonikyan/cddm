@@ -2,5 +2,6 @@
 /.logs
 /webui/node_modules
 /webui/dist
+/webui/coverage
 .env
 *.log

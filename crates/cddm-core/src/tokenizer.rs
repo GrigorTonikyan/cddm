@@ -37,25 +37,25 @@ pub fn tokenize(
         }
 
         // Handle block comments
-        if let Some((start_delim, end_delim)) = grammar.block_comment {
-            if source[offset..].starts_with(start_delim) {
-                for _ in 0..start_delim.len() {
-                    chars.next();
-                }
-                while let Some(&(inner_offset, c)) = chars.peek() {
-                    if source[inner_offset..].starts_with(end_delim) {
-                        for _ in 0..end_delim.len() {
-                            chars.next();
-                        }
-                        break;
-                    }
-                    if c == '\n' {
-                        current_line += 1;
-                    }
-                    chars.next();
-                }
-                continue;
+        if let Some((start_delim, end_delim)) = grammar.block_comment
+            && source[offset..].starts_with(start_delim)
+        {
+            for _ in 0..start_delim.len() {
+                chars.next();
             }
+            while let Some(&(inner_offset, c)) = chars.peek() {
+                if source[inner_offset..].starts_with(end_delim) {
+                    for _ in 0..end_delim.len() {
+                        chars.next();
+                    }
+                    break;
+                }
+                if c == '\n' {
+                    current_line += 1;
+                }
+                chars.next();
+            }
+            continue;
         }
 
         // Strings
