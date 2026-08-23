@@ -51,7 +51,6 @@
   },
 
   "rust-analyzer.check.command": "clippy",
-  "rust-analyzer.check.extraArgs": ["--workspace", "--all-targets"],
   "rust-analyzer.rustfmt.extraArgs": ["--config-path", "rustfmt.toml"],
   "rust-analyzer.cargo.buildScripts.enable": true,
   "rust-analyzer.procMacro.enable": true,
