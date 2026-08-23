@@ -30,6 +30,8 @@ tsconfig.tsbuildinfo
 .vite/
 /webui/.vite/
 .nyc_output/
+.cddm/
+**/.cddm/
 
 # Logs & temporary files
 /.logs/

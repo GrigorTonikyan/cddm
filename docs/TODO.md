@@ -33,23 +33,23 @@
 
 ### Milestone v0.3.0: Caching, Differential Scans & Refactoring
 
-- [ ] **[EP-03] Persistent Disk-Backed Fingerprint Cache**
-  - [ ] Add `redb` dependency to `crates/cddm-core/Cargo.toml`
-  - [ ] Implement persistent cache in `crates/cddm-core/src/cache.rs`
-  - [ ] Add CLI flag `--cache-dir <DIR>` (default: `.cddm/cache.db`) and `--no-cache`
-  - [ ] Invalidate modified/deleted files during Discovery phase
-  - [ ] Benchmark repeat scan latency on large repositories
+- [x] **[EP-03] Persistent Disk-Backed Fingerprint Cache**
+  - [x] Add `redb` dependency to `crates/cddm-core/Cargo.toml`
+  - [x] Implement persistent cache in `crates/cddm-core/src/cache.rs`
+  - [x] Add CLI flag `--cache-dir <DIR>` (default: `.cddm/cache.db`) and `--no-cache`
+  - [x] Invalidate modified/deleted files during Discovery phase
+  - [x] Benchmark repeat scan latency on large repositories
 
-- [ ] **[EP-08] Differential Scanning & Branch Comparison (`cddm diff`)**
-  - [ ] Add `cddm diff <BASE_REF> [TARGET_REF]` subcommand in `cddm-cli`
-  - [ ] Integrate in-process `gix` revision range file diffing
-  - [ ] Calculate net DRY delta score between revisions
-  - [ ] Add integration tests for git branch comparisons
+- [x] **[EP-08] Differential Scanning & Branch Comparison (`cddm diff`)**
+  - [x] Add `cddm diff <BASE_REF> [TARGET_REF]` subcommand in `cddm-cli`
+  - [x] Integrate in-process `gix` revision range file diffing
+  - [x] Calculate net DRY delta score between revisions
+  - [x] Add integration tests for git branch comparisons
 
-- [ ] **[EP-07] Automated Refactoring & Patch Synthesis (`cddm refactor`)**
-  - [ ] Add `cddm refactor --pair <ID>` subcommand
-  - [ ] Implement invariant token extraction algorithm
-  - [ ] Generate unified `.patch` format output
+- [x] **[EP-07] Automated Refactoring & Patch Synthesis (`cddm refactor`)**
+  - [x] Add `cddm refactor --pair <ID>` subcommand
+  - [x] Implement invariant token extraction algorithm
+  - [x] Generate unified `.patch` format output
 
 ---
 
@@ -103,3 +103,4 @@
 - [x] **v0.1.1**: Type-2 identifier normalization, Axum HTTP server, React WebUI.
 - [x] **v0.1.2**: Tree-sitter AST hashing module, `cddm-mcp` stdio JSON-RPC 2.0 server, in-process `gix` git blame, Vite Plus toolchain integration, Conventional Commits & automated semver pipeline, cross-platform workspace clean (`vp run clean`) & reset (`vp run reset`) runners with 27 unit tests.
 - [x] **v0.2.0**: Zero-emoji strict enforcement policy across codebase, dependency upgrade to latest versions with precision retention, missing_debug_implementations workspace denial, automated multi-manifest semver synchronization with README badge & lockfile updates.
+- [x] **v0.3.0**: Persistent ACID disk cache powered by `redb` v4 (`.cddm/cache.db`), Git differential scan engine (`cddm diff`), automated patch refactoring CLI (`cddm refactor`), MCP `cddm_diff_scan` tool, with 63 passing unit tests and sub-30ms repeat scans.

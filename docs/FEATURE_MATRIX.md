@@ -1,11 +1,11 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-23 | Rust: 54/54 PASS | WebUI: 24/24 PASS | Repository Scripts: 27/27 PASS | CI Workflows: PASS
+> Last verified: 2026-08-23 | Rust: 63/63 PASS | WebUI: 24/24 PASS | Repository Scripts: 27/27 PASS | CI Workflows: PASS
 
 ---
 
-## 1. Rust Backend — `cddm-core`, `cddm-cli`, `cddm-mcp` (54 unit tests)
+## 1. Rust Backend — `cddm-core`, `cddm-cli`, `cddm-mcp` (63 unit tests)
 
 ### Tokenization Engine (`crates/cddm-core/src/tokenizer.rs`)
 
@@ -39,6 +39,7 @@
 | F-03.5 | Ignore patterns filter out matching paths             | `detector::tests::test_scan_ignore_patterns`           | PASS   |
 | F-03.6 | DRY health score always in [0.0, 100.0] range         | `detector::tests::test_dry_health_score_range`         | PASS   |
 | F-03.7 | Intra-file clone prevention when `scan_self` disabled | `detector::tests::test_no_self_overlapping_clones`     | PASS   |
+| F-03.8 | Persistent disk caching populates & accelerates scan  | `detector::tests::test_scan_with_disk_caching`         | PASS   |
 
 ### Language Grammar Registry (`crates/cddm-core/src/grammar.rs`)
 
@@ -64,14 +65,16 @@
 | F-06.2 | TypeScript AST parsing produces `program` root          | `ast::parser::tests::test_parse_typescript_ast` | PASS   |
 | F-06.3 | Blake3 Merkle subtree hashing extracts depth >= 2 nodes | `ast::hasher::tests::test_ast_subtree_hashing`  | PASS   |
 
-### Incremental Cache (`crates/cddm-core/src/cache.rs`)
+### Persistent redb Disk Cache (`crates/cddm-core/src/cache.rs`)
 
-| ID     | Feature Variant                                   | Test Function                                      | Result |
-| :----- | :------------------------------------------------ | :------------------------------------------------- | :----- |
-| F-07.1 | Cache modification detection (new, same, changed) | `cache::tests::test_fingerprint_cache`             | PASS   |
-| F-07.2 | Real file SHA-256 hashing (valid 64-char hex)     | `cache::tests::test_compute_file_hash_real_file`   | PASS   |
-| F-07.3 | Nonexistent file returns `None`                   | `cache::tests::test_compute_file_hash_nonexistent` | PASS   |
-| F-07.4 | Multiple files cached independently               | `cache::tests::test_cache_multiple_files`          | PASS   |
+| ID     | Feature Variant                                          | Test Function                                               | Result |
+| :----- | :------------------------------------------------------- | :---------------------------------------------------------- | :----- |
+| F-07.1 | Cache modification detection (new, same, changed)        | `cache::tests::test_fingerprint_cache`                      | PASS   |
+| F-07.2 | Real file Blake3 hashing (valid 64-char hex)             | `cache::tests::test_compute_file_hash_real_file`            | PASS   |
+| F-07.3 | Nonexistent file returns `None`                          | `cache::tests::test_compute_file_hash_nonexistent`          | PASS   |
+| F-07.4 | Persistent redb lifecycle (batch save, fetch, fast stat) | `cache::tests::test_disk_cache_lifecycle`                   | PASS   |
+| F-07.5 | Disabled no-op cache safety                              | `cache::tests::test_disk_cache_disabled`                    | PASS   |
+| F-07.6 | Auto-healing recovery on corrupted database header       | `cache::tests::test_disk_cache_auto_healing_corrupted_file` | PASS   |
 
 ### File System Watcher (`crates/cddm-core/src/watcher.rs`)
 
@@ -81,14 +84,16 @@
 
 ### Type System & Serialization (`crates/cddm-core/src/types.rs`)
 
-| ID     | Feature Variant                            | Test Function                                    | Result |
-| :----- | :----------------------------------------- | :----------------------------------------------- | :----- |
-| F-09.1 | `ScanConfig` default values                | `types::tests::test_scan_config_default`         | PASS   |
-| F-09.2 | `ScanConfig` JSON serde roundtrip          | `types::tests::test_scan_config_serde_roundtrip` | PASS   |
-| F-09.3 | `CloneType` all 4 variants serde correctly | `types::tests::test_clone_type_serde_variants`   | PASS   |
-| F-09.4 | Full `ScanResult` JSON serde roundtrip     | `types::tests::test_scan_result_serde_roundtrip` | PASS   |
-| F-09.5 | `LineSpan` equality comparison             | `types::tests::test_line_span_equality`          | PASS   |
-| F-09.6 | `ScanPhase` enum serde roundtrip           | `types::tests::test_scan_phase_serde`            | PASS   |
+| ID     | Feature Variant                              | Test Function                                         | Result |
+| :----- | :------------------------------------------- | :---------------------------------------------------- | :----- |
+| F-09.1 | `ScanConfig` default values with cache flags | `types::tests::test_scan_config_default`              | PASS   |
+| F-09.2 | `ScanConfig` JSON serde roundtrip            | `types::tests::test_scan_config_serde_roundtrip`      | PASS   |
+| F-09.3 | `CloneType` all 4 variants serde correctly   | `types::tests::test_clone_type_serde_variants`        | PASS   |
+| F-09.4 | Full `ScanResult` JSON serde roundtrip       | `types::tests::test_scan_result_serde_roundtrip`      | PASS   |
+| F-09.5 | `LineSpan` equality comparison               | `types::tests::test_line_span_equality`               | PASS   |
+| F-09.6 | `ScanPhase` enum serde roundtrip             | `types::tests::test_scan_phase_serde`                 | PASS   |
+| F-09.7 | `CloneStatus` display and serde roundtrip    | `types::tests::test_clone_status_display_and_serde`   | PASS   |
+| F-09.8 | `DiffScanResult` JSON serde roundtrip        | `types::tests::test_diff_scan_result_serde_roundtrip` | PASS   |
 
 ### OASIS SARIF 2.1.0 Reporter (`crates/cddm-core/src/sarif.rs`)
 
@@ -107,24 +112,33 @@
 | F-11.3 | Real filesystem file clone refactoring & patch         | `refactor::tests::test_real_file_clone_refactoring`   | PASS   |
 | F-11.4 | Out-of-bounds line range error handling                | `refactor::tests::test_invalid_line_range`            | PASS   |
 
+### Git Differential Scanning Engine (`crates/cddm-core/src/diff.rs`)
+
+| ID     | Feature Variant                                       | Test Function                             | Result |
+| :----- | :---------------------------------------------------- | :---------------------------------------- | :----- |
+| F-12.1 | Non-git directory differential scan error propagation | `diff::tests::test_diff_scan_non_git_dir` | PASS   |
+| F-12.2 | Cross-platform file path normalization for diff match | `diff::tests::test_normalize_path_str`    | PASS   |
+
 ### CLI Reporter & Flags (`crates/cddm-cli/src/main.rs`)
 
 | ID     | Feature Variant                                      | Test Function                                          | Result |
 | :----- | :--------------------------------------------------- | :----------------------------------------------------- | :----- |
-| F-12.1 | `OutputFormat` enum equality & variant parsing       | `main::tests::test_output_format_variants`             | PASS   |
-| F-12.2 | CLI SARIF output printing execution                  | `main::tests::test_print_sarif_report_succeeds`        | PASS   |
-| F-12.3 | CLI Console and Markdown formatting output execution | `main::tests::test_print_console_and_markdown_reports` | PASS   |
+| F-13.1 | `OutputFormat` enum equality & variant parsing       | `main::tests::test_output_format_variants`             | PASS   |
+| F-13.2 | CLI SARIF output printing execution                  | `main::tests::test_print_sarif_report_succeeds`        | PASS   |
+| F-13.3 | CLI Console and Markdown formatting output execution | `main::tests::test_print_console_and_markdown_reports` | PASS   |
+| F-13.4 | CLI Differential scan console & markdown tables      | `main::tests::test_print_diff_reports`                 | PASS   |
 
 ### Advanced MCP Server Protocol (`crates/cddm-mcp/src/main.rs`)
 
-| ID     | Feature Variant                                                  | Test Function                                | Result |
-| :----- | :--------------------------------------------------------------- | :------------------------------------------- | :----- |
-| F-13.1 | MCP protocol initialize, version negotiation & serverInfo        | `main::tests::test_mcp_initialize`           | PASS   |
-| F-13.2 | MCP ping healthcheck method                                      | `main::tests::test_mcp_ping`                 | PASS   |
-| F-13.3 | Tools discovery (`scan_codebase`, `cddm_get_clone_pair`, etc.)   | `main::tests::test_mcp_tools_list`           | PASS   |
-| F-13.4 | Resources discovery (`cddm://workspace/health` & `clones`)       | `main::tests::test_mcp_resources_list`       | PASS   |
-| F-13.5 | Prompts discovery and retrieval (`audit_dry_health`, `refactor`) | `main::tests::test_mcp_prompts_list_and_get` | PASS   |
-| F-13.6 | Standard JSON-RPC 2.0 error handling for invalid/unknown method  | `main::tests::test_mcp_unknown_method`       | PASS   |
+| ID     | Feature Variant                                                  | Test Function                                    | Result |
+| :----- | :--------------------------------------------------------------- | :----------------------------------------------- | :----- |
+| F-14.1 | MCP protocol initialize, version negotiation & serverInfo        | `main::tests::test_mcp_initialize`               | PASS   |
+| F-14.2 | MCP ping healthcheck method                                      | `main::tests::test_mcp_ping`                     | PASS   |
+| F-14.3 | Tools discovery (`scan_codebase`, `cddm_diff_scan`, refactor)    | `main::tests::test_mcp_tools_list`               | PASS   |
+| F-14.4 | Differential scan tool invocation parameter validation           | `main::tests::test_mcp_diff_scan_missing_params` | PASS   |
+| F-14.5 | Resources discovery (`cddm://workspace/health` & `clones`)       | `main::tests::test_mcp_resources_list`           | PASS   |
+| F-14.6 | Prompts discovery and retrieval (`audit_dry_health`, `refactor`) | `main::tests::test_mcp_prompts_list_and_get`     | PASS   |
+| F-14.7 | Standard JSON-RPC 2.0 error handling for invalid/unknown method  | `main::tests::test_mcp_unknown_method`           | PASS   |
 
 ---
 

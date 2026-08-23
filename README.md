@@ -100,8 +100,14 @@ The compiled binary will be placed at `./target/release/cddm`.
 Scan your project directory in terminal:
 
 ```bash
-# Scan current directory with ANSI color table output
+# Scan current directory with persistent ACID disk caching
 cddm scan ./src
+
+# Differential scan comparing current changes against main branch
+cddm diff main
+
+# Generate automated refactoring patch for duplicate clone pair #1
+cddm refactor --pair 1 --output refactor.patch
 
 # Scan with custom minimum token threshold & git blame annotations
 cddm scan ./src --min-tokens 40 --git-blame
@@ -119,7 +125,7 @@ cddm serve --port 3000 --open
 
 ### `cddm scan [DIRECTORY]`
 
-Executes code clone detection on the target directory.
+Executes code clone detection on the target directory with optional persistent disk caching.
 
 ```bash
 cddm scan [OPTIONS] [DIRECTORY]
@@ -129,12 +135,33 @@ cddm scan [OPTIONS] [DIRECTORY]
 
 - `-m, --min-tokens <INT>`: Minimum token count for a code fragment to be classified as a clone (Default: `50`).
 - `-l, --languages <LANGS>`: Filter scanning to specific languages (e.g. `--languages rust,typescript`).
-- `-f, --format <FORMAT>`: Output report format (`table`, `json`, `markdown`, `html`) (Default: `table`).
+- `-f, --format <FORMAT>`: Output report format (`console`, `json`, `markdown`, `sarif`) (Default: `console`).
 - `-o, --output <PATH>`: Write output report directly to a file.
 - `--git-blame`: Enable `gix` in-process Git blame to attribute code clones to authors.
 - `--no-self`: Skip checking for intra-file self-overlapping duplicates.
 - `--ignore <PATTERNS>`: Glob patterns to exclude (Default: `node_modules`, `target`, `.git`, `dist`, `build`).
 - `--fail-threshold <FLOAT>`: Exit with non-zero code if duplication percentage exceeds threshold (useful for CI).
+- `--cache-dir <PATH>`: Custom path for persistent `redb` cache database (Default: `.cddm/cache.db`).
+- `--no-cache`: Bypass persistent disk cache.
+- `--clear-cache`: Clear existing cache database before scanning.
+
+### `cddm diff <BASE_REF> [TARGET_REF]`
+
+Executes differential code clone detection comparing working changes against a Git base revision (e.g. `main`, `HEAD~1`).
+
+```bash
+cddm diff main
+cddm diff origin/main HEAD --fail-threshold 0.0
+```
+
+### `cddm refactor [OPTIONS]`
+
+Analyzes duplicate code clones and generates automated deduplication refactoring patches in unified `.patch` format.
+
+```bash
+cddm refactor --pair 1
+cddm refactor --pair 2 --output patch.diff
+```
 
 ---
 
@@ -168,6 +195,10 @@ CDDM includes a native stdio Model Context Protocol (MCP) server `cddm-mcp` for 
 ### Exposed MCP Tools
 
 - `scan_codebase`: Runs a polyglot code duplication scan and returns DRY health scores, duplication metrics, and clone pair details directly to AI context.
+- `cddm_diff_scan`: Runs differential code clone detection comparing working changes against a Git base revision.
+- `cddm_get_clone_pair`: Retrieves localized source snippet lines, token counts, and git blame context.
+- `cddm_suggest_refactor`: Performs invariant token analysis and produces structural refactoring recommendations with unified patches.
+- `cddm_export_sarif`: Generates OASIS SARIF v2.1.0 reports on demand.
 
 ---
 

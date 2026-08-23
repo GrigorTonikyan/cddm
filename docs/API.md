@@ -100,6 +100,36 @@ Executes terminal clone detection with configurable reporters.
 | `--languages`      | `-l`  | `String[]`                       | `[]`      | Filter scan by language names                  |
 | `--ignore`         | `-i`  | `String[]`                       | `[]`      | Additional ignore glob patterns                |
 | `--git-blame`      |       | `bool`                           | `false`   | Enable `gix` git author annotations            |
+| `--cache-dir`      |       | `PathBuf`                        | None      | Custom path for persistent redb cache database |
+| `--no-cache`       |       | `bool`                           | `false`   | Bypass persistent disk cache                   |
+| `--clear-cache`    |       | `bool`                           | `false`   | Clear existing cache database before scanning  |
+
+### Command: `cddm diff <BASE_REF> [TARGET_REF]`
+
+Executes differential duplication scanning comparing current changes against a Git base revision.
+
+| Flag               | Short | Type                             | Default   | Description                                    |
+| :----------------- | :---- | :------------------------------- | :-------- | :--------------------------------------------- |
+| `--directory`      | `-d`  | `PathBuf`                        | `"."`     | Target Git repository directory path           |
+| `--min-tokens`     | `-m`  | `usize`                          | `50`      | Minimum token clone threshold                  |
+| `--format`         | `-f`  | `console\|json\|markdown\|sarif` | `console` | Output report format                           |
+| `--fail-threshold` |       | `f64`                            | None      | Exit code 1 if new clones exceed threshold     |
+| `--languages`      | `-l`  | `String[]`                       | `[]`      | Filter scan by language names                  |
+| `--ignore`         | `-i`  | `String[]`                       | `[]`      | Additional ignore glob patterns                |
+| `--git-blame`      |       | `bool`                           | `false`   | Enable `gix` git author annotations            |
+| `--cache-dir`      |       | `PathBuf`                        | None      | Custom path for persistent redb cache database |
+| `--no-cache`       |       | `bool`                           | `false`   | Bypass persistent disk cache                   |
+
+### Command: `cddm refactor [OPTIONS]`
+
+Generates automated refactoring patch recommendations for duplicate code clones.
+
+| Flag           | Short | Type      | Default | Description                                 |
+| :------------- | :---- | :-------- | :------ | :------------------------------------------ |
+| `--pair`       | `-p`  | `usize`   | `1`     | Target clone pair 1-based index to refactor |
+| `--output`     | `-o`  | `PathBuf` | None    | Write generated unified patch to file       |
+| `--directory`  |       | `PathBuf` | `"."`   | Target codebase directory path              |
+| `--min-tokens` | `-m`  | `usize`   | `50`    | Minimum token clone threshold               |
 
 ### Command: `cddm serve`
 
@@ -127,6 +157,17 @@ Runs a polyglot code duplication scan and returns structured JSON metrics and cl
 | `directory`        | `string`  | Yes      | `"."`   | Target directory path to analyze         |
 | `min_tokens`       | `number`  | No       | `50`    | Minimum token clone threshold            |
 | `enable_git_blame` | `boolean` | No       | `false` | Annotate duplicate lines with git author |
+
+#### `cddm_diff_scan`
+
+Runs differential code clone detection comparing working changes against a Git base revision.
+
+| Parameter    | Type     | Required | Default  | Description                                      |
+| :----------- | :------- | :------- | :------- | :----------------------------------------------- |
+| `base_ref`   | `string` | Yes      | None     | Base Git revision to compare against (e.g. main) |
+| `target_ref` | `string` | No       | `"HEAD"` | Target Git revision                              |
+| `directory`  | `string` | No       | `"."`    | Target Git repository directory path             |
+| `min_tokens` | `number` | No       | `50`     | Minimum token clone threshold                    |
 
 #### `cddm_get_clone_pair`
 

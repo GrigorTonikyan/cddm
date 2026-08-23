@@ -1,14 +1,15 @@
+use crate::cache::{CACHE_SCHEMA_VERSION, CachedFileEntry, DiskFingerprintCache};
 use crate::fingerprint::{Fingerprint, MIN_K_GRAM, WINDOW_OFFSET, winnow};
 use crate::grammar::get_grammar_for_path;
 use crate::tokenizer::tokenize;
 use crate::types::{
-    ClonePair, CloneType, LanguageStats, MAX_HEALTH_SCORE, MIN_HEALTH_SCORE, ScanConfig, ScanPhase,
-    ScanProgress, ScanResult,
+    ClonePair, CloneType, DEFAULT_CACHE_FILE, LanguageStats, MAX_HEALTH_SCORE, MIN_HEALTH_SCORE,
+    ScanConfig, ScanPhase, ScanProgress, ScanResult,
 };
 use ignore::WalkBuilder;
 use rayon::prelude::*;
 use std::collections::HashMap;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::{
     Arc,
     atomic::{AtomicBool, Ordering},
@@ -118,14 +119,71 @@ pub async fn run_scan(
         return Err("Scan cancelled".to_string());
     }
 
+    let disk_cache = if config.enable_cache {
+        let cache_path = config
+            .cache_dir
+            .as_ref()
+            .map(PathBuf::from)
+            .unwrap_or_else(|| Path::new(&config.directory).join(DEFAULT_CACHE_FILE));
+        DiskFingerprintCache::open_or_create(&cache_path).unwrap_or_else(|err| {
+            tracing::warn!(
+                "Failed to initialize disk cache: {}; continuing in memory",
+                err
+            );
+            DiskFingerprintCache::disabled()
+        })
+    } else {
+        DiskFingerprintCache::disabled()
+    };
+
     let parsed_files: Arc<Vec<ParsedFile>> = {
         let config_clone = config.clone();
+        let disk_cache_clone = disk_cache.clone();
+
         tokio::task::spawn_blocking(move || {
-            let files: Vec<ParsedFile> = files_to_process
+            let mut cached_parsed = Vec::new();
+            let mut files_to_tokenize = Vec::new();
+
+            for path in files_to_process {
+                let path_str = path.to_string_lossy().to_string();
+                if let Ok(meta) = std::fs::metadata(&path) {
+                    let mtime = meta
+                        .modified()
+                        .ok()
+                        .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+                        .map(|d| d.as_secs() as i64)
+                        .unwrap_or(0);
+                    let size = meta.len();
+
+                    if let Some(entry) = disk_cache_clone.is_file_valid(&path_str, mtime, size) {
+                        cached_parsed.push(ParsedFile {
+                            path: path_str,
+                            language: entry.language,
+                            token_count: entry.token_count,
+                            token_spans: entry.token_spans,
+                            fingerprints: entry.fingerprints,
+                        });
+                        continue;
+                    }
+                }
+                files_to_tokenize.push(path);
+            }
+
+            let newly_parsed_and_entries: Vec<(ParsedFile, CachedFileEntry)> = files_to_tokenize
                 .par_iter()
                 .filter_map(|path| {
                     let grammar = get_grammar_for_path(path)?;
                     let content = std::fs::read_to_string(path).ok()?;
+                    let meta = std::fs::metadata(path).ok()?;
+                    let mtime = meta
+                        .modified()
+                        .ok()
+                        .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+                        .map(|d| d.as_secs() as i64)
+                        .unwrap_or(0);
+                    let file_size = meta.len();
+                    let content_hash = blake3::hash(content.as_bytes()).to_hex().to_string();
+
                     let tokens = tokenize(&content, grammar, config_clone.detect_type2);
                     let token_count = tokens.len();
                     let token_spans: Vec<_> = tokens.iter().map(|(_, span)| span.clone()).collect();
@@ -134,16 +192,44 @@ pub async fn run_scan(
                     let w = k + WINDOW_OFFSET;
                     let fingerprints = winnow(&tokens, k, w);
 
-                    Some(ParsedFile {
-                        path: path.to_string_lossy().to_string(),
+                    let path_str = path.to_string_lossy().to_string();
+                    let parsed = ParsedFile {
+                        path: path_str.clone(),
+                        language: grammar.name.to_string(),
+                        token_count,
+                        token_spans: token_spans.clone(),
+                        fingerprints: fingerprints.clone(),
+                    };
+
+                    let entry = CachedFileEntry {
+                        schema_version: CACHE_SCHEMA_VERSION,
+                        content_hash,
+                        mtime_secs: mtime,
+                        file_size,
                         language: grammar.name.to_string(),
                         token_count,
                         token_spans,
                         fingerprints,
-                    })
+                    };
+
+                    Some((parsed, entry))
                 })
                 .collect();
-            Arc::new(files)
+
+            if disk_cache_clone.is_enabled() && !newly_parsed_and_entries.is_empty() {
+                let batch: Vec<(String, CachedFileEntry)> = newly_parsed_and_entries
+                    .iter()
+                    .map(|(p, e)| (p.path.clone(), e.clone()))
+                    .collect();
+                let _ = disk_cache_clone.batch_save_entries(&batch);
+            }
+
+            let mut all_files = cached_parsed;
+            for (p, _) in newly_parsed_and_entries {
+                all_files.push(p);
+            }
+
+            Arc::new(all_files)
         })
         .await
         .unwrap()
@@ -425,6 +511,8 @@ mod tests {
             detect_type2: true,
             scan_self: false,
             enable_git_blame: false,
+            cache_dir: None,
+            enable_cache: false,
         }
     }
 
@@ -565,5 +653,46 @@ mod tests {
                 );
             }
         }
+    }
+
+    #[tokio::test]
+    async fn test_scan_with_disk_caching() {
+        use std::fs::File;
+        use std::io::Write;
+        use tempfile::tempdir;
+
+        let dir = tempdir().unwrap();
+        let cache_db = dir.path().join("sub").join("test_cache.redb");
+
+        let file_a_path = dir.path().join("a.rs");
+        let file_b_path = dir.path().join("b.rs");
+
+        let code =
+            "fn compute_heavy_task() -> u64 { let mut v = 0; for i in 0..100 { v += i * 2; } v }\n";
+        let code_long = format!("{} {} {} {} {}", code, code, code, code, code);
+
+        let mut fa = File::create(&file_a_path).unwrap();
+        writeln!(fa, "{}", code_long).unwrap();
+
+        let mut fb = File::create(&file_b_path).unwrap();
+        writeln!(fb, "{}", code_long).unwrap();
+
+        let mut config = make_test_config(&dir.path().to_string_lossy(), 30);
+        config.enable_cache = true;
+        config.cache_dir = Some(cache_db.to_string_lossy().to_string());
+
+        // First scan (populates cache)
+        let res1 = run_test_scan(config.clone()).await.unwrap();
+        assert_eq!(res1.total_files, 2);
+        assert!(res1.total_clones > 0);
+
+        // Verify cache file was created
+        assert!(cache_db.exists());
+
+        // Second scan (uses cache)
+        let res2 = run_test_scan(config).await.unwrap();
+        assert_eq!(res2.total_files, 2);
+        assert_eq!(res2.total_clones, res1.total_clones);
+        assert_eq!(res2.duplication_percentage, res1.duplication_percentage);
     }
 }

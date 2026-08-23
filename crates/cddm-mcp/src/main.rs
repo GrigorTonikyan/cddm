@@ -4,9 +4,9 @@ use cddm_core::{
 };
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use std::io::{self, BufRead, Write};
 use std::path::Path;
 use std::sync::{Arc, atomic::AtomicBool};
+use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::sync::mpsc;
 
 /// JSON-RPC 2.0 protocol version.
@@ -31,6 +31,8 @@ pub mod rpc_errors {
 pub mod mcp_methods {
     pub const INITIALIZE: &str = "initialize";
     pub const INITIALIZED: &str = "notifications/initialized";
+    pub const INITIALIZED_ALT: &str = "initialized";
+    pub const CANCELLED: &str = "notifications/cancelled";
     pub const PING: &str = "ping";
     pub const TOOLS_LIST: &str = "tools/list";
     pub const TOOLS_CALL: &str = "tools/call";
@@ -47,10 +49,13 @@ pub mod mcp_tools {
     pub const GET_CLONE_PAIR: &str = "cddm_get_clone_pair";
     pub const SUGGEST_REFACTOR: &str = "cddm_suggest_refactor";
     pub const EXPORT_SARIF: &str = "cddm_export_sarif";
+    pub const DIFF_SCAN: &str = "cddm_diff_scan";
 
     pub const PARAM_DIRECTORY: &str = "directory";
     pub const PARAM_MIN_TOKENS: &str = "min_tokens";
     pub const PARAM_ENABLE_GIT_BLAME: &str = "enable_git_blame";
+    pub const PARAM_BASE_REF: &str = "base_ref";
+    pub const PARAM_TARGET_REF: &str = "target_ref";
     pub const PARAM_FILE_A: &str = "file_a";
     pub const PARAM_START_LINE_A: &str = "start_line_a";
     pub const PARAM_END_LINE_A: &str = "end_line_a";
@@ -222,7 +227,7 @@ async fn handle_mcp_request(req: JsonRpcRequest) -> Option<JsonRpcResponse> {
             error: None,
         }),
 
-        mcp_methods::INITIALIZED => None,
+        mcp_methods::INITIALIZED | mcp_methods::INITIALIZED_ALT | mcp_methods::CANCELLED => None,
 
         mcp_methods::PING => Some(JsonRpcResponse {
             jsonrpc: JSONRPC_VERSION.to_string(),
@@ -283,6 +288,32 @@ async fn handle_mcp_request(req: JsonRpcRequest) -> Option<JsonRpcResponse> {
                                 }
                             }
                         }
+                    },
+                    {
+                        "name": mcp_tools::DIFF_SCAN,
+                        "description": "Run differential code clone detection comparing working changes against a Git base revision (e.g. main, origin/main, HEAD~1).",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                mcp_tools::PARAM_BASE_REF: {
+                                    "type": "string",
+                                    "description": "Base Git revision to compare against (e.g. main, origin/main, HEAD~1)"
+                                },
+                                mcp_tools::PARAM_TARGET_REF: {
+                                    "type": "string",
+                                    "description": "Target Git revision (default: HEAD / working tree)"
+                                },
+                                mcp_tools::PARAM_DIRECTORY: {
+                                    "type": "string",
+                                    "description": "Target Git repository directory path"
+                                },
+                                mcp_tools::PARAM_MIN_TOKENS: {
+                                    "type": "number",
+                                    "description": format!("Minimum token threshold (default: {})", DEFAULT_MIN_TOKENS)
+                                }
+                            },
+                            "required": [mcp_tools::PARAM_BASE_REF]
+                        }
                     }
                 ]
             })),
@@ -321,6 +352,8 @@ async fn handle_mcp_request(req: JsonRpcRequest) -> Option<JsonRpcResponse> {
                         detect_type2: true,
                         scan_self: true,
                         enable_git_blame: git_blame,
+                        cache_dir: None,
+                        enable_cache: true,
                     };
 
                     let (tx, _rx) = mpsc::channel(100);
@@ -332,6 +365,60 @@ async fn handle_mcp_request(req: JsonRpcRequest) -> Option<JsonRpcResponse> {
                             serde_json::to_string_pretty(&scan_res).unwrap_or_default(),
                         )),
                         Err(e) => Some(make_error_response(req.id, rpc_errors::INTERNAL_ERROR, e)),
+                    }
+                }
+
+                mcp_tools::DIFF_SCAN => {
+                    let args = req.params.as_ref().and_then(|p| p.get("arguments"));
+                    let base_ref = args
+                        .and_then(|a| a.get(mcp_tools::PARAM_BASE_REF))
+                        .and_then(|b| b.as_str());
+
+                    if let Some(base) = base_ref {
+                        let dir = args
+                            .and_then(|a| a.get(mcp_tools::PARAM_DIRECTORY))
+                            .and_then(|d| d.as_str())
+                            .unwrap_or(DEFAULT_DIRECTORY);
+                        let target = args
+                            .and_then(|a| a.get(mcp_tools::PARAM_TARGET_REF))
+                            .and_then(|t| t.as_str());
+                        let min_tokens = args
+                            .and_then(|a| a.get(mcp_tools::PARAM_MIN_TOKENS))
+                            .and_then(|t| t.as_u64())
+                            .unwrap_or(DEFAULT_MIN_TOKENS as u64)
+                            as usize;
+
+                        let config = ScanConfig {
+                            directory: dir.to_string(),
+                            min_tokens,
+                            languages: vec![],
+                            ignore_patterns: ScanConfig::default().ignore_patterns,
+                            detect_type2: true,
+                            scan_self: true,
+                            enable_git_blame: false,
+                            cache_dir: None,
+                            enable_cache: true,
+                        };
+
+                        let (tx, _rx) = mpsc::channel(100);
+                        let cancel_flag = Arc::new(AtomicBool::new(false));
+
+                        match cddm_core::run_diff_scan(base, target, config, tx, cancel_flag).await
+                        {
+                            Ok(diff_res) => Some(make_text_response(
+                                req.id,
+                                serde_json::to_string_pretty(&diff_res).unwrap_or_default(),
+                            )),
+                            Err(e) => {
+                                Some(make_error_response(req.id, rpc_errors::INTERNAL_ERROR, e))
+                            }
+                        }
+                    } else {
+                        Some(make_error_response(
+                            req.id,
+                            rpc_errors::INVALID_PARAMS,
+                            "Missing required 'base_ref' argument",
+                        ))
                     }
                 }
 
@@ -419,6 +506,8 @@ async fn handle_mcp_request(req: JsonRpcRequest) -> Option<JsonRpcResponse> {
                         detect_type2: true,
                         scan_self: true,
                         enable_git_blame: false,
+                        cache_dir: None,
+                        enable_cache: true,
                     };
 
                     let (tx, _rx) = mpsc::channel(100);
@@ -444,29 +533,36 @@ async fn handle_mcp_request(req: JsonRpcRequest) -> Option<JsonRpcResponse> {
             }
         }
 
-        mcp_methods::RESOURCES_LIST | mcp_methods::RESOURCES_TEMPLATES_LIST => {
-            Some(JsonRpcResponse {
-                jsonrpc: JSONRPC_VERSION.to_string(),
-                id: req.id,
-                result: Some(json!({
-                    "resources": [
-                        {
-                            "uri": mcp_resources::URI_WORKSPACE_HEALTH,
-                            "name": "Workspace DRY Health Score",
-                            "description": "Real-time DRY Health Index, file metrics, and language statistics.",
-                            "mimeType": mcp_resources::MIME_APPLICATION_JSON
-                        },
-                        {
-                            "uri": mcp_resources::URI_WORKSPACE_CLONES,
-                            "name": "Workspace Code Clones",
-                            "description": "Registry of active duplicate code clones across repository files.",
-                            "mimeType": mcp_resources::MIME_APPLICATION_JSON
-                        }
-                    ]
-                })),
-                error: None,
-            })
-        }
+        mcp_methods::RESOURCES_LIST => Some(JsonRpcResponse {
+            jsonrpc: JSONRPC_VERSION.to_string(),
+            id: req.id,
+            result: Some(json!({
+                "resources": [
+                    {
+                        "uri": mcp_resources::URI_WORKSPACE_HEALTH,
+                        "name": "Workspace DRY Health Score",
+                        "description": "Real-time DRY Health Index, file metrics, and language statistics.",
+                        "mimeType": mcp_resources::MIME_APPLICATION_JSON
+                    },
+                    {
+                        "uri": mcp_resources::URI_WORKSPACE_CLONES,
+                        "name": "Workspace Code Clones",
+                        "description": "Registry of active duplicate code clones across repository files.",
+                        "mimeType": mcp_resources::MIME_APPLICATION_JSON
+                    }
+                ]
+            })),
+            error: None,
+        }),
+
+        mcp_methods::RESOURCES_TEMPLATES_LIST => Some(JsonRpcResponse {
+            jsonrpc: JSONRPC_VERSION.to_string(),
+            id: req.id,
+            result: Some(json!({
+                "resourceTemplates": []
+            })),
+            error: None,
+        }),
 
         mcp_methods::RESOURCES_READ => {
             let uri = req
@@ -643,31 +739,34 @@ async fn handle_mcp_request(req: JsonRpcRequest) -> Option<JsonRpcResponse> {
             }
         }
 
-        _ => Some(make_error_response(
-            req.id,
-            rpc_errors::METHOD_NOT_FOUND,
-            format!("Method '{}' not found", req.method),
-        )),
+        _ => {
+            // In JSON-RPC 2.0, notifications (id == None) must NOT be responded to
+            if req.id.is_none() {
+                None
+            } else {
+                Some(make_error_response(
+                    req.id,
+                    rpc_errors::METHOD_NOT_FOUND,
+                    format!("Method '{}' not found", req.method),
+                ))
+            }
+        }
     }
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let stdin = io::stdin();
-    let stdout = io::stdout();
-    let mut handle = stdout.lock();
+    let stdin = tokio::io::stdin();
+    let mut reader = BufReader::new(stdin).lines();
+    let mut stdout = tokio::io::stdout();
 
-    for line in stdin.lock().lines() {
-        let line_str = match line {
-            Ok(l) => l,
-            Err(_) => break,
-        };
-
-        if line_str.trim().is_empty() {
+    while let Ok(Some(line)) = reader.next_line().await {
+        let line_str = line.trim();
+        if line_str.is_empty() {
             continue;
         }
 
-        let req: JsonRpcRequest = match serde_json::from_str(&line_str) {
+        let req: JsonRpcRequest = match serde_json::from_str(line_str) {
             Ok(r) => r,
             Err(e) => {
                 let err_resp = make_error_response(
@@ -675,15 +774,23 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     rpc_errors::PARSE_ERROR,
                     format!("Parse error: {}", e),
                 );
-                let _ = writeln!(handle, "{}", serde_json::to_string(&err_resp)?);
-                let _ = handle.flush();
+                if let Ok(json_str) = serde_json::to_string(&err_resp) {
+                    let mut payload = json_str.into_bytes();
+                    payload.push(b'\n');
+                    let _ = stdout.write_all(&payload).await;
+                    let _ = stdout.flush().await;
+                }
                 continue;
             }
         };
 
-        if let Some(response) = handle_mcp_request(req).await {
-            let _ = writeln!(handle, "{}", serde_json::to_string(&response)?);
-            let _ = handle.flush();
+        if let Some(response) = handle_mcp_request(req).await
+            && let Ok(json_str) = serde_json::to_string(&response)
+        {
+            let mut payload = json_str.into_bytes();
+            payload.push(b'\n');
+            let _ = stdout.write_all(&payload).await;
+            let _ = stdout.flush().await;
         }
     }
 
@@ -739,12 +846,32 @@ mod tests {
     #[tokio::test]
     async fn test_mcp_tools_list() {
         let tools = list_mcp_items(mcp_methods::TOOLS_LIST, "tools").await;
-        assert_eq!(tools.len(), 4);
+        assert_eq!(tools.len(), 5);
         let tool_names: Vec<&str> = tools.iter().map(|t| t["name"].as_str().unwrap()).collect();
         assert!(tool_names.contains(&mcp_tools::SCAN_CODEBASE));
         assert!(tool_names.contains(&mcp_tools::GET_CLONE_PAIR));
         assert!(tool_names.contains(&mcp_tools::SUGGEST_REFACTOR));
         assert!(tool_names.contains(&mcp_tools::EXPORT_SARIF));
+        assert!(tool_names.contains(&mcp_tools::DIFF_SCAN));
+    }
+
+    #[tokio::test]
+    async fn test_mcp_diff_scan_missing_params() {
+        let resp = handle_mcp_request(make_test_req(
+            15,
+            mcp_methods::TOOLS_CALL,
+            Some(json!({
+                "name": mcp_tools::DIFF_SCAN,
+                "arguments": {}
+            })),
+        ))
+        .await
+        .expect("Expected response");
+        assert!(resp.error.is_some());
+        assert_eq!(
+            resp.error.unwrap()["code"].as_i64().unwrap(),
+            rpc_errors::INVALID_PARAMS
+        );
     }
 
     #[tokio::test]
@@ -780,5 +907,39 @@ mod tests {
             resp.error.unwrap()["code"].as_i64().unwrap(),
             rpc_errors::METHOD_NOT_FOUND
         );
+    }
+
+    #[tokio::test]
+    async fn test_mcp_notification_returns_none() {
+        let req = JsonRpcRequest {
+            jsonrpc: JSONRPC_VERSION.to_string(),
+            id: None,
+            method: mcp_methods::INITIALIZED.to_string(),
+            params: None,
+        };
+        let resp = handle_mcp_request(req).await;
+        assert!(resp.is_none());
+
+        let unknown_notif = JsonRpcRequest {
+            jsonrpc: JSONRPC_VERSION.to_string(),
+            id: None,
+            method: "some/unknown_notification".to_string(),
+            params: None,
+        };
+        let resp_unknown = handle_mcp_request(unknown_notif).await;
+        assert!(resp_unknown.is_none());
+    }
+
+    #[tokio::test]
+    async fn test_mcp_resource_templates_list() {
+        let resp = handle_mcp_request(make_test_req(
+            16,
+            mcp_methods::RESOURCES_TEMPLATES_LIST,
+            None,
+        ))
+        .await
+        .expect("Expected response");
+        assert!(resp.result.is_some());
+        assert!(resp.result.unwrap()["resourceTemplates"].is_array());
     }
 }

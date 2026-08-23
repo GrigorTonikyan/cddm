@@ -40,8 +40,10 @@ pub fn fast_mod_m61(x: u128) -> u64 {
     t as u64
 }
 
+use serde::{Deserialize, Serialize};
+
 /// A fingerprint representing a winnowed hash and its location span.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct Fingerprint {
     /// Composite hash `(hash1, hash2)`
     pub hash: (u64, u64),

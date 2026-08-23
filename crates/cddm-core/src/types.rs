@@ -162,6 +162,81 @@ pub struct ScanResult {
     pub language_breakdown: Vec<LanguageStats>,
 }
 
+/// Default persistent cache database path.
+pub const DEFAULT_CACHE_FILE: &str = ".cddm/cache.db";
+
+/// Represents the status of a clone pair in a differential scan.
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CloneStatus {
+    /// A newly introduced clone pair in the target branch/commit
+    New,
+    /// An existing pre-existing clone pair inherited from the base ref
+    Legacy,
+    /// A clone pair present in the base ref that has been refactored/resolved
+    Resolved,
+}
+
+impl std::fmt::Display for CloneStatus {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.as_ref())
+    }
+}
+
+impl AsRef<str> for CloneStatus {
+    fn as_ref(&self) -> &str {
+        match self {
+            Self::New => "New",
+            Self::Legacy => "Legacy",
+            Self::Resolved => "Resolved",
+        }
+    }
+}
+
+/// A clone pair annotated with differential status relative to a base git ref.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct DiffClonePair {
+    /// The clone pair details
+    pub clone_pair: ClonePair,
+    /// Status relative to the base ref
+    pub status: CloneStatus,
+}
+
+/// Summary metrics comparing target state to baseline git reference.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct DiffSummary {
+    /// The base git revision (e.g., "origin/main", "HEAD~1")
+    pub base_ref: String,
+    /// The target git revision or working tree description
+    pub target_ref: String,
+    /// DRY Health Score of the baseline revision
+    pub base_dry_score: f64,
+    /// DRY Health Score of the target revision
+    pub target_dry_score: f64,
+    /// Net DRY score delta (target_dry_score - base_dry_score)
+    pub net_dry_delta: f64,
+    /// Total number of modified/added files in the git delta
+    pub total_changed_files: usize,
+    /// Count of newly introduced clone pairs
+    pub new_clones: usize,
+    /// Count of legacy pre-existing clone pairs
+    pub legacy_clones: usize,
+    /// Count of resolved/eliminated clone pairs
+    pub resolved_clones: usize,
+}
+
+/// The result of a differential git clone scan.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct DiffScanResult {
+    /// Unique identifier for this differential scan
+    pub scan_id: String,
+    /// Summary metrics comparing base and target
+    pub summary: DiffSummary,
+    /// List of clone pairs with differential statuses
+    pub diff_clones: Vec<DiffClonePair>,
+    /// How long the differential scan took in milliseconds
+    pub duration_ms: u64,
+}
+
 /// Configuration options for running a code scan.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(default)]
@@ -180,6 +255,10 @@ pub struct ScanConfig {
     pub scan_self: bool,
     /// Whether to annotate clone pairs with in-process git blame author information
     pub enable_git_blame: bool,
+    /// Custom path for the persistent disk cache database (default: ".cddm/cache.db")
+    pub cache_dir: Option<String>,
+    /// Whether to use the persistent disk cache (default: true)
+    pub enable_cache: bool,
 }
 
 impl Default for ScanConfig {
@@ -195,6 +274,8 @@ impl Default for ScanConfig {
             detect_type2: true,
             scan_self: true,
             enable_git_blame: false,
+            cache_dir: None,
+            enable_cache: true,
         }
     }
 }
@@ -331,5 +412,51 @@ mod tests {
         };
         assert_eq!(span1, span2);
         assert_ne!(span1, span3);
+    }
+
+    #[test]
+    fn test_clone_status_display_and_serde() {
+        let statuses = [CloneStatus::New, CloneStatus::Legacy, CloneStatus::Resolved];
+        for status in statuses {
+            assert_serde_roundtrip(&status);
+            assert_eq!(status.to_string(), status.as_ref());
+        }
+    }
+
+    #[test]
+    fn test_diff_scan_result_serde_roundtrip() {
+        let diff_result = DiffScanResult {
+            scan_id: "diff-test-id".to_string(),
+            summary: DiffSummary {
+                base_ref: "main".to_string(),
+                target_ref: "feature/refactor".to_string(),
+                base_dry_score: 92.5,
+                target_dry_score: 96.0,
+                net_dry_delta: 3.5,
+                total_changed_files: 3,
+                new_clones: 0,
+                legacy_clones: 2,
+                resolved_clones: 1,
+            },
+            diff_clones: vec![DiffClonePair {
+                clone_pair: ClonePair {
+                    file_a: "src/a.rs".to_string(),
+                    start_line_a: 10,
+                    end_line_a: 20,
+                    file_b: "src/b.rs".to_string(),
+                    start_line_b: 30,
+                    end_line_b: 40,
+                    token_count: 60,
+                    similarity: 1.0,
+                    fragment_hash: "hash_diff".to_string(),
+                    clone_type: CloneType::Exact,
+                    author_a: None,
+                    author_b: None,
+                },
+                status: CloneStatus::Legacy,
+            }],
+            duration_ms: 45,
+        };
+        assert_serde_roundtrip(&diff_result);
     }
 }

@@ -89,7 +89,7 @@ CI/CD workflows currently support JSON, Markdown, and Console table formats. Git
 - **Target Milestone**: `v0.3.0`
 - **Component**: `crates/cddm-core`
 - **Priority**: `High`
-- **Status**: `Proposed`
+- **Status**: `Completed (v0.3.0)`
 
 #### Problem Statement
 
@@ -192,7 +192,7 @@ Developers need a high-level visual representation of where duplication is clust
 - **Target Milestone**: `v0.3.0`
 - **Component**: `crates/cddm-cli`, `crates/cddm-core`
 - **Priority**: `Medium`
-- **Status**: `Proposed`
+- **Status**: `Completed (v0.3.0)`
 
 #### Problem Statement
 
@@ -218,7 +218,7 @@ Identifying clones is the first step; refactoring them requires extracting commo
 - **Target Milestone**: `v0.3.0`
 - **Component**: `crates/cddm-cli`, `crates/cddm-core`
 - **Priority**: `Medium`
-- **Status**: `Proposed`
+- **Status**: `Completed (v0.3.0)`
 
 #### Problem Statement
 
@@ -295,16 +295,16 @@ Maximizing token throughput on multi-gigabyte codebases to achieve > 20M tokens/
 ```markdown
 ### Milestone v0.2.0 (CI/CD & AI Agent Tooling)
 
-- [ ] Implement SARIF 2.1.0 reporter in `cddm-cli` (`--format sarif`) [EP-01]
-- [ ] Add `cddm_get_clone_pair` and `cddm_suggest_refactor` to `cddm-mcp` [EP-02]
-- [ ] Expose `cddm://workspace/health` MCP read-only resource [EP-02]
-- [ ] Publish composite GitHub Action `GrigorTonikyan/cddm-action` [EP-01]
+- [x] Implement SARIF 2.1.0 reporter in `cddm-cli` (`--format sarif`) [EP-01]
+- [x] Add `cddm_get_clone_pair` and `cddm_suggest_refactor` to `cddm-mcp` [EP-02]
+- [x] Expose `cddm://workspace/health` MCP read-only resource [EP-02]
+- [x] Publish composite GitHub Action `GrigorTonikyan/cddm-action` [EP-01]
 
 ### Milestone v0.3.0 (Caching, Differential & Refactoring)
 
-- [ ] Embed `redb` disk-backed persistent fingerprint cache in `cddm-core` [EP-03]
-- [ ] Add `cddm diff <BASE_REF>` for differential pull-request scans [EP-08]
-- [ ] Implement `cddm refactor` prototype for automated patch synthesis [EP-07]
+- [x] Embed `redb` disk-backed persistent fingerprint cache in `cddm-core` [EP-03]
+- [x] Add `cddm diff <BASE_REF>` for differential pull-request scans [EP-08]
+- [x] Implement `cddm refactor` prototype for automated patch synthesis [EP-07]
 
 ### Milestone v0.4.0 (Studio Visual Analytics)
 
