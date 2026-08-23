@@ -387,14 +387,10 @@ export function updateChangelog(newSection: string, workspaceRoot: string = proc
   let existingContent = "";
   if (existsSync(changelogPath)) {
     const full = readFileSync(changelogPath, "utf-8");
-    if (full.startsWith("# Changelog")) {
-      const match = full.match(/^# Changelog[\s\S]*?\n\n/);
-      if (match) {
-        header = match[0];
-        existingContent = full.slice(header.length);
-      } else {
-        existingContent = full;
-      }
+    const firstSectionIndex = full.indexOf("\n## [");
+    if (firstSectionIndex !== -1) {
+      header = full.slice(0, firstSectionIndex + 1);
+      existingContent = full.slice(firstSectionIndex + 1);
     } else {
       existingContent = full;
     }

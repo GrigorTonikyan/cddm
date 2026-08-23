@@ -5,6 +5,31 @@ All notable changes to **CDDM** (_Code De-Duplication Meister_) will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-08-23
+
+### Features
+
+- **scripts**: sync README badges and Cargo.lock on version bump (`83f324c`)
+- **scripts**: add workspace clean and reset runners with full verification (`47ad3ee`)
+- **tooling**: enforce zero-emoji policy and eradicate emojis across codebase (`c499090`)
+
+### Bug Fixes
+
+- **vscode**: remove duplicate flags from rust-analyzer extraArgs (`cdaf76f`)
+- **ci**: enforce workspace-wide formatting in CI and configure markdownlint MD024 (`f300cab`)
+
+### Documentation
+
+- **agents**: add zero-downgrade dependency policy to prime directives (`e345352`)
+- add comprehensive strategic roadmap, enhancement proposals, and active todo tracker (`27d108f`)
+
+### Tooling & Maintenance
+
+- **deps**: upgrade rust dependencies to latest versions preserving precision (`8c5f20a`)
+- **cargo**: enforce missing_debug_implementations = deny workspace-wide (`37dfab5`)
+- **deps**: update vitest to 4.1.11 in webui (`16d7dec`)
+- **docs**: integrate doc integrity and roadmap sync into verification pipeline (`e333809`)
+
 ## [0.1.2] - 2026-08-23
 
 ### Features

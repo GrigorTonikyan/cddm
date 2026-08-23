@@ -101,3 +101,4 @@
 - [x] **v0.1.0**: Initial Rust core engine, Winnowing rolling hash, CLI scanner.
 - [x] **v0.1.1**: Type-2 identifier normalization, Axum HTTP server, React WebUI.
 - [x] **v0.1.2**: Tree-sitter AST hashing module, `cddm-mcp` stdio JSON-RPC 2.0 server, in-process `gix` git blame, Vite Plus toolchain integration, Conventional Commits & automated semver pipeline, cross-platform workspace clean (`vp run clean`) & reset (`vp run reset`) runners with 27 unit tests.
+- [x] **v0.2.0**: Zero-emoji strict enforcement policy across codebase, dependency upgrade to latest versions with precision retention, missing_debug_implementations workspace denial, automated multi-manifest semver synchronization with README badge & lockfile updates.
