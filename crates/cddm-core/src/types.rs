@@ -232,6 +232,16 @@ mod tests {
         assert!(!config.enable_git_blame);
     }
 
+    fn assert_serde_roundtrip<
+        T: Serialize + for<'de> Deserialize<'de> + PartialEq + std::fmt::Debug,
+    >(
+        val: &T,
+    ) {
+        let json = serde_json::to_string(val).expect("Serialization failed");
+        let recovered: T = serde_json::from_str(&json).expect("Deserialization failed");
+        assert_eq!(val, &recovered);
+    }
+
     #[test]
     fn test_scan_phase_serde() {
         let phases = [
@@ -245,19 +255,14 @@ mod tests {
             ScanPhase::Failed,
         ];
         for phase in phases {
-            let serialized = serde_json::to_string(&phase).unwrap();
-            let deserialized: ScanPhase = serde_json::from_str(&serialized).unwrap();
-            assert_eq!(phase, deserialized);
+            assert_serde_roundtrip(&phase);
             assert_eq!(phase.to_string(), phase.as_ref());
         }
     }
 
     #[test]
     fn test_scan_config_serde_roundtrip() {
-        let config = ScanConfig::default();
-        let serialized = serde_json::to_string(&config).unwrap();
-        let deserialized: ScanConfig = serde_json::from_str(&serialized).unwrap();
-        assert_eq!(config, deserialized);
+        assert_serde_roundtrip(&ScanConfig::default());
     }
 
     #[test]
@@ -269,9 +274,7 @@ mod tests {
             CloneType::Semantic,
         ];
         for variant in variants {
-            let serialized = serde_json::to_string(&variant).unwrap();
-            let deserialized: CloneType = serde_json::from_str(&serialized).unwrap();
-            assert_eq!(variant, deserialized);
+            assert_serde_roundtrip(&variant);
         }
     }
 
@@ -306,9 +309,7 @@ mod tests {
                 clones: 5,
             }],
         };
-        let serialized = serde_json::to_string(&result).unwrap();
-        let deserialized: ScanResult = serde_json::from_str(&serialized).unwrap();
-        assert_eq!(result, deserialized);
+        assert_serde_roundtrip(&result);
     }
 
     #[test]

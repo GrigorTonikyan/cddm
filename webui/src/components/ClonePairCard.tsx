@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { ClonePair } from "../types/cddm-types";
-import { parsePath } from "../utils/path-utils";
+import { parsePath, FormattedPath } from "../utils/path-utils";
 import {
   ChevronDown,
   ChevronRight,
@@ -17,6 +17,85 @@ export interface ClonePairCardProps {
   index: number;
 }
 
+interface FilePathSummaryProps {
+  parsed: FormattedPath;
+  startLine: number;
+  endLine: number;
+}
+
+const FilePathSummary: React.FC<FilePathSummaryProps> = ({ parsed, startLine, endLine }) => (
+  <div className="flex items-center gap-2 bg-slate-950/90 px-3 py-1.5 rounded-lg border border-slate-800/80 min-w-0 group/item">
+    <FileCode2 className="w-4 h-4 shrink-0 text-indigo-400" />
+    <div className="min-w-0 flex-1 text-xs font-mono truncate" title={parsed.fullNormalized}>
+      <span className="sr-only">{parsed.fullNormalized}</span>
+      <span className="text-slate-500 select-none">{parsed.directory}</span>
+      <span className="text-slate-100 font-semibold">{parsed.filename}</span>
+    </div>
+    <span className="shrink-0 text-[11px] font-mono px-2 py-0.5 bg-slate-800/80 text-slate-300 rounded">
+      L{startLine}-{endLine}
+    </span>
+  </div>
+);
+
+interface FragmentDetailPanelProps {
+  label: string;
+  parsed: FormattedPath;
+  startLine: number;
+  endLine: number;
+  tokens: number;
+  isCopied: boolean;
+  onCopy: () => void;
+}
+
+const FragmentDetailPanel: React.FC<FragmentDetailPanelProps> = ({
+  label,
+  parsed,
+  startLine,
+  endLine,
+  tokens,
+  isCopied,
+  onCopy,
+}) => (
+  <div className="bg-slate-900/90 rounded-lg border border-slate-800/90 overflow-hidden">
+    <div className="px-3 py-2 bg-slate-950/80 border-b border-slate-800/80 flex items-center justify-between text-xs font-mono">
+      <span className="text-indigo-400 font-semibold flex items-center gap-1.5">
+        <FileCode2 className="w-3.5 h-3.5" />
+        {label}
+      </span>
+      <div className="flex items-center gap-2">
+        <span className="text-slate-400">
+          Lines {startLine}–{endLine}
+        </span>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onCopy();
+          }}
+          className="p-1 hover:bg-slate-800 text-slate-400 hover:text-slate-200 rounded transition-colors"
+          title="Copy full path"
+        >
+          {isCopied ? (
+            <Check className="w-3.5 h-3.5 text-emerald-400" />
+          ) : (
+            <Copy className="w-3.5 h-3.5" />
+          )}
+        </button>
+      </div>
+    </div>
+    <div className="p-3 font-mono text-xs space-y-2">
+      <div className="text-slate-300 break-all bg-slate-950 p-2 rounded border border-slate-800/60">
+        <span className="text-slate-500">{parsed.directory}</span>
+        <span className="text-indigo-300 font-bold">{parsed.filename}</span>
+      </div>
+      <div className="text-slate-500 text-[11px] flex items-center justify-between pt-1">
+        <span>Tokens: {tokens}</span>
+        <span>Range: {endLine - startLine + 1} lines</span>
+      </div>
+    </div>
+  </div>
+);
+
 export const ClonePairCard: React.FC<ClonePairCardProps> = ({ pair, index }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [copiedA, setCopiedA] = useState(false);
@@ -25,8 +104,8 @@ export const ClonePairCard: React.FC<ClonePairCardProps> = ({ pair, index }) => 
   const pathA = parsePath(pair.file_a);
   const pathB = parsePath(pair.file_b);
 
-  const copyToClipboard = (text: string, isA: boolean) => {
-    void navigator.clipboard.writeText(text);
+  const handleCopy = (path: string, isA: boolean) => {
+    void navigator.clipboard.writeText(path);
     if (isA) {
       setCopiedA(true);
       setTimeout(() => setCopiedA(false), 2000);
@@ -61,37 +140,16 @@ export const ClonePairCard: React.FC<ClonePairCardProps> = ({ pair, index }) => 
 
           {/* Files Grid Comparison */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 min-w-0 flex-1">
-            {/* File A */}
-            <div className="flex items-center gap-2 bg-slate-950/90 px-3 py-1.5 rounded-lg border border-slate-800/80 min-w-0 group/item">
-              <FileCode2 className="w-4 h-4 shrink-0 text-indigo-400" />
-              <div
-                className="min-w-0 flex-1 text-xs font-mono truncate"
-                title={pathA.fullNormalized}
-              >
-                <span className="sr-only">{pathA.fullNormalized}</span>
-                <span className="text-slate-500 select-none">{pathA.directory}</span>
-                <span className="text-slate-100 font-semibold">{pathA.filename}</span>
-              </div>
-              <span className="shrink-0 text-[11px] font-mono px-2 py-0.5 bg-slate-800/80 text-slate-300 rounded">
-                L{pair.start_line_a}-{pair.end_line_a}
-              </span>
-            </div>
-
-            {/* File B */}
-            <div className="flex items-center gap-2 bg-slate-950/90 px-3 py-1.5 rounded-lg border border-slate-800/80 min-w-0 group/item">
-              <FileCode2 className="w-4 h-4 shrink-0 text-indigo-400" />
-              <div
-                className="min-w-0 flex-1 text-xs font-mono truncate"
-                title={pathB.fullNormalized}
-              >
-                <span className="sr-only">{pathB.fullNormalized}</span>
-                <span className="text-slate-500 select-none">{pathB.directory}</span>
-                <span className="text-slate-100 font-semibold">{pathB.filename}</span>
-              </div>
-              <span className="shrink-0 text-[11px] font-mono px-2 py-0.5 bg-slate-800/80 text-slate-300 rounded">
-                L{pair.start_line_b}-{pair.end_line_b}
-              </span>
-            </div>
+            <FilePathSummary
+              parsed={pathA}
+              startLine={pair.start_line_a}
+              endLine={pair.end_line_a}
+            />
+            <FilePathSummary
+              parsed={pathB}
+              startLine={pair.start_line_b}
+              endLine={pair.end_line_b}
+            />
           </div>
         </div>
 
@@ -149,85 +207,24 @@ export const ClonePairCard: React.FC<ClonePairCardProps> = ({ pair, index }) => 
 
           {/* Side-by-Side Detailed Panels */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Panel A */}
-            <div className="bg-slate-900/90 rounded-lg border border-slate-800/90 overflow-hidden">
-              <div className="px-3 py-2 bg-slate-950/80 border-b border-slate-800/80 flex items-center justify-between text-xs font-mono">
-                <span className="text-indigo-400 font-semibold flex items-center gap-1.5">
-                  <FileCode2 className="w-3.5 h-3.5" />
-                  Fragment A
-                </span>
-                <div className="flex items-center gap-2">
-                  <span className="text-slate-400">
-                    Lines {pair.start_line_a}–{pair.end_line_a}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      copyToClipboard(pathA.fullNormalized, true);
-                    }}
-                    className="p-1 hover:bg-slate-800 text-slate-400 hover:text-slate-200 rounded transition-colors"
-                    title="Copy full path"
-                  >
-                    {copiedA ? (
-                      <Check className="w-3.5 h-3.5 text-emerald-400" />
-                    ) : (
-                      <Copy className="w-3.5 h-3.5" />
-                    )}
-                  </button>
-                </div>
-              </div>
-              <div className="p-3 font-mono text-xs space-y-2">
-                <div className="text-slate-300 break-all bg-slate-950 p-2 rounded border border-slate-800/60">
-                  <span className="text-slate-500">{pathA.directory}</span>
-                  <span className="text-indigo-300 font-bold">{pathA.filename}</span>
-                </div>
-                <div className="text-slate-500 text-[11px] flex items-center justify-between pt-1">
-                  <span>Tokens: {pair.token_count}</span>
-                  <span>Range: {pair.end_line_a - pair.start_line_a + 1} lines</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Panel B */}
-            <div className="bg-slate-900/90 rounded-lg border border-slate-800/90 overflow-hidden">
-              <div className="px-3 py-2 bg-slate-950/80 border-b border-slate-800/80 flex items-center justify-between text-xs font-mono">
-                <span className="text-indigo-400 font-semibold flex items-center gap-1.5">
-                  <FileCode2 className="w-3.5 h-3.5" />
-                  Fragment B
-                </span>
-                <div className="flex items-center gap-2">
-                  <span className="text-slate-400">
-                    Lines {pair.start_line_b}–{pair.end_line_b}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      copyToClipboard(pathB.fullNormalized, false);
-                    }}
-                    className="p-1 hover:bg-slate-800 text-slate-400 hover:text-slate-200 rounded transition-colors"
-                    title="Copy full path"
-                  >
-                    {copiedB ? (
-                      <Check className="w-3.5 h-3.5 text-emerald-400" />
-                    ) : (
-                      <Copy className="w-3.5 h-3.5" />
-                    )}
-                  </button>
-                </div>
-              </div>
-              <div className="p-3 font-mono text-xs space-y-2">
-                <div className="text-slate-300 break-all bg-slate-950 p-2 rounded border border-slate-800/60">
-                  <span className="text-slate-500">{pathB.directory}</span>
-                  <span className="text-indigo-300 font-bold">{pathB.filename}</span>
-                </div>
-                <div className="text-slate-500 text-[11px] flex items-center justify-between pt-1">
-                  <span>Tokens: {pair.token_count}</span>
-                  <span>Range: {pair.end_line_b - pair.start_line_b + 1} lines</span>
-                </div>
-              </div>
-            </div>
+            <FragmentDetailPanel
+              label="Fragment A"
+              parsed={pathA}
+              startLine={pair.start_line_a}
+              endLine={pair.end_line_a}
+              tokens={pair.token_count}
+              isCopied={copiedA}
+              onCopy={() => handleCopy(pathA.fullNormalized, true)}
+            />
+            <FragmentDetailPanel
+              label="Fragment B"
+              parsed={pathB}
+              startLine={pair.start_line_b}
+              endLine={pair.end_line_b}
+              tokens={pair.token_count}
+              isCopied={copiedB}
+              onCopy={() => handleCopy(pathB.fullNormalized, false)}
+            />
           </div>
         </div>
       )}

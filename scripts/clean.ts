@@ -7,6 +7,7 @@
 
 import { existsSync, lstatSync, readdirSync, rmSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { printScriptBanner, printScriptHelp } from "./lib/step-runner";
 
 export interface CleanOptions {
   dryRun?: boolean;
@@ -33,28 +34,23 @@ export interface CleanResult {
   elapsedMs: number;
 }
 
+const PKG_ROOTS = ["", "webui", "tests/e2e"];
+const LOCK_NAMES = ["bun.lock", "package-lock.json", "yarn.lock", "pnpm-lock.yaml"];
+
 export const KNOWN_CLEAN_DIRS: Array<{ path: string; category: CleanItem["category"] }> = [
-  // Rust build output
   { path: "target", category: "build" },
-
-  // Node dependencies
-  { path: "node_modules", category: "cache" },
-  { path: "webui/node_modules", category: "cache" },
-  { path: "tests/e2e/node_modules", category: "cache" },
-
-  // WebUI build & test outputs
-  { path: "webui/dist", category: "build" },
-  { path: "webui/coverage", category: "test-report" },
   { path: "dist", category: "build" },
   { path: "coverage", category: "test-report" },
+  { path: "webui/dist", category: "build" },
+  { path: "webui/coverage", category: "test-report" },
   { path: "npm/cddm/dist", category: "build" },
-
-  // E2E test reports
+  ...PKG_ROOTS.map((p) => ({
+    path: p ? `${p}/node_modules` : "node_modules",
+    category: "cache" as const,
+  })),
   { path: "tests/e2e/test-results", category: "test-report" },
   { path: "tests/e2e/playwright-report", category: "test-report" },
   { path: "tests/e2e/blob-report", category: "test-report" },
-
-  // Cache & log directories
   { path: ".logs", category: "temp" },
   { path: ".turbo", category: "cache" },
   { path: ".cache", category: "cache" },
@@ -65,25 +61,17 @@ export const KNOWN_CLEAN_DIRS: Array<{ path: string; category: CleanItem["catego
 ];
 
 export const KNOWN_CLEAN_FILES: Array<{ path: string; category: CleanItem["category"] }> = [
-  // Lockfiles
-  { path: "bun.lock", category: "lockfile" },
-  { path: "webui/bun.lock", category: "lockfile" },
-  { path: "tests/e2e/bun.lock", category: "lockfile" },
   { path: "Cargo.lock", category: "lockfile" },
-  { path: "package-lock.json", category: "lockfile" },
-  { path: "webui/package-lock.json", category: "lockfile" },
-  { path: "tests/e2e/package-lock.json", category: "lockfile" },
-  { path: "yarn.lock", category: "lockfile" },
-  { path: "webui/yarn.lock", category: "lockfile" },
-  { path: "tests/e2e/yarn.lock", category: "lockfile" },
-  { path: "pnpm-lock.yaml", category: "lockfile" },
-  { path: "webui/pnpm-lock.yaml", category: "lockfile" },
-  { path: "tests/e2e/pnpm-lock.yaml", category: "lockfile" },
-
-  // TypeScript build info
-  { path: "tsconfig.tsbuildinfo", category: "cache" },
-  { path: "webui/tsconfig.tsbuildinfo", category: "cache" },
-  { path: "tests/e2e/tsconfig.tsbuildinfo", category: "cache" },
+  ...PKG_ROOTS.flatMap((p) =>
+    LOCK_NAMES.map((name) => ({
+      path: p ? `${p}/${name}` : name,
+      category: "lockfile" as const,
+    })),
+  ),
+  ...PKG_ROOTS.map((p) => ({
+    path: p ? `${p}/tsconfig.tsbuildinfo` : "tsconfig.tsbuildinfo",
+    category: "cache" as const,
+  })),
 ];
 
 export const PROTECTED_PREFIXES = new Set([
@@ -389,20 +377,17 @@ function parseCliArgs(args: string[]): CleanOptions {
     } else if (arg === "--keep-node-modules") {
       options.keepNodeModules = true;
     } else if (arg === "--help" || arg === "-h") {
-      console.log(`
-CDDM Workspace Cleaner (vp run clean / bun scripts/clean.ts)
-
-Usage:
-  vp run clean [options]
-  bun scripts/clean.ts [options]
-
-Options:
-  --dry-run, -n          Simulate cleanup and print targets without deleting
-  --verbose, -v          Print every item being deleted
-  --keep-lockfiles       Keep lockfiles (bun.lock, Cargo.lock)
-  --keep-node-modules    Keep node_modules directories
-  --help, -h             Show this help message
-`);
+      printScriptHelp(
+        "Workspace Cleaner",
+        "vp run clean [options] / bun scripts/clean.ts [options]",
+        [
+          ["--dry-run, -n", "Simulate cleanup and print targets without deleting"],
+          ["--verbose, -v", "Print every item being deleted"],
+          ["--keep-lockfiles", "Keep lockfiles (bun.lock, Cargo.lock)"],
+          ["--keep-node-modules", "Keep node_modules directories"],
+          ["--help, -h", "Show this help message"],
+        ],
+      );
       process.exit(0);
     }
   }
@@ -411,10 +396,7 @@ Options:
 
 async function main() {
   const options = parseCliArgs(process.argv.slice(2));
-
-  console.log("\x1b[36m=======================================================\x1b[0m");
-  console.log("\x1b[36m             CDDM Workspace Cleanup Tool               \x1b[0m");
-  console.log("\x1b[36m=======================================================\x1b[0m");
+  printScriptBanner("CDDM Workspace Cleanup Tool");
 
   if (options.dryRun) {
     console.log("\x1b[33m[INFO] Running in DRY-RUN mode (no files will be deleted).\x1b[0m\n");
@@ -425,7 +407,7 @@ async function main() {
   console.log("\n\x1b[32m=======================================================\x1b[0m");
   const actionText = result.dryRun ? "Identified for removal" : "Cleaned successfully";
   console.log(
-    `\x1b[32m[OK] ${actionText}: ${result.dirsRemoved} directories, ${result.filesRemoved} files (${formatBytes(result.bytesFreed)}) in ${result.elapsedMs}ms\x1b[0m`,
+    `\x1b[32m[PASS] ${actionText}: ${result.dirsRemoved} directories, ${result.filesRemoved} files (${formatBytes(result.bytesFreed)}) in ${result.elapsedMs}ms\x1b[0m`,
   );
   console.log("\x1b[32m=======================================================\x1b[0m\n");
 }

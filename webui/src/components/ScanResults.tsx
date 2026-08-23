@@ -21,6 +21,36 @@ export interface ScanResultsProps {
   className?: string;
 }
 
+const LANG_EXTENSIONS: Record<string, string[]> = {
+  python: ["py"],
+  typescript: ["ts", "tsx"],
+  javascript: ["js", "jsx", "mjs", "cjs"],
+  rust: ["rs"],
+  json: ["json"],
+  css: ["css", "scss", "less"],
+  html: ["html", "htm"],
+};
+
+interface SummaryCardProps {
+  title: string;
+  value: React.ReactNode;
+  subtitle: string;
+  icon: React.ReactNode;
+}
+
+const SummaryCard: React.FC<SummaryCardProps> = ({ title, value, subtitle, icon }) => (
+  <div className="bg-slate-900/80 border border-slate-800/80 rounded-xl p-4 flex flex-col justify-between shadow-lg">
+    <div className="flex items-center justify-between text-slate-400">
+      <span className="text-xs font-bold uppercase tracking-wider">{title}</span>
+      {icon}
+    </div>
+    <div className="mt-3">
+      <span className="text-3xl font-extrabold font-mono text-slate-100">{value}</span>
+      <p className="text-[11px] text-slate-400 mt-1">{subtitle}</p>
+    </div>
+  </div>
+);
+
 export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
   const { results } = useCDDMStore();
 
@@ -55,16 +85,10 @@ export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
         if (selectedLang !== "ALL") {
           const extA = pair.file_a.split(".").pop()?.toLowerCase() || "";
           const extB = pair.file_b.split(".").pop()?.toLowerCase() || "";
-          const langLower = selectedLang.toLowerCase();
-          const matchesLang =
-            (langLower === "python" && (extA === "py" || extB === "py")) ||
-            (langLower === "typescript" && (extA.startsWith("ts") || extB.startsWith("ts"))) ||
-            (langLower === "javascript" && (extA.startsWith("js") || extB.startsWith("js"))) ||
-            (langLower === "rust" && (extA === "rs" || extB === "rs")) ||
-            (langLower === "json" && (extA === "json" || extB === "json")) ||
-            (langLower === "css" && (extA === "css" || extB === "css")) ||
-            (langLower === "html" && (extA === "html" || extB === "html"));
-          if (!matchesLang) return false;
+          const allowedExts = LANG_EXTENSIONS[selectedLang.toLowerCase()] || [];
+          if (!allowedExts.includes(extA) && !allowedExts.includes(extB)) {
+            return false;
+          }
         }
 
         return true;
@@ -131,63 +155,41 @@ export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
         </div>
 
         {/* Duplication Rate */}
-        <div className="bg-slate-900/80 border border-slate-800/80 rounded-xl p-4 flex flex-col justify-between shadow-lg">
-          <div className="flex items-center justify-between text-slate-400">
-            <span className="text-xs font-bold uppercase tracking-wider">Duplication Rate</span>
-            <Copy className="w-5 h-5 text-indigo-400" />
-          </div>
-          <div className="mt-3">
-            <span className="text-3xl font-extrabold font-mono text-slate-100">
-              {results.duplication_percentage.toFixed(2)}%
-            </span>
-            <p className="text-[11px] text-slate-400 mt-1">Total code redundancy</p>
-          </div>
-        </div>
+        <SummaryCard
+          title="Duplication Rate"
+          value={`${results.duplication_percentage.toFixed(2)}%`}
+          subtitle="Total code redundancy"
+          icon={<Copy className="w-5 h-5 text-indigo-400" />}
+        />
 
         {/* Files Scanned */}
-        <div className="bg-slate-900/80 border border-slate-800/80 rounded-xl p-4 flex flex-col justify-between shadow-lg">
-          <div className="flex items-center justify-between text-slate-400">
-            <span className="text-xs font-bold uppercase tracking-wider">Files Scanned</span>
-            <Layers className="w-5 h-5 text-indigo-400" />
-          </div>
-          <div className="mt-3">
-            <span className="text-3xl font-extrabold font-mono text-slate-100">
-              {results.total_files.toLocaleString()}
-            </span>
-            <p className="text-[11px] text-slate-400 mt-1">
-              {results.total_tokens.toLocaleString()} tokens indexed
-            </p>
-          </div>
-        </div>
+        <SummaryCard
+          title="Files Scanned"
+          value={results.total_files.toLocaleString()}
+          subtitle={`${results.total_tokens.toLocaleString()} tokens indexed`}
+          icon={<Layers className="w-5 h-5 text-indigo-400" />}
+        />
 
         {/* Clone Pairs */}
-        <div className="bg-slate-900/80 border border-slate-800/80 rounded-xl p-4 flex flex-col justify-between shadow-lg">
-          <div className="flex items-center justify-between text-slate-400">
-            <span className="text-xs font-bold uppercase tracking-wider">Clone Pairs</span>
-            <Activity className="w-5 h-5 text-indigo-400" />
-          </div>
-          <div className="mt-3">
-            <span className="text-3xl font-extrabold font-mono text-slate-100">
-              {results.total_clones.toLocaleString()}
-            </span>
-            <p className="text-[11px] text-slate-400 mt-1">Identified duplicate fragments</p>
-          </div>
-        </div>
+        <SummaryCard
+          title="Clone Pairs"
+          value={results.total_clones.toLocaleString()}
+          subtitle="Identified duplicate fragments"
+          icon={<Activity className="w-5 h-5 text-indigo-400" />}
+        />
 
         {/* Scan Duration */}
-        <div className="bg-slate-900/80 border border-slate-800/80 rounded-xl p-4 flex flex-col justify-between shadow-lg">
-          <div className="flex items-center justify-between text-slate-400">
-            <span className="text-xs font-bold uppercase tracking-wider">Engine Speed</span>
-            <Clock className="w-5 h-5 text-indigo-400" />
-          </div>
-          <div className="mt-3">
-            <span className="text-3xl font-extrabold font-mono text-slate-100">
+        <SummaryCard
+          title="Engine Speed"
+          value={
+            <>
               {results.duration_ms}
-            </span>
-            <span className="text-xs text-slate-400 font-mono"> ms</span>
-            <p className="text-[11px] text-slate-400 mt-1">Winnowing M61 execution</p>
-          </div>
-        </div>
+              <span className="text-xs text-slate-400 font-mono"> ms</span>
+            </>
+          }
+          subtitle="Winnowing M61 execution"
+          icon={<Clock className="w-5 h-5 text-indigo-400" />}
+        />
       </div>
 
       {/* Visual Language Breakdown */}
@@ -203,38 +205,38 @@ export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
             </span>
           </div>
 
-          {/* GitHub-style Visual Stack Bar */}
-          <div className="w-full bg-slate-950 rounded-lg h-3 flex overflow-hidden border border-slate-800/80">
-            {results.language_breakdown.map((lang) => {
-              const pct = totalTokensAllLangs > 0 ? (lang.tokens / totalTokensAllLangs) * 100 : 0;
-              const style = getLanguageStyle(lang.language);
+          {/* Segmented Distribution Bar */}
+          <div className="w-full h-3 bg-slate-950 rounded-full overflow-hidden flex border border-slate-800 shadow-inner">
+            {results.language_breakdown.map((item) => {
+              const style = getLanguageStyle(item.language);
+              const pct = totalTokensAllLangs > 0 ? (item.tokens / totalTokensAllLangs) * 100 : 0;
               return (
                 <div
-                  key={lang.language}
-                  className={`h-full ${style.bar} transition-all duration-300 relative group hover:opacity-90`}
-                  style={{ width: `${Math.max(1, pct)}%` }}
-                  title={`${lang.language}: ${lang.files} files, ${lang.tokens.toLocaleString()} tokens (${pct.toFixed(1)}%)`}
+                  key={item.language}
+                  className={`h-full ${style.bar} transition-all duration-300`}
+                  style={{ width: `${pct}%` }}
+                  title={`${item.language}: ${item.files} files (${pct.toFixed(1)}% tokens)`}
                 />
               );
             })}
           </div>
 
-          {/* Language Breakdown Chips */}
-          <div className="flex flex-wrap gap-2 pt-1">
-            {results.language_breakdown.map((lang) => {
-              const style = getLanguageStyle(lang.language);
-              const pct = totalTokensAllLangs > 0 ? (lang.tokens / totalTokensAllLangs) * 100 : 0;
+          {/* Language Legend Grid */}
+          <div className="flex flex-wrap items-center gap-3 pt-1">
+            {results.language_breakdown.map((item) => {
+              const style = getLanguageStyle(item.language);
+              const pct = totalTokensAllLangs > 0 ? (item.tokens / totalTokensAllLangs) * 100 : 0;
               return (
                 <div
-                  key={lang.language}
-                  className={`border rounded-lg px-3 py-1.5 flex items-center gap-2 text-xs font-mono transition-colors ${style.bg} ${style.border}`}
+                  key={item.language}
+                  className={`flex items-center gap-2 px-3 py-1 rounded-lg border text-xs font-mono transition-all ${style.bg} ${style.text} ${style.border}`}
                 >
                   <span className={`w-2 h-2 rounded-full ${style.bar}`} />
-                  <span className={`font-bold ${style.text}`}>{lang.language}</span>
-                  <span className="text-slate-500">|</span>
-                  <span className="text-slate-300">{lang.files.toLocaleString()} files</span>
-                  <span className="text-slate-500">|</span>
-                  <span className="text-slate-400">{pct.toFixed(1)}%</span>
+                  <span className="font-semibold">{item.language}</span>
+                  <span className="opacity-40">|</span>
+                  <span>{item.files} files</span>
+                  <span className="opacity-40">|</span>
+                  <span>{pct.toFixed(1)}%</span>
                 </div>
               );
             })}
@@ -242,10 +244,10 @@ export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
         </div>
       )}
 
-      {/* Filter & Search Toolbar */}
-      <div className="bg-slate-900/80 border border-slate-800/80 rounded-xl p-4 shadow-lg space-y-4">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          {/* Search Box */}
+      {/* Filter and Search Toolbar */}
+      <div className="bg-slate-900/80 border border-slate-800/80 rounded-xl p-4 shadow-lg space-y-3">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+          {/* Search Input */}
           <div className="relative flex-1">
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
@@ -256,13 +258,13 @@ export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
                 setCurrentPage(1);
               }}
               placeholder="Search by file name or path (e.g. gradio_demo.py)..."
-              className="w-full pl-10 pr-4 py-2 bg-slate-950 border border-slate-800 rounded-lg text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors font-mono"
+              className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-10 pr-4 py-2 text-xs font-mono text-slate-100 placeholder-slate-400 focus:outline-none focus:border-indigo-500 transition-colors shadow-inner"
             />
           </div>
 
-          {/* Quick Filters */}
+          {/* Filter Controls Row */}
           <div className="flex flex-wrap items-center gap-3">
-            {/* Similarity Filter Slider */}
+            {/* Min Similarity Slider */}
             <div className="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800 text-xs font-mono">
               <span className="text-slate-400">Min Match:</span>
               <input
@@ -275,12 +277,12 @@ export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
                   setMinSimilarity(Number(e.target.value));
                   setCurrentPage(1);
                 }}
-                className="w-20 h-1.5 bg-slate-900 rounded appearance-none cursor-pointer accent-indigo-500"
+                className="w-20 h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
               />
-              <span className="text-indigo-400 font-bold min-w-[35px]">{minSimilarity}%</span>
+              <span className="text-indigo-300 font-bold min-w-[32px]">{minSimilarity}%</span>
             </div>
 
-            {/* Language Selector */}
+            {/* Language Filter Dropdown */}
             <div className="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800 text-xs font-mono">
               <Filter className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
               <select
@@ -291,7 +293,9 @@ export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
                 }}
                 className="bg-transparent text-slate-200 focus:outline-none cursor-pointer"
               >
-                <option value="ALL">All Languages</option>
+                <option value="ALL" className="bg-slate-900 text-slate-100">
+                  All Languages
+                </option>
                 {results.language_breakdown.map((l) => (
                   <option
                     key={l.language}

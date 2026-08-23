@@ -5,13 +5,9 @@
  * Uses Vite Plus (`vp`) exclusively for JS/TS formatting, linting, type-checking, and building.
  */
 
-interface Step {
-  title: string;
-  command: string[];
-  cwd?: string;
-}
+import { executeStep, printScriptBanner, ScriptStep } from "./lib/step-runner";
 
-const STEPS: Step[] = [
+const STEPS: ScriptStep[] = [
   {
     title: "Rust code formatting check (cargo fmt --check)",
     command: ["cargo", "fmt", "--check"],
@@ -70,39 +66,13 @@ const STEPS: Step[] = [
   },
 ];
 
-async function runStep(step: Step, index: number, total: number): Promise<void> {
-  const stepNum = `[${index + 1}/${total}]`;
-  console.log(`\n\x1b[33m${stepNum} ${step.title}...\x1b[0m`);
-  const startTime = performance.now();
-
-  const proc = Bun.spawn(step.command, {
-    cwd: step.cwd,
-    stdout: "inherit",
-    stderr: "inherit",
-  });
-
-  const exitCode = await proc.exited;
-  const elapsedMs = Math.round(performance.now() - startTime);
-
-  if (exitCode !== 0) {
-    console.error(
-      `\n\x1b[31m[FAIL] Step failed with exit code ${exitCode} (${elapsedMs}ms): ${step.command.join(" ")}\x1b[0m\n`,
-    );
-    process.exit(exitCode ?? 1);
-  }
-
-  console.log(`\x1b[32m[PASS] (${elapsedMs}ms)\x1b[0m`);
-}
-
 async function main() {
-  console.log("\x1b[36m=======================================================\x1b[0m");
-  console.log("\x1b[36m       CDDM Full Repository Verification Pipeline      \x1b[0m");
-  console.log("\x1b[36m=======================================================\x1b[0m");
+  printScriptBanner("CDDM Full Repository Verification Pipeline", "\x1b[36m");
 
   const overallStart = performance.now();
 
   for (const [i, step] of STEPS.entries()) {
-    await runStep(step, i, STEPS.length);
+    await executeStep(step, i, STEPS.length, "\x1b[33m");
   }
 
   const totalTime = (performance.now() - overallStart) / 1000;

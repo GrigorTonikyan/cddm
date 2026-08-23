@@ -34,7 +34,7 @@
 - **Target Milestone**: `v0.2.0`
 - **Component**: `crates/cddm-cli`, `crates/cddm-core`
 - **Priority**: `High`
-- **Status**: `Proposed`
+- **Status**: `Completed (v0.2.0)`
 
 #### Problem Statement
 
@@ -61,7 +61,7 @@ CI/CD workflows currently support JSON, Markdown, and Console table formats. Git
 - **Target Milestone**: `v0.2.0`
 - **Component**: `crates/cddm-mcp`
 - **Priority**: `High`
-- **Status**: `Proposed`
+- **Status**: `Completed (v0.2.0)`
 
 #### Problem Statement
 

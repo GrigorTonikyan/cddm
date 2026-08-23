@@ -15,24 +15,36 @@ pub struct LanguageGrammar {
     pub block_comment: Option<(&'static str, &'static str)>,
 }
 
+const fn make_c_style_grammar(
+    name: &'static str,
+    extensions: &'static [&'static str],
+    keywords: &'static [&'static str],
+) -> LanguageGrammar {
+    LanguageGrammar {
+        name,
+        extensions,
+        keywords,
+        line_comment: "//",
+        block_comment: Some(("/*", "*/")),
+    }
+}
+
 /// A static registry of supported languages.
 pub const SUPPORTED_LANGUAGES: &[LanguageGrammar] = &[
-    LanguageGrammar {
-        name: "Rust",
-        extensions: &["rs"],
-        keywords: &[
+    make_c_style_grammar(
+        "Rust",
+        &["rs"],
+        &[
             "as", "break", "const", "continue", "crate", "else", "enum", "extern", "false", "fn",
             "for", "if", "impl", "in", "let", "loop", "match", "mod", "move", "mut", "pub", "ref",
             "return", "self", "Self", "static", "struct", "super", "trait", "true", "type",
             "unsafe", "use", "where", "while", "async", "await", "dyn",
         ],
-        line_comment: "//",
-        block_comment: Some(("/*", "*/")),
-    },
-    LanguageGrammar {
-        name: "TypeScript",
-        extensions: &["ts", "tsx"],
-        keywords: &[
+    ),
+    make_c_style_grammar(
+        "TypeScript",
+        &["ts", "tsx"],
+        &[
             "break",
             "case",
             "catch",
@@ -94,13 +106,11 @@ pub const SUPPORTED_LANGUAGES: &[LanguageGrammar] = &[
             "from",
             "of",
         ],
-        line_comment: "//",
-        block_comment: Some(("/*", "*/")),
-    },
-    LanguageGrammar {
-        name: "JavaScript",
-        extensions: &["js", "jsx", "cjs", "mjs"],
-        keywords: &[
+    ),
+    make_c_style_grammar(
+        "JavaScript",
+        &["js", "jsx", "cjs", "mjs"],
+        &[
             "break",
             "case",
             "catch",
@@ -141,9 +151,7 @@ pub const SUPPORTED_LANGUAGES: &[LanguageGrammar] = &[
             "true",
             "false",
         ],
-        line_comment: "//",
-        block_comment: Some(("/*", "*/")),
-    },
+    ),
     LanguageGrammar {
         name: "Python",
         extensions: &["py"],
@@ -156,10 +164,10 @@ pub const SUPPORTED_LANGUAGES: &[LanguageGrammar] = &[
         line_comment: "#",
         block_comment: None,
     },
-    LanguageGrammar {
-        name: "Go",
-        extensions: &["go"],
-        keywords: &[
+    make_c_style_grammar(
+        "Go",
+        &["go"],
+        &[
             "break",
             "default",
             "func",
@@ -186,13 +194,11 @@ pub const SUPPORTED_LANGUAGES: &[LanguageGrammar] = &[
             "return",
             "var",
         ],
-        line_comment: "//",
-        block_comment: Some(("/*", "*/")),
-    },
-    LanguageGrammar {
-        name: "Java",
-        extensions: &["java"],
-        keywords: &[
+    ),
+    make_c_style_grammar(
+        "Java",
+        &["java"],
+        &[
             "abstract",
             "continue",
             "for",
@@ -247,25 +253,21 @@ pub const SUPPORTED_LANGUAGES: &[LanguageGrammar] = &[
             "true",
             "false",
         ],
-        line_comment: "//",
-        block_comment: Some(("/*", "*/")),
-    },
-    LanguageGrammar {
-        name: "C",
-        extensions: &["c", "h"],
-        keywords: &[
+    ),
+    make_c_style_grammar(
+        "C",
+        &["c", "h"],
+        &[
             "auto", "break", "case", "char", "const", "continue", "default", "do", "double",
             "else", "enum", "extern", "float", "for", "goto", "if", "inline", "int", "long",
             "register", "restrict", "return", "short", "signed", "sizeof", "static", "struct",
             "switch", "typedef", "union", "unsigned", "void", "volatile", "while",
         ],
-        line_comment: "//",
-        block_comment: Some(("/*", "*/")),
-    },
-    LanguageGrammar {
-        name: "C++",
-        extensions: &["cpp", "hpp", "cc", "hh", "cxx", "hxx"],
-        keywords: &[
+    ),
+    make_c_style_grammar(
+        "C++",
+        &["cpp", "hpp", "cc", "hh", "cxx", "hxx"],
+        &[
             "alignas",
             "alignof",
             "and",
@@ -353,13 +355,11 @@ pub const SUPPORTED_LANGUAGES: &[LanguageGrammar] = &[
             "xor",
             "xor_eq",
         ],
-        line_comment: "//",
-        block_comment: Some(("/*", "*/")),
-    },
-    LanguageGrammar {
-        name: "C#",
-        extensions: &["cs"],
-        keywords: &[
+    ),
+    make_c_style_grammar(
+        "C#",
+        &["cs"],
+        &[
             "abstract",
             "as",
             "base",
@@ -438,13 +438,11 @@ pub const SUPPORTED_LANGUAGES: &[LanguageGrammar] = &[
             "volatile",
             "while",
         ],
-        line_comment: "//",
-        block_comment: Some(("/*", "*/")),
-    },
-    LanguageGrammar {
-        name: "CSS",
-        extensions: &["css", "scss", "sass", "less"],
-        keywords: &[
+    ),
+    make_c_style_grammar(
+        "CSS",
+        &["css", "scss", "sass", "less"],
+        &[
             "import",
             "media",
             "keyframes",
@@ -453,9 +451,7 @@ pub const SUPPORTED_LANGUAGES: &[LanguageGrammar] = &[
             "supports",
             "namespace",
         ],
-        line_comment: "//",
-        block_comment: Some(("/*", "*/")),
-    },
+    ),
     LanguageGrammar {
         name: "HTML",
         extensions: &["html", "htm"],
@@ -463,13 +459,7 @@ pub const SUPPORTED_LANGUAGES: &[LanguageGrammar] = &[
         line_comment: "",
         block_comment: Some(("<!--", "-->")),
     },
-    LanguageGrammar {
-        name: "JSON",
-        extensions: &["json"],
-        keywords: &["true", "false", "null"],
-        line_comment: "//",
-        block_comment: Some(("/*", "*/")),
-    },
+    make_c_style_grammar("JSON", &["json"], &["true", "false", "null"]),
 ];
 
 /// Gets the grammar definition for a given file path based on its extension.

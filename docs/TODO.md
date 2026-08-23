@@ -9,24 +9,25 @@
 
 ### Milestone v0.2.0: CI/CD & AI Agent Tooling (High Priority)
 
-- [ ] **[EP-01] SARIF 2.1.0 Reporter for GitHub Code Scanning**
-  - [ ] Add `OutputFormat::Sarif` in `crates/cddm-cli/src/main.rs`
-  - [ ] Implement `sarif_reporter.rs` emitting OASIS-compliant SARIF JSON
-  - [ ] Map `ClonePair` to SARIF `result` objects with secondary counterpart locations
-  - [ ] Add CLI unit and integration tests for SARIF validation
-  - [ ] Configure GitHub Code Scanning action workflow sample
+- [x] **[EP-01] SARIF 2.1.0 Reporter for GitHub Code Scanning**
+  - [x] Add `OutputFormat::Sarif` in `crates/cddm-cli/src/main.rs`
+  - [x] Implement `sarif.rs` emitting OASIS-compliant SARIF 2.1.0 JSON in `cddm-core`
+  - [x] Map `ClonePair` to SARIF `result` objects with primary and counterpart `relatedLocations`
+  - [x] Add CLI and core unit tests for SARIF validation and rule catalog
+  - [x] Configure GitHub Code Scanning action workflow sample
 
-- [ ] **[EP-02] Advanced MCP Agentic Toolset & Resource Protocol**
-  - [ ] Add `cddm_get_clone_pair` tool to `crates/cddm-mcp/src/main.rs`
-  - [ ] Add `cddm_suggest_refactor` tool with parameter identification
-  - [ ] Implement `cddm_compare_revisions` tool for diff checking
-  - [ ] Expose `cddm://workspace/health` and `cddm://workspace/clones` MCP resources
-  - [ ] Add unit tests for JSON-RPC 2.0 requests in `cddm-mcp`
+- [x] **[EP-02] Advanced MCP Agentic Toolset & Resource Protocol**
+  - [x] Add `cddm_get_clone_pair` tool to `crates/cddm-mcp/src/main.rs`
+  - [x] Add `cddm_suggest_refactor` tool with invariant LCS parameter extraction and unified `.patch` format
+  - [x] Add `cddm_export_sarif` tool for on-demand SARIF 2.1.0 JSON generation
+  - [x] Expose `cddm://workspace/health` and `cddm://workspace/clones` MCP resources (`resources/list`, `resources/read`)
+  - [x] Expose `audit_dry_health` and `refactor_clone_pair` MCP prompts (`prompts/list`, `prompts/get`)
+  - [x] Add unit tests for JSON-RPC 2.0 requests in `cddm-mcp`
 
-- [ ] **Official GitHub Action (`GrigorTonikyan/cddm-action`)**
-  - [ ] Create `.github/actions/cddm-scan/action.yml`
-  - [ ] Implement PR summary comment with DRY Health Score delta badge
-  - [ ] Support `--fail-threshold` failure enforcement
+- [x] **Official GitHub Action (`GrigorTonikyan/cddm-action`)**
+  - [x] Create `.github/actions/cddm-scan/action.yml`
+  - [x] Implement PR summary comment with DRY Health Score metrics and `$GITHUB_STEP_SUMMARY`
+  - [x] Support `--fail-threshold` failure enforcement
 
 ---
 

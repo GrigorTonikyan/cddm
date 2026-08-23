@@ -5,6 +5,7 @@
  */
 
 import { readFileSync, existsSync } from "node:fs";
+import { hasEmoji } from "./check-no-emojis";
 
 export const CONVENTIONAL_COMMIT_REGEX =
   /^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(?:\(([a-zA-Z0-9_/-]+)\))?(!)?:\s*(.+)$/;
@@ -18,10 +19,6 @@ export interface ValidationResult {
   error?: string;
 }
 
-// Regex matching Extended Pictographic characters and Emojis
-const EMOJI_CHECK_REGEX =
-  /[\p{Extended_Pictographic}\u{1F300}-\u{1FAFF}\u{1F000}-\u{1F02F}\u{1F0A0}-\u{1F0FF}\u{1F100}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{2600}-\u{27BF}\u{2300}-\u{23FF}\u{2B50}\u{2B55}]/u;
-
 export function validateCommitMessage(message: string): ValidationResult {
   const trimmed = message.trim();
   if (!trimmed) {
@@ -29,7 +26,7 @@ export function validateCommitMessage(message: string): ValidationResult {
   }
 
   // Strictly reject emojis in commit messages
-  if (EMOJI_CHECK_REGEX.test(trimmed)) {
+  if (hasEmoji(trimmed)) {
     return {
       valid: false,
       breaking: false,

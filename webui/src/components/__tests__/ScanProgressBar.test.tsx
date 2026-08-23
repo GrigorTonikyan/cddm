@@ -2,11 +2,10 @@ import { render, screen } from "@testing-library/react";
 import { describe, it, expect, beforeEach } from "vite-plus/test";
 import { ScanProgressBar } from "../ScanProgressBar";
 import { useCDDMStore } from "../../store/cddm-store";
+import { resetTestStore, createMockProgress } from "./test-helpers";
 
 describe("ScanProgressBar Component", () => {
-  beforeEach(() => {
-    useCDDMStore.getState().resetScan();
-  });
+  beforeEach(resetTestStore);
 
   it("should return null when not scanning", () => {
     const { container } = render(<ScanProgressBar />);
@@ -16,14 +15,7 @@ describe("ScanProgressBar Component", () => {
   it("should render progress bar when scanning", () => {
     useCDDMStore.setState({
       isScanning: true,
-      progress: {
-        progress: 0.5,
-        phase: "Tokenization",
-        message: "Tokenizing files...",
-        files_processed: 10,
-        total_files: 20,
-        scan_id: "123",
-      },
+      progress: createMockProgress(),
     });
     render(<ScanProgressBar />);
     expect(screen.getByText(/Phase: Tokenization/i)).toBeDefined();
@@ -32,17 +24,15 @@ describe("ScanProgressBar Component", () => {
   it("should display phase name and percentage", () => {
     useCDDMStore.setState({
       isScanning: true,
-      progress: {
+      progress: createMockProgress({
         progress: 0.75,
         phase: "Indexing",
         message: "Indexing clones...",
         files_processed: 15,
-        total_files: 20,
-        scan_id: "123",
-      },
+      }),
     });
     render(<ScanProgressBar />);
     expect(screen.getByText(/Phase: Indexing/i)).toBeDefined();
-    expect(screen.getByText("75%")).toBeDefined();
+    expect(screen.getByText(/75%/i)).toBeDefined();
   });
 });

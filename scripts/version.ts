@@ -47,8 +47,8 @@ export const CONVENTIONAL_TYPES = [
   "revert",
 ] as const;
 
-export const COMMIT_REGEX =
-  /^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(?:\(([a-zA-Z0-9_-]+)\))?(!)?:\s*(.+)$/;
+import { CONVENTIONAL_COMMIT_REGEX as COMMIT_REGEX } from "./validate-commit-msg";
+export { COMMIT_REGEX };
 
 /**
  * Parse a single commit message into a structured Conventional Commit object.

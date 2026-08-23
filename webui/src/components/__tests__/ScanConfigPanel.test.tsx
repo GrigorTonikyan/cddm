@@ -2,11 +2,10 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, beforeEach } from "vite-plus/test";
 import { ScanConfigPanel } from "../ScanConfigPanel";
 import { useCDDMStore } from "../../store/cddm-store";
+import { resetTestStore } from "./test-helpers";
 
 describe("ScanConfigPanel Component", () => {
-  beforeEach(() => {
-    useCDDMStore.getState().resetScan();
-  });
+  beforeEach(resetTestStore);
 
   it("should render inputs and controls correctly", () => {
     render(<ScanConfigPanel />);
@@ -24,9 +23,6 @@ describe("ScanConfigPanel Component", () => {
 
   it("should update min tokens slider", () => {
     render(<ScanConfigPanel />);
-    // The range input has min/max/step so we can find it by its role or just any range input.
-    // Actually we can find it by finding the input type range or the label.
-    // It's easier to find it by value or test-id, but we can just find it by type range.
     const slider = document.querySelector('input[type="range"]') as HTMLInputElement;
     fireEvent.change(slider, { target: { value: "100" } });
     expect(useCDDMStore.getState().config.min_tokens).toBe(100);

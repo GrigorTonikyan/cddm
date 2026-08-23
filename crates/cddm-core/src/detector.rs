@@ -8,6 +8,7 @@ use crate::types::{
 use ignore::WalkBuilder;
 use rayon::prelude::*;
 use std::collections::HashMap;
+use std::path::Path;
 use std::sync::{
     Arc,
     atomic::{AtomicBool, Ordering},
@@ -253,6 +254,24 @@ pub async fn run_scan(
 
             let mut merged_pairs = Vec::new();
             if !raw_pairs.is_empty() {
+                let mut push_pair_if_valid =
+                    |mut pair: ClonePair, file_a_idx: usize, file_b_idx: usize| {
+                        let count_a = count_tokens_in_line_span(
+                            &parsed_files_clone[file_a_idx].token_spans,
+                            pair.start_line_a,
+                            pair.end_line_a,
+                        );
+                        let count_b = count_tokens_in_line_span(
+                            &parsed_files_clone[file_b_idx].token_spans,
+                            pair.start_line_b,
+                            pair.end_line_b,
+                        );
+                        pair.token_count = std::cmp::max(k, std::cmp::min(count_a, count_b));
+                        if pair.token_count >= config_clone.min_tokens {
+                            merged_pairs.push(pair);
+                        }
+                    };
+
                 let mut current = raw_pairs[0].clone();
                 let mut curr_file_a_idx = parsed_files_clone
                     .iter()
@@ -284,22 +303,7 @@ pub async fn run_scan(
                         current.end_line_a = candidate_end_a;
                         current.end_line_b = candidate_end_b;
                     } else {
-                        let count_a = count_tokens_in_line_span(
-                            &parsed_files_clone[curr_file_a_idx].token_spans,
-                            current.start_line_a,
-                            current.end_line_a,
-                        );
-                        let count_b = count_tokens_in_line_span(
-                            &parsed_files_clone[curr_file_b_idx].token_spans,
-                            current.start_line_b,
-                            current.end_line_b,
-                        );
-                        current.token_count = std::cmp::max(k, std::cmp::min(count_a, count_b));
-
-                        if current.token_count >= config_clone.min_tokens {
-                            merged_pairs.push(current);
-                        }
-
+                        push_pair_if_valid(current, curr_file_a_idx, curr_file_b_idx);
                         current = next;
                         curr_file_a_idx = parsed_files_clone
                             .iter()
@@ -312,21 +316,7 @@ pub async fn run_scan(
                     }
                 }
 
-                let count_a = count_tokens_in_line_span(
-                    &parsed_files_clone[curr_file_a_idx].token_spans,
-                    current.start_line_a,
-                    current.end_line_a,
-                );
-                let count_b = count_tokens_in_line_span(
-                    &parsed_files_clone[curr_file_b_idx].token_spans,
-                    current.start_line_b,
-                    current.end_line_b,
-                );
-                current.token_count = std::cmp::max(k, std::cmp::min(count_a, count_b));
-
-                if current.token_count >= config_clone.min_tokens {
-                    merged_pairs.push(current);
-                }
+                push_pair_if_valid(current, curr_file_a_idx, curr_file_b_idx);
             }
 
             merged_pairs.sort_by(|a, b| {
@@ -371,9 +361,11 @@ pub async fn run_scan(
 
     let mut cross_module_count = 0;
     for pair in &merged_pairs {
-        let dir_a = pair.file_a.split('/').next().unwrap_or("");
-        let dir_b = pair.file_b.split('/').next().unwrap_or("");
-        if dir_a != dir_b {
+        let norm_a = pair.file_a.replace('\\', "/");
+        let norm_b = pair.file_b.replace('\\', "/");
+        let parent_a = Path::new(&norm_a).parent().unwrap_or(Path::new(""));
+        let parent_b = Path::new(&norm_b).parent().unwrap_or(Path::new(""));
+        if parent_a != parent_b {
             cross_module_count += 1;
         }
     }
@@ -390,8 +382,8 @@ pub async fn run_scan(
     } else {
         0.0
     };
-    let dry_health_score = ((MAX_HEALTH_SCORE - duplication_percentage * 1.5)
-        * (1.0 - 0.25 * cross_module_ratio))
+    let duplication_weight = 1.5 * (1.0 + 0.3 * cross_module_ratio);
+    let dry_health_score = (MAX_HEALTH_SCORE - duplication_percentage * duplication_weight)
         .clamp(MIN_HEALTH_SCORE, MAX_HEALTH_SCORE);
 
     let _ = progress_tx
@@ -424,20 +416,26 @@ mod tests {
     use std::sync::atomic::AtomicBool;
     use tokio::sync::mpsc;
 
-    #[tokio::test]
-    async fn test_empty_scan() {
-        let (tx, _rx) = mpsc::channel(100);
-        let config = ScanConfig {
-            directory: "non_existent_dir".to_string(),
-            min_tokens: 50,
+    fn make_test_config(directory: &str, min_tokens: usize) -> ScanConfig {
+        ScanConfig {
+            directory: directory.to_string(),
+            min_tokens,
             languages: vec![],
             ignore_patterns: vec![],
             detect_type2: true,
             scan_self: false,
             enable_git_blame: false,
-        };
+        }
+    }
 
-        let result = run_scan(config, tx, Arc::new(AtomicBool::new(false)))
+    async fn run_test_scan(config: ScanConfig) -> Result<ScanResult, String> {
+        let (tx, _rx) = mpsc::channel(100);
+        run_scan(config, tx, Arc::new(AtomicBool::new(false))).await
+    }
+
+    #[tokio::test]
+    async fn test_empty_scan() {
+        let result = run_test_scan(make_test_config("non_existent_dir", 50))
             .await
             .unwrap();
         assert_eq!(result.total_files, 0);
@@ -477,18 +475,7 @@ mod tests {
         let mut file_b = File::create(&file_b_path).unwrap();
         writeln!(file_b, "{}", content_ext).unwrap();
 
-        let (tx, _rx) = mpsc::channel(100);
-        let config = ScanConfig {
-            directory: dir.path().to_string_lossy().to_string(),
-            min_tokens: 50,
-            languages: vec![],
-            ignore_patterns: vec![],
-            detect_type2: true,
-            scan_self: false,
-            enable_git_blame: false,
-        };
-
-        let result = run_scan(config, tx, Arc::new(AtomicBool::new(false)))
+        let result = run_test_scan(make_test_config(&dir.path().to_string_lossy(), 50))
             .await
             .unwrap();
         assert!(result.total_clones > 0);
@@ -498,18 +485,8 @@ mod tests {
     #[tokio::test]
     async fn test_scan_cancellation() {
         let (tx, _rx) = mpsc::channel(100);
-        let config = ScanConfig {
-            directory: ".".to_string(),
-            min_tokens: 50,
-            languages: vec![],
-            ignore_patterns: vec![],
-            detect_type2: true,
-            scan_self: false,
-            enable_git_blame: false,
-        };
-
         let cancel_flag = Arc::new(AtomicBool::new(true)); // Pre-cancelled
-        let result = run_scan(config, tx, cancel_flag).await;
+        let result = run_scan(make_test_config(".", 50), tx, cancel_flag).await;
         assert_eq!(result.unwrap_err(), "Scan cancelled");
     }
 
@@ -525,20 +502,10 @@ mod tests {
         let mut file_py = File::create(dir.path().join("test.py")).unwrap();
         writeln!(file_py, "def main(): pass").unwrap();
 
-        let (tx, _rx) = mpsc::channel(100);
-        let config = ScanConfig {
-            directory: dir.path().to_string_lossy().to_string(),
-            min_tokens: 50,
-            languages: vec!["Rust".to_string()],
-            ignore_patterns: vec![],
-            detect_type2: true,
-            scan_self: false,
-            enable_git_blame: false,
-        };
+        let mut config = make_test_config(&dir.path().to_string_lossy(), 50);
+        config.languages = vec!["Rust".to_string()];
 
-        let result = run_scan(config, tx, Arc::new(AtomicBool::new(false)))
-            .await
-            .unwrap();
+        let result = run_test_scan(config).await.unwrap();
         assert_eq!(result.total_files, 1);
         assert_eq!(result.language_breakdown.len(), 1);
         assert_eq!(result.language_breakdown[0].language, "Rust");
@@ -554,36 +521,16 @@ mod tests {
         File::create(dir.path().join("node_modules").join("test.rs")).unwrap();
         File::create(dir.path().join("main.rs")).unwrap();
 
-        let (tx, _rx) = mpsc::channel(100);
-        let config = ScanConfig {
-            directory: dir.path().to_string_lossy().to_string(),
-            min_tokens: 50,
-            languages: vec![],
-            ignore_patterns: vec!["node_modules".to_string()],
-            detect_type2: true,
-            scan_self: false,
-            enable_git_blame: false,
-        };
+        let mut config = make_test_config(&dir.path().to_string_lossy(), 50);
+        config.ignore_patterns = vec!["node_modules".to_string()];
 
-        let result = run_scan(config, tx, Arc::new(AtomicBool::new(false)))
-            .await
-            .unwrap();
+        let result = run_test_scan(config).await.unwrap();
         assert_eq!(result.total_files, 1);
     }
 
     #[tokio::test]
     async fn test_dry_health_score_range() {
-        let (tx, _rx) = mpsc::channel(100);
-        let config = ScanConfig {
-            directory: ".".to_string(),
-            min_tokens: 50,
-            languages: vec![],
-            ignore_patterns: vec![],
-            detect_type2: true,
-            scan_self: false,
-            enable_git_blame: false,
-        };
-        let result = run_scan(config, tx, Arc::new(AtomicBool::new(false))).await;
+        let result = run_test_scan(make_test_config(".", 50)).await;
         if let Ok(res) = result {
             assert!(res.dry_health_score >= 0.0 && res.dry_health_score <= 100.0);
         }
@@ -603,20 +550,10 @@ mod tests {
             writeln!(f, "{}", content).unwrap();
         }
 
-        let (tx, _rx) = mpsc::channel(100);
-        let config = ScanConfig {
-            directory: dir.path().to_string_lossy().to_string(),
-            min_tokens: 20,
-            languages: vec![],
-            ignore_patterns: vec![],
-            detect_type2: true,
-            scan_self: true,
-            enable_git_blame: false,
-        };
+        let mut config = make_test_config(&dir.path().to_string_lossy(), 20);
+        config.scan_self = true;
 
-        let result = run_scan(config, tx, Arc::new(AtomicBool::new(false)))
-            .await
-            .unwrap();
+        let result = run_test_scan(config).await.unwrap();
         for pair in &result.clone_pairs {
             if pair.file_a == pair.file_b {
                 let overlaps =

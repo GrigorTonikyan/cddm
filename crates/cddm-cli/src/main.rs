@@ -34,7 +34,7 @@ enum Commands {
         #[arg(short, long, default_value_t = cddm_core::DEFAULT_MIN_TOKENS)]
         min_tokens: usize,
 
-        /// Output report format (console, json, markdown)
+        /// Output report format (console, json, markdown, sarif)
         #[arg(short, long, value_enum, default_value_t = OutputFormat::Console)]
         format: OutputFormat,
 
@@ -72,6 +72,7 @@ enum OutputFormat {
     Console,
     Json,
     Markdown,
+    Sarif,
 }
 
 #[tokio::main]
@@ -129,6 +130,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     println!("{}", serde_json::to_string_pretty(&result)?);
                 }
                 OutputFormat::Markdown => print_markdown_report(&result),
+                OutputFormat::Sarif => print_sarif_report(&result)?,
             }
 
             if let Some(threshold) = fail_threshold
@@ -149,15 +151,30 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+fn scan_metrics_summary(result: &ScanResult) -> [(&'static str, String); 7] {
+    [
+        ("Scan ID", result.scan_id.clone()),
+        ("Total Files", result.total_files.to_string()),
+        ("Total Tokens", result.total_tokens.to_string()),
+        ("Total Clone Pairs", result.total_clones.to_string()),
+        (
+            "Duplication Rate",
+            format!("{:.2}%", result.duplication_percentage),
+        ),
+        (
+            "DRY Health Score",
+            format!("{:.1} / 100.0", result.dry_health_score),
+        ),
+        ("Scan Duration", format!("{} ms", result.duration_ms)),
+    ]
+}
+
 fn print_console_report(result: &ScanResult) {
     println!("\n=== CDDM — Code De-Duplication Meister Report ===");
-    println!("Scan ID:           {}", result.scan_id);
-    println!("Total Files:       {}", result.total_files);
-    println!("Total Tokens:      {}", result.total_tokens);
-    println!("Total Clone Pairs: {}", result.total_clones);
-    println!("Duplication:       {:.2}%", result.duplication_percentage);
-    println!("DRY Health Score:  {:.1} / 100.0", result.dry_health_score);
-    println!("Duration:          {} ms\n", result.duration_ms);
+    for (k, v) in scan_metrics_summary(result) {
+        println!("{:<18} {}", format!("{}:", k), v);
+    }
+    println!();
 
     if !result.clone_pairs.is_empty() {
         let mut table = Table::new();
@@ -195,19 +212,10 @@ fn print_console_report(result: &ScanResult) {
 
 fn print_markdown_report(result: &ScanResult) {
     println!("# CDDM Duplicate Code Scan Report\n");
-    println!("- **Scan ID**: `{}`", result.scan_id);
-    println!("- **Total Files**: {}", result.total_files);
-    println!("- **Total Tokens**: {}", result.total_tokens);
-    println!("- **Total Clone Pairs**: {}", result.total_clones);
-    println!(
-        "- **Duplication Rate**: {:.2}%",
-        result.duplication_percentage
-    );
-    println!(
-        "- **DRY Health Score**: {:.1} / 100",
-        result.dry_health_score
-    );
-    println!("- **Scan Duration**: {} ms\n", result.duration_ms);
+    for (k, v) in scan_metrics_summary(result) {
+        println!("- **{}**: `{}`", k, v);
+    }
+    println!();
 
     if !result.clone_pairs.is_empty() {
         println!("| File A | Lines A | File B | Lines B | Tokens | Similarity |");
@@ -227,5 +235,71 @@ fn print_markdown_report(result: &ScanResult) {
         }
     } else {
         println!("Zero code duplication detected!");
+    }
+}
+
+fn print_sarif_report(result: &ScanResult) -> Result<(), Box<dyn std::error::Error>> {
+    let sarif_json = cddm_core::generate_sarif_json(result);
+    println!("{}", serde_json::to_string_pretty(&sarif_json)?);
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use cddm_core::{ClonePair, CloneType, LanguageStats, ScanResult};
+
+    fn make_test_result() -> ScanResult {
+        ScanResult {
+            scan_id: "test-scan-cli".to_string(),
+            total_files: 3,
+            total_tokens: 500,
+            total_clones: 1,
+            duplication_percentage: 10.0,
+            dry_health_score: 90.0,
+            clone_pairs: vec![ClonePair {
+                file_a: "src/a.rs".to_string(),
+                start_line_a: 1,
+                end_line_a: 10,
+                file_b: "src/b.rs".to_string(),
+                start_line_b: 1,
+                end_line_b: 10,
+                token_count: 50,
+                similarity: 1.0,
+                fragment_hash: "hash_cli".to_string(),
+                clone_type: CloneType::Exact,
+                author_a: None,
+                author_b: None,
+            }],
+            duration_ms: 15,
+            language_breakdown: vec![LanguageStats {
+                language: "Rust".to_string(),
+                files: 3,
+                tokens: 500,
+                clones: 1,
+            }],
+        }
+    }
+
+    #[test]
+    fn test_output_format_variants() {
+        assert_eq!(OutputFormat::Console, OutputFormat::Console);
+        assert_ne!(OutputFormat::Json, OutputFormat::Sarif);
+        assert_eq!(OutputFormat::Sarif, OutputFormat::Sarif);
+        assert_eq!(OutputFormat::Markdown, OutputFormat::Markdown);
+    }
+
+    #[test]
+    fn test_print_sarif_report_succeeds() {
+        let result = make_test_result();
+        let res = print_sarif_report(&result);
+        assert!(res.is_ok());
+    }
+
+    #[test]
+    fn test_print_console_and_markdown_reports() {
+        let result = make_test_result();
+        print_console_report(&result);
+        print_markdown_report(&result);
     }
 }

@@ -92,34 +92,33 @@ Execute a code duplication scan asynchronously.
 
 Executes terminal clone detection with configurable reporters.
 
-| Flag               | Short | Type                            | Default   | Description                                    |
-| :----------------- | :---- | :------------------------------ | :-------- | :--------------------------------------------- |
-| `--min-tokens`     | `-m`  | `usize`                         | `50`      | Minimum token clone threshold                  |
-| `--format`         | `-f`  | `console\|json\|markdown\|html` | `console` | Output reporter format                         |
-| `--fail-threshold` |       | `f64`                           | None      | Exit code 1 if duplication % exceeds threshold |
-| `--languages`      | `-l`  | `String[]`                      | `[]`      | Filter scan by language names                  |
-| `--ignore`         | `-i`  | `String[]`                      | `[]`      | Additional ignore glob patterns                |
-| `--git-blame`      |       | `bool`                          | `false`   | Enable `gix` git author annotations            |
-| `--no-self`        |       | `bool`                          | `false`   | Skip intra-file clone checking                 |
-| `--output`         | `-o`  | `String`                        | None      | Save report directly to file                   |
+| Flag               | Short | Type                             | Default   | Description                                    |
+| :----------------- | :---- | :------------------------------- | :-------- | :--------------------------------------------- |
+| `--min-tokens`     | `-m`  | `usize`                          | `50`      | Minimum token clone threshold                  |
+| `--format`         | `-f`  | `console\|json\|markdown\|sarif` | `console` | Output reporter format                         |
+| `--fail-threshold` |       | `f64`                            | None      | Exit code 1 if duplication % exceeds threshold |
+| `--languages`      | `-l`  | `String[]`                       | `[]`      | Filter scan by language names                  |
+| `--ignore`         | `-i`  | `String[]`                       | `[]`      | Additional ignore glob patterns                |
+| `--git-blame`      |       | `bool`                           | `false`   | Enable `gix` git author annotations            |
 
 ### Command: `cddm serve`
 
 Launches the Axum server delivering the interactive WebUI.
 
-| Flag     | Short | Type     | Default     | Description               |
-| :------- | :---- | :------- | :---------- | :------------------------ |
-| `--port` | `-p`  | `u16`    | `3000`      | HTTP server port          |
-| `--host` |       | `String` | `127.0.0.1` | Host binding address      |
-| `--open` | `-o`  | `bool`   | `true`      | Auto-open default browser |
+| Flag     | Short | Type   | Default | Description               |
+| :------- | :---- | :----- | :------ | :------------------------ |
+| `--port` | `-p`  | `u16`  | `3000`  | HTTP server port          |
+| `--open` | `-o`  | `bool` | `false` | Auto-open default browser |
 
 ---
 
 ## 3. MCP Protocol (`cddm-mcp`)
 
-The MCP server communicates over stdio using JSON-RPC 2.0.
+The MCP server communicates over stdio using JSON-RPC 2.0 and supports Tools, Resources, and Prompts.
 
-### Tool: `scan_codebase`
+### Tools
+
+#### `scan_codebase`
 
 Runs a polyglot code duplication scan and returns structured JSON metrics and clone pair details for AI context.
 
@@ -129,12 +128,63 @@ Runs a polyglot code duplication scan and returns structured JSON metrics and cl
 | `min_tokens`       | `number`  | No       | `50`    | Minimum token clone threshold            |
 | `enable_git_blame` | `boolean` | No       | `false` | Annotate duplicate lines with git author |
 
+#### `cddm_get_clone_pair`
+
+Retrieves localized source snippet lines, token counts, and blame context for a clone pair.
+
+| Parameter      | Type     | Required | Description                      |
+| :------------- | :------- | :------- | :------------------------------- |
+| `file_a`       | `string` | Yes      | File path of fragment A          |
+| `start_line_a` | `number` | Yes      | 1-based start line of fragment A |
+| `end_line_a`   | `number` | Yes      | 1-based end line of fragment A   |
+| `file_b`       | `string` | Yes      | File path of fragment B          |
+| `start_line_b` | `number` | Yes      | 1-based start line of fragment B |
+| `end_line_b`   | `number` | Yes      | 1-based end line of fragment B   |
+
+#### `cddm_suggest_refactor`
+
+Performs invariant LCS analysis and produces a structural deduplication recommendation with unified `.patch` format.
+
+| Parameter      | Type     | Required | Description                      |
+| :------------- | :------- | :------- | :------------------------------- |
+| `file_a`       | `string` | Yes      | File path of fragment A          |
+| `start_line_a` | `number` | Yes      | 1-based start line of fragment A |
+| `end_line_a`   | `number` | Yes      | 1-based end line of fragment A   |
+| `file_b`       | `string` | Yes      | File path of fragment B          |
+| `start_line_b` | `number` | Yes      | 1-based start line of fragment B |
+| `end_line_b`   | `number` | Yes      | 1-based end line of fragment B   |
+
+#### `cddm_export_sarif`
+
+Executes duplication scan and returns OASIS SARIF v2.1.0 report for GitHub Code Scanning integration.
+
+| Parameter    | Type     | Required | Default | Description                      |
+| :----------- | :------- | :------- | :------ | :------------------------------- |
+| `directory`  | `string` | Yes      | `"."`   | Target directory path to analyze |
+| `min_tokens` | `number` | No       | `50`    | Minimum token threshold          |
+
+### Resources
+
+| URI                       | MIME Type          | Description                                                   |
+| :------------------------ | :----------------- | :------------------------------------------------------------ |
+| `cddm://workspace/health` | `application/json` | Real-time DRY Health Index, file metrics, and language stats. |
+| `cddm://workspace/clones` | `application/json` | Registry of active duplicate code clones across files.        |
+
+### Prompts
+
+| Prompt Name           | Description                                                            |
+| :-------------------- | :--------------------------------------------------------------------- |
+| `audit_dry_health`    | Pre-configured prompt to audit codebase DRY health and top hotspots.   |
+| `refactor_clone_pair` | Pre-configured prompt to extract duplicate fragments into shared code. |
+
 ---
 
 ## 4. Rust Library API (`cddm-core`)
 
 ```rust
-use cddm_core::{run_scan, ScanConfig, ScanResult};
+use cddm_core::{
+    run_scan, ScanConfig, ScanResult, generate_sarif_report, analyze_clone_refactoring,
+};
 
 let config = ScanConfig {
     directory: "./src".to_string(),
@@ -148,4 +198,11 @@ let cancel_flag = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false))
 
 let result: ScanResult = run_scan(config, tx, cancel_flag).await.unwrap();
 println!("DRY Health Score: {:.1}", result.dry_health_score);
+
+// Generate OASIS SARIF 2.1.0 Report
+let sarif_report = generate_sarif_report(&result);
+
+// Analyze Clone Refactoring
+let suggestion = analyze_clone_refactoring("src/a.rs", (10, 25), "src/b.rs", (15, 30)).unwrap();
+println!("Patch:\n{}", suggestion.unified_patch);
 ```

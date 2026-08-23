@@ -1,11 +1,11 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-23 | Rust: 38/38 PASS | WebUI: 24/24 PASS | CI Workflows: PASS
+> Last verified: 2026-08-23 | Rust: 54/54 PASS | WebUI: 24/24 PASS | Repository Scripts: 27/27 PASS | CI Workflows: PASS
 
 ---
 
-## 1. Rust Backend — `cddm-core` (38 unit tests)
+## 1. Rust Backend — `cddm-core`, `cddm-cli`, `cddm-mcp` (54 unit tests)
 
 ### Tokenization Engine (`crates/cddm-core/src/tokenizer.rs`)
 
@@ -89,6 +89,42 @@
 | F-09.4 | Full `ScanResult` JSON serde roundtrip     | `types::tests::test_scan_result_serde_roundtrip` | PASS   |
 | F-09.5 | `LineSpan` equality comparison             | `types::tests::test_line_span_equality`          | PASS   |
 | F-09.6 | `ScanPhase` enum serde roundtrip           | `types::tests::test_scan_phase_serde`            | PASS   |
+
+### OASIS SARIF 2.1.0 Reporter (`crates/cddm-core/src/sarif.rs`)
+
+| ID     | Feature Variant                                            | Test Function                                   | Result |
+| :----- | :--------------------------------------------------------- | :---------------------------------------------- | :----- |
+| F-10.1 | OASIS SARIF v2.1.0 structured report generation            | `sarif::tests::test_sarif_report_generation`    | PASS   |
+| F-10.2 | SARIF JSON serde serialization and deserialization         | `sarif::tests::test_sarif_json_serde_roundtrip` | PASS   |
+| F-10.3 | Mapping all 4 clone types to rule catalog and rule indices | `sarif::tests::test_all_clone_types_mapped`     | PASS   |
+
+### Clone Refactoring Engine (`crates/cddm-core/src/refactor.rs`)
+
+| ID     | Feature Variant                                        | Test Function                                         | Result |
+| :----- | :----------------------------------------------------- | :---------------------------------------------------- | :----- |
+| F-11.1 | Identical clone snippet refactoring & patch synthesis  | `refactor::tests::test_identical_snippet_refactoring` | PASS   |
+| F-11.2 | Parameter difference detection for renamed identifiers | `refactor::tests::test_renamed_parameter_refactoring` | PASS   |
+| F-11.3 | Real filesystem file clone refactoring & patch         | `refactor::tests::test_real_file_clone_refactoring`   | PASS   |
+| F-11.4 | Out-of-bounds line range error handling                | `refactor::tests::test_invalid_line_range`            | PASS   |
+
+### CLI Reporter & Flags (`crates/cddm-cli/src/main.rs`)
+
+| ID     | Feature Variant                                      | Test Function                                          | Result |
+| :----- | :--------------------------------------------------- | :----------------------------------------------------- | :----- |
+| F-12.1 | `OutputFormat` enum equality & variant parsing       | `main::tests::test_output_format_variants`             | PASS   |
+| F-12.2 | CLI SARIF output printing execution                  | `main::tests::test_print_sarif_report_succeeds`        | PASS   |
+| F-12.3 | CLI Console and Markdown formatting output execution | `main::tests::test_print_console_and_markdown_reports` | PASS   |
+
+### Advanced MCP Server Protocol (`crates/cddm-mcp/src/main.rs`)
+
+| ID     | Feature Variant                                                  | Test Function                                | Result |
+| :----- | :--------------------------------------------------------------- | :------------------------------------------- | :----- |
+| F-13.1 | MCP protocol initialize, version negotiation & serverInfo        | `main::tests::test_mcp_initialize`           | PASS   |
+| F-13.2 | MCP ping healthcheck method                                      | `main::tests::test_mcp_ping`                 | PASS   |
+| F-13.3 | Tools discovery (`scan_codebase`, `cddm_get_clone_pair`, etc.)   | `main::tests::test_mcp_tools_list`           | PASS   |
+| F-13.4 | Resources discovery (`cddm://workspace/health` & `clones`)       | `main::tests::test_mcp_resources_list`       | PASS   |
+| F-13.5 | Prompts discovery and retrieval (`audit_dry_health`, `refactor`) | `main::tests::test_mcp_prompts_list_and_get` | PASS   |
+| F-13.6 | Standard JSON-RPC 2.0 error handling for invalid/unknown method  | `main::tests::test_mcp_unknown_method`       | PASS   |
 
 ---
 

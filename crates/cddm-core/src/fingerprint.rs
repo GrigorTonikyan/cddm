@@ -208,20 +208,24 @@ mod tests {
         assert_eq!(fast_mod_m61(m61 + 5), 5);
     }
 
+    fn make_test_tokens(count: usize) -> Vec<(NormalizedToken, LineSpan)> {
+        (0..count)
+            .map(|i| {
+                (
+                    NormalizedToken::Identifier,
+                    LineSpan {
+                        line_start: i,
+                        line_end: i,
+                        byte_offset: i * 10,
+                    },
+                )
+            })
+            .collect()
+    }
+
     #[test]
     fn test_winnowing() {
-        let mut tokens = Vec::new();
-        for i in 0..20 {
-            tokens.push((
-                NormalizedToken::Identifier,
-                LineSpan {
-                    line_start: i,
-                    line_end: i,
-                    byte_offset: i * 10,
-                },
-            ));
-        }
-
+        let tokens = make_test_tokens(20);
         let fp = winnow(&tokens, 5, 4);
         assert!(!fp.is_empty());
         assert!(fp.len() <= 20 - 5 + 1);
@@ -229,32 +233,14 @@ mod tests {
 
     #[test]
     fn test_winnow_too_few_tokens() {
-        let tokens = vec![(
-            NormalizedToken::Identifier,
-            LineSpan {
-                line_start: 1,
-                line_end: 1,
-                byte_offset: 0,
-            },
-        )];
+        let tokens = make_test_tokens(1);
         let fp = winnow(&tokens, 5, 4);
         assert!(fp.is_empty());
     }
 
     #[test]
     fn test_winnow_deterministic() {
-        let mut tokens = Vec::new();
-        for i in 0..20 {
-            tokens.push((
-                NormalizedToken::Identifier,
-                LineSpan {
-                    line_start: i,
-                    line_end: i,
-                    byte_offset: i * 10,
-                },
-            ));
-        }
-
+        let tokens = make_test_tokens(20);
         let fp1 = winnow(&tokens, 5, 4);
         let fp2 = winnow(&tokens, 5, 4);
         assert_eq!(fp1, fp2);

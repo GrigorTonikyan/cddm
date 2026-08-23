@@ -1,0 +1,97 @@
+name: "CDDM Code Duplication & DRY Health Scan"
+description: "Scan codebases for duplicate code fragments, evaluate DRY Health Scores, and generate OASIS SARIF v2.1.0 reports."
+author: "Grigor Tonikyan"
+
+inputs:
+  directory:
+    description: "Directory path to analyze"
+    required: false
+    default: "."
+  min-tokens:
+    description: "Minimum token threshold for clone detection"
+    required: false
+    default: "50"
+  fail-threshold:
+    description: "Duplication percentage threshold to enforce failure (0-100)"
+    required: false
+    default: ""
+  format:
+    description: "Report format: console, json, markdown, or sarif"
+    required: false
+    default: "sarif"
+  sarif-file:
+    description: "Output path for SARIF report file"
+    required: false
+    default: "cddm-results.sarif"
+  git-blame:
+    description: "Enable git blame author metadata annotation"
+    required: false
+    default: "false"
+
+outputs:
+  duplication-percentage:
+    description: "Calculated code duplication percentage"
+    value: ${{ steps.run-scan.outputs.duplication_percentage }}
+  dry-health-score:
+    description: "Evaluated DRY Health Score (0.0 - 100.0)"
+    value: ${{ steps.run-scan.outputs.dry_health_score }}
+  total-clones:
+    description: "Total duplicate clone pairs detected"
+    value: ${{ steps.run-scan.outputs.total_clones }}
+  total-files:
+    description: "Total scanned source code files"
+    value: ${{ steps.run-scan.outputs.total_files }}
+  sarif-path:
+    description: "Path to the generated SARIF 2.1.0 report"
+    value: ${{ steps.run-scan.outputs.sarif_path }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Execute CDDM Duplicate Code Scan
+      id: run-scan
+      shell: bash
+      run: |
+        EXTRA_ARGS=""
+        if [ -n "${{ inputs.fail-threshold }}" ]; then
+          EXTRA_ARGS="$EXTRA_ARGS --fail-threshold ${{ inputs.fail-threshold }}"
+        fi
+        if [ "${{ inputs.git-blame }}" = "true" ]; then
+          EXTRA_ARGS="$EXTRA_ARGS --git-blame"
+        fi
+
+        if [ "${{ inputs.format }}" = "sarif" ]; then
+          cargo run -p cddm-cli -- scan "${{ inputs.directory }}" --min-tokens "${{ inputs.min-tokens }}" --format sarif $EXTRA_ARGS > "${{ inputs.sarif-file }}"
+          echo "sarif_path=${{ inputs.sarif-file }}" >> $GITHUB_OUTPUT
+        else
+          cargo run -p cddm-cli -- scan "${{ inputs.directory }}" --min-tokens "${{ inputs.min-tokens }}" --format "${{ inputs.format }}" $EXTRA_ARGS
+        fi
+
+        # Generate JSON summary metrics for step outputs and summary
+        JSON_METRICS=$(cargo run -p cddm-cli -- scan "${{ inputs.directory }}" --min-tokens "${{ inputs.min-tokens }}" --format json)
+
+        DUP_PCT=$(echo "$JSON_METRICS" | grep '"duplication_percentage"' | head -n 1 | sed -E 's/.*: ([0-9.]+).*/\1/')
+        DRY_SCORE=$(echo "$JSON_METRICS" | grep '"dry_health_score"' | head -n 1 | sed -E 's/.*: ([0-9.]+).*/\1/')
+        TOTAL_CLONES=$(echo "$JSON_METRICS" | grep '"total_clones"' | head -n 1 | sed -E 's/.*: ([0-9]+).*/\1/')
+        TOTAL_FILES=$(echo "$JSON_METRICS" | grep '"total_files"' | head -n 1 | sed -E 's/.*: ([0-9]+).*/\1/')
+
+        echo "duplication_percentage=${DUP_PCT:-0}" >> $GITHUB_OUTPUT
+        echo "dry_health_score=${DRY_SCORE:-100}" >> $GITHUB_OUTPUT
+        echo "total_clones=${TOTAL_CLONES:-0}" >> $GITHUB_OUTPUT
+        echo "total_files=${TOTAL_FILES:-0}" >> $GITHUB_OUTPUT
+
+        # Populate GitHub Step Summary Markdown
+        if [ -n "$GITHUB_STEP_SUMMARY" ]; then
+          echo "## CDDM Code Duplication & DRY Health Scan Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "| :--- | :--- |" >> $GITHUB_STEP_SUMMARY
+          echo "| **DRY Health Score** | \`${DRY_SCORE:-100.0} / 100.0\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Duplication Rate** | \`${DUP_PCT:-0.0}%\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Duplicate Clones** | \`${TOTAL_CLONES:-0}\` pairs |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Files Analyzed** | \`${TOTAL_FILES:-0}\` files |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ inputs.format }}" = "sarif" ]; then
+            echo "> **SARIF Report**: Emitted OASIS SARIF v2.1.0 to \`${{ inputs.sarif-file }}\`" >> $GITHUB_STEP_SUMMARY
+          fi
+        fi

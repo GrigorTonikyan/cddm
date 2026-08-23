@@ -6,14 +6,9 @@
  * Uses Vite Plus (`vp check --fix`) workspace-wide.
  */
 
-interface FixStep {
-  title: string;
-  command: string[];
-  cwd?: string;
-  allowFailure?: boolean;
-}
+import { executeStep, printScriptBanner, ScriptStep } from "./lib/step-runner";
 
-const FIX_STEPS: FixStep[] = [
+const FIX_STEPS: ScriptStep[] = [
   {
     title: "Auto-format Rust codebase (cargo fmt)",
     command: ["cargo", "fmt"],
@@ -45,43 +40,17 @@ const FIX_STEPS: FixStep[] = [
   },
 ];
 
-async function runFixStep(step: FixStep, index: number, total: number): Promise<void> {
-  const stepNum = `[${index + 1}/${total}]`;
-  console.log(`\n\x1b[35m${stepNum} ${step.title}...\x1b[0m`);
-  const startTime = performance.now();
-
-  const proc = Bun.spawn(step.command, {
-    cwd: step.cwd,
-    stdout: "inherit",
-    stderr: "inherit",
-  });
-
-  const exitCode = await proc.exited;
-  const elapsedMs = Math.round(performance.now() - startTime);
-
-  if (exitCode !== 0 && !step.allowFailure) {
-    console.error(
-      `\n\x1b[31m[ERROR] Fix step failed with exit code ${exitCode} (${elapsedMs}ms): ${step.command.join(" ")}\x1b[0m\n`,
-    );
-    process.exit(exitCode ?? 1);
-  }
-
-  console.log(`\x1b[32m[OK] Completed (${elapsedMs}ms)\x1b[0m`);
-}
-
 async function main() {
-  console.log("\x1b[35m=======================================================\x1b[0m");
-  console.log("\x1b[35m          CDDM Automated Codebase Fixer & Verifier     \x1b[0m");
-  console.log("\x1b[35m=======================================================\x1b[0m");
+  printScriptBanner("CDDM Automated Codebase Fixer & Verifier", "\x1b[35m");
 
   const overallStart = performance.now();
 
   for (const [i, step] of FIX_STEPS.entries()) {
-    await runFixStep(step, i, FIX_STEPS.length);
+    await executeStep(step, i, FIX_STEPS.length, "\x1b[35m");
   }
 
   const fixTime = (performance.now() - overallStart) / 1000;
-  console.log(`\n\x1b[32m[OK] Auto-fix steps completed in ${fixTime.toFixed(2)}s.\x1b[0m`);
+  console.log(`\n\x1b[32m[PASS] Auto-fix steps completed in ${fixTime.toFixed(2)}s.\x1b[0m`);
   console.log("\x1b[36m--> Launching complete verification pipeline...\x1b[0m\n");
 
   // Run verify.ts directly via bun

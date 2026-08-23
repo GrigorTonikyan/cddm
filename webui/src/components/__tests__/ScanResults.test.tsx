@@ -2,11 +2,10 @@ import { render, screen } from "@testing-library/react";
 import { describe, it, expect, beforeEach } from "vite-plus/test";
 import { ScanResults } from "../ScanResults";
 import { useCDDMStore } from "../../store/cddm-store";
+import { resetTestStore, createMockScanResult } from "./test-helpers";
 
 describe("ScanResults Component", () => {
-  beforeEach(() => {
-    useCDDMStore.getState().resetScan();
-  });
+  beforeEach(resetTestStore);
 
   it("should return null when results is null", () => {
     const { container } = render(<ScanResults />);
@@ -15,17 +14,7 @@ describe("ScanResults Component", () => {
 
   it("should render DRY health score and clone details when results exist", () => {
     useCDDMStore.setState({
-      results: {
-        scan_id: "demo-scan-123",
-        total_files: 42,
-        total_tokens: 15420,
-        total_clones: 3,
-        duplication_percentage: 4.85,
-        dry_health_score: 92.7,
-        duration_ms: 12,
-        clone_pairs: [],
-        language_breakdown: [{ language: "Rust", files: 10, tokens: 1000, clones: 1 }],
-      },
+      results: createMockScanResult(),
     });
     render(<ScanResults />);
     expect(screen.getByText("DRY Health Score")).toBeDefined();
@@ -36,21 +25,13 @@ describe("ScanResults Component", () => {
 
   it("should render clone pair count", () => {
     useCDDMStore.setState({
-      results: {
-        scan_id: "demo-scan-123",
-        total_files: 42,
-        total_tokens: 15420,
-        total_clones: 3,
-        duplication_percentage: 4.85,
-        dry_health_score: 92.7,
-        duration_ms: 12,
-        clone_pairs: [],
-        language_breakdown: [],
-      },
+      results: createMockScanResult({
+        total_clones: 5,
+        duplication_percentage: 12.3,
+      }),
     });
     render(<ScanResults />);
-    // clone count is 3
-    expect(screen.getByText("3")).toBeDefined();
-    expect(screen.getByText("Clone Pairs")).toBeDefined();
+    expect(screen.getByText("5")).toBeDefined();
+    expect(screen.getByText(/12\.30/i)).toBeDefined();
   });
 });

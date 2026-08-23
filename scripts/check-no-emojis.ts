@@ -21,6 +21,11 @@ export interface EmojiMatch {
 export const EMOJI_REGEX =
   /[\p{Extended_Pictographic}\u{1F300}-\u{1FAFF}\u{1F000}-\u{1F02F}\u{1F0A0}-\u{1F0FF}\u{1F100}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{2600}-\u{27BF}\u{2300}-\u{23FF}\u{2B50}\u{2B55}]/gu;
 
+export function hasEmoji(text: string): boolean {
+  EMOJI_REGEX.lastIndex = 0;
+  return EMOJI_REGEX.test(text);
+}
+
 export const DEFAULT_IGNORED_DIRS = new Set([
   ".git",
   "node_modules",

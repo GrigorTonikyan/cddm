@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "cddm": {
+      "command": "target\\debug\\cddm-mcp.exe",
+      "args": []
+    }
+  }
+}
