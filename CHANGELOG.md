@@ -5,6 +5,12 @@ All notable changes to **CDDM** (_Code De-Duplication Meister_) will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-08-23
+
+### Features
+
+- **core**: implement redb caching, git differential scans, and refactor advisor (`0d24083`)
+
 ## [0.3.0] - 2026-08-23
 
 ### Features
