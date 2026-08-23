@@ -42,6 +42,11 @@ This document defines the strict, non-negotiable engineering standards, conventi
    - Codebase cleanliness is continuously scanned and enforced via `bun scripts/check-no-emojis.ts` (`vp run check:emojis`).
    - Use clean, professional text tags (`[PASS]`, `[FAIL]`, `[OK]`, `[ERROR]`, `[WARN]`) for status indicators.
 
+8. **Strict Zero-Downgrade & Latest Dependencies Policy Across Entire Codebase**:
+   - **NEVER DOWNGRADE ANY DEPENDENCY** under any circumstances across any subsystem (Rust `Cargo.toml`, npm `package.json`, React `webui/package.json`, E2E `tests/e2e/package.json`, or root scripts).
+   - Only the latest compatible versions of all libraries, devDependencies, crates, and toolchain components must be used across the entire repository.
+   - When encountering upstream linter, compiler, or runner version mismatches, always upgrade, pin, or resolve with the latest versions rather than reverting or downgrading.
+
 ---
 
 ## 2. Code Architecture & Style Standards
