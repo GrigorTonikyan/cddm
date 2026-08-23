@@ -51,5 +51,5 @@ perf = { level = "warn", priority = -1 }
 style = { level = "warn", priority = -1 }
 
 [workspace.lints.rust]
-missing_debug_implementations = "warn"
+missing_debug_implementations = "deny"
 unsafe_code = "forbid"
