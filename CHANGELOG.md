@@ -5,6 +5,12 @@ All notable changes to **CDDM** (_Code De-Duplication Meister_) will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-08-23
+
+### Features
+
+- **webui**: implement atomic windowing system, diff viewer, duplication treemap, and refactor modal (`6142cc8`)
+
 ## [0.4.0] - 2026-08-23
 
 ### Features
