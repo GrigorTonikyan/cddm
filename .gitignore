@@ -1,15 +1,46 @@
+# Rust build artifacts
 /target
-/.logs
-/node_modules
-/webui/node_modules
-/webui/dist
-/webui/coverage
-/tests/e2e/node_modules
-/tests/e2e/test-results
-/tests/e2e/playwright-report
+
+# Node dependencies
+node_modules/
+/webui/node_modules/
+/tests/e2e/node_modules/
+
+# WebUI & Frontend build/coverage outputs
+/webui/dist/
+/webui/coverage/
+/coverage/
+/dist/
+
+# End-to-End test reports & results
+/tests/e2e/test-results/
+/tests/e2e/playwright-report/
+/tests/e2e/blob-report/
+
+# TypeScript build caches
 *.tsbuildinfo
 tsconfig.tsbuildinfo
-.env
+
+# Tooling & framework caches
+.turbo/
+.cache/
+.vite/
+/webui/.vite/
+.nyc_output/
+
+# Logs & temporary files
+/.logs/
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+bun.log*
+
+# Environment variable files
+.env
+.env.*
+!.env.example
+
+# OS metadata
 .DS_Store
 Thumbs.db

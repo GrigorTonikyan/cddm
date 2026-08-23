@@ -106,13 +106,15 @@
 
 ---
 
-## 3. Repository Scripts & Release Tooling — Bun Test (14 unit tests)
+## 3. Repository Scripts & Release Tooling — Bun Test (27 unit tests)
 
-| Module           | Test Suite File                     | Test Cases | Status |
-| :--------------- | :---------------------------------- | :--------- | :----- |
-| Commit Validator | `scripts/__tests__/version.test.ts` | 4 tests    | PASS   |
-| Semantic Release | `scripts/__tests__/version.test.ts` | 5 tests    | PASS   |
-| Doc Integrity    | `scripts/__tests__/docs.test.ts`    | 5 tests    | PASS   |
+| Module           | Test Suite File                         | Test Cases | Status |
+| :--------------- | :-------------------------------------- | :--------- | :----- |
+| Commit Validator | `scripts/__tests__/version.test.ts`     | 4 tests    | PASS   |
+| Semantic Release | `scripts/__tests__/version.test.ts`     | 5 tests    | PASS   |
+| Doc Integrity    | `scripts/__tests__/docs.test.ts`        | 5 tests    | PASS   |
+| No-Emoji Policy  | `scripts/__tests__/no-emojis.test.ts`   | 5 tests    | PASS   |
+| Workspace Engine | `scripts/__tests__/clean-reset.test.ts` | 8 tests    | PASS   |
 
 ---
 

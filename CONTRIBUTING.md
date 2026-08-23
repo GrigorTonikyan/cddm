@@ -73,10 +73,10 @@ For a deep dive into internal design, read [docs/ARCHITECTURE.md](docs/ARCHITECT
 
 ### Master Workspace Runners
 
-You can run the complete quality pipeline or auto-fix across both Rust backend and React WebUI with single cross-platform commands:
+You can run the complete quality pipeline, auto-fix, clean, or workspace reset across both Rust backend and React WebUI with single cross-platform commands:
 
 ```bash
-# 1. Run all 10 checks, tests, typechecks, lints, builds, and dogfood self-scan (Read-Only)
+# 1. Run all 11 checks, tests, typechecks, lints, builds, and dogfood self-scan (Read-Only)
 vp run verify
 # or directly:
 bun scripts/verify.ts
@@ -85,6 +85,16 @@ bun scripts/verify.ts
 vp run fix
 # or directly:
 bun scripts/fix.ts
+
+# 3. Deep clean all build artifacts, temp files, caches, test reports, and lockfiles
+vp run clean
+# or directly:
+bun scripts/clean.ts
+
+# 4. Deep clean, reinstall dependencies, configure hooks, build, and verify workspace
+vp run reset
+# or directly:
+bun scripts/reset.ts
 ```
 
 ### Individual Subsystems
@@ -151,7 +161,7 @@ To add a new language grammar to `cddm-core`:
    - `docs: update MCP setup guide`
    - `feat(api)!: breaking change to scan endpoint`
 4. Commit messages are automatically checked via `@commitlint/cli` and `commitlint.config.ts`.
-5. Run `vp run verify` to confirm all 9 quality checks pass.
+5. Run `vp run verify` to confirm all 11 quality checks pass.
 6. Push to your fork and submit a Pull Request to `main`.
 
 ### 3. Releasing & Semantic Versioning

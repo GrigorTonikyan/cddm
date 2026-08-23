@@ -94,7 +94,7 @@ Git hooks are installed and configured via `vp config` / `vp run prepare`:
 
 ### Canonical Master Runners
 
-The repository provides two master commands:
+The repository provides canonical master commands:
 
 1. **Verify All Checks (Read-Only)**:
 
@@ -110,6 +110,22 @@ The repository provides two master commands:
    vp run fix
    # or directly:
    bun scripts/fix.ts
+   ```
+
+3. **Deep Clean All Artifacts & Lockfiles**:
+
+   ```bash
+   vp run clean
+   # or directly:
+   bun scripts/clean.ts
+   ```
+
+4. **Full Workspace Reset & Default State Preparation**:
+
+   ```bash
+   vp run reset
+   # or directly:
+   bun scripts/reset.ts
    ```
 
 All 11 verification checks must pass cleanly:
