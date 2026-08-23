@@ -8,8 +8,8 @@
 [![Vite Plus](https://img.shields.io/badge/vite%2B-0.2.9-purple.svg)](https://viteplus.dev)
 [![TypeScript](https://img.shields.io/badge/typescript-7.0-blue.svg)](https://www.typescriptlang.org)
 [![React](https://img.shields.io/badge/react-19.2-61dafb.svg)](https://react.dev)
-[![npm version](https://img.shields.io/badge/npm-0.2.0-red.svg)](https://www.npmjs.com/package/cddm)
-[![crates.io](https://img.shields.io/badge/crates.io-0.2.0-brightgreen.svg)](https://crates.io/crates/cddm)
+[![npm version](https://img.shields.io/badge/npm-0.3.0-red.svg)](https://www.npmjs.com/package/cddm)
+[![crates.io](https://img.shields.io/badge/crates.io-0.3.0-brightgreen.svg)](https://crates.io/crates/cddm)
 
 ---
 
