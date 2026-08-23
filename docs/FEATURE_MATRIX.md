@@ -106,22 +106,24 @@
 
 ---
 
-## 3. Repository Scripts & Release Tooling — Bun Test (9 unit tests)
+## 3. Repository Scripts & Release Tooling — Bun Test (14 unit tests)
 
 | Module           | Test Suite File                     | Test Cases | Status |
 | :--------------- | :---------------------------------- | :--------- | :----- |
 | Commit Validator | `scripts/__tests__/version.test.ts` | 4 tests    | PASS   |
 | Semantic Release | `scripts/__tests__/version.test.ts` | 5 tests    | PASS   |
+| Doc Integrity    | `scripts/__tests__/docs.test.ts`    | 5 tests    | PASS   |
 
 ---
 
 ## 4. GitHub Automation & Governance Validation
 
-| Layer                     | Validation Target                                              | Status     |
-| :------------------------ | :------------------------------------------------------------- | :--------- |
-| **Commit Message Linter** | `@commitlint/cli` + `commitlint.config.ts` in `.vite-hooks`    | Enforced   |
-| **Semantic Versioning**   | `bumpp` + `conventional-changelog` via `vp run bump`           | Enforced   |
-| **CI Automation**         | `.github/workflows/ci.yml` (Matrix build, clippy, fmt, vitest) | Configured |
-| **Release Automation**    | `.github/workflows/release.yml` (Cross-compiling 4 targets)    | Configured |
-| **Community Templates**   | Issue templates & Pull Request checklist template              | Active     |
-| **Registry Metadata**     | `crates.io` keywords/categories + `npm` keywords/links         | Validated  |
+| Layer                       | Validation Target                                              | Status     |
+| :-------------------------- | :------------------------------------------------------------- | :--------- |
+| **Commit Message Linter**   | `@commitlint/cli` + `commitlint.config.ts` in `.vite-hooks`    | Enforced   |
+| **Semantic Versioning**     | `bumpp` + `conventional-changelog` via `vp run bump`           | Enforced   |
+| **CI Automation**           | `.github/workflows/ci.yml` (Matrix build, clippy, fmt, vitest) | Configured |
+| **Release Automation**      | `.github/workflows/release.yml` (Cross-compiling 4 targets)    | Configured |
+| **Documentation Integrity** | `bun scripts/check-docs.ts` (Links, tables, roadmap sync)      | Enforced   |
+| **Community Templates**     | Issue templates & Pull Request checklist template              | Active     |
+| **Registry Metadata**       | `crates.io` keywords/categories + `npm` keywords/links         | Validated  |

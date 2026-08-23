@@ -45,6 +45,10 @@ const STEPS: Step[] = [
     command: ["vp", "-C", "webui", "run", "build"],
   },
   {
+    title: "Documentation integrity & cross-reference validation (bun scripts/check-docs.ts)",
+    command: ["bun", "scripts/check-docs.ts"],
+  },
+  {
     title: "CDDM Dogfooding Self-Scan (cddm scan .)",
     command: [
       "cargo",

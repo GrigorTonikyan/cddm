@@ -1,6 +1,6 @@
 # CDDM Task Tracking & Active Implementation TODO
 
-> **Reference Document**: [docs/ROADMAP.md](file:///docs/ROADMAP.md)  
+> **Reference Document**: [docs/ROADMAP.md](ROADMAP.md)  
 > **Last Updated**: 2026-08-23
 
 ---

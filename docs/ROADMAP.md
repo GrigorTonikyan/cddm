@@ -251,7 +251,7 @@ In CI pipelines, developers want to ensure that a pull request does not introduc
 
 Extend full Tree-sitter AST parsing support beyond Rust, TypeScript, JavaScript, and Python.
 
-#### Languages to Add:
+#### Languages to Add
 
 - **Go**: `tree-sitter-go`
 - **C / C++**: `tree-sitter-c`, `tree-sitter-cpp`
@@ -332,5 +332,5 @@ Maximizing token throughput on multi-gigabyte codebases to achieve > 20M tokens/
 To propose an addition or enhancement:
 
 1. Review existing proposals in this document to avoid duplicates.
-2. Submit a GitHub Issue using the [Feature Request Template](file:///.github/ISSUE_TEMPLATE/feature_request.md).
-3. Open a discussion or Pull Request adhering to the [CDDM Standards](file:///AGENTS.md).
+2. Submit a GitHub Issue using the [Feature Request Template](../.github/ISSUE_TEMPLATE/feature_request.md).
+3. Open a discussion or Pull Request adhering to the [CDDM Standards](../AGENTS.md).

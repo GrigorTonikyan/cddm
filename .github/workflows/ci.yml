@@ -88,6 +88,9 @@ jobs:
         with:
           bun-version: latest
 
+      - name: Validate Documentation Integrity & Synchronization
+        run: bun scripts/check-docs.ts
+
       - name: Validate Vite+ Git Hooks Setup
         run: |
           bunx vp config

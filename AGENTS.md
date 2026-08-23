@@ -107,17 +107,18 @@ The repository provides two master commands:
    bun scripts/fix.ts
    ```
 
-All 9 verification checks must pass cleanly:
+All 10 verification checks must pass cleanly:
 
 1. `cargo fmt --check` (Rust formatting check)
 2. `cargo clippy --workspace --all-targets -- -D warnings` (Strict Clippy zero-warning linter)
 3. `cargo test --workspace` (Rust unit & integration test suite - 38 tests)
 4. `tsc -p tsconfig.json` (Scripts strict typecheck)
-5. `bun test scripts/__tests__` (Repository scripts unit tests - 9 tests)
+5. `bun test scripts/__tests__` (Repository scripts unit tests - 14 tests)
 6. `vp check` (Workspace-wide type-aware Oxlint + Oxfmt check)
 7. `vp -C webui run test` (WebUI Vitest unit test suite - 24 tests)
 8. `vp -C webui run build` (WebUI production bundle compilation)
-9. `cddm scan . --min-tokens 50 --fail-threshold 15.0` (Dogfooding self-scan)
+9. `bun scripts/check-docs.ts` (Documentation integrity & cross-reference sync validation)
+10. `cddm scan . --min-tokens 50 --fail-threshold 15.0` (Dogfooding self-scan)
 
 ---
 

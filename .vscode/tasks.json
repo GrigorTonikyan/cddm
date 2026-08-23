@@ -80,6 +80,13 @@
       "problemMatcher": []
     },
     {
+      "label": "Documentation: Check Integrity",
+      "type": "shell",
+      "command": "bun scripts/check-docs.ts",
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
       "label": "CDDM: Verify All (Read-Only)",
       "type": "shell",
       "command": "vp run verify",
