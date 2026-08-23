@@ -357,6 +357,23 @@ export function updateWorkspaceVersions(
     writeFileSync(npmPkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf-8");
     console.log(`\x1b[32m[OK] Updated npm/cddm/package.json -> ${newVersion}\x1b[0m`);
   }
+
+  // 5. README.md badges
+  const readmePath = join(workspaceRoot, "README.md");
+  if (existsSync(readmePath)) {
+    const readmeContent = readFileSync(readmePath, "utf-8");
+    const updatedReadme = readmeContent
+      .replace(/badge\/npm-[\d.]+-red\.svg/, `badge/npm-${newVersion}-red.svg`)
+      .replace(
+        /badge\/crates\.io-[\d.]+-brightgreen\.svg/,
+        `badge/crates.io-${newVersion}-brightgreen.svg`,
+      );
+    writeFileSync(readmePath, updatedReadme, "utf-8");
+    console.log(`\x1b[32m[OK] Updated README.md -> ${newVersion}\x1b[0m`);
+  }
+
+  // 6. Cargo.lock
+  Bun.spawnSync(["cargo", "check", "--workspace"], { cwd: workspaceRoot });
 }
 
 /**
@@ -473,10 +490,12 @@ Options:
       "git",
       "add",
       "Cargo.toml",
+      "Cargo.lock",
       "package.json",
       "webui/package.json",
       "npm/cddm/package.json",
       "CHANGELOG.md",
+      "README.md",
     ]);
     const commitProc = Bun.spawnSync(["git", "commit", "-m", `chore(release): ${tagName}`]);
     if (commitProc.exitCode === 0) {
