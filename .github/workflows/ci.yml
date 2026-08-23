@@ -88,6 +88,12 @@ jobs:
         with:
           bun-version: latest
 
+      - name: Validate Workspace Formatting, Lints & Types (vp check)
+        run: bunx vp check
+
+      - name: Run Repository Scripts Unit Tests (bun test)
+        run: bun test scripts/__tests__
+
       - name: Validate Documentation Integrity & Synchronization
         run: bun scripts/check-docs.ts
 
