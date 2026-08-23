@@ -72,7 +72,8 @@ export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
       .sort((a, b) => {
         if (sortBy === "similarity") return b.similarity - a.similarity;
         if (sortBy === "tokens") return b.token_count - a.token_count;
-        if (sortBy === "name") return parsePath(a.file_a).filename.localeCompare(parsePath(b.file_a).filename);
+        if (sortBy === "name")
+          return parsePath(a.file_a).filename.localeCompare(parsePath(b.file_a).filename);
         return 0;
       });
   }, [results?.clone_pairs, searchTerm, minSimilarity, selectedLang, sortBy]);
@@ -90,22 +91,28 @@ export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
     results.dry_health_score >= 80
       ? "text-emerald-400 border-emerald-500/40 bg-emerald-950/20 shadow-emerald-950/30"
       : results.dry_health_score >= 60
-      ? "text-amber-400 border-amber-500/40 bg-amber-950/20 shadow-amber-950/30"
-      : "text-rose-400 border-rose-500/40 bg-rose-950/20 shadow-rose-950/30";
+        ? "text-amber-400 border-amber-500/40 bg-amber-950/20 shadow-amber-950/30"
+        : "text-rose-400 border-rose-500/40 bg-rose-950/20 shadow-rose-950/30";
 
   return (
     <div className={`space-y-6 ${className}`}>
       {/* Top Metrics Cards Banner */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* DRY Health Score Card */}
-        <div className={`border rounded-xl p-4 flex flex-col justify-between shadow-lg relative overflow-hidden ${scoreColor}`}>
+        <div
+          className={`border rounded-xl p-4 flex flex-col justify-between shadow-lg relative overflow-hidden ${scoreColor}`}
+        >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider opacity-90">DRY Health Score</span>
+            <span className="text-xs font-bold uppercase tracking-wider opacity-90">
+              DRY Health Score
+            </span>
             <Award className="w-5 h-5" />
           </div>
           <div className="mt-3">
             <div className="flex items-baseline gap-1">
-              <span className="text-3xl font-extrabold font-mono tracking-tight">{results.dry_health_score.toFixed(1)}</span>
+              <span className="text-3xl font-extrabold font-mono tracking-tight">
+                {results.dry_health_score.toFixed(1)}
+              </span>
               <span className="text-sm opacity-60">/ 100</span>
             </div>
             <div className="w-full bg-slate-900/60 rounded-full h-1.5 mt-2 overflow-hidden border border-slate-700/30">
@@ -114,8 +121,8 @@ export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
                   results.dry_health_score >= 80
                     ? "bg-emerald-400"
                     : results.dry_health_score >= 60
-                    ? "bg-amber-400"
-                    : "bg-rose-400"
+                      ? "bg-amber-400"
+                      : "bg-rose-400"
                 }`}
                 style={{ width: `${Math.min(100, Math.max(0, results.dry_health_score))}%` }}
               />
@@ -147,7 +154,9 @@ export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
             <span className="text-3xl font-extrabold font-mono text-slate-100">
               {results.total_files.toLocaleString()}
             </span>
-            <p className="text-[11px] text-slate-400 mt-1">{results.total_tokens.toLocaleString()} tokens indexed</p>
+            <p className="text-[11px] text-slate-400 mt-1">
+              {results.total_tokens.toLocaleString()} tokens indexed
+            </p>
           </div>
         </div>
 
@@ -172,7 +181,9 @@ export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
             <Clock className="w-5 h-5 text-indigo-400" />
           </div>
           <div className="mt-3">
-            <span className="text-3xl font-extrabold font-mono text-slate-100">{results.duration_ms}</span>
+            <span className="text-3xl font-extrabold font-mono text-slate-100">
+              {results.duration_ms}
+            </span>
             <span className="text-xs text-slate-400 font-mono"> ms</span>
             <p className="text-[11px] text-slate-400 mt-1">Winnowing M61 execution</p>
           </div>
@@ -282,7 +293,11 @@ export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
               >
                 <option value="ALL">All Languages</option>
                 {results.language_breakdown.map((l) => (
-                  <option key={l.language} value={l.language} className="bg-slate-900 text-slate-100">
+                  <option
+                    key={l.language}
+                    value={l.language}
+                    className="bg-slate-900 text-slate-100"
+                  >
                     {l.language} ({l.files})
                   </option>
                 ))}
@@ -361,7 +376,13 @@ export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
           <div className="space-y-3">
             {paginatedPairs.map((pair, idx) => {
               const globalIndex = (currentPage - 1) * itemsPerPage + idx + 1;
-              return <ClonePairCard key={`${pair.file_a}-${pair.file_b}-${idx}`} pair={pair} index={globalIndex} />;
+              return (
+                <ClonePairCard
+                  key={`${pair.file_a}-${pair.file_b}-${idx}`}
+                  pair={pair}
+                  index={globalIndex}
+                />
+              );
             })}
           </div>
         )}
@@ -371,8 +392,8 @@ export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
           <div className="flex items-center justify-between bg-slate-900/60 border border-slate-800/80 rounded-xl p-4 font-mono text-xs text-slate-400">
             <div>
               Showing {(currentPage - 1) * itemsPerPage + 1}–
-              {Math.min(currentPage * itemsPerPage, filteredPairs.length)} of {filteredPairs.length.toLocaleString()}{" "}
-              clones
+              {Math.min(currentPage * itemsPerPage, filteredPairs.length)} of{" "}
+              {filteredPairs.length.toLocaleString()} clones
             </div>
             <div className="flex items-center gap-2">
               <button

@@ -3,6 +3,7 @@ import { ScanConfigPanel } from "./components/ScanConfigPanel";
 import { ScanProgressBar } from "./components/ScanProgressBar";
 import { ScanResults } from "./components/ScanResults";
 import { Scissors, Terminal, Sparkles, ShieldCheck } from "lucide-react";
+import { APP_VERSION } from "./constants/cddm-constants";
 import { useCDDMStore } from "./store/cddm-store";
 
 export const App: React.FC = () => {
@@ -23,10 +24,12 @@ export const App: React.FC = () => {
             <h1 className="font-extrabold text-xl tracking-tight text-white flex items-center gap-2.5">
               <span>CDDM Studio</span>
               <span className="text-xs bg-indigo-950 text-indigo-300 font-mono px-2.5 py-0.5 rounded-full font-semibold border border-indigo-800/50">
-                v0.1.2
+                v{APP_VERSION}
               </span>
             </h1>
-            <p className="text-xs text-slate-400">Code De-Duplication Meister & Architectural Health</p>
+            <p className="text-xs text-slate-400">
+              Code De-Duplication Meister & Architectural Health
+            </p>
           </div>
         </div>
 
@@ -57,7 +60,8 @@ export const App: React.FC = () => {
 
       {/* Footer */}
       <footer className="border-t border-slate-900 py-6 text-center text-xs text-slate-500 font-mono bg-slate-950/80">
-        CDDM — Code De-Duplication Meister &copy; 2026 Grigor Tonikyan. Open Source MIT / Apache-2.0.
+        CDDM — Code De-Duplication Meister &copy; 2026 Grigor Tonikyan. Open Source MIT /
+        Apache-2.0.
       </footer>
     </div>
   );

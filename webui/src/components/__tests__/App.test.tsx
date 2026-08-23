@@ -1,6 +1,5 @@
-
 import { render, screen } from "@testing-library/react";
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach } from "vite-plus/test";
 import App from "../../App";
 import { useCDDMStore } from "../../store/cddm-store";
 

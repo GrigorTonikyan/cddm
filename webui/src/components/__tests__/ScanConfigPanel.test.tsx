@@ -1,6 +1,5 @@
-
 import { render, screen, fireEvent } from "@testing-library/react";
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach } from "vite-plus/test";
 import { ScanConfigPanel } from "../ScanConfigPanel";
 import { useCDDMStore } from "../../store/cddm-store";
 

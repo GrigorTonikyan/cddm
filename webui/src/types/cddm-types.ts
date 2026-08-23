@@ -83,11 +83,24 @@ export interface ScanConfig {
 }
 
 /**
+ * Scan execution phases matching backend ScanPhase enum.
+ */
+export type ScanPhase =
+  | "Discovery"
+  | "Tokenization"
+  | "Indexing"
+  | "Merging"
+  | "Scoring"
+  | "Complete"
+  | "Cancelled"
+  | "Failed";
+
+/**
  * Scan progress event.
  */
 export interface ScanProgress {
   scan_id: string;
-  phase: string;
+  phase: ScanPhase;
   files_processed: number;
   total_files: number;
   progress: number;

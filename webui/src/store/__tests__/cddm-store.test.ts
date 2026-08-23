@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach } from "vite-plus/test";
 import { useCDDMStore } from "../cddm-store";
 
 describe("useCDDMStore Zustand Store", () => {
@@ -57,10 +57,10 @@ describe("useCDDMStore Zustand Store", () => {
   it("should not allow concurrent scans", async () => {
     // start first scan
     const scanPromise1 = useCDDMStore.getState().startScan();
-    
+
     // store should immediately reflect scanning state
     expect(useCDDMStore.getState().isScanning).toBe(true);
-    
+
     // calling it again shouldn't mess it up (well, in our mock startScan it just overwrites state)
     // but the test expects "should not allow concurrent scans". We might need to adjust store or just test logic.
     // For now we just await the promise
@@ -68,7 +68,12 @@ describe("useCDDMStore Zustand Store", () => {
   });
 
   it("should reset all state on resetScan", () => {
-    useCDDMStore.setState({ isScanning: true, error: "err", results: {} as any, progress: {} as any });
+    useCDDMStore.setState({
+      isScanning: true,
+      error: "err",
+      results: {} as any,
+      progress: {} as any,
+    });
     useCDDMStore.getState().resetScan();
     const state = useCDDMStore.getState();
     expect(state.isScanning).toBe(false);

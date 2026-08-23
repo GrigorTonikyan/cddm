@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect } from "vite-plus/test";
 import { ScanConfig, CloneType } from "../cddm-types";
 
 describe("cddm-types", () => {
@@ -24,7 +24,7 @@ describe("cddm-types", () => {
     const renamed: CloneType = "Renamed";
     const nearMiss: CloneType = "NearMiss";
     const semantic: CloneType = "Semantic";
-    
+
     expect(exact).toBe("Exact");
     expect(renamed).toBe("Renamed");
     expect(nearMiss).toBe("NearMiss");

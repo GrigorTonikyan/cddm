@@ -1,6 +1,5 @@
-
 import { render, screen } from "@testing-library/react";
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach } from "vite-plus/test";
 import { ScanResults } from "../ScanResults";
 import { useCDDMStore } from "../../store/cddm-store";
 
@@ -25,9 +24,7 @@ describe("ScanResults Component", () => {
         dry_health_score: 92.7,
         duration_ms: 12,
         clone_pairs: [],
-        language_breakdown: [
-          { language: "Rust", files: 10, tokens: 1000, clones: 1 },
-        ],
+        language_breakdown: [{ language: "Rust", files: 10, tokens: 1000, clones: 1 }],
       },
     });
     render(<ScanResults />);

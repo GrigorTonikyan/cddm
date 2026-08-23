@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { API_ROUTES, DEFAULT_SCAN_CONFIG } from "../constants/cddm-constants";
 import { ScanConfig, ScanProgress, ScanResult } from "../types/cddm-types";
 
 /**
@@ -28,21 +29,11 @@ export interface CDDMStoreState {
   resetScan: () => void;
 }
 
-const DEFAULT_CONFIG: ScanConfig = {
-  directory: ".",
-  min_tokens: 50,
-  languages: [],
-  ignore_patterns: ["node_modules", "target", ".git", "dist", "build"],
-  detect_type2: true,
-  scan_self: true,
-  enable_git_blame: true,
-};
-
 /**
  * Global Zustand store for CDDM WebUI control plane.
  */
 export const useCDDMStore = create<CDDMStoreState>((set, get) => ({
-  config: DEFAULT_CONFIG,
+  config: DEFAULT_SCAN_CONFIG,
   activeScanId: null,
   progress: null,
   results: null,
@@ -61,7 +52,7 @@ export const useCDDMStore = create<CDDMStoreState>((set, get) => ({
 
     try {
       // In standalone REST/Axum mode, POST to /api/scan
-      const res = await fetch("/api/scan", {
+      const res = await fetch(API_ROUTES.SCAN, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(config),

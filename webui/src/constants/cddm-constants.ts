@@ -1,0 +1,51 @@
+/**
+ * Centralized constants and protocol definitions for CDDM WebUI.
+ */
+
+import pkg from "../../package.json";
+import { CloneType, ScanConfig, ScanPhase } from "../types/cddm-types";
+
+/**
+ * Dynamic application version derived from package.json.
+ */
+export const APP_VERSION: string = pkg.version;
+
+/**
+ * REST API endpoint routes exposed by the Axum server.
+ */
+export const API_ROUTES = {
+  HEALTH: "/api/health",
+  SCAN: "/api/scan",
+} as const;
+
+/**
+ * Default fallback parameters for scanning codebases.
+ */
+export const DEFAULT_SCAN_CONFIG: ScanConfig = {
+  directory: ".",
+  min_tokens: 50,
+  languages: [],
+  ignore_patterns: ["node_modules", "target", ".git", "dist", "build", ".logs"],
+  detect_type2: true,
+  scan_self: true,
+  enable_git_blame: true,
+};
+
+/**
+ * All supported clone type classifications.
+ */
+export const ALL_CLONE_TYPES: CloneType[] = ["Exact", "Renamed", "NearMiss", "Semantic"];
+
+/**
+ * Scan execution phases in chronological order.
+ */
+export const ALL_SCAN_PHASES: ScanPhase[] = [
+  "Discovery",
+  "Tokenization",
+  "Indexing",
+  "Merging",
+  "Scoring",
+  "Complete",
+  "Cancelled",
+  "Failed",
+];

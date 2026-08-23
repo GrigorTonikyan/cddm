@@ -10,7 +10,9 @@ export const ScanConfigPanel: React.FC<ScanConfigPanelProps> = ({ className = ""
   const { config, setConfig, startScan, isScanning, resetScan } = useCDDMStore();
 
   return (
-    <div className={`bg-slate-900/80 border border-slate-800/80 rounded-xl p-6 shadow-xl backdrop-blur-md ${className}`}>
+    <div
+      className={`bg-slate-900/80 border border-slate-800/80 rounded-xl p-6 shadow-xl backdrop-blur-md ${className}`}
+    >
       <div className="flex items-center justify-between mb-6 border-b border-slate-800/80 pb-4">
         <div className="flex items-center gap-2 text-indigo-400 font-bold text-lg">
           <SlidersHorizontal className="w-5 h-5" />
@@ -73,7 +75,10 @@ export const ScanConfigPanel: React.FC<ScanConfigPanelProps> = ({ className = ""
             value={config.ignore_patterns.join(", ")}
             onChange={(e) =>
               setConfig({
-                ignore_patterns: e.target.value.split(",").map((s) => s.trim()).filter(Boolean),
+                ignore_patterns: e.target.value
+                  .split(",")
+                  .map((s) => s.trim())
+                  .filter(Boolean),
               })
             }
             className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm font-mono text-slate-100 focus:outline-none focus:border-indigo-500 transition-colors shadow-inner"

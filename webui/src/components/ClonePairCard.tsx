@@ -26,7 +26,7 @@ export const ClonePairCard: React.FC<ClonePairCardProps> = ({ pair, index }) => 
   const pathB = parsePath(pair.file_b);
 
   const copyToClipboard = (text: string, isA: boolean) => {
-    navigator.clipboard.writeText(text);
+    void navigator.clipboard.writeText(text);
     if (isA) {
       setCopiedA(true);
       setTimeout(() => setCopiedA(false), 2000);
@@ -43,8 +43,8 @@ export const ClonePairCard: React.FC<ClonePairCardProps> = ({ pair, index }) => 
     simNum >= 95
       ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/40 shadow-emerald-900/20"
       : simNum >= 80
-      ? "bg-cyan-500/15 text-cyan-300 border-cyan-500/40 shadow-cyan-900/20"
-      : "bg-amber-500/15 text-amber-300 border-amber-500/40 shadow-amber-900/20";
+        ? "bg-cyan-500/15 text-cyan-300 border-cyan-500/40 shadow-cyan-900/20"
+        : "bg-amber-500/15 text-amber-300 border-amber-500/40 shadow-amber-900/20";
 
   return (
     <div className="group bg-slate-900/70 border border-slate-800/80 hover:border-indigo-500/40 rounded-xl overflow-hidden shadow-lg transition-all duration-200 backdrop-blur-sm">
@@ -64,7 +64,10 @@ export const ClonePairCard: React.FC<ClonePairCardProps> = ({ pair, index }) => 
             {/* File A */}
             <div className="flex items-center gap-2 bg-slate-950/90 px-3 py-1.5 rounded-lg border border-slate-800/80 min-w-0 group/item">
               <FileCode2 className="w-4 h-4 shrink-0 text-indigo-400" />
-              <div className="min-w-0 flex-1 text-xs font-mono truncate" title={pathA.fullNormalized}>
+              <div
+                className="min-w-0 flex-1 text-xs font-mono truncate"
+                title={pathA.fullNormalized}
+              >
                 <span className="sr-only">{pathA.fullNormalized}</span>
                 <span className="text-slate-500 select-none">{pathA.directory}</span>
                 <span className="text-slate-100 font-semibold">{pathA.filename}</span>
@@ -77,7 +80,10 @@ export const ClonePairCard: React.FC<ClonePairCardProps> = ({ pair, index }) => 
             {/* File B */}
             <div className="flex items-center gap-2 bg-slate-950/90 px-3 py-1.5 rounded-lg border border-slate-800/80 min-w-0 group/item">
               <FileCode2 className="w-4 h-4 shrink-0 text-indigo-400" />
-              <div className="min-w-0 flex-1 text-xs font-mono truncate" title={pathB.fullNormalized}>
+              <div
+                className="min-w-0 flex-1 text-xs font-mono truncate"
+                title={pathB.fullNormalized}
+              >
                 <span className="sr-only">{pathB.fullNormalized}</span>
                 <span className="text-slate-500 select-none">{pathB.directory}</span>
                 <span className="text-slate-100 font-semibold">{pathB.filename}</span>
@@ -104,7 +110,11 @@ export const ClonePairCard: React.FC<ClonePairCardProps> = ({ pair, index }) => 
           </div>
 
           <div className="p-1 rounded-lg hover:bg-slate-800 text-slate-400 transition-colors">
-            {isExpanded ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+            {isExpanded ? (
+              <ChevronDown className="w-5 h-5" />
+            ) : (
+              <ChevronRight className="w-5 h-5" />
+            )}
           </div>
         </div>
       </div>
@@ -116,7 +126,9 @@ export const ClonePairCard: React.FC<ClonePairCardProps> = ({ pair, index }) => 
           <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-400 pb-3 border-b border-slate-800/60 font-mono">
             <div className="flex items-center gap-2">
               <Hash className="w-3.5 h-3.5 text-indigo-400" />
-              <span className="text-slate-300 font-semibold">Fragment Hash: {pair.fragment_hash}</span>
+              <span className="text-slate-300 font-semibold">
+                Fragment Hash: {pair.fragment_hash}
+              </span>
             </div>
 
             <div className="flex items-center gap-4">
@@ -157,7 +169,11 @@ export const ClonePairCard: React.FC<ClonePairCardProps> = ({ pair, index }) => 
                     className="p-1 hover:bg-slate-800 text-slate-400 hover:text-slate-200 rounded transition-colors"
                     title="Copy full path"
                   >
-                    {copiedA ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    {copiedA ? (
+                      <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    ) : (
+                      <Copy className="w-3.5 h-3.5" />
+                    )}
                   </button>
                 </div>
               </div>
@@ -193,7 +209,11 @@ export const ClonePairCard: React.FC<ClonePairCardProps> = ({ pair, index }) => 
                     className="p-1 hover:bg-slate-800 text-slate-400 hover:text-slate-200 rounded transition-colors"
                     title="Copy full path"
                   >
-                    {copiedB ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    {copiedB ? (
+                      <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    ) : (
+                      <Copy className="w-3.5 h-3.5" />
+                    )}
                   </button>
                 </div>
               </div>
