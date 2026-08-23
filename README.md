@@ -194,6 +194,8 @@ For detailed technical references, explore our design documentation:
 - [docs/API.md](docs/API.md) — Complete REST API & CLI specification.
 - [docs/FEATURE_MATRIX.md](docs/FEATURE_MATRIX.md) — Detailed feature comparisons & algorithm specifications.
 - [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md) — Technical requirements & performance bounds.
+- [docs/ROADMAP.md](docs/ROADMAP.md) — Strategic release roadmap & enhancement proposals (EP-01 to EP-10).
+- [docs/TODO.md](docs/TODO.md) — Active task tracking and implementation checklist.
 
 ---
 
