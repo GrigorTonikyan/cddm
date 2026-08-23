@@ -164,6 +164,7 @@ pub struct ScanResult {
 
 /// Configuration options for running a code scan.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[serde(default)]
 pub struct ScanConfig {
     /// Root directory to scan (absolute or relative path)
     pub directory: String,

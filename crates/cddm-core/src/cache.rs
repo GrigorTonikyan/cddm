@@ -23,7 +23,13 @@ impl FingerprintCache {
         let content = fs::read(path).ok()?;
         let mut hasher = Sha256::new();
         hasher.update(&content);
-        Some(format!("{:x}", hasher.finalize()))
+        let result = hasher.finalize();
+        let hex = result.iter().fold(String::with_capacity(64), |mut acc, b| {
+            use std::fmt::Write;
+            let _ = write!(acc, "{:02x}", b);
+            acc
+        });
+        Some(hex)
     }
 
     /// Checks if file has been modified since last scan.
