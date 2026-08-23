@@ -1,15 +1,29 @@
-# e2e
+# CDDM End-to-End (E2E) Test Suite
 
-To install dependencies:
+Automated end-to-end browser tests for the CDDM Studio WebUI using Playwright and Bun.
+
+---
+
+## Running Tests
+
+### 1. Install Dependencies
 
 ```bash
 bun install
 ```
 
-To run:
+### 2. Run Headless Tests
 
 ```bash
-bun run 
+bun run test
+# or:
+bunx playwright test
 ```
 
-This project was created using `bun init` in bun v1.3.14. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.
+### 3. Run Interactive UI Mode
+
+```bash
+bunx playwright test --ui
+```
+
+Playwright is configured to automatically launch the CDDM Studio WebUI development server on `http://localhost:3000` during test runs.

@@ -1,7 +1,15 @@
 /target
 /.logs
+/node_modules
 /webui/node_modules
 /webui/dist
 /webui/coverage
+/tests/e2e/node_modules
+/tests/e2e/test-results
+/tests/e2e/playwright-report
+*.tsbuildinfo
+tsconfig.tsbuildinfo
 .env
 *.log
+.DS_Store
+Thumbs.db
