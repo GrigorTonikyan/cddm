@@ -26,7 +26,7 @@ else
     exit 0
   else
     echo ""
-    echo "✖ Invalid commit message format: \"$commit_msg\""
+    echo "[ERROR] Invalid commit message format: \"$commit_msg\""
     echo "Commit messages must follow Conventional Commits (e.g. feat(core): add AST subtree hashing)"
     exit 1
   fi

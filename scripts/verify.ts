@@ -45,6 +45,10 @@ const STEPS: Step[] = [
     command: ["vp", "-C", "webui", "run", "build"],
   },
   {
+    title: "Zero-Emoji policy codebase enforcement (bun scripts/check-no-emojis.ts)",
+    command: ["bun", "scripts/check-no-emojis.ts"],
+  },
+  {
     title: "Documentation integrity & cross-reference validation (bun scripts/check-docs.ts)",
     command: ["bun", "scripts/check-docs.ts"],
   },
@@ -82,12 +86,12 @@ async function runStep(step: Step, index: number, total: number): Promise<void> 
 
   if (exitCode !== 0) {
     console.error(
-      `\n\x1b[31m✖ Step failed with exit code ${exitCode} (${elapsedMs}ms): ${step.command.join(" ")}\x1b[0m\n`,
+      `\n\x1b[31m[FAIL] Step failed with exit code ${exitCode} (${elapsedMs}ms): ${step.command.join(" ")}\x1b[0m\n`,
     );
     process.exit(exitCode ?? 1);
   }
 
-  console.log(`\x1b[32m✔ Passed (${elapsedMs}ms)\x1b[0m`);
+  console.log(`\x1b[32m[PASS] (${elapsedMs}ms)\x1b[0m`);
 }
 
 async function main() {

@@ -18,10 +18,23 @@ export interface ValidationResult {
   error?: string;
 }
 
+// Regex matching Extended Pictographic characters and Emojis
+const EMOJI_CHECK_REGEX =
+  /[\p{Extended_Pictographic}\u{1F300}-\u{1FAFF}\u{1F000}-\u{1F02F}\u{1F0A0}-\u{1F0FF}\u{1F100}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{2600}-\u{27BF}\u{2300}-\u{23FF}\u{2B50}\u{2B55}]/u;
+
 export function validateCommitMessage(message: string): ValidationResult {
   const trimmed = message.trim();
   if (!trimmed) {
     return { valid: false, breaking: false, error: "Commit message cannot be empty" };
+  }
+
+  // Strictly reject emojis in commit messages
+  if (EMOJI_CHECK_REGEX.test(trimmed)) {
+    return {
+      valid: false,
+      breaking: false,
+      error: "Commit messages MUST NOT contain emojis. Please remove all emojis.",
+    };
   }
 
   const firstLine = trimmed.split("\n")[0]?.trim() ?? "";
@@ -85,7 +98,7 @@ async function main() {
   const result = validateCommitMessage(content);
 
   if (!result.valid) {
-    console.error(`\n\x1b[31m✖ ${result.error}\x1b[0m\n`);
+    console.error(`\n\x1b[31m[ERROR] ${result.error}\x1b[0m\n`);
     console.error(
       "Valid types: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert",
     );
@@ -97,7 +110,7 @@ async function main() {
     process.exit(1);
   }
 
-  console.log("\x1b[32m✔ Conventional Commit message validated!\x1b[0m");
+  console.log("\x1b[32m[OK] Conventional Commit message validated!\x1b[0m");
 }
 
 if (import.meta.main) {

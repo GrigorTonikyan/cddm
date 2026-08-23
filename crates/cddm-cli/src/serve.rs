@@ -56,7 +56,7 @@ pub async fn start_server(port: u16, open_browser: bool) -> Result<(), Box<dyn s
     let listener = tokio::net::TcpListener::bind(addr).await?;
     let server_url = format!("http://localhost:{}", port);
 
-    println!("\n🚀 CDDM Studio WebUI server listening at {}", server_url);
+    println!("\nCDDM Studio WebUI server listening at {}", server_url);
 
     if open_browser {
         let _ = opener::open(&server_url);

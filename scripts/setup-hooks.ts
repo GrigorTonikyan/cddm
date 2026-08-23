@@ -33,7 +33,7 @@ async function setupGitHooks() {
     }
   }
 
-  console.log("\x1b[32m✔ Vite+ git hooks successfully configured to .vite-hooks!\x1b[0m");
+  console.log("\x1b[32m[OK] Vite+ git hooks successfully configured to .vite-hooks!\x1b[0m");
 }
 
 setupGitHooks().catch((err) => {

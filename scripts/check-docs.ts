@@ -256,18 +256,18 @@ async function main() {
 
   if (summary.errors.length > 0) {
     console.error(
-      `\n\x1b[31m✖ Found ${summary.errors.length} documentation integrity errors:\x1b[0m\n`,
+      `\n\x1b[31m[ERROR] Found ${summary.errors.length} documentation integrity errors:\x1b[0m\n`,
     );
     for (const err of summary.errors) {
       const lineStr = err.line ? `:${err.line}` : "";
-      console.error(`  \x1b[31m✖ [${err.file}${lineStr}]\x1b[0m ${err.message}`);
+      console.error(`  \x1b[31m[FAIL] [${err.file}${lineStr}]\x1b[0m ${err.message}`);
     }
     console.error("");
     process.exit(1);
   }
 
   console.log(
-    "\x1b[32m✔ All documentation files, links, and roadmap proposals are 100% valid and synchronized!\x1b[0m\n",
+    "\x1b[32m[PASS] All documentation files, links, and roadmap proposals are 100% valid and synchronized!\x1b[0m\n",
   );
 }
 

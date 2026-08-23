@@ -111,9 +111,9 @@ describe("Semantic Versioning Engine", () => {
     ];
     const changelog = generateChangelogSection("0.2.0", "2026-08-23", commits);
     expect(changelog).toContain("## [0.2.0] - 2026-08-23");
-    expect(changelog).toContain("### 🚀 Features");
+    expect(changelog).toContain("### Features");
     expect(changelog).toContain("**core**: add AST hasher (`abc1234`)");
-    expect(changelog).toContain("### 🐛 Bug Fixes");
+    expect(changelog).toContain("### Bug Fixes");
     expect(changelog).toContain("correct clone bounds (`def5678`)");
   });
 });

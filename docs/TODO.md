@@ -5,9 +5,9 @@
 
 ---
 
-## 🎯 Active Development Tasks
+## Active Development Tasks
 
-### 🚀 Milestone v0.2.0: CI/CD & AI Agent Tooling (High Priority)
+### Milestone v0.2.0: CI/CD & AI Agent Tooling (High Priority)
 
 - [ ] **[EP-01] SARIF 2.1.0 Reporter for GitHub Code Scanning**
   - [ ] Add `OutputFormat::Sarif` in `crates/cddm-cli/src/main.rs`
@@ -30,7 +30,7 @@
 
 ---
 
-### ⚡ Milestone v0.3.0: Caching, Differential Scans & Refactoring
+### Milestone v0.3.0: Caching, Differential Scans & Refactoring
 
 - [ ] **[EP-03] Persistent Disk-Backed Fingerprint Cache**
   - [ ] Add `redb` dependency to `crates/cddm-core/Cargo.toml`
@@ -52,7 +52,7 @@
 
 ---
 
-### 🎨 Milestone v0.4.0: WebUI Studio & Visual Analytics
+### Milestone v0.4.0: WebUI Studio & Visual Analytics
 
 - [ ] **[EP-04] Interactive Side-by-Side Code Diff Visualizer**
   - [ ] Add backend endpoint `GET /api/snippet` in `crates/cddm-cli/src/serve.rs`
@@ -71,7 +71,7 @@
 
 ---
 
-### 🌐 Milestone v0.5.0: AST Pipeline & Polyglot Expansion
+### Milestone v0.5.0: AST Pipeline & Polyglot Expansion
 
 - [ ] **[EP-05] Tree-sitter AST Merkle Pipeline Integration**
   - [ ] Elevate `cddm-core::ast::hasher` to a primary scan phase (`ScanPhase::AstAnalysis`)
@@ -87,7 +87,7 @@
 
 ---
 
-### 🏎️ Milestone v1.0.0: High-Throughput Enterprise Engine
+### Milestone v1.0.0: High-Throughput Enterprise Engine
 
 - [ ] **[EP-10] Memory-Mapped I/O & SIMD Vectorization**
   - [ ] Integrate `memmap2` zero-copy memory mapping for large files
@@ -96,7 +96,7 @@
 
 ---
 
-## 📋 Completed Milestones (Verified)
+## Completed Milestones (Verified)
 
 - [x] **v0.1.0**: Initial Rust core engine, Winnowing rolling hash, CLI scanner.
 - [x] **v0.1.1**: Type-2 identifier normalization, Axum HTTP server, React WebUI.

@@ -29,7 +29,7 @@ if (existsSync(cargoPath)) {
     `$1"${newVersion}"`,
   );
   writeFileSync(cargoPath, updatedCargo, "utf-8");
-  console.log(`\x1b[32m✔ Updated Cargo.toml -> ${newVersion}\x1b[0m`);
+  console.log(`\x1b[32m[OK] Updated Cargo.toml -> ${newVersion}\x1b[0m`);
 }
 
 // 3. Update CHANGELOG.md with conventionalcommits preset
@@ -47,7 +47,7 @@ const changelogProc = Bun.spawnSync([
 ]);
 
 if (changelogProc.exitCode === 0) {
-  console.log("\x1b[32m✔ CHANGELOG.md updated successfully!\x1b[0m");
+  console.log("\x1b[32m[OK] CHANGELOG.md updated successfully!\x1b[0m");
 } else {
   console.warn("conventional-changelog notice:", changelogProc.stderr.toString());
 }

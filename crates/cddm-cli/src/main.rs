@@ -189,7 +189,7 @@ fn print_console_report(result: &ScanResult) {
             );
         }
     } else {
-        println!("✔ Zero code duplication detected!");
+        println!("Zero code duplication detected!");
     }
 }
 
@@ -226,6 +226,6 @@ fn print_markdown_report(result: &ScanResult) {
             );
         }
     } else {
-        println!("✔ Zero code duplication detected!");
+        println!("Zero code duplication detected!");
     }
 }

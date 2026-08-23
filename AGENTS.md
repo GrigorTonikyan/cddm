@@ -37,6 +37,11 @@ This document defines the strict, non-negotiable engineering standards, conventi
    - Breaking changes MUST use `!` (e.g. `feat(core)!: ...`) or a `BREAKING CHANGE:` footer.
    - Releases and version bumps MUST use `vp run bump` or `vp run version:release`, keeping `Cargo.toml`, `package.json`, `webui/package.json`, `npm/cddm/package.json`, and `CHANGELOG.md` in lockstep.
 
+7. **Strict Zero-Emoji Policy Across Entire Codebase**:
+   - **NO EMOJIS OR PICTOGRAPHS** are permitted anywhere in the repository (Rust crates, WebUI, documentation, scripts, changelogs, CLI terminal output, or commit messages).
+   - Codebase cleanliness is continuously scanned and enforced via `bun scripts/check-no-emojis.ts` (`vp run check:emojis`).
+   - Use clean, professional text tags (`[PASS]`, `[FAIL]`, `[OK]`, `[ERROR]`, `[WARN]`) for status indicators.
+
 ---
 
 ## 2. Code Architecture & Style Standards
@@ -107,18 +112,19 @@ The repository provides two master commands:
    bun scripts/fix.ts
    ```
 
-All 10 verification checks must pass cleanly:
+All 11 verification checks must pass cleanly:
 
 1. `cargo fmt --check` (Rust formatting check)
 2. `cargo clippy --workspace --all-targets -- -D warnings` (Strict Clippy zero-warning linter)
-3. `cargo test --workspace` (Rust unit & integration test suite - 38 tests)
+3. `cargo test --workspace` (Rust unit & integration test suite)
 4. `tsc -p tsconfig.json` (Scripts strict typecheck)
-5. `bun test scripts/__tests__` (Repository scripts unit tests - 14 tests)
+5. `bun test scripts/__tests__` (Repository scripts unit tests)
 6. `vp check` (Workspace-wide type-aware Oxlint + Oxfmt check)
-7. `vp -C webui run test` (WebUI Vitest unit test suite - 24 tests)
+7. `vp -C webui run test` (WebUI Vitest unit test suite)
 8. `vp -C webui run build` (WebUI production bundle compilation)
-9. `bun scripts/check-docs.ts` (Documentation integrity & cross-reference sync validation)
-10. `cddm scan . --min-tokens 50 --fail-threshold 15.0` (Dogfooding self-scan)
+9. `bun scripts/check-no-emojis.ts` (Zero-Emoji policy codebase enforcement)
+10. `bun scripts/check-docs.ts` (Documentation integrity & cross-reference sync validation)
+11. `cddm scan . --min-tokens 50 --fail-threshold 15.0` (Dogfooding self-scan)
 
 ---
 

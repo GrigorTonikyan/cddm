@@ -247,7 +247,7 @@ export function generateChangelogSection(
   let section = `## [${version}] - ${dateStr}\n\n`;
 
   if (breakings.length > 0) {
-    section += `### ⚠️ BREAKING CHANGES\n\n`;
+    section += `### BREAKING CHANGES\n\n`;
     for (const c of breakings) {
       const scopeStr = c.scope ? `**${c.scope}**: ` : "";
       section += `- ${scopeStr}${c.subject} (\`${c.hash}\`)\n`;
@@ -256,7 +256,7 @@ export function generateChangelogSection(
   }
 
   if (features.length > 0) {
-    section += `### 🚀 Features\n\n`;
+    section += `### Features\n\n`;
     for (const c of features) {
       const scopeStr = c.scope ? `**${c.scope}**: ` : "";
       section += `- ${scopeStr}${c.subject} (\`${c.hash}\`)\n`;
@@ -265,7 +265,7 @@ export function generateChangelogSection(
   }
 
   if (fixes.length > 0) {
-    section += `### 🐛 Bug Fixes\n\n`;
+    section += `### Bug Fixes\n\n`;
     for (const c of fixes) {
       const scopeStr = c.scope ? `**${c.scope}**: ` : "";
       section += `- ${scopeStr}${c.subject} (\`${c.hash}\`)\n`;
@@ -274,7 +274,7 @@ export function generateChangelogSection(
   }
 
   if (perfs.length > 0) {
-    section += `### ⚡ Performance Improvements\n\n`;
+    section += `### Performance Improvements\n\n`;
     for (const c of perfs) {
       const scopeStr = c.scope ? `**${c.scope}**: ` : "";
       section += `- ${scopeStr}${c.subject} (\`${c.hash}\`)\n`;
@@ -283,7 +283,7 @@ export function generateChangelogSection(
   }
 
   if (refactors.length > 0) {
-    section += `### ♻️ Refactoring\n\n`;
+    section += `### Refactoring\n\n`;
     for (const c of refactors) {
       const scopeStr = c.scope ? `**${c.scope}**: ` : "";
       section += `- ${scopeStr}${c.subject} (\`${c.hash}\`)\n`;
@@ -292,7 +292,7 @@ export function generateChangelogSection(
   }
 
   if (docs.length > 0) {
-    section += `### 📚 Documentation\n\n`;
+    section += `### Documentation\n\n`;
     for (const c of docs) {
       const scopeStr = c.scope ? `**${c.scope}**: ` : "";
       section += `- ${scopeStr}${c.subject} (\`${c.hash}\`)\n`;
@@ -301,7 +301,7 @@ export function generateChangelogSection(
   }
 
   if (chores.length > 0) {
-    section += `### 🛠️ Tooling & Maintenance\n\n`;
+    section += `### Tooling & Maintenance\n\n`;
     for (const c of chores) {
       const scopeStr = c.scope ? `**${c.scope}**: ` : "";
       section += `- ${scopeStr}${c.subject} (\`${c.hash}\`)\n`;
@@ -328,7 +328,7 @@ export function updateWorkspaceVersions(
       `$1"${newVersion}"`,
     );
     writeFileSync(cargoPath, updatedCargo, "utf-8");
-    console.log(`\x1b[32m✔ Updated Cargo.toml -> ${newVersion}\x1b[0m`);
+    console.log(`\x1b[32m[OK] Updated Cargo.toml -> ${newVersion}\x1b[0m`);
   }
 
   // 2. Root package.json
@@ -337,7 +337,7 @@ export function updateWorkspaceVersions(
     const pkg = JSON.parse(readFileSync(rootPkgPath, "utf-8"));
     pkg.version = newVersion;
     writeFileSync(rootPkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf-8");
-    console.log(`\x1b[32m✔ Updated package.json -> ${newVersion}\x1b[0m`);
+    console.log(`\x1b[32m[OK] Updated package.json -> ${newVersion}\x1b[0m`);
   }
 
   // 3. WebUI package.json
@@ -346,7 +346,7 @@ export function updateWorkspaceVersions(
     const pkg = JSON.parse(readFileSync(webuiPkgPath, "utf-8"));
     pkg.version = newVersion;
     writeFileSync(webuiPkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf-8");
-    console.log(`\x1b[32m✔ Updated webui/package.json -> ${newVersion}\x1b[0m`);
+    console.log(`\x1b[32m[OK] Updated webui/package.json -> ${newVersion}\x1b[0m`);
   }
 
   // 4. npm/cddm/package.json
@@ -355,7 +355,7 @@ export function updateWorkspaceVersions(
     const pkg = JSON.parse(readFileSync(npmPkgPath, "utf-8"));
     pkg.version = newVersion;
     writeFileSync(npmPkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf-8");
-    console.log(`\x1b[32m✔ Updated npm/cddm/package.json -> ${newVersion}\x1b[0m`);
+    console.log(`\x1b[32m[OK] Updated npm/cddm/package.json -> ${newVersion}\x1b[0m`);
   }
 }
 
@@ -385,7 +385,7 @@ export function updateChangelog(newSection: string, workspaceRoot: string = proc
 
   const updated = `${header}${newSection}${existingContent}`;
   writeFileSync(changelogPath, updated, "utf-8");
-  console.log(`\x1b[32m✔ Updated CHANGELOG.md\x1b[0m`);
+  console.log(`\x1b[32m[OK] Updated CHANGELOG.md\x1b[0m`);
 }
 
 async function main() {
@@ -481,13 +481,15 @@ Options:
     const commitProc = Bun.spawnSync(["git", "commit", "-m", `chore(release): ${tagName}`]);
     if (commitProc.exitCode === 0) {
       Bun.spawnSync(["git", "tag", "-a", tagName, "-m", `Release ${tagName}`]);
-      console.log(`\x1b[32m✔ Release commit and tag ${tagName} created successfully!\x1b[0m`);
+      console.log(`\x1b[32m[OK] Release commit and tag ${tagName} created successfully!\x1b[0m`);
     } else {
       console.error(`\x1b[31mFailed to create git commit: ${commitProc.stderr.toString()}\x1b[0m`);
     }
   }
 
-  console.log(`\n\x1b[32m✔ Successfully updated workspace to version ${nextSemver.raw}!\x1b[0m\n`);
+  console.log(
+    `\n\x1b[32m[OK] Successfully updated workspace to version ${nextSemver.raw}!\x1b[0m\n`,
+  );
 }
 
 if (import.meta.main) {

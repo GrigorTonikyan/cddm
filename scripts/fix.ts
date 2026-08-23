@@ -61,12 +61,12 @@ async function runFixStep(step: FixStep, index: number, total: number): Promise<
 
   if (exitCode !== 0 && !step.allowFailure) {
     console.error(
-      `\n\x1b[31m✖ Fix step failed with exit code ${exitCode} (${elapsedMs}ms): ${step.command.join(" ")}\x1b[0m\n`,
+      `\n\x1b[31m[ERROR] Fix step failed with exit code ${exitCode} (${elapsedMs}ms): ${step.command.join(" ")}\x1b[0m\n`,
     );
     process.exit(exitCode ?? 1);
   }
 
-  console.log(`\x1b[32m✔ Completed (${elapsedMs}ms)\x1b[0m`);
+  console.log(`\x1b[32m[OK] Completed (${elapsedMs}ms)\x1b[0m`);
 }
 
 async function main() {
@@ -81,7 +81,7 @@ async function main() {
   }
 
   const fixTime = (performance.now() - overallStart) / 1000;
-  console.log(`\n\x1b[32m✔ Auto-fix steps completed in ${fixTime.toFixed(2)}s.\x1b[0m`);
+  console.log(`\n\x1b[32m[OK] Auto-fix steps completed in ${fixTime.toFixed(2)}s.\x1b[0m`);
   console.log("\x1b[36m--> Launching complete verification pipeline...\x1b[0m\n");
 
   // Run verify.ts directly via bun
