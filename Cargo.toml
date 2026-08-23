@@ -1,23 +1,17 @@
 [workspace]
 resolver = "2"
-members = [
-    "crates/cddm-core",
-    "crates/cddm-cli",
-    "crates/cddm-mcp",
-]
+members = ["crates/cddm-cli", "crates/cddm-core", "crates/cddm-mcp"]
 
 [workspace.package]
 version = "0.1.2"
 edition = "2024"
-authors = ["Grigor Tonikyan <grigor@tonikyan.com>"]
-license = "MIT OR Apache-2.0"
-repository = "https://github.com/GrigorTonikyan/cddm"
-homepage = "https://github.com/GrigorTonikyan/cddm"
 documentation = "https://docs.rs/cddm-core"
 readme = "README.md"
-keywords = ["code-quality", "duplication", "ast", "tree-sitter", "mcp"]
-categories = ["development-tools", "command-line-utilities", "code-analysis"]
-
+homepage = "https://github.com/GrigorTonikyan/cddm"
+repository = "https://github.com/GrigorTonikyan/cddm"
+license = "MIT OR Apache-2.0"
+keywords = ["ast", "code-quality", "duplication", "mcp", "tree-sitter"]
+categories = ["code-analysis", "command-line-utilities", "development-tools"]
 
 [workspace.dependencies]
 anyhow = "^1"
@@ -39,12 +33,23 @@ serde_json = "^1"
 sha2 = "^0.10"
 thiserror = "^2"
 tokio = { version = "^1", features = ["full"] }
-tower-http = { version = "^0.7", features = ["fs", "cors"] }
-tree-sitter = "0.26"
-tree-sitter-javascript = "0.25"
-tree-sitter-python = "0.25"
-tree-sitter-rust = "0.24"
-tree-sitter-typescript = "0.23"
+tower-http = { version = "^0.7", features = ["cors", "fs"] }
 tracing = "^0.1"
-tracing-subscriber = "^0.3"
+tracing-subscriber = { version = "^0.3", features = ["env-filter"] }
+tree-sitter = "^0.24"
+tree-sitter-javascript = "^0.23"
+tree-sitter-python = "^0.23"
+tree-sitter-rust = "^0.23"
+tree-sitter-typescript = "^0.23"
 uuid = { version = "^1", features = ["serde", "v4"] }
+
+[workspace.lints.clippy]
+all = { level = "deny", priority = -1 }
+complexity = { level = "warn", priority = -1 }
+correctness = { level = "deny", priority = -1 }
+perf = { level = "warn", priority = -1 }
+style = { level = "warn", priority = -1 }
+
+[workspace.lints.rust]
+missing_debug_implementations = "warn"
+unsafe_code = "forbid"

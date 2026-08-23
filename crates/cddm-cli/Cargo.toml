@@ -2,25 +2,27 @@
 name = "cddm-cli"
 version.workspace = true
 edition.workspace = true
-authors.workspace = true
-license.workspace = true
-repository.workspace = true
-homepage.workspace = true
+description = "CDDM CLI Binary — Code De-Duplication Meister"
 documentation.workspace = true
+readme = "../../README.md"
+homepage.workspace = true
+repository.workspace = true
+license.workspace = true
 keywords.workspace = true
 categories.workspace = true
-readme = "../../README.md"
-description = "CDDM CLI Binary — Code De-Duplication Meister"
+
+[lints]
+workspace = true
 
 [[bin]]
 name = "cddm"
 path = "src/main.rs"
 
 [dependencies]
-cddm-core = { path = "../cddm-core" }
 anyhow.workspace = true
 async-trait.workspace = true
 axum.workspace = true
+cddm-core = { path = "../cddm-core" }
 chrono.workspace = true
 clap.workspace = true
 comfy-table.workspace = true

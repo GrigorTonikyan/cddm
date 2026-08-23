@@ -1,5 +1,63 @@
 use serde::{Deserialize, Serialize};
 
+/// Default minimum token count required to classify a fragment as a clone.
+pub const DEFAULT_MIN_TOKENS: usize = 50;
+
+/// Default directory path when not specified.
+pub const DEFAULT_DIRECTORY: &str = ".";
+
+/// Default glob patterns excluded from scanning.
+pub const DEFAULT_IGNORE_PATTERNS: &[&str] =
+    &["node_modules", "target", ".git", "dist", "build", ".logs"];
+
+/// Minimum DRY health score bounds.
+pub const MIN_HEALTH_SCORE: f64 = 0.0;
+
+/// Maximum DRY health score bounds.
+pub const MAX_HEALTH_SCORE: f64 = 100.0;
+
+/// Represents the execution phase of a duplication scan.
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ScanPhase {
+    /// Discovering files and applying ignore/language filters
+    Discovery,
+    /// Parsing source code into normalized token streams
+    Tokenization,
+    /// Winnowing rolling hash index construction
+    Indexing,
+    /// Pairwise clone matching and interval merging
+    Merging,
+    /// DRY health score and modularity index calculation
+    Scoring,
+    /// Scan completed successfully
+    Complete,
+    /// Scan was cancelled by user/signal
+    Cancelled,
+    /// Scan encountered an unrecoverable failure
+    Failed,
+}
+
+impl std::fmt::Display for ScanPhase {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.as_ref())
+    }
+}
+
+impl AsRef<str> for ScanPhase {
+    fn as_ref(&self) -> &str {
+        match self {
+            Self::Discovery => "Discovery",
+            Self::Tokenization => "Tokenization",
+            Self::Indexing => "Indexing",
+            Self::Merging => "Merging",
+            Self::Scoring => "Scoring",
+            Self::Complete => "Complete",
+            Self::Cancelled => "Cancelled",
+            Self::Failed => "Failed",
+        }
+    }
+}
+
 /// Represents the type of a token after normalization.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub enum NormalizedToken {
@@ -126,17 +184,13 @@ pub struct ScanConfig {
 impl Default for ScanConfig {
     fn default() -> Self {
         Self {
-            directory: ".".to_string(),
-            min_tokens: 50,
+            directory: DEFAULT_DIRECTORY.to_string(),
+            min_tokens: DEFAULT_MIN_TOKENS,
             languages: Vec::new(),
-            ignore_patterns: vec![
-                "node_modules".to_string(),
-                "target".to_string(),
-                ".git".to_string(),
-                "dist".to_string(),
-                "build".to_string(),
-                ".logs".to_string(),
-            ],
+            ignore_patterns: DEFAULT_IGNORE_PATTERNS
+                .iter()
+                .map(|&s| s.to_string())
+                .collect(),
             detect_type2: true,
             scan_self: true,
             enable_git_blame: false,
@@ -149,8 +203,8 @@ impl Default for ScanConfig {
 pub struct ScanProgress {
     /// ID of the scan
     pub scan_id: String,
-    /// Current phase: e.g. "Discovery", "Tokenization", "Indexing", "Merging"
-    pub phase: String,
+    /// Current phase of execution
+    pub phase: ScanPhase,
     /// Number of files processed so far in the current phase
     pub files_processed: usize,
     /// Total expected files in this phase
@@ -168,13 +222,33 @@ mod tests {
     #[test]
     fn test_scan_config_default() {
         let config = ScanConfig::default();
-        assert_eq!(config.directory, ".");
-        assert_eq!(config.min_tokens, 50);
+        assert_eq!(config.directory, DEFAULT_DIRECTORY);
+        assert_eq!(config.min_tokens, DEFAULT_MIN_TOKENS);
         assert!(config.languages.is_empty());
-        assert_eq!(config.ignore_patterns.len(), 6);
+        assert_eq!(config.ignore_patterns.len(), DEFAULT_IGNORE_PATTERNS.len());
         assert!(config.detect_type2);
         assert!(config.scan_self);
         assert!(!config.enable_git_blame);
+    }
+
+    #[test]
+    fn test_scan_phase_serde() {
+        let phases = [
+            ScanPhase::Discovery,
+            ScanPhase::Tokenization,
+            ScanPhase::Indexing,
+            ScanPhase::Merging,
+            ScanPhase::Scoring,
+            ScanPhase::Complete,
+            ScanPhase::Cancelled,
+            ScanPhase::Failed,
+        ];
+        for phase in phases {
+            let serialized = serde_json::to_string(&phase).unwrap();
+            let deserialized: ScanPhase = serde_json::from_str(&serialized).unwrap();
+            assert_eq!(phase, deserialized);
+            assert_eq!(phase.to_string(), phase.as_ref());
+        }
     }
 
     #[test]

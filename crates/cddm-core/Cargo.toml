@@ -2,15 +2,17 @@
 name = "cddm-core"
 version.workspace = true
 edition.workspace = true
-authors.workspace = true
-license.workspace = true
-repository.workspace = true
-homepage.workspace = true
+description = "Core Polyglot Code De-Duplication & Architectural Modularity Engine"
 documentation.workspace = true
+readme = "../../README.md"
+homepage.workspace = true
+repository.workspace = true
+license.workspace = true
 keywords.workspace = true
 categories.workspace = true
-readme = "../../README.md"
-description = "Core Polyglot Code De-Duplication & Architectural Modularity Engine"
+
+[lints]
+workspace = true
 
 [dependencies]
 anyhow.workspace = true

@@ -1,7 +1,10 @@
-use crate::fingerprint::{Fingerprint, winnow};
+use crate::fingerprint::{Fingerprint, MIN_K_GRAM, WINDOW_OFFSET, winnow};
 use crate::grammar::get_grammar_for_path;
 use crate::tokenizer::tokenize;
-use crate::types::{ClonePair, CloneType, LanguageStats, ScanConfig, ScanProgress, ScanResult};
+use crate::types::{
+    ClonePair, CloneType, LanguageStats, MAX_HEALTH_SCORE, MIN_HEALTH_SCORE, ScanConfig, ScanPhase,
+    ScanProgress, ScanResult,
+};
 use ignore::WalkBuilder;
 use rayon::prelude::*;
 use std::collections::HashMap;
@@ -50,7 +53,7 @@ pub async fn run_scan(
     let _ = progress_tx
         .send(ScanProgress {
             scan_id: scan_id.clone(),
-            phase: "Discovery".to_string(),
+            phase: ScanPhase::Discovery,
             files_processed: 0,
             total_files: 0,
             progress: 0.0,
@@ -102,7 +105,7 @@ pub async fn run_scan(
     let _ = progress_tx
         .send(ScanProgress {
             scan_id: scan_id.clone(),
-            phase: "Tokenization".to_string(),
+            phase: ScanPhase::Tokenization,
             files_processed: 0,
             total_files,
             progress: 0.1,
@@ -126,8 +129,8 @@ pub async fn run_scan(
                     let token_count = tokens.len();
                     let token_spans: Vec<_> = tokens.iter().map(|(_, span)| span.clone()).collect();
 
-                    let k = std::cmp::max(10, config_clone.min_tokens / 2);
-                    let w = k + 5;
+                    let k = std::cmp::max(MIN_K_GRAM, config_clone.min_tokens / 2);
+                    let w = k + WINDOW_OFFSET;
                     let fingerprints = winnow(&tokens, k, w);
 
                     Some(ParsedFile {
@@ -148,7 +151,7 @@ pub async fn run_scan(
     let _ = progress_tx
         .send(ScanProgress {
             scan_id: scan_id.clone(),
-            phase: "Indexing".to_string(),
+            phase: ScanPhase::Indexing,
             files_processed: total_files,
             total_files,
             progress: 0.5,
@@ -186,7 +189,7 @@ pub async fn run_scan(
                 None
             };
 
-            let k = std::cmp::max(10, config_clone.min_tokens / 2);
+            let k = std::cmp::max(MIN_K_GRAM, config_clone.min_tokens / 2);
 
             for (hash, locations) in index {
                 if locations.len() > 1 {
@@ -387,14 +390,14 @@ pub async fn run_scan(
     } else {
         0.0
     };
-    let dry_health_score = ((100.0 - duplication_percentage * 1.5)
+    let dry_health_score = ((MAX_HEALTH_SCORE - duplication_percentage * 1.5)
         * (1.0 - 0.25 * cross_module_ratio))
-        .clamp(0.0, 100.0);
+        .clamp(MIN_HEALTH_SCORE, MAX_HEALTH_SCORE);
 
     let _ = progress_tx
         .send(ScanProgress {
             scan_id: scan_id.clone(),
-            phase: "Complete".to_string(),
+            phase: ScanPhase::Complete,
             files_processed: total_files,
             total_files,
             progress: 1.0,

@@ -8,6 +8,12 @@ pub struct CddmWatcher {
     pub rx: Receiver<notify::Result<Event>>,
 }
 
+impl std::fmt::Debug for CddmWatcher {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("CddmWatcher").finish_non_exhaustive()
+    }
+}
+
 impl CddmWatcher {
     /// Creates a new directory watcher on `dir_path`.
     pub fn watch_directory<P: AsRef<Path>>(dir_path: P) -> Result<Self, String> {

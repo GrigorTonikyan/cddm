@@ -2,24 +2,26 @@
 name = "cddm-mcp"
 version.workspace = true
 edition.workspace = true
-authors.workspace = true
-license.workspace = true
-repository.workspace = true
-homepage.workspace = true
+description = "CDDM MCP Server — Model Context Protocol integration for AI Agents"
 documentation.workspace = true
+readme = "../../README.md"
+homepage.workspace = true
+repository.workspace = true
+license.workspace = true
 keywords.workspace = true
 categories.workspace = true
-readme = "../../README.md"
-description = "CDDM MCP Server — Model Context Protocol integration for AI Agents"
+
+[lints]
+workspace = true
 
 [[bin]]
 name = "cddm-mcp"
 path = "src/main.rs"
 
 [dependencies]
-cddm-core = { path = "../cddm-core" }
 anyhow.workspace = true
 async-trait.workspace = true
+cddm-core = { path = "../cddm-core" }
 serde.workspace = true
 serde_json.workspace = true
 tokio.workspace = true

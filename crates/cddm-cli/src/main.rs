@@ -9,9 +9,11 @@ use tokio::sync::mpsc;
 #[command(
     name = "cddm",
     author = "Grigor Tonikyan",
-    version = "0.1.0",
-    about = "CDDM — Code De-Duplication Meister: High-Performance Polyglot Code Clone & Modularity Analyzer",
-    long_about = "CDDM analyzes codebases for duplicate code fragments, evaluates DRY health scores, and generates actionable structural reports."
+    version,
+    about = "CDDM — Code De-Duplication Meister: High-Performance Polyglot Code Clone & \
+             Modularity Analyzer",
+    long_about = "CDDM analyzes codebases for duplicate code fragments, evaluates DRY health \
+                  scores, and generates actionable structural reports."
 )]
 struct Cli {
     #[command(subcommand)]
@@ -25,11 +27,11 @@ enum Commands {
     /// Scan target directory for code duplication & DRY health score
     Scan {
         /// Directory path to scan (default: current directory)
-        #[arg(default_value = ".")]
+        #[arg(default_value = cddm_core::DEFAULT_DIRECTORY)]
         directory: PathBuf,
 
         /// Minimum token count to consider as duplicate clone
-        #[arg(short, long, default_value_t = 50)]
+        #[arg(short, long, default_value_t = cddm_core::DEFAULT_MIN_TOKENS)]
         min_tokens: usize,
 
         /// Output report format (console, json, markdown)
@@ -56,7 +58,7 @@ enum Commands {
     /// Launch interactive WebUI HTTP server with embedded React app
     Serve {
         /// Port to bind WebUI HTTP server to (default: 3000)
-        #[arg(short, long, default_value_t = 3000)]
+        #[arg(short, long, default_value_t = serve::DEFAULT_PORT)]
         port: u16,
 
         /// Automatically open browser tab

@@ -1,12 +1,41 @@
 use crate::types::{LineSpan, NormalizedToken};
 
+/// Mersenne prime M_61 = 2^61 - 1 used for rolling hash modular reduction.
+pub const MERSENNE_61: u128 = (1 << 61) - 1;
+
+/// Primary rolling hash base (prime).
+pub const HASH_BASE_1: u64 = 313;
+
+/// Secondary rolling hash base for dual-base collision avoidance.
+pub const HASH_BASE_2: u64 = 1000003;
+
+/// Absolute minimum size of k-gram rolling window.
+pub const MIN_K_GRAM: usize = 10;
+
+/// Default offset added to k-gram size for window size w.
+pub const WINDOW_OFFSET: usize = 5;
+
+/// Numeric hash value representing an identifier token.
+pub const TOKEN_IDENTIFIER_VAL: u64 = 1;
+
+/// Numeric hash value representing a string literal token.
+pub const TOKEN_STRING_VAL: u64 = 2;
+
+/// Numeric hash value representing a numeric literal token.
+pub const TOKEN_NUMERIC_VAL: u64 = 3;
+
+/// Base integer offset for language keyword IDs.
+pub const TOKEN_KEYWORD_OFFSET: u64 = 1000;
+
+/// Base integer offset for punctuation IDs.
+pub const TOKEN_PUNCTUATION_OFFSET: u64 = 2000;
+
 /// A fast modulo operation for the Mersenne prime M_61 (2^61 - 1).
 #[inline]
 pub fn fast_mod_m61(x: u128) -> u64 {
-    const M61: u128 = (1 << 61) - 1;
-    let mut t = (x & M61) + (x >> 61);
-    if t >= M61 {
-        t -= M61;
+    let mut t = (x & MERSENNE_61) + (x >> 61);
+    if t >= MERSENNE_61 {
+        t -= MERSENNE_61;
     }
     t as u64
 }
@@ -23,11 +52,11 @@ pub struct Fingerprint {
 /// Converts a token into a unique integer for hashing.
 fn token_to_u64(token: &NormalizedToken) -> u64 {
     match token {
-        NormalizedToken::Identifier => 1,
-        NormalizedToken::StringLiteral => 2,
-        NormalizedToken::NumericLiteral => 3,
-        NormalizedToken::Keyword(id) => 1000 + (*id as u64),
-        NormalizedToken::Punctuation(id) => 2000 + (*id as u64),
+        NormalizedToken::Identifier => TOKEN_IDENTIFIER_VAL,
+        NormalizedToken::StringLiteral => TOKEN_STRING_VAL,
+        NormalizedToken::NumericLiteral => TOKEN_NUMERIC_VAL,
+        NormalizedToken::Keyword(id) => TOKEN_KEYWORD_OFFSET + (*id as u64),
+        NormalizedToken::Punctuation(id) => TOKEN_PUNCTUATION_OFFSET + (*id as u64),
     }
 }
 
@@ -40,8 +69,8 @@ pub fn winnow(tokens: &[(NormalizedToken, LineSpan)], k: usize, w: usize) -> Vec
         return Vec::new();
     }
 
-    let b1: u64 = 313;
-    let b2: u64 = 1000003;
+    let b1: u64 = HASH_BASE_1;
+    let b2: u64 = HASH_BASE_2;
 
     // Precompute b1^(k-1) and b2^(k-1) modulo M_61
     let mut b1_k_minus_1: u64 = 1;
