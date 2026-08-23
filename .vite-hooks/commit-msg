@@ -1,0 +1,33 @@
+#!/usr/bin/env sh
+# Vite+ Commit Message Validator via @commitlint/cli
+commit_msg_file="$1"
+if [ ! -f "$commit_msg_file" ]; then
+  exit 0
+fi
+
+# Execute commitlint via Vite+ exec / node_modules bin
+if [ -x "./node_modules/.bin/commitlint" ]; then
+  ./node_modules/.bin/commitlint --edit "$commit_msg_file"
+elif command -v commitlint >/dev/null 2>&1; then
+  commitlint --edit "$commit_msg_file"
+elif command -v bunx >/dev/null 2>&1; then
+  bunx commitlint --edit "$commit_msg_file"
+else
+  # Fallback to internal regex validator if commitlint is not installed
+  commit_msg=$(head -n 1 "$commit_msg_file")
+  case "$commit_msg" in
+    Merge*|fixup!*|squash!*|Revert*|v[0-9]*)
+      exit 0
+      ;;
+  esac
+
+  pattern="^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([a-zA-Z0-9_/-]+\))?(!)?:\s*.+"
+  if echo "$commit_msg" | grep -qE "$pattern"; then
+    exit 0
+  else
+    echo ""
+    echo "✖ Invalid commit message format: \"$commit_msg\""
+    echo "Commit messages must follow Conventional Commits (e.g. feat(core): add AST subtree hashing)"
+    exit 1
+  fi
+fi

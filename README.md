@@ -1,18 +1,15 @@
 # CDDM — Code De-Duplication Meister
 
-<div align="center">
-
 > **High-Performance Polyglot Code Clone Detection, DRY Health Analysis, AST Subtree Hasher & Embedded Studio WebUI.**
 
 [![CI](https://github.com/GrigorTonikyan/cddm/actions/workflows/ci.yml/badge.svg)](https://github.com/GrigorTonikyan/cddm/actions/workflows/ci.yml)
 [![License: MIT / Apache 2.0](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)](LICENSE)
 [![Rust](https://img.shields.io/badge/rust-2024%20edition-orange.svg)](https://www.rust-lang.org)
-[![Bun](https://img.shields.io/badge/bun-1.2+-black.svg)](https://bun.sh)
-[![React](https://img.shields.io/badge/react-19.0-61dafb.svg)](https://react.dev)
+[![Vite Plus](https://img.shields.io/badge/vite%2B-0.2.9-purple.svg)](https://viteplus.dev)
+[![TypeScript](https://img.shields.io/badge/typescript-7.0-blue.svg)](https://www.typescriptlang.org)
+[![React](https://img.shields.io/badge/react-19.2-61dafb.svg)](https://react.dev)
 [![npm version](https://img.shields.io/badge/npm-0.1.2-red.svg)](https://www.npmjs.com/package/cddm)
 [![crates.io](https://img.shields.io/badge/crates.io-0.1.2-brightgreen.svg)](https://crates.io/crates/cddm)
-
-</div>
 
 ---
 
@@ -36,23 +33,23 @@
 
 ## Overview
 
-**CDDM** (*Code De-Duplication Meister*) is an open-source, ultra-fast, multi-threaded polyglot code clone detection and modularity analysis engine built natively in Rust. Designed to scale seamlessly across large enterprise monorepos, CDDM detects exact (Type 1), renamed (Type 2), structural (Type 3), and semantic (Type 4) code clones in milliseconds.
+**CDDM** (_Code De-Duplication Meister_) is an open-source, ultra-fast, multi-threaded polyglot code clone detection and modularity analysis engine built natively in Rust. Designed to scale seamlessly across large enterprise monorepos, CDDM detects exact (Type 1), renamed (Type 2), structural (Type 3), and semantic (Type 4) code clones in milliseconds.
 
-Whether integrated into **CI/CD pipelines**, used via the **Terminal CLI**, explored in the **Embedded React Studio WebUI**, or connected to **AI Coding Agents** via **MCP**, CDDM helps developers keep their codebases clean, maintainable, and DRY (*Don't Repeat Yourself*).
+Whether integrated into **CI/CD pipelines**, used via the **Terminal CLI**, explored in the **Embedded React Studio WebUI**, or connected to **AI Coding Agents** via **MCP**, CDDM helps developers keep their codebases clean, maintainable, and DRY (_Don't Repeat Yourself_).
 
 ---
 
 ## Key Features
 
-| Feature | Description |
-| :--- | :--- |
-| **M61 Rolling Hash Winnowing** | Sub-linear O(N) token fingerprinting using Mersenne Prime M61 = 2^61 - 1 for collision-resistant clone detection. |
-| **Tree-sitter AST Hasher** | Parse source trees into ASTs and hash subtrees with `blake3` to identify structural near-misses and semantic clones. |
-| **DRY Health Scoring** | Computes a normalized 0.0 - 100.0 DRY codebase health score factoring in duplication ratio and cross-module cross-contamination. |
-| **In-Process Git Blame** | Powered by `gix` (`gitoxide`) to annotate duplicate fragments with author names and commit timestamps without spawning subprocesses. |
-| **Embedded Studio WebUI** | High-performance interactive React 19 dashboard served directly from the single compiled binary via `axum` & `rust-embed`. |
-| **AI Agent MCP Server** | Stdio JSON-RPC 2.0 protocol (`cddm-mcp`) allowing AI assistants (Claude, Antigravity, Cursor) to inspect duplication programmatically. |
-| **Rayon Parallel Pipeline** | Multi-threaded file discovery, AST parsing, and fingerprint indexing across all available CPU cores. |
+| Feature                        | Description                                                                                                                            |
+| :----------------------------- | :------------------------------------------------------------------------------------------------------------------------------------- |
+| **M61 Rolling Hash Winnowing** | Sub-linear O(N) token fingerprinting using Mersenne Prime M61 = 2^61 - 1 for collision-resistant clone detection.                      |
+| **Tree-sitter AST Hasher**     | Parse source trees into ASTs and hash subtrees with `blake3` to identify structural near-misses and semantic clones.                   |
+| **DRY Health Scoring**         | Computes a normalized 0.0 - 100.0 DRY codebase health score factoring in duplication ratio and cross-module cross-contamination.       |
+| **In-Process Git Blame**       | Powered by `gix` (`gitoxide`) to annotate duplicate fragments with author names and commit timestamps without spawning subprocesses.   |
+| **Embedded Studio WebUI**      | High-performance interactive React 19 dashboard served directly from the single compiled binary via `axum` & `rust-embed`.             |
+| **AI Agent MCP Server**        | Stdio JSON-RPC 2.0 protocol (`cddm-mcp`) allowing AI assistants (Claude, Antigravity, Cursor) to inspect duplication programmatically. |
+| **Rayon Parallel Pipeline**    | Multi-threaded file discovery, AST parsing, and fingerprint indexing across all available CPU cores.                                   |
 
 ---
 
@@ -75,21 +72,25 @@ Shell (.sh, .bash)   HTML / CSS              JSON / YAML / TOML
 ## Installation
 
 ### Via Cargo (Recommended for Rust users)
+
 ```bash
 cargo install cddm
 ```
 
 ### Via npm (Cross-platform binary wrapper)
+
 ```bash
 npm install -g cddm
 ```
 
 ### From Source
+
 ```bash
 git clone https://github.com/GrigorTonikyan/cddm.git
 cd cddm
 cargo build --release
 ```
+
 The compiled binary will be placed at `./target/release/cddm`.
 
 ---
@@ -117,13 +118,15 @@ cddm serve --port 3000 --open
 ## CLI Command Reference
 
 ### `cddm scan [DIRECTORY]`
+
 Executes code clone detection on the target directory.
 
 ```bash
 cddm scan [OPTIONS] [DIRECTORY]
 ```
 
-#### Options:
+#### Options
+
 - `-m, --min-tokens <INT>`: Minimum token count for a code fragment to be classified as a clone (Default: `50`).
 - `-l, --languages <LANGS>`: Filter scanning to specific languages (e.g. `--languages rust,typescript`).
 - `-f, --format <FORMAT>`: Output report format (`table`, `json`, `markdown`, `html`) (Default: `table`).
@@ -135,7 +138,8 @@ cddm scan [OPTIONS] [DIRECTORY]
 
 ---
 
-### `cddm serve`
+## Embedded Studio WebUI
+
 Launches the Axum HTTP server delivering the embedded React 19 Studio WebUI.
 
 ```bash
@@ -144,20 +148,11 @@ cddm serve --port 3000 --host 127.0.0.1 --open
 
 ---
 
-### `cddm-mcp`
-Starts the Model Context Protocol stdio server for AI agents.
-
-```bash
-cddm-mcp
-```
-
----
-
 ## Model Context Protocol (MCP) Server
 
 CDDM includes a native stdio Model Context Protocol (MCP) server `cddm-mcp` for direct integration with AI coding tools like Claude Desktop, Antigravity, or Cursor.
 
-### Configuration for Claude Desktop (`claude_desktop_config.json`):
+### Configuration for Claude Desktop (`claude_desktop_config.json`)
 
 ```json
 {
@@ -170,9 +165,9 @@ CDDM includes a native stdio Model Context Protocol (MCP) server `cddm-mcp` for 
 }
 ```
 
-### Exposed MCP Tools:
-1. `cddm_scan`: Runs a clone scan and returns duplication metric summaries and clone pairs to the LLM context.
-2. `cddm_health`: Returns the DRY codebase health score and modularity index.
+### Exposed MCP Tools
+
+- `scan_codebase`: Runs a polyglot code duplication scan and returns DRY health scores, duplication metrics, and clone pair details directly to AI context.
 
 ---
 
@@ -185,6 +180,7 @@ Score = max(0, min(100, (100 - 1.5 * Duplication_Percentage) * (1 - 0.25 * Cross
 ```
 
 Where:
+
 - **Duplication_Percentage**: Codebase duplication percentage (`(Clone Tokens / Total Tokens) * 100`).
 - **Cross_Module_Ratio**: Cross-module clone ratio (clones spanning distinct top-level directories / total clone pairs).
 
@@ -205,11 +201,11 @@ For detailed technical references, explore our design documentation:
 
 Scanning benchmark on a codebase of **500,000 LOC** across 1,200 files:
 
-| Tool | Engine Language | Scan Time | Memory Usage | Type 3 AST Clones |
-| :--- | :--- | :--- | :--- | :--- |
-| **CDDM** | **Rust 2024** | **180 ms** | **45 MB** | **Yes (Tree-sitter)** |
-| `jscpd` | Node.js | 4,200 ms | 320 MB | No |
-| `PMD-CPD` | Java | 6,800 ms | 510 MB | No |
+| Tool      | Engine Language | Scan Time  | Memory Usage | Type 3 AST Clones     |
+| :-------- | :-------------- | :--------- | :----------- | :-------------------- |
+| **CDDM**  | **Rust 2024**   | **180 ms** | **45 MB**    | **Yes (Tree-sitter)** |
+| `jscpd`   | Node.js         | 4,200 ms   | 320 MB       | No                    |
+| `PMD-CPD` | Java            | 6,800 ms   | 510 MB       | No                    |
 
 ---
 
@@ -225,7 +221,7 @@ Please read our [Code of Conduct](CODE_OF_CONDUCT.md) and [Security Policy](SECU
 
 Dual-licensed under either of:
 
-- **Apache License, Version 2.0** ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
-- **MIT License** ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+- **Apache License, Version 2.0** ([LICENSE-APACHE](LICENSE-APACHE) or <http://www.apache.org/licenses/LICENSE-2.0>)
+- **MIT License** ([LICENSE-MIT](LICENSE-MIT) or <http://opensource.org/licenses/MIT>)
 
 at your option.

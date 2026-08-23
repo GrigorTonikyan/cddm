@@ -11,6 +11,7 @@ The embedded Axum HTTP server exposes the following endpoints when running `cddm
 Health check endpoint for monitoring and studio readiness.
 
 **Response** (`200 OK`):
+
 ```json
 {
   "status": "ok",
@@ -26,6 +27,7 @@ Health check endpoint for monitoring and studio readiness.
 Execute a code duplication scan asynchronously.
 
 **Request Body** (`application/json`):
+
 ```json
 {
   "directory": "./src",
@@ -38,17 +40,18 @@ Execute a code duplication scan asynchronously.
 }
 ```
 
-| Field | Type | Required | Default | Description |
-|:------|:-----|:---------|:--------|:------------|
-| `directory` | `string` | Yes | `"."` | Root directory path to scan |
-| `min_tokens` | `number` | No | `50` | Minimum token count for a clone fragment |
-| `languages` | `string[]` | No | `[]` | Filter by language names (empty = all) |
-| `ignore_patterns` | `string[]` | No | See above | Glob patterns to exclude |
-| `detect_type2` | `boolean` | No | `true` | Enable Type-2 (renamed) identifier normalization |
-| `scan_self` | `boolean` | No | `true` | Find intra-file self-overlapping duplicates |
-| `enable_git_blame` | `boolean` | No | `false` | Annotate clone pairs with `gix` git author |
+| Field              | Type       | Required | Default   | Description                                      |
+| :----------------- | :--------- | :------- | :-------- | :----------------------------------------------- |
+| `directory`        | `string`   | Yes      | `"."`     | Root directory path to scan                      |
+| `min_tokens`       | `number`   | No       | `50`      | Minimum token count for a clone fragment         |
+| `languages`        | `string[]` | No       | `[]`      | Filter by language names (empty = all)           |
+| `ignore_patterns`  | `string[]` | No       | See above | Glob patterns to exclude                         |
+| `detect_type2`     | `boolean`  | No       | `true`    | Enable Type-2 (renamed) identifier normalization |
+| `scan_self`        | `boolean`  | No       | `true`    | Find intra-file self-overlapping duplicates      |
+| `enable_git_blame` | `boolean`  | No       | `false`   | Annotate clone pairs with `gix` git author       |
 
 **Response** (`200 OK`):
+
 ```json
 {
   "scan_id": "550e8400-e29b-41d4-a716-446655440000",
@@ -89,26 +92,26 @@ Execute a code duplication scan asynchronously.
 
 Executes terminal clone detection with configurable reporters.
 
-| Flag | Short | Type | Default | Description |
-|:-----|:------|:-----|:--------|:------------|
-| `--min-tokens` | `-m` | `usize` | `50` | Minimum token clone threshold |
-| `--format` | `-f` | `console\|json\|markdown\|html` | `console` | Output reporter format |
-| `--fail-threshold` | | `f64` | None | Exit code 1 if duplication % exceeds threshold |
-| `--languages` | `-l` | `String[]` | `[]` | Filter scan by language names |
-| `--ignore` | `-i` | `String[]` | `[]` | Additional ignore glob patterns |
-| `--git-blame` | | `bool` | `false` | Enable `gix` git author annotations |
-| `--no-self` | | `bool` | `false` | Skip intra-file clone checking |
-| `--output` | `-o` | `String` | None | Save report directly to file |
+| Flag               | Short | Type                            | Default   | Description                                    |
+| :----------------- | :---- | :------------------------------ | :-------- | :--------------------------------------------- |
+| `--min-tokens`     | `-m`  | `usize`                         | `50`      | Minimum token clone threshold                  |
+| `--format`         | `-f`  | `console\|json\|markdown\|html` | `console` | Output reporter format                         |
+| `--fail-threshold` |       | `f64`                           | None      | Exit code 1 if duplication % exceeds threshold |
+| `--languages`      | `-l`  | `String[]`                      | `[]`      | Filter scan by language names                  |
+| `--ignore`         | `-i`  | `String[]`                      | `[]`      | Additional ignore glob patterns                |
+| `--git-blame`      |       | `bool`                          | `false`   | Enable `gix` git author annotations            |
+| `--no-self`        |       | `bool`                          | `false`   | Skip intra-file clone checking                 |
+| `--output`         | `-o`  | `String`                        | None      | Save report directly to file                   |
 
 ### Command: `cddm serve`
 
 Launches the Axum server delivering the interactive WebUI.
 
-| Flag | Short | Type | Default | Description |
-|:-----|:------|:-----|:--------|:------------|
-| `--port` | `-p` | `u16` | `3000` | HTTP server port |
-| `--host` | | `String` | `127.0.0.1` | Host binding address |
-| `--open` | `-o` | `bool` | `true` | Auto-open default browser |
+| Flag     | Short | Type     | Default     | Description               |
+| :------- | :---- | :------- | :---------- | :------------------------ |
+| `--port` | `-p`  | `u16`    | `3000`      | HTTP server port          |
+| `--host` |       | `String` | `127.0.0.1` | Host binding address      |
+| `--open` | `-o`  | `bool`   | `true`      | Auto-open default browser |
 
 ---
 
@@ -117,10 +120,14 @@ Launches the Axum server delivering the interactive WebUI.
 The MCP server communicates over stdio using JSON-RPC 2.0.
 
 ### Tool: `scan_codebase`
-Runs code duplication scan and returns structured JSON metrics for AI context.
 
-### Tool: `cddm_health`
-Returns DRY codebase health score and modularity index.
+Runs a polyglot code duplication scan and returns structured JSON metrics and clone pair details for AI context.
+
+| Parameter          | Type      | Required | Default | Description                              |
+| :----------------- | :-------- | :------- | :------ | :--------------------------------------- |
+| `directory`        | `string`  | Yes      | `"."`   | Target directory path to analyze         |
+| `min_tokens`       | `number`  | No       | `50`    | Minimum token clone threshold            |
+| `enable_git_blame` | `boolean` | No       | `false` | Annotate duplicate lines with git author |
 
 ---
 

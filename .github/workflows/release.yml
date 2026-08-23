@@ -3,14 +3,14 @@ name: Release & Package Publishing
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
 
 permissions:
   contents: write
 
 jobs:
   build-binaries:
-    name: Build Binary (${{ matrix.target }})
+    name: Build (${{ matrix.target }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -18,30 +18,34 @@ jobs:
         include:
           - target: x86_64-pc-windows-msvc
             os: windows-latest
-            artifact_name: cddm-windows-amd64.exe
+            artifact_prefix: cddm-windows-amd64
+            exe_ext: ".exe"
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-latest
-            artifact_name: cddm-linux-amd64
+            artifact_prefix: cddm-linux-amd64
+            exe_ext: ""
           - target: x86_64-apple-darwin
             os: macos-latest
-            artifact_name: cddm-darwin-amd64
+            artifact_prefix: cddm-darwin-amd64
+            exe_ext: ""
           - target: aarch64-apple-darwin
             os: macos-latest
-            artifact_name: cddm-darwin-arm64
+            artifact_prefix: cddm-darwin-arm64
+            exe_ext: ""
 
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v4
 
-      - name: Setup Bun & Build WebUI
+      - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
 
-      - name: Build WebUI Bundle
+      - name: Build WebUI Distribution Assets
+        working-directory: ./webui
         run: |
-          cd webui
-          bun install
+          bun install --frozen-lockfile || bun install
           bun run build
 
       - name: Install Rust Toolchain
@@ -49,14 +53,22 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
-      - name: Build Binary Target
-        run: cargo build --release --target ${{ matrix.target }} --bin cddm
+      - name: Build Standalone Binaries (CLI & MCP)
+        run: |
+          cargo build --release --target ${{ matrix.target }} --bin cddm --bin cddm-mcp
 
-      - name: Upload Binary Artifact
+      - name: Prepare Staged Release Artifacts
+        shell: bash
+        run: |
+          mkdir -p dist-package
+          cp target/${{ matrix.target }}/release/cddm${{ matrix.exe_ext }} dist-package/${{ matrix.artifact_prefix }}${{ matrix.exe_ext }}
+          cp target/${{ matrix.target }}/release/cddm-mcp${{ matrix.exe_ext }} dist-package/cddm-mcp-${{ matrix.artifact_prefix }}${{ matrix.exe_ext }}
+
+      - name: Upload Target Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.artifact_name }}
-          path: target/${{ matrix.target }}/release/cddm*
+          name: ${{ matrix.artifact_prefix }}-binaries
+          path: dist-package/*
 
   github-release:
     name: Publish GitHub Release
@@ -66,13 +78,21 @@ jobs:
       - name: Checkout Source Code
         uses: actions/checkout@v4
 
-      - name: Download Artifacts
+      - name: Download All Build Artifacts
         uses: actions/download-artifact@v4
         with:
           path: ./release-artifacts
 
-      - name: Create GitHub Release
+      - name: Flatten Directory & Generate Checksums
+        run: |
+          mkdir -p ./release-dist
+          find ./release-artifacts -type f -exec cp {} ./release-dist/ \;
+          cd ./release-dist
+          sha256sum * > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - name: Create GitHub Release with Binaries & Checksums
         uses: softprops/action-gh-release@v2
         with:
-          files: ./release-artifacts/**/*
+          files: ./release-dist/*
           generate_release_notes: true

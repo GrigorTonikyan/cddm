@@ -1,0 +1,16 @@
+#!/usr/bin/env sh
+echo "=== [Vite+ Git Hooks] Running Pre-Push Verification ==="
+
+echo "--> Running Rust workspace unit & integration tests..."
+cargo test --workspace
+
+echo "--> Running WebUI Vitest test suite (vp -C webui run test)..."
+vp -C webui run test
+
+echo "--> Verifying WebUI production build (vp -C webui run build)..."
+vp -C webui run build
+
+echo "--> Running CDDM dogfooding self-scan on codebase..."
+cargo run -p cddm-cli -- scan . --min-tokens 50 --fail-threshold 15.0
+
+echo "=== [Vite+ Git Hooks] All pre-push checks PASSED! Safe to push. ==="

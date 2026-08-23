@@ -2,39 +2,39 @@
   "name": "cddm",
   "version": "0.1.2",
   "description": "CDDM — Code De-Duplication Meister: High-Performance Polyglot Code Clone & Modularity Analyzer",
-  "bin": {
-    "cddm": "./bin/cddm.js"
-  },
-  "main": "./bin/cddm.js",
+  "keywords": [
+    "ast",
+    "cddm",
+    "code-duplication",
+    "code-quality",
+    "dry",
+    "duplicate-code",
+    "jscpd",
+    "mcp",
+    "refactoring",
+    "rust",
+    "static-analysis",
+    "tree-sitter",
+    "winnowing"
+  ],
   "homepage": "https://github.com/GrigorTonikyan/cddm#readme",
   "bugs": {
     "url": "https://github.com/GrigorTonikyan/cddm/issues"
   },
+  "license": "MIT OR Apache-2.0",
+  "author": "Grigor Tonikyan <grigor@tonikyan.com>",
   "repository": {
     "type": "git",
     "url": "https://github.com/GrigorTonikyan/cddm.git"
   },
-  "keywords": [
-    "cddm",
-    "jscpd",
-    "duplicate-code",
-    "code-duplication",
-    "refactoring",
-    "code-quality",
-    "ast",
-    "dry",
-    "winnowing",
-    "mcp",
-    "static-analysis",
-    "tree-sitter",
-    "rust"
-  ],
-  "author": "Grigor Tonikyan <grigor@tonikyan.com>",
-  "license": "MIT OR Apache-2.0",
+  "bin": {
+    "cddm": "./bin/cddm.js"
+  },
+  "main": "./bin/cddm.js",
   "optionalDependencies": {
-    "@cddm/win32-x64": "0.1.0",
-    "@cddm/linux-x64": "0.1.0",
+    "@cddm/darwin-arm64": "0.1.0",
     "@cddm/darwin-x64": "0.1.0",
-    "@cddm/darwin-arm64": "0.1.0"
+    "@cddm/linux-x64": "0.1.0",
+    "@cddm/win32-x64": "0.1.0"
   }
 }

@@ -33,7 +33,7 @@ function getBinaryPath() {
     if (fs.existsSync(binPath)) {
       return binPath;
     }
-  } catch (e) {
+  } catch {
     // optionalDependency not installed directly
   }
 

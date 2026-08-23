@@ -1,0 +1,97 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Rust: Cargo Check",
+      "type": "shell",
+      "command": "cargo check --workspace --all-targets",
+      "group": "build",
+      "problemMatcher": ["$rustc"]
+    },
+    {
+      "label": "Rust: Cargo Clippy",
+      "type": "shell",
+      "command": "cargo clippy --workspace --all-targets -- -D warnings",
+      "group": "build",
+      "problemMatcher": ["$rustc"]
+    },
+    {
+      "label": "Rust: Cargo Test",
+      "type": "shell",
+      "command": "cargo test --workspace",
+      "group": "test",
+      "problemMatcher": ["$rustc"]
+    },
+    {
+      "label": "Rust: Cargo Format Check",
+      "type": "shell",
+      "command": "cargo fmt --check",
+      "group": "none",
+      "problemMatcher": []
+    },
+    {
+      "label": "CDDM: Dogfood Self-Scan",
+      "type": "shell",
+      "command": "cargo run -p cddm-cli -- scan . --min-tokens 50 --fail-threshold 15.0",
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "WebUI: Dev Server",
+      "type": "shell",
+      "command": "vp run --cwd webui dev",
+      "group": "none",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "WebUI: Vitest",
+      "type": "shell",
+      "command": "vp run --cwd webui test",
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "WebUI: Type Check",
+      "type": "shell",
+      "command": "vp run --cwd webui check",
+      "group": "build",
+      "problemMatcher": ["$tsc"]
+    },
+    {
+      "label": "WebUI: Lint",
+      "type": "shell",
+      "command": "vp run --cwd webui lint",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "WebUI: Format Check",
+      "type": "shell",
+      "command": "vp run --cwd webui format:check",
+      "group": "none",
+      "problemMatcher": []
+    },
+    {
+      "label": "WebUI: Build",
+      "type": "shell",
+      "command": "vp run --cwd webui build",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "CDDM: Verify All (Read-Only)",
+      "type": "shell",
+      "command": "vp run verify",
+      "group": "test",
+      "problemMatcher": ["$rustc", "$tsc"]
+    },
+    {
+      "label": "CDDM: Auto-Fix All",
+      "type": "shell",
+      "command": "vp run fix",
+      "group": "build",
+      "problemMatcher": ["$rustc", "$tsc"]
+    }
+  ]
+}

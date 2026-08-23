@@ -1,0 +1,58 @@
+{
+  "name": "cddm-workspace",
+  "version": "0.1.2",
+  "private": true,
+  "description": "Root workspace scripts for CDDM (Code De-Duplication Meister)",
+  "scripts": {
+    "prepare": "bun scripts/setup-hooks.ts",
+    "fmt": "cargo fmt && vp -C webui run format",
+    "fmt:check": "cargo fmt --check && vp -C webui run format:check",
+    "lint:rust": "cargo clippy --workspace --all-targets -- -D warnings",
+    "lint:webui": "vp -C webui run lint",
+    "lint": "cargo clippy --workspace --all-targets -- -D warnings && vp -C webui run lint",
+    "check:rust": "cargo check --workspace --all-targets",
+    "check:webui": "vp -C webui run check",
+    "check:scripts": "bunx tsc -p tsconfig.json",
+    "check": "cargo check --workspace --all-targets && vp check && bunx tsc -p tsconfig.json",
+    "test:rust": "cargo test --workspace",
+    "test:webui": "vp -C webui run test",
+    "test:scripts": "bun test scripts/__tests__",
+    "test": "cargo test --workspace && vp -C webui run test && bun test scripts/__tests__",
+    "self-scan": "cargo run -p cddm-cli -- scan . --min-tokens 50 --fail-threshold 15.0",
+    "commitlint": "commitlint --edit",
+    "changelog": "conventional-changelog -p conventionalcommits -i CHANGELOG.md -s -r 1",
+    "bump": "bumpp -r --execute \"bun scripts/sync-version.ts\"",
+    "version:check": "bun scripts/version.ts --dry-run",
+    "version:bump": "bun scripts/version.ts",
+    "version:release": "bumpp -r --execute \"bun scripts/sync-version.ts\" --commit \"chore(release): v%s\" --tag \"v%s\"",
+    "build:webui": "vp -C webui run build",
+    "build:rust": "cargo build --workspace",
+    "build": "vp -C webui run build && cargo build --workspace",
+    "build:release": "vp -C webui run build && cargo build --release --workspace",
+    "verify": "bun scripts/verify.ts",
+    "fix": "bun scripts/fix.ts"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^21.2.2",
+    "@commitlint/config-conventional": "^21.2.2",
+    "@commitlint/types": "^21.2.0",
+    "@types/bun": "^1.4.0",
+    "@types/node": "^26.2.0",
+    "bumpp": "^12.2.1",
+    "conventional-changelog-cli": "^5.0.0",
+    "jsdom": "^30.0.1",
+    "typescript": "^7.0.2",
+    "vite": "npm:@voidzero-dev/vite-plus-core@0.2.9",
+    "vite-plus": "0.2.9"
+  },
+  "overrides": {
+    "vite": "npm:@voidzero-dev/vite-plus-core@0.2.9"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "bun",
+      "version": "1.4.0",
+      "onFail": "download"
+    }
+  }
+}

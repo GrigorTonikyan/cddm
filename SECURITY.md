@@ -14,11 +14,13 @@ Security updates are applied to the latest release of **CDDM**.
 If you discover a security vulnerability within CDDM, please send an email to **Grigor Tonikyan** at [grigor@tonikyan.com](mailto:grigor@tonikyan.com).
 
 Please include:
+
 - A description of the vulnerability and its potential impact.
 - Steps or code to reproduce the issue.
 - Any suggested mitigations or fixes.
 
 ### Response Timeline
+
 - **Acknowledgement**: Within 48 hours.
 - **Status update**: Within 7 business days.
 - **Fix & Advisory**: Release patch version ASAP.

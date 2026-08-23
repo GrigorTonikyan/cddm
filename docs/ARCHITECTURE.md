@@ -2,7 +2,7 @@
 
 ## 1. High-Level Architecture
 
-CDDM (*Code De-Duplication Meister*) is a multi-threaded Rust workspace consisting of three primary crates, an embedded React 19 WebUI, and cross-platform npm/Cargo package wrappers:
+CDDM (_Code De-Duplication Meister_) is a multi-threaded Rust workspace consisting of three primary crates, an embedded React 19 WebUI, and cross-platform npm/Cargo package wrappers:
 
 ```mermaid
 graph TD
@@ -62,6 +62,7 @@ Score = max(0, min(100, (100 - 1.5 * Duplication_Percentage) * (1 - 0.25 * Cross
 ```
 
 Where:
+
 - **Duplication_Percentage**: Duplication percentage (`(Clone Tokens / Total Tokens) * 100`).
 - **Cross_Module_Ratio**: Cross-module clone ratio (`Cross-Directory Clones / Total Clones`).
 
@@ -107,14 +108,14 @@ cddm-mcp (binary crate) ──depends──→ cddm-core
 
 ## 6. WebUI Embedding Architecture
 
-The React 19 WebUI is compiled to static assets at build time (`bun run build` in `webui/`) and embedded directly into the compiled Rust binary:
+The React 19 WebUI is compiled to static assets at build time (`vp run build` in `webui/`) and embedded directly into the compiled Rust binary:
 
 ```text
 Build Time:                          Runtime:
 ┌────────────────┐                  ┌────────────────────────┐
-│ webui/src/     │  bun run build   │ cddm-cli binary        │
+│ webui/src/     │   vp run build   │ cddm-cli binary        │
 │ ├── App.tsx    │ ──────────────→  │ ┌────────────────────┐ │
-│ ├── store/     │   Vite → dist/   │ │ rust-embed Assets  │ │
+│ ├── store/     │ Vite Plus → dist │ │ rust-embed Assets  │ │
 │ └── components/│                  │ │ ├── index.html     │ │
 └────────────────┘                  │ │ └── assets/*.js    │ │
                                     │ └────────┬───────────┘ │

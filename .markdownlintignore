@@ -1,0 +1,8 @@
+node_modules/
+target/
+webui/dist/
+webui/node_modules/
+tests/e2e/test-results/
+tests/e2e/playwright-report/
+LICENSE*
+.logs/

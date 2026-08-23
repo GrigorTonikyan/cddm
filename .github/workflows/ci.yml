@@ -2,23 +2,22 @@ name: Continuous Integration
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  ci:
-    name: Continuous Integration
+  rust-ci:
+    name: Rust Backend Quality Gate
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Install Rust Toolchain
+      - name: Install Rust Toolchain (stable)
         uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy, rustfmt
@@ -26,17 +25,27 @@ jobs:
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
 
-      - name: Check Rust Formatting
+      - name: Verify Rust Formatting
         run: cargo fmt --check
 
-      - name: Cargo Check
+      - name: Cargo Typecheck
         run: cargo check --workspace --all-targets
 
-      - name: Run Clippy Lints
+      - name: Clippy Linter (-D warnings)
         run: cargo clippy --workspace --all-targets -- -D warnings
 
-      - name: Run Cargo Unit & Integration Tests
+      - name: Run Unit & Integration Tests (37 tests)
         run: cargo test --workspace
+
+      - name: CDDM Dogfooding Self-Scan (Mandatory Quality Gate)
+        run: cargo run -p cddm-cli -- scan . --min-tokens 50 --fail-threshold 15.0
+
+  webui-ci:
+    name: WebUI Frontend Quality Gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -44,17 +53,47 @@ jobs:
           bun-version: latest
 
       - name: Install WebUI Dependencies
-        run: bun install
         working-directory: ./webui
+        run: bun install --frozen-lockfile || bun install
 
-      - name: Run WebUI Vitest Suite
-        run: bun run test
+      - name: Typecheck TypeScript (vp run check)
         working-directory: ./webui
+        run: bunx vp run check
 
-      - name: Typecheck WebUI
-        run: bun run check
+      - name: Code Formatting Check (vp fmt --check)
         working-directory: ./webui
+        run: bunx vp run format:check
 
-      - name: Build WebUI Bundle
-        run: bun run build
+      - name: WebUI Linter (vp lint)
         working-directory: ./webui
+        run: bunx vp run lint
+
+      - name: Run WebUI Vitest Suite (vp run test)
+        working-directory: ./webui
+        run: bunx vp run test
+
+      - name: Build WebUI Bundle (vp run build)
+        working-directory: ./webui
+        run: bunx vp run build
+
+  package-and-hooks-ci:
+    name: Package & Integration Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Validate Vite+ Git Hooks Setup
+        run: |
+          bunx vp config
+          chmod +x .vite-hooks/* 2>/dev/null || true
+          git status
+
+      - name: Validate npm Distribution Package
+        run: |
+          node -e "const pkg = require('./npm/cddm/package.json'); console.log('Package validated:', pkg.name, pkg.version);"

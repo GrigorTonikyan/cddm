@@ -1,6 +1,6 @@
 # Contributing to CDDM
 
-First off, thank you for considering contributing to **CDDM** (*Code De-Duplication Meister*)! It is open-source software built for performance, polyglot developer experience, and code quality analysis.
+First off, thank you for considering contributing to **CDDM** (_Code De-Duplication Meister_)! It is open-source software built for performance, polyglot developer experience, and code quality analysis.
 
 ---
 
@@ -10,12 +10,15 @@ CDDM is structured as a Rust cargo workspace with an embedded React 19 WebUI:
 
 ```text
 cddm/
+├── .vite-hooks/        # Native Vite Plus pre-commit, pre-push, and commit-msg quality hooks
+├── .vscode/            # Aligned IDE settings, formatters, tasks, and debug profiles
 ├── crates/
 │   ├── cddm-core/      # Core algorithm library (Winnowing M61, Tree-sitter AST, gix blame)
 │   ├── cddm-cli/       # CLI application & Axum embedded WebUI server
 │   └── cddm-mcp/       # Model Context Protocol stdio server for AI agents
-├── webui/              # React 19 + Vite + Tailwind CSS studio frontend (Bun)
+├── webui/              # React 19 + Vite Plus + Tailwind CSS studio frontend
 ├── npm/                # npm cross-platform binary package distribution
+├── scripts/            # Setup and verification automation scripts
 └── docs/               # Architecture, API, Requirements & Feature Matrix docs
 ```
 
@@ -28,59 +31,96 @@ For a deep dive into internal design, read [docs/ARCHITECTURE.md](docs/ARCHITECT
 ### Prerequisites
 
 - **Rust**: 2024 edition (1.85+ recommended). Install via [rustup.rs](https://rustup.rs).
-- **Bun**: 1.2+ or **Node.js**: 20+. Install via [bun.sh](https://bun.sh).
+- **Vite Plus**: `0.2.9` via [viteplus.dev](https://viteplus.dev) or **Bun**: `1.4.0` via [bun.sh](https://bun.sh).
 
 ### Setting Up Development Workspace
 
 1. **Clone the repository**:
+
    ```bash
    git clone https://github.com/GrigorTonikyan/cddm.git
    cd cddm
    ```
 
-2. **Build Rust crates**:
+2. **Configure Git Hooks**:
+
+   CDDM includes native Git hooks in `.vite-hooks/` to ensure formatters and linters run automatically on every commit:
+
+   ```bash
+   # Option A: via workspace prepare script
+   vp run prepare
+
+   # Option B: via Vite Plus config command directly
+   vp config
+   ```
+
+3. **Build Rust crates**:
+
    ```bash
    cargo build
    ```
 
-3. **Install WebUI dependencies**:
+4. **Install WebUI dependencies**:
+
    ```bash
    cd webui
-   bun install
+   vp install
    ```
 
 ---
 
 ## Running Tests & Quality Checks
 
-### Rust Crates
+### Master Workspace Runners
 
-Before opening a pull request, ensure all Rust unit tests pass and code is formatted cleanly:
+You can run the complete quality pipeline or auto-fix across both Rust backend and React WebUI with single cross-platform commands:
 
 ```bash
-# Run all workspace unit & integration tests
-cargo test
+# 1. Run all 10 checks, tests, typechecks, lints, builds, and dogfood self-scan (Read-Only)
+vp run verify
+# or directly:
+bun scripts/verify.ts
 
+# 2. Automatically fix all auto-fixable formatting & lints, then run full verification
+vp run fix
+# or directly:
+bun scripts/fix.ts
+```
+
+### Individual Subsystems
+
+#### Rust Crates
+
+```bash
 # Check formatting
 cargo fmt --check
 
-# Run Clippy lints
+# Run Clippy lints (zero warning policy)
 cargo clippy --workspace --all-targets -- -D warnings
+
+# Run all 38 workspace unit & integration tests
+cargo test --workspace
 ```
 
-### WebUI Frontend
+#### WebUI Frontend
 
 ```bash
 cd webui
 
-# Run unit tests (Vitest)
-bun run test
-
 # Check TypeScript types
-bun run check
+vp run check
+
+# Run Vite Plus linter
+vp run lint
+
+# Check code formatting with Vite Plus
+vp run format:check
+
+# Run unit tests (Vitest - 24 tests)
+vp run test
 
 # Build production assets (embedded into rust-embed)
-bun run build
+vp run build
 ```
 
 ---
@@ -88,7 +128,9 @@ bun run build
 ## How to Contribute
 
 ### 1. Adding Support for a New Language
+
 To add a new language grammar to `cddm-core`:
+
 1. Add the corresponding `tree-sitter-<lang>` crate to `Cargo.toml` dependencies.
 2. Register the extension mapping and language grammar in `crates/cddm-core/src/grammar.rs`.
 3. Add tokenizer rules and tests in `crates/cddm-core/src/tokenizer.rs`.
@@ -97,15 +139,35 @@ To add a new language grammar to `cddm-core`:
 ### 2. Submitting Pull Requests
 
 1. **Fork the repo** and create your branch from `main`:
+
    ```bash
    git checkout -b feature/my-cool-feature
    ```
+
 2. Make your changes and write unit tests covering new functionality.
-3. Commit with clear, descriptive commit messages following standard conventions:
-   - `feat: add support for Go tree-sitter grammar`
-   - `fix: handle edge case in winnowing window sliding`
+3. Commit with clear, descriptive messages following Conventional Commits:
+   - `feat(core): add Go tree-sitter grammar support`
+   - `fix(webui): correct slider token threshold calculation`
    - `docs: update MCP setup guide`
-4. Push to your fork and submit a Pull Request to `main`.
+   - `feat(api)!: breaking change to scan endpoint`
+4. Commit messages are automatically checked via `@commitlint/cli` and `commitlint.config.ts`.
+5. Run `vp run verify` to confirm all 9 quality checks pass.
+6. Push to your fork and submit a Pull Request to `main`.
+
+### 3. Releasing & Semantic Versioning
+
+For maintainers creating new releases:
+
+```bash
+# Preview calculated version and changelog entry (dry-run)
+vp run version:check
+
+# Bump version and synchronize Cargo.toml, package manifests, and CHANGELOG.md
+vp run bump
+
+# Complete release: bumps versions, regenerates changelog, creates git commit and tag
+vp run version:release
+```
 
 ---
 

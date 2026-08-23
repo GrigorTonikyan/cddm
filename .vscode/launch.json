@@ -1,0 +1,47 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug CDDM Scan (CLI)",
+      "cargo": {
+        "args": ["build", "--bin=cddm", "--package=cddm-cli"],
+        "filter": {
+          "name": "cddm",
+          "kind": "bin"
+        }
+      },
+      "args": ["scan", "crates/cddm-core/src"],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug CDDM Serve (WebUI Server)",
+      "cargo": {
+        "args": ["build", "--bin=cddm", "--package=cddm-cli"],
+        "filter": {
+          "name": "cddm",
+          "kind": "bin"
+        }
+      },
+      "args": ["serve", "--port", "3000"],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug CDDM MCP Server",
+      "cargo": {
+        "args": ["build", "--bin=cddm-mcp", "--package=cddm-mcp"],
+        "filter": {
+          "name": "cddm-mcp",
+          "kind": "bin"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}

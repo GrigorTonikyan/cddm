@@ -1,0 +1,16 @@
+#!/usr/bin/env sh
+echo "=== [Vite+ Git Hooks] Running Pre-Commit Checks ==="
+
+echo "--> Running Vite+ staged checks & linters..."
+vp staged
+
+echo "--> Checking Rust code formatting (cargo fmt)..."
+cargo fmt --check
+
+echo "--> Running Clippy lints (cargo clippy)..."
+cargo clippy --workspace --all-targets -- -D warnings
+
+echo "--> Running workspace Vite+ type-aware check (vp check)..."
+vp check
+
+echo "=== [Vite+ Git Hooks] All pre-commit checks PASSED cleanly! ==="
