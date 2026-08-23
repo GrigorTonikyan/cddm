@@ -1,15 +1,17 @@
 import React, { useState } from "react";
 import { ClonePair } from "../types/cddm-types";
 import { parsePath, FormattedPath } from "../utils/path-utils";
+import { DiffViewer } from "./DiffViewer";
+import { RefactorPatchModal } from "./RefactorPatchModal";
 import {
   ChevronDown,
   ChevronRight,
   FileCode2,
   User,
   Hash,
-  Copy,
-  Check,
   Sparkles,
+  Wand2,
+  Tag,
 } from "lucide-react";
 
 export interface ClonePairCardProps {
@@ -37,83 +39,12 @@ const FilePathSummary: React.FC<FilePathSummaryProps> = ({ parsed, startLine, en
   </div>
 );
 
-interface FragmentDetailPanelProps {
-  label: string;
-  parsed: FormattedPath;
-  startLine: number;
-  endLine: number;
-  tokens: number;
-  isCopied: boolean;
-  onCopy: () => void;
-}
-
-const FragmentDetailPanel: React.FC<FragmentDetailPanelProps> = ({
-  label,
-  parsed,
-  startLine,
-  endLine,
-  tokens,
-  isCopied,
-  onCopy,
-}) => (
-  <div className="bg-slate-900/90 rounded-lg border border-slate-800/90 overflow-hidden">
-    <div className="px-3 py-2 bg-slate-950/80 border-b border-slate-800/80 flex items-center justify-between text-xs font-mono">
-      <span className="text-indigo-400 font-semibold flex items-center gap-1.5">
-        <FileCode2 className="w-3.5 h-3.5" />
-        {label}
-      </span>
-      <div className="flex items-center gap-2">
-        <span className="text-slate-400">
-          Lines {startLine}–{endLine}
-        </span>
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onCopy();
-          }}
-          className="p-1 hover:bg-slate-800 text-slate-400 hover:text-slate-200 rounded transition-colors"
-          title="Copy full path"
-        >
-          {isCopied ? (
-            <Check className="w-3.5 h-3.5 text-emerald-400" />
-          ) : (
-            <Copy className="w-3.5 h-3.5" />
-          )}
-        </button>
-      </div>
-    </div>
-    <div className="p-3 font-mono text-xs space-y-2">
-      <div className="text-slate-300 break-all bg-slate-950 p-2 rounded border border-slate-800/60">
-        <span className="text-slate-500">{parsed.directory}</span>
-        <span className="text-indigo-300 font-bold">{parsed.filename}</span>
-      </div>
-      <div className="text-slate-500 text-[11px] flex items-center justify-between pt-1">
-        <span>Tokens: {tokens}</span>
-        <span>Range: {endLine - startLine + 1} lines</span>
-      </div>
-    </div>
-  </div>
-);
-
 export const ClonePairCard: React.FC<ClonePairCardProps> = ({ pair, index }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [copiedA, setCopiedA] = useState(false);
-  const [copiedB, setCopiedB] = useState(false);
+  const [isRefactorOpen, setIsRefactorOpen] = useState(false);
 
   const pathA = parsePath(pair.file_a);
   const pathB = parsePath(pair.file_b);
-
-  const handleCopy = (path: string, isA: boolean) => {
-    void navigator.clipboard.writeText(path);
-    if (isA) {
-      setCopiedA(true);
-      setTimeout(() => setCopiedA(false), 2000);
-    } else {
-      setCopiedB(true);
-      setTimeout(() => setCopiedB(false), 2000);
-    }
-  };
 
   const simPct = (pair.similarity * 100).toFixed(0);
   const simNum = pair.similarity * 100;
@@ -124,6 +55,15 @@ export const ClonePairCard: React.FC<ClonePairCardProps> = ({ pair, index }) => 
       : simNum >= 80
         ? "bg-cyan-500/15 text-cyan-300 border-cyan-500/40 shadow-cyan-900/20"
         : "bg-amber-500/15 text-amber-300 border-amber-500/40 shadow-amber-900/20";
+
+  const cloneTypeBadge =
+    pair.clone_type === "Exact"
+      ? "bg-emerald-950/80 text-emerald-300 border-emerald-800/50"
+      : pair.clone_type === "Renamed"
+        ? "bg-indigo-950/80 text-indigo-300 border-indigo-800/50"
+        : pair.clone_type === "NearMiss"
+          ? "bg-amber-950/80 text-amber-300 border-amber-800/50"
+          : "bg-purple-950/80 text-purple-300 border-purple-800/50";
 
   return (
     <div className="group bg-slate-900/70 border border-slate-800/80 hover:border-indigo-500/40 rounded-xl overflow-hidden shadow-lg transition-all duration-200 backdrop-blur-sm">
@@ -156,6 +96,14 @@ export const ClonePairCard: React.FC<ClonePairCardProps> = ({ pair, index }) => 
         {/* Right Side: Badges & Controls */}
         <div className="flex items-center justify-between md:justify-end gap-3 shrink-0">
           <div className="flex items-center gap-2">
+            {/* Clone Type Badge */}
+            <span
+              className={`text-[11px] font-mono px-2 py-0.5 rounded border flex items-center gap-1 ${cloneTypeBadge}`}
+            >
+              <Tag className="w-3 h-3 opacity-70" />
+              {pair.clone_type || "Exact"}
+            </span>
+
             <span className="text-xs font-mono bg-slate-800/80 text-slate-300 px-2.5 py-1 rounded-md border border-slate-700/50">
               {pair.token_count.toLocaleString()} tokens
             </span>
@@ -189,7 +137,7 @@ export const ClonePairCard: React.FC<ClonePairCardProps> = ({ pair, index }) => 
               </span>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               {pair.author_a && (
                 <div className="flex items-center gap-1.5 bg-slate-900 px-2.5 py-1 rounded border border-slate-800">
                   <User className="w-3.5 h-3.5 text-indigo-400" />
@@ -202,32 +150,45 @@ export const ClonePairCard: React.FC<ClonePairCardProps> = ({ pair, index }) => 
                   <span className="text-slate-300">Author B: {pair.author_b}</span>
                 </div>
               )}
+              {/* Refactor Advisor Button */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsRefactorOpen(true);
+                }}
+                className="px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs flex items-center gap-1.5 transition-colors shadow-sm"
+              >
+                <Wand2 className="w-3.5 h-3.5" />
+                Refactor Advisor
+              </button>
             </div>
           </div>
 
-          {/* Side-by-Side Detailed Panels */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FragmentDetailPanel
-              label="Fragment A"
-              parsed={pathA}
-              startLine={pair.start_line_a}
-              endLine={pair.end_line_a}
-              tokens={pair.token_count}
-              isCopied={copiedA}
-              onCopy={() => handleCopy(pathA.fullNormalized, true)}
-            />
-            <FragmentDetailPanel
-              label="Fragment B"
-              parsed={pathB}
-              startLine={pair.start_line_b}
-              endLine={pair.end_line_b}
-              tokens={pair.token_count}
-              isCopied={copiedB}
-              onCopy={() => handleCopy(pathB.fullNormalized, false)}
-            />
-          </div>
+          {/* Interactive Synchronized Split Diff Viewer */}
+          <DiffViewer
+            fileA={pair.file_a}
+            startLineA={pair.start_line_a}
+            endLineA={pair.end_line_a}
+            fileB={pair.file_b}
+            startLineB={pair.start_line_b}
+            endLineB={pair.end_line_b}
+            tokenCount={pair.token_count}
+          />
         </div>
       )}
+
+      {/* Refactor Patch Synthesis Modal */}
+      <RefactorPatchModal
+        isOpen={isRefactorOpen}
+        onClose={() => setIsRefactorOpen(false)}
+        fileA={pair.file_a}
+        startLineA={pair.start_line_a}
+        endLineA={pair.end_line_a}
+        fileB={pair.file_b}
+        startLineB={pair.start_line_b}
+        endLineB={pair.end_line_b}
+      />
     </div>
   );
 };

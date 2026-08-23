@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, beforeEach } from "vite-plus/test";
 import { ScanResults } from "../ScanResults";
 import { useCDDMStore } from "../../store/cddm-store";
@@ -12,7 +12,7 @@ describe("ScanResults Component", () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it("should render DRY health score and clone details when results exist", () => {
+  it("should render DRY health score and visual analytics when results exist", () => {
     useCDDMStore.setState({
       results: createMockScanResult(),
     });
@@ -20,7 +20,14 @@ describe("ScanResults Component", () => {
     expect(screen.getByText("DRY Health Score")).toBeDefined();
     expect(screen.getByText("92.7")).toBeDefined();
     expect(screen.getByText(/4\.85/i)).toBeDefined();
+    expect(screen.getByText("Visual Analytics")).toBeDefined();
+    expect(screen.getByText("Duplication Treemap")).toBeDefined();
     expect(screen.getByText("Language Breakdown")).toBeDefined();
+
+    // Switch to language breakdown
+    const langBtn = screen.getByText("Language Breakdown");
+    fireEvent.click(langBtn);
+    expect(screen.getByText("1 Languages Detected")).toBeDefined();
   });
 
   it("should render clone pair count", () => {

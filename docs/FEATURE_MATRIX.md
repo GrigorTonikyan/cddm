@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-23 | Rust: 63/63 PASS | WebUI: 24/24 PASS | Repository Scripts: 27/27 PASS | CI Workflows: PASS
+> Last verified: 2026-08-23 | Rust: 63/63 PASS | WebUI: 33/33 PASS | Repository Scripts: 27/27 PASS | CI Workflows: PASS
 
 ---
 
@@ -142,17 +142,20 @@
 
 ---
 
-## 2. WebUI Frontend — React 19 + TypeScript + Vitest (24 unit tests)
+## 2. WebUI Frontend — React 19 + TypeScript + Vitest (33 unit tests)
 
-| Module          | Test Suite File                                           | Test Cases | Status |
-| :-------------- | :-------------------------------------------------------- | :--------- | :----- |
-| Store           | `webui/src/store/__tests__/cddm-store.test.ts`            | 7 tests    | PASS   |
-| App Shell       | `webui/src/components/__tests__/App.test.tsx`             | 3 tests    | PASS   |
-| Config Panel    | `webui/src/components/__tests__/ScanConfigPanel.test.tsx` | 4 tests    | PASS   |
-| Progress Bar    | `webui/src/components/__tests__/ScanProgressBar.test.tsx` | 3 tests    | PASS   |
-| Results View    | `webui/src/components/__tests__/ScanResults.test.tsx`     | 3 tests    | PASS   |
-| Clone Pair Card | `webui/src/components/__tests__/ClonePairCard.test.tsx`   | 2 tests    | PASS   |
-| Type System     | `webui/src/types/__tests__/cddm-types.test.ts`            | 2 tests    | PASS   |
+| Module          | Test Suite File                                              | Test Cases | Status |
+| :-------------- | :----------------------------------------------------------- | :--------- | :----- |
+| Store           | `webui/src/store/__tests__/cddm-store.test.ts`               | 7 tests    | PASS   |
+| App Shell       | `webui/src/components/__tests__/App.test.tsx`                | 3 tests    | PASS   |
+| Config Panel    | `webui/src/components/__tests__/ScanConfigPanel.test.tsx`    | 4 tests    | PASS   |
+| Progress Bar    | `webui/src/components/__tests__/ScanProgressBar.test.tsx`    | 3 tests    | PASS   |
+| Results View    | `webui/src/components/__tests__/ScanResults.test.tsx`        | 3 tests    | PASS   |
+| Clone Pair Card | `webui/src/components/__tests__/ClonePairCard.test.tsx`      | 2 tests    | PASS   |
+| Diff Viewer     | `webui/src/components/__tests__/DiffViewer.test.tsx`         | 3 tests    | PASS   |
+| Refactor Modal  | `webui/src/components/__tests__/RefactorPatchModal.test.tsx` | 3 tests    | PASS   |
+| Duplication Map | `webui/src/components/__tests__/DuplicationTreemap.test.tsx` | 3 tests    | PASS   |
+| Type System     | `webui/src/types/__tests__/cddm-types.test.ts`               | 2 tests    | PASS   |
 
 ---
 

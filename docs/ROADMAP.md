@@ -117,9 +117,9 @@ Currently, `cddm` parses and tokenizes every file on every scan. In large enterp
 ### EP-04: Interactive Side-by-Side Monaco Diff Visualizer in WebUI
 
 - **Target Milestone**: `v0.4.0`
-- **Component**: `webui/`
+- **Component**: `webui/`, `crates/cddm-cli`
 - **Priority**: `Medium`
-- **Status**: `Proposed`
+- **Status**: `Completed (v0.4.0)`
 
 #### Problem Statement
 
@@ -127,10 +127,10 @@ The WebUI Studio currently displays static line ranges and author annotations fo
 
 #### Specification & Architecture
 
-1. Integrate `@monaco-editor/react` (or `@codemirror/lang-*`) into `ClonePairCard.tsx`.
-2. Fetch snippet contents via REST endpoint `GET /api/snippet?file=path&start=N&end=M`.
-3. Render Fragment A on the left and Fragment B on the right with token-level diff annotations.
-4. Provide copy buttons for extracting common logic.
+1. Implement `DiffViewer.tsx` into `ClonePairCard.tsx` with split and unified modes.
+2. Fetch snippet contents via REST endpoint `GET /api/snippet?file=path&start=N&end=M&context=4`.
+3. Render Fragment A on the left and Fragment B on the right with synchronized scrolling and line highlighting.
+4. Provide copy buttons for extracting duplicate and invariant code.
 
 #### Acceptance Criteria
 
@@ -169,7 +169,7 @@ Lexical winnowing detects identical and renamed token streams (Type-1 and Type-2
 - **Target Milestone**: `v0.4.0`
 - **Component**: `webui/`
 - **Priority**: `Medium`
-- **Status**: `Proposed`
+- **Status**: `Completed (v0.4.0)`
 
 #### Problem Statement
 
@@ -177,9 +177,9 @@ Developers need a high-level visual representation of where duplication is clust
 
 #### Specification & Architecture
 
-1. Add D3.js or ECharts hierarchical Treemap and Sunburst charts in `ScanResults.tsx`.
+1. Add Squarified Treemap layout in `DuplicationTreemap.tsx` integrated in `ScanResults.tsx`.
 2. Node size represents total token volume; node color represents local duplication rate (emerald for < 5%, amber for 5-15%, rose for > 15%).
-3. Clicking a directory node zooms into subdirectories and filters the clone pair list.
+3. Clicking a directory node zooms into subdirectories and filters the clone pair list with breadcrumb navigation.
 
 #### Acceptance Criteria
 
@@ -308,9 +308,9 @@ Maximizing token throughput on multi-gigabyte codebases to achieve > 20M tokens/
 
 ### Milestone v0.4.0 (Studio Visual Analytics)
 
-- [ ] Add Monaco / CodeMirror interactive split-diff view in WebUI [EP-04]
-- [ ] Implement D3.js / ECharts hierarchical codebase duplication treemap [EP-06]
-- [ ] Add Git historical DRY Health Score trend graph [EP-06]
+- [x] Add interactive split-diff view with synchronized scrolling in WebUI [EP-04]
+- [x] Implement Squarified hierarchical codebase duplication treemap [EP-06]
+- [x] Add automated refactoring advisor and `.patch` diff modal in WebUI [EP-04]
 
 ### Milestone v0.5.0 (AST Pipeline & Polyglot Expansion)
 

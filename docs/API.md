@@ -86,6 +86,72 @@ Execute a code duplication scan asynchronously.
 
 ---
 
+### `GET /api/snippet`
+
+Retrieves source lines for a given file path and line span with configurable surrounding context and syntax language detection.
+
+**Query Parameters**:
+
+| Parameter | Type     | Required | Default | Description                                |
+| :-------- | :------- | :------- | :------ | :----------------------------------------- |
+| `file`    | `string` | Yes      | None    | Relative or absolute file path             |
+| `start`   | `number` | Yes      | None    | 1-based start line of duplicate fragment   |
+| `end`     | `number` | Yes      | None    | 1-based end line of duplicate fragment     |
+| `context` | `number` | No       | `3`     | Context lines before and after (max: `20`) |
+
+**Response** (`200 OK`):
+
+```json
+{
+  "file": "src/auth/login.rs",
+  "start_line": 10,
+  "end_line": 12,
+  "context_start_line": 7,
+  "context_end_line": 15,
+  "lines": [
+    { "line_number": 7, "content": "use anyhow::Result;", "is_target": false },
+    { "line_number": 10, "content": "pub fn login() {", "is_target": true }
+  ],
+  "total_lines": 120,
+  "language": "Rust"
+}
+```
+
+---
+
+### `POST /api/refactor`
+
+Synthesizes on-demand deduplication recommendations, parameter variance analysis, and unified `.patch` format diffs.
+
+**Request Body** (`application/json`):
+
+```json
+{
+  "file_a": "src/a.rs",
+  "start_line_a": 10,
+  "end_line_a": 25,
+  "file_b": "src/b.rs",
+  "start_line_b": 15,
+  "end_line_b": 30
+}
+```
+
+**Response** (`200 OK`):
+
+```json
+{
+  "suggested_function_name": "extracted_shared_helper",
+  "strategy": "extract_function",
+  "common_body_lines": ["let x = 1;", "let y = 2;"],
+  "parameter_differences": [],
+  "target_module_hint": "Shared utility module or common crate",
+  "unified_patch": "--- a/src/a.rs\n+++ b/src/a.rs\n@@ -10,2 +10,1 @@\n-let x = 1;\n+    extracted_shared_helper();",
+  "lines_saved": 8
+}
+```
+
+---
+
 ## 2. CLI Reference (`cddm`)
 
 ### Command: `cddm scan [DIRECTORY]`

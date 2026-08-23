@@ -55,20 +55,21 @@
 
 ### Milestone v0.4.0: WebUI Studio & Visual Analytics
 
-- [ ] **[EP-04] Interactive Side-by-Side Code Diff Visualizer**
-  - [ ] Add backend endpoint `GET /api/snippet` in `crates/cddm-cli/src/serve.rs`
-  - [ ] Integrate syntax-highlighted split diff in `ClonePairCard.tsx`
-  - [ ] Implement synchronized vertical scrolling and line highlighting
-  - [ ] Add unit tests in `ClonePairCard.test.tsx`
+- [x] **[EP-04] Interactive Side-by-Side Code Diff Visualizer**
+  - [x] Add backend endpoint `GET /api/snippet` in `crates/cddm-cli/src/serve.rs`
+  - [x] Integrate syntax-highlighted split diff in `ClonePairCard.tsx` and `DiffViewer.tsx`
+  - [x] Implement synchronized vertical scrolling and line highlighting
+  - [x] Add unit tests in `DiffViewer.test.tsx` and `ClonePairCard.test.tsx`
 
-- [ ] **[EP-06] Duplication Treemap & Hierarchical Analytics**
-  - [ ] Add D3.js or ECharts hierarchical Treemap in `ScanResults.tsx`
-  - [ ] Support zoom-in navigation by directory and crate module
-  - [ ] Add color-coded duplication density mapping
+- [x] **[EP-06] Duplication Treemap & Hierarchical Analytics**
+  - [x] Add Squarified Treemap layout in `DuplicationTreemap.tsx` integrated in `ScanResults.tsx`
+  - [x] Support zoom-in navigation by directory and crate module
+  - [x] Add color-coded duplication density mapping
 
-- [ ] **Historical DRY Health Score Trend Graph**
-  - [ ] Add Git historical timeline analyzer via `gix`
-  - [ ] Plot DRY score progression over recent commits in WebUI
+- [x] **One-Click Refactoring Patch Visualizer in WebUI**
+  - [x] Add `POST /api/refactor` endpoint in `crates/cddm-cli/src/serve.rs`
+  - [x] Implement `RefactorPatchModal.tsx` displaying invariant suggestions and `.patch` diffs
+  - [x] Support one-click patch copy and `.patch` file download
 
 ---
 
@@ -104,3 +105,4 @@
 - [x] **v0.1.2**: Tree-sitter AST hashing module, `cddm-mcp` stdio JSON-RPC 2.0 server, in-process `gix` git blame, Vite Plus toolchain integration, Conventional Commits & automated semver pipeline, cross-platform workspace clean (`vp run clean`) & reset (`vp run reset`) runners with 27 unit tests.
 - [x] **v0.2.0**: Zero-emoji strict enforcement policy across codebase, dependency upgrade to latest versions with precision retention, missing_debug_implementations workspace denial, automated multi-manifest semver synchronization with README badge & lockfile updates.
 - [x] **v0.3.0**: Persistent ACID disk cache powered by `redb` v4 (`.cddm/cache.db`), Git differential scan engine (`cddm diff`), automated patch refactoring CLI (`cddm refactor`), MCP `cddm_diff_scan` tool, with 63 passing unit tests and sub-30ms repeat scans.
+- [x] **v0.4.0**: Interactive WebUI Studio with side-by-side synchronized diff visualizer (`DiffViewer.tsx`), secure Axum snippet API (`GET /api/snippet`), on-demand refactoring patch synthesis (`POST /api/refactor`), and hierarchical Squarified Duplication Treemap (`DuplicationTreemap.tsx`).

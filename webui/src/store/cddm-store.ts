@@ -1,6 +1,51 @@
 import { create } from "zustand";
 import { API_ROUTES, DEFAULT_SCAN_CONFIG } from "../constants/cddm-constants";
-import { ScanConfig, ScanProgress, ScanResult } from "../types/cddm-types";
+import {
+  ScanConfig,
+  ScanProgress,
+  ScanResult,
+  ModalWindowState,
+  DEFAULT_MODAL_WINDOW_STATE,
+} from "../types/cddm-types";
+
+const LOCAL_STORAGE_MODAL_WINDOW_KEY = "cddm_modal_window_state";
+
+export function loadPersistedWindowState(): ModalWindowState {
+  if (typeof window === "undefined" || !window.localStorage) {
+    return DEFAULT_MODAL_WINDOW_STATE;
+  }
+  try {
+    const raw = window.localStorage.getItem(LOCAL_STORAGE_MODAL_WINDOW_KEY);
+    if (!raw) return DEFAULT_MODAL_WINDOW_STATE;
+    const parsed = JSON.parse(raw) as Partial<ModalWindowState>;
+    return {
+      x: typeof parsed.x === "number" ? parsed.x : DEFAULT_MODAL_WINDOW_STATE.x,
+      y: typeof parsed.y === "number" ? parsed.y : DEFAULT_MODAL_WINDOW_STATE.y,
+      width:
+        typeof parsed.width === "number" && parsed.width >= 400
+          ? parsed.width
+          : DEFAULT_MODAL_WINDOW_STATE.width,
+      height:
+        typeof parsed.height === "number" && parsed.height >= 300
+          ? parsed.height
+          : DEFAULT_MODAL_WINDOW_STATE.height,
+      isMaximized: typeof parsed.isMaximized === "boolean" ? parsed.isMaximized : false,
+      isMinimized: typeof parsed.isMinimized === "boolean" ? parsed.isMinimized : false,
+    };
+  } catch {
+    return DEFAULT_MODAL_WINDOW_STATE;
+  }
+}
+
+export function persistWindowState(state: ModalWindowState): void {
+  if (typeof window !== "undefined" && window.localStorage) {
+    try {
+      window.localStorage.setItem(LOCAL_STORAGE_MODAL_WINDOW_KEY, JSON.stringify(state));
+    } catch {
+      // Ignore quota or private browsing storage errors
+    }
+  }
+}
 
 /**
  * Interface for CDDM Zustand Store State and Actions.
@@ -18,9 +63,13 @@ export interface CDDMStoreState {
   isScanning: boolean;
   /** Error message if scan failed */
   error: string | null;
+  /** Windows 11 Modal Window persistable configuration */
+  modalWindowState: ModalWindowState;
 
   /** Updates the scan configuration */
   setConfig: (config: Partial<ScanConfig>) => void;
+  /** Updates and persists the modal window state */
+  setModalWindowState: (state: Partial<ModalWindowState>) => void;
   /** Initiates a new code duplication scan */
   startScan: () => Promise<void>;
   /** Cancels an ongoing scan */
@@ -39,11 +88,23 @@ export const useCDDMStore = create<CDDMStoreState>((set, get) => ({
   results: null,
   isScanning: false,
   error: null,
+  modalWindowState: loadPersistedWindowState(),
 
   setConfig: (newConfig) => {
     set((state) => ({
       config: { ...state.config, ...newConfig },
     }));
+  },
+
+  setModalWindowState: (newState) => {
+    set((state) => {
+      const updated: ModalWindowState = {
+        ...state.modalWindowState,
+        ...newState,
+      };
+      persistWindowState(updated);
+      return { modalWindowState: updated };
+    });
   },
 
   startScan: async () => {
