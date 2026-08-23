@@ -4,6 +4,6 @@
     "tombi-toml.tombi",
     "davidanson.vscode-markdownlint",
     "bradlc.vscode-tailwindcss",
-    "dbaeumer.vscode-eslint"
+    "void-zero.vite-plus-extension-pack"
   ]
 }
