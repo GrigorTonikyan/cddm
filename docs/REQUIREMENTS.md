@@ -1,6 +1,6 @@
-# CDDM (Code De-Duplication Meister) — System Requirements Document v2.1
+# CDDM (Code De-Duplication Meister) — System Requirements Document v3.0
 
-> This document defines the exhaustive functional and non-functional requirements for CDDM, aligned with actual implementation status as of v0.2.0.
+> This document defines the exhaustive functional and non-functional requirements for CDDM, aligned with actual implementation status as of v1.0.0.
 
 ---
 

@@ -173,7 +173,7 @@ pub async fn run_scan(
                 .par_iter()
                 .filter_map(|path| {
                     let grammar = get_grammar_for_path(path)?;
-                    let content = std::fs::read_to_string(path).ok()?;
+                    let content = crate::io::read_file_source(path).ok()?;
                     let meta = std::fs::metadata(path).ok()?;
                     let mtime = meta
                         .modified()

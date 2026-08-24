@@ -269,7 +269,7 @@ Extend full Tree-sitter AST parsing support beyond Rust, TypeScript, JavaScript,
 - **Target Milestone**: `v1.0.0`
 - **Component**: `crates/cddm-core`
 - **Priority**: `Low`
-- **Status**: `Proposed`
+- **Status**: `Completed (v1.0.0)`
 
 #### Problem Statement
 
@@ -318,9 +318,9 @@ Maximizing token throughput on multi-gigabyte codebases to achieve > 20M tokens/
 
 ### Milestone v1.0.0 (High-Throughput Enterprise Engine)
 
-- [ ] Implement `memmap2` zero-copy memory mapping for large files [EP-10]
-- [ ] Implement AVX2 / NEON SIMD vectorization for Mersenne 61 rolling hash [EP-10]
-- [ ] Benchmark and validate 1M+ LOC enterprise monorepo scalability [EP-10]
+- [x] Implement `memmap2` zero-copy memory mapping for large files [EP-10]
+- [x] Implement AVX2 / NEON SIMD vectorization for Mersenne 61 rolling hash [EP-10]
+- [x] Benchmark and validate 1M+ LOC enterprise monorepo scalability [EP-10]
 ```
 
 ---

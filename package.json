@@ -33,6 +33,7 @@
     "build": "vp -C webui run build && cargo build --workspace",
     "build:release": "vp -C webui run build && cargo build --release --workspace",
     "verify": "bun scripts/verify.ts",
+    "bench": "cargo bench -p cddm-core",
     "fix": "bun scripts/fix.ts",
     "clean": "bun scripts/clean.ts",
     "reset": "bun scripts/reset.ts"

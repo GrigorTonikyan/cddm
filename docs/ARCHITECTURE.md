@@ -13,8 +13,10 @@ graph TD
     end
 
     subgraph Core ["cddm-core Library Engine"]
+        IO["Zero-Copy File I/O (memmap2)"]
         Grammar["Grammar Registry (30+ Languages)"]
         Tokenizer["Tokenization Engine (Normalizer)"]
+        SIMD["SIMD Mersenne M61 Engine (AVX2/NEON)"]
         Winnow["Winnowing Engine (Mersenne M61)"]
         AST["Tree-sitter AST Hasher (Blake3 Merkle)"]
         Index["Fingerprint Index (HashMap)"]
@@ -28,8 +30,10 @@ graph TD
     Serve --> Core
     MCP --> Core
 
+    IO --> Tokenizer
     Grammar --> Tokenizer
-    Tokenizer --> Winnow
+    Tokenizer --> SIMD
+    SIMD --> Winnow
     Winnow --> Index
     Index --> Detector
     AST --> Detector
@@ -87,7 +91,8 @@ cddm-core (library crate)
   ├── rayon                (parallel CPU execution)
   ├── gix                  (in-process git blame)
   ├── ignore               (directory traversal & .gitignore parsing)
-  ├── tree-sitter-*        (AST CST parsing: Rust, TS, JS, Python)
+  ├── memmap2              (zero-copy memory-mapped file I/O)
+  ├── tree-sitter-*        (AST CST parsing: 9 supported languages)
   ├── notify               (filesystem event watcher)
   ├── serde, serde_json    (serialization)
   └── tokio                (async runtime)

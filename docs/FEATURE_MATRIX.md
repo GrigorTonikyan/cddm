@@ -1,11 +1,11 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-24 | Rust: 82/82 PASS | WebUI: 108/108 PASS | Repository Scripts: 27/27 PASS | CI Workflows: PASS
+> Last verified: 2026-08-24 | Rust: 92/92 PASS | WebUI: 108/108 PASS | Repository Scripts: 27/27 PASS | CI Workflows: PASS
 
 ---
 
-## 1. Rust Backend — `cddm-core`, `cddm-cli`, `cddm-mcp` (82 unit tests)
+## 1. Rust Backend — `cddm-core`, `cddm-cli`, `cddm-mcp` (92 unit tests)
 
 ### Tokenization Engine (`crates/cddm-core/src/tokenizer.rs`)
 
@@ -152,6 +152,26 @@
 | F-14.5 | Resources discovery (`cddm://workspace/health` & `clones`)       | `main::tests::test_mcp_resources_list`           | PASS   |
 | F-14.6 | Prompts discovery and retrieval (`audit_dry_health`, `refactor`) | `main::tests::test_mcp_prompts_list_and_get`     | PASS   |
 | F-14.7 | Standard JSON-RPC 2.0 error handling for invalid/unknown method  | `main::tests::test_mcp_unknown_method`           | PASS   |
+
+### Zero-Copy Memory-Mapped File I/O (`crates/cddm-core/src/io/`)
+
+| ID     | Feature Variant                                             | Test Function                                     | Result |
+| :----- | :---------------------------------------------------------- | :------------------------------------------------ | :----- |
+| F-15.1 | Small file reads (<= 64KB) utilize heap buffer              | `io::mmap::tests::test_read_small_file_uses_heap` | PASS   |
+| F-15.2 | Large file reads (> 64KB) utilize zero-copy `memmap2::Mmap` | `io::mmap::tests::test_read_large_file_uses_mmap` | PASS   |
+| F-15.3 | Empty file reads return empty heap buffer                   | `io::mmap::tests::test_read_empty_file`           | PASS   |
+| F-15.4 | Nonexistent file error propagation                          | `io::mmap::tests::test_read_nonexistent_file`     | PASS   |
+| F-15.5 | Non-UTF-8 invalid byte error handling                       | `io::mmap::tests::test_read_non_utf8_large_file`  | PASS   |
+| F-15.6 | `FileSource` debug representation formatting                | `io::mmap::tests::test_debug_formatting`          | PASS   |
+
+### SIMD Mersenne-61 Rolling Hash Engine (`crates/cddm-core/src/simd/`)
+
+| ID     | Feature Variant                                               | Test Function                                             | Result |
+| :----- | :------------------------------------------------------------ | :-------------------------------------------------------- | :----- |
+| F-16.1 | Scalar dual-base k-gram rolling hashes calculation            | `simd::scalar::tests::test_scalar_kgram_hashes`           | PASS   |
+| F-16.2 | AVX2 hardware acceleration output parity with scalar baseline | `simd::avx2::tests::test_avx2_matches_scalar`             | PASS   |
+| F-16.3 | ARM NEON vector lanes output parity with scalar baseline      | `simd::neon::tests::test_neon_matches_scalar`             | PASS   |
+| F-16.4 | Automatic runtime hardware vectorization dispatcher           | `simd::tests::test_compute_kgram_rolling_hashes_dispatch` | PASS   |
 
 ---
 

@@ -52,7 +52,8 @@ pub struct Fingerprint {
 }
 
 /// Converts a token into a unique integer for hashing.
-fn token_to_u64(token: &NormalizedToken) -> u64 {
+#[inline]
+pub fn token_to_u64(token: &NormalizedToken) -> u64 {
     match token {
         NormalizedToken::Identifier => TOKEN_IDENTIFIER_VAL,
         NormalizedToken::StringLiteral => TOKEN_STRING_VAL,
@@ -82,55 +83,8 @@ pub fn winnow(tokens: &[(NormalizedToken, LineSpan)], k: usize, w: usize) -> Vec
         b2_k_minus_1 = fast_mod_m61((b2_k_minus_1 as u128) * (b2 as u128));
     }
 
-    let mut kgram_hashes = Vec::with_capacity(tokens.len() - k + 1);
-    let mut h1: u64 = 0;
-    let mut h2: u64 = 0;
-
-    // Initial window
-    for token in tokens.iter().take(k) {
-        let val = token_to_u64(&token.0);
-        h1 = fast_mod_m61((h1 as u128) * (b1 as u128) + (val as u128));
-        h2 = fast_mod_m61((h2 as u128) * (b2 as u128) + (val as u128));
-    }
-
-    kgram_hashes.push((
-        (h1, h2),
-        tokens[0].1.line_start,
-        tokens[k - 1].1.line_end,
-        tokens[0].1.byte_offset,
-    ));
-
-    // Rolling hash for the rest
-    for i in k..tokens.len() {
-        let old_val = token_to_u64(&tokens[i - k].0);
-        let new_val = token_to_u64(&tokens[i].0);
-
-        // Remove old_val * b^(k-1)
-        let sub1 = fast_mod_m61((old_val as u128) * (b1_k_minus_1 as u128));
-        h1 = if h1 >= sub1 {
-            h1 - sub1
-        } else {
-            h1 + ((1u64 << 61) - 1) - sub1
-        };
-
-        let sub2 = fast_mod_m61((old_val as u128) * (b2_k_minus_1 as u128));
-        h2 = if h2 >= sub2 {
-            h2 - sub2
-        } else {
-            h2 + ((1u64 << 61) - 1) - sub2
-        };
-
-        // Multiply by b and add new_val
-        h1 = fast_mod_m61((h1 as u128) * (b1 as u128) + (new_val as u128));
-        h2 = fast_mod_m61((h2 as u128) * (b2 as u128) + (new_val as u128));
-
-        kgram_hashes.push((
-            (h1, h2),
-            tokens[i - k + 1].1.line_start,
-            tokens[i].1.line_end,
-            tokens[i - k + 1].1.byte_offset,
-        ));
-    }
+    let kgram_hashes =
+        crate::simd::compute_kgram_rolling_hashes(tokens, k, b1, b2, b1_k_minus_1, b2_k_minus_1);
 
     // Winnowing
     let mut fingerprints = Vec::new();

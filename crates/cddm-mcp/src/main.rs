@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 use cddm_core::{
     DEFAULT_DIRECTORY, DEFAULT_MIN_TOKENS, ScanConfig, analyze_clone_refactoring,
     generate_sarif_json, refactor::read_file_lines_range, run_scan,

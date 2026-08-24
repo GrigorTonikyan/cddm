@@ -41,15 +41,17 @@ Whether integrated into **CI/CD pipelines**, used via the **Terminal CLI**, expl
 
 ## Key Features
 
-| Feature                        | Description                                                                                                                            |
-| :----------------------------- | :------------------------------------------------------------------------------------------------------------------------------------- |
-| **M61 Rolling Hash Winnowing** | Sub-linear O(N) token fingerprinting using Mersenne Prime M61 = 2^61 - 1 for collision-resistant clone detection.                      |
-| **Tree-sitter AST Hasher**     | Parse source trees into ASTs and hash subtrees with `blake3` to identify structural near-misses and semantic clones.                   |
-| **DRY Health Scoring**         | Computes a normalized 0.0 - 100.0 DRY codebase health score factoring in duplication ratio and cross-module cross-contamination.       |
-| **In-Process Git Blame**       | Powered by `gix` (`gitoxide`) to annotate duplicate fragments with author names and commit timestamps without spawning subprocesses.   |
-| **Embedded Studio WebUI**      | High-performance interactive React 19 dashboard served directly from the single compiled binary via `axum` & `rust-embed`.             |
-| **AI Agent MCP Server**        | Stdio JSON-RPC 2.0 protocol (`cddm-mcp`) allowing AI assistants (Claude, Antigravity, Cursor) to inspect duplication programmatically. |
-| **Rayon Parallel Pipeline**    | Multi-threaded file discovery, AST parsing, and fingerprint indexing across all available CPU cores.                                   |
+| Feature                          | Description                                                                                                                            |
+| :------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------- |
+| **M61 Rolling Hash Winnowing**   | Sub-linear O(N) token fingerprinting using Mersenne Prime M61 = 2^61 - 1 for collision-resistant clone detection.                      |
+| **SIMD Vectorized Rolling Hash** | Hardware-accelerated AVX2 (x86_64) and ARM NEON (AArch64) vector lanes computing parallel Mersenne-61 modular reduction.               |
+| **Zero-Copy Memory Mapping**     | High-throughput `memmap2` zero-copy memory mapping for large files (> 64KB) bypassing heap allocation overhead.                        |
+| **Tree-sitter AST Hasher**       | Parse source trees into ASTs and hash subtrees with `blake3` to identify structural near-misses and semantic clones.                   |
+| **DRY Health Scoring**           | Computes a normalized 0.0 - 100.0 DRY codebase health score factoring in duplication ratio and cross-module cross-contamination.       |
+| **In-Process Git Blame**         | Powered by `gix` (`gitoxide`) to annotate duplicate fragments with author names and commit timestamps without spawning subprocesses.   |
+| **Embedded Studio WebUI**        | High-performance interactive React 19 dashboard served directly from the single compiled binary via `axum` & `rust-embed`.             |
+| **AI Agent MCP Server**          | Stdio JSON-RPC 2.0 protocol (`cddm-mcp`) allowing AI assistants (Claude, Antigravity, Cursor) to inspect duplication programmatically. |
+| **Rayon Parallel Pipeline**      | Multi-threaded file discovery, AST parsing, and fingerprint indexing across all available CPU cores.                                   |
 
 ---
 

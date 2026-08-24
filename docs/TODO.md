@@ -97,10 +97,10 @@
 
 ### Milestone v1.0.0: High-Throughput Enterprise Engine
 
-- [ ] **[EP-10] Memory-Mapped I/O & SIMD Vectorization**
-  - [ ] Integrate `memmap2` zero-copy memory mapping for large files
-  - [ ] Implement AVX2 / ARM NEON SIMD vector lanes for Mersenne 61 rolling hash
-  - [ ] Perform comparative throughput benchmarks on 1M+ LOC codebases
+- [x] **[EP-10] Memory-Mapped I/O & SIMD Vectorization**
+  - [x] Integrate `memmap2` zero-copy memory mapping for large files
+  - [x] Implement AVX2 / ARM NEON SIMD vector lanes for Mersenne 61 rolling hash
+  - [x] Perform comparative throughput benchmarks on 1M+ LOC codebases
 
 ---
 
@@ -113,3 +113,4 @@
 - [x] **v0.3.0**: Persistent ACID disk cache powered by `redb` v4 (`.cddm/cache.db`), Git differential scan engine (`cddm diff`), automated patch refactoring CLI (`cddm refactor`), MCP `cddm_diff_scan` tool, with 63 passing unit tests and sub-30ms repeat scans.
 - [x] **v0.4.0**: Interactive WebUI Studio with side-by-side synchronized diff visualizer (`DiffViewer.tsx`), secure Axum snippet API (`GET /api/snippet`), on-demand refactoring patch synthesis (`POST /api/refactor`), and hierarchical Squarified Duplication Treemap (`DuplicationTreemap.tsx`).
 - [x] **v0.5.0**: AST Merkle Pipeline Integration (`ScanPhase::AstAnalysis`), dynamic clone classification (Type-1 Exact, Type-2 Renamed, Type-3 Near-Miss, Type-4 Semantic), dynamic similarity calculation, and polyglot Tree-sitter expansion with native parsers for Go, C, C++, Java, and C#.
+- [x] **v1.0.0**: Enterprise High-Throughput Engine with `memmap2` zero-copy I/O for large files, AVX2 and ARM NEON SIMD Mersenne-61 rolling hash vectorization, and Criterion throughput benchmarking suite.

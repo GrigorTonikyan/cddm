@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 use cddm_core::{
     CloneStatus, DiffScanResult, ScanConfig, ScanResult, analyze_clone_refactoring, run_diff_scan,
     run_scan,

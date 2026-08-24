@@ -21,6 +21,7 @@ blake3.workspace = true
 chrono.workspace = true
 gix.workspace = true
 ignore.workspace = true
+memmap2.workspace = true
 notify.workspace = true
 rayon.workspace = true
 redb.workspace = true
@@ -43,4 +44,9 @@ tree-sitter-typescript.workspace = true
 uuid.workspace = true
 
 [dev-dependencies]
+criterion.workspace = true
 tempfile = "^3"
+
+[[bench]]
+name = "throughput"
+harness = false
