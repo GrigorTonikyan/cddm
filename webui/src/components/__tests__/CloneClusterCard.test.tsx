@@ -9,12 +9,9 @@ describe("CloneClusterCard Component", () => {
   it("should render collapsed cluster summary card with badges", () => {
     renderWithWin2x(<CloneClusterCard cluster={mockCluster} index={1} />);
 
-    expect(screen.getByText("#1")).toBeDefined();
-    expect(screen.getByText("Cluster #1")).toBeDefined();
-    expect(screen.getByText("3 Sites")).toBeDefined();
-    expect(screen.getByText("Exact")).toBeDefined();
-    expect(screen.getByText("100%")).toBeDefined();
-    expect(screen.getByText("Refactor")).toBeDefined();
+    for (const label of ["#1", "Cluster #1", "3 Sites", "Exact", "100%", "Refactor"]) {
+      expect(screen.getByText(label)).toBeDefined();
+    }
   });
 
   it("should expand cluster occurrences list and metadata on accordion click", () => {
@@ -23,12 +20,16 @@ describe("CloneClusterCard Component", () => {
     const expandBtn = screen.getByLabelText("Expand cluster details");
     fireEvent.click(expandBtn);
 
-    expect(screen.getByText("Occurrences in Codebase (3)")).toBeDefined();
-    expect(screen.getByText("login.ts")).toBeDefined();
-    expect(screen.getByText("register.ts")).toBeDefined();
-    expect(screen.getByText("reset.ts")).toBeDefined();
-    expect(screen.getByText("L10-25")).toBeDefined();
-    expect(screen.getByText("L15-30")).toBeDefined();
-    expect(screen.getByText("L5-20")).toBeDefined();
+    for (const item of [
+      "Occurrences in Codebase (3)",
+      "login.ts",
+      "register.ts",
+      "reset.ts",
+      "L10-25",
+      "L15-30",
+      "L5-20",
+    ]) {
+      expect(screen.getByText(item)).toBeDefined();
+    }
   });
 });

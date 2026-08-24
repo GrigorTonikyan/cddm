@@ -8,7 +8,7 @@ export default defineConfig({
     trace: "on-first-retry",
   },
   webServer: {
-    command: "bun run --cwd ../../webui dev --port 3000",
+    command: "bun ../../scripts/dev.ts",
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
     timeout: 60000,

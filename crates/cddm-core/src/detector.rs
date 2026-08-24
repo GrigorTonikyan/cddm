@@ -907,25 +907,7 @@ mod tests {
         write_test_file(dir.path().join("Proc1.java"), java_code);
         write_test_file(dir.path().join("Proc2.java"), java_code);
 
-        let config = make_test_config(&dir.path().to_string_lossy(), 15);
-        let result = run_test_scan(config).await.unwrap();
-
-        assert_eq!(result.total_files, 4);
-        assert!(result.total_clones >= 2);
-        assert!(result.language_breakdown.iter().any(|l| l.language == "Go"));
-        assert!(
-            result
-                .language_breakdown
-                .iter()
-                .any(|l| l.language == "Java")
-        );
-    }
-
-    #[tokio::test]
-    async fn test_polyglot_expansion_scan() {
-        use tempfile::tempdir;
-        let dir = tempdir().unwrap();
-
+        // Zig duplicate files
         let zig_code = r#"
             const std = @import("std");
             pub fn computeSum(a: i32, b: i32, c: i32, d: i32) i32 {
@@ -937,6 +919,7 @@ mod tests {
         write_test_file(dir.path().join("a.zig"), zig_code);
         write_test_file(dir.path().join("b.zig"), zig_code);
 
+        // Scala duplicate files
         let scala_code = r#"
             object Helper {
                 def processData(input: String, prefix: String, suffix: String): String = {
@@ -949,6 +932,7 @@ mod tests {
         write_test_file(dir.path().join("a.scala"), scala_code);
         write_test_file(dir.path().join("b.scala"), scala_code);
 
+        // Elixir duplicate files
         let elixir_code = r#"
             defmodule Calculator do
                 def multiply_and_add(a, b, c, d) do
@@ -962,6 +946,7 @@ mod tests {
         write_test_file(dir.path().join("calc1.ex"), elixir_code);
         write_test_file(dir.path().join("calc2.ex"), elixir_code);
 
+        // SQL duplicate files
         let sql_code = r#"
             SELECT u.id, u.username, u.email, COUNT(p.id) as post_count, SUM(p.views) as total_views
             FROM users u
@@ -977,32 +962,16 @@ mod tests {
         let config = make_test_config(&dir.path().to_string_lossy(), 15);
         let result = run_test_scan(config).await.unwrap();
 
-        assert_eq!(result.total_files, 8);
-        assert!(result.total_clones >= 4);
-        assert!(
-            result
-                .language_breakdown
-                .iter()
-                .any(|l| l.language == "Zig")
-        );
-        assert!(
-            result
-                .language_breakdown
-                .iter()
-                .any(|l| l.language == "Scala")
-        );
-        assert!(
-            result
-                .language_breakdown
-                .iter()
-                .any(|l| l.language == "Elixir")
-        );
-        assert!(
-            result
-                .language_breakdown
-                .iter()
-                .any(|l| l.language == "SQL")
-        );
+        assert_eq!(result.total_files, 12);
+        assert!(result.total_clones >= 6);
+        for lang in &["Go", "Java", "Zig", "Scala", "Elixir", "SQL"] {
+            assert!(
+                result
+                    .language_breakdown
+                    .iter()
+                    .any(|l| &l.language == lang)
+            );
+        }
     }
 
     #[tokio::test]

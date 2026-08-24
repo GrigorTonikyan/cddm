@@ -44,9 +44,29 @@ test.describe("CDDM WebUI E2E Workflows", () => {
     await expect(page.getByRole("button", { name: /Live Watch: OFF/i })).toBeVisible();
   });
 
+  test("should open Policy Studio modal and switch between tabs", async ({ page }) => {
+    await page.goto("/");
+    const policyBtn = page.getByRole("button", { name: /Policy Studio/i });
+    await expect(policyBtn).toBeVisible();
+    await policyBtn.click();
+
+    // Verify Policy Studio Window is open
+    await expect(
+      page.getByText("Architectural Boundary & Anti-Duplication Policy Studio"),
+    ).toBeVisible();
+    await expect(page.getByText(/Active Policies/i)).toBeVisible();
+    await expect(page.getByText(/Violations Inspector/i)).toBeVisible();
+    await expect(page.getByText(/.cddmrules.toml Editor/i)).toBeVisible();
+
+    // Switch to Editor Tab
+    const editorTab = page.getByRole("button", { name: /.cddmrules.toml Editor/i });
+    await editorTab.click();
+    await expect(page.locator("textarea")).toBeVisible();
+  });
+
   test("should select preferred IDE editor in scan configuration panel", async ({ page }) => {
     await page.goto("/");
-    const ideSelect = page.locator("select");
+    const ideSelect = page.locator("select").first();
     await expect(ideSelect).toBeVisible();
     await ideSelect.selectOption("cursor");
     await expect(ideSelect).toHaveValue("cursor");

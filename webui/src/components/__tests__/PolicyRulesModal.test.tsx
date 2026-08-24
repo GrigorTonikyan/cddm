@@ -75,22 +75,21 @@ describe("PolicyRulesModal Component", () => {
     });
   });
 
-  it("should return null when closed", () => {
-    const { container } = render(
+  const renderPolicyModal = (isOpen = true, onClose = () => {}) =>
+    render(
       <Win2xManagerProvider>
-        <PolicyRulesModal isOpen={false} onClose={() => {}} />
+        <PolicyRulesModal isOpen={isOpen} onClose={onClose} />
       </Win2xManagerProvider>,
     );
+
+  it("should return null when closed", () => {
+    const { container } = renderPolicyModal(false);
     expect(container.firstChild).toBeNull();
   });
 
   it("should render tabs and active policies when open", () => {
     const onClose = vi.fn();
-    render(
-      <Win2xManagerProvider>
-        <PolicyRulesModal isOpen={true} onClose={onClose} />
-      </Win2xManagerProvider>,
-    );
+    renderPolicyModal(true, onClose);
 
     expect(
       screen.getByText("Architectural Boundary & Anti-Duplication Policy Studio"),
@@ -110,11 +109,7 @@ describe("PolicyRulesModal Component", () => {
   });
 
   it("should switch to violations tab and display violation cards", () => {
-    render(
-      <Win2xManagerProvider>
-        <PolicyRulesModal isOpen={true} onClose={() => {}} />
-      </Win2xManagerProvider>,
-    );
+    renderPolicyModal(true);
 
     const violationsTab = screen.getByText("Violations Inspector (1)");
     fireEvent.click(violationsTab);
@@ -126,11 +121,7 @@ describe("PolicyRulesModal Component", () => {
   });
 
   it("should switch to editor tab and allow editing raw TOML", () => {
-    render(
-      <Win2xManagerProvider>
-        <PolicyRulesModal isOpen={true} onClose={() => {}} />
-      </Win2xManagerProvider>,
-    );
+    renderPolicyModal(true);
 
     const editorTab = screen.getByText(".cddmrules.toml Editor");
     fireEvent.click(editorTab);

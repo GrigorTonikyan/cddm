@@ -5,8 +5,10 @@
  * Ensures the backend is fully initialized and healthy before routing frontend requests.
  */
 
+import { join } from "node:path";
 import type { Subprocess } from "bun";
 
+const workspaceRoot = join(import.meta.dir, "..");
 const BACKEND_PORT = 3001;
 const HEALTH_URL = `http://127.0.0.1:${BACKEND_PORT}/api/health`;
 const MAX_HEALTH_ATTEMPTS = 60;
@@ -75,6 +77,7 @@ async function main() {
 
   backendProc = Bun.spawn({
     cmd: ["cargo", "run", "-p", "cddm-cli", "--", "serve", "--port", String(BACKEND_PORT)],
+    cwd: workspaceRoot,
     stdout: "inherit",
     stderr: "inherit",
     stdin: "inherit",
@@ -94,6 +97,7 @@ async function main() {
     cmd: isWindows
       ? ["cmd.exe", "/c", "vp", "-C", "webui", "run", "dev"]
       : ["vp", "-C", "webui", "run", "dev"],
+    cwd: workspaceRoot,
     stdout: "inherit",
     stderr: "inherit",
     stdin: "inherit",

@@ -2,16 +2,15 @@ import React, { useState, useEffect } from "react";
 import { useCDDMStore } from "../store/cddm-store";
 import { Win2xWindow } from "./ui/win2x-manager";
 import {
-  Scale,
   Save,
   RotateCcw,
   Check,
-  AlertCircle,
   ShieldCheck,
   AlertTriangle,
   Layers,
   FileCode,
   Sliders,
+  Play,
 } from "lucide-react";
 import { PolicyConfig, PolicyViolation, PolicySeverity } from "../types/cddm-types";
 
@@ -167,6 +166,18 @@ severity = "warning"
     }
   };
 
+  const renderPolicyRuleHeader = (name: string, severity: PolicySeverity, description?: string) => (
+    <>
+      <div className="flex items-center justify-between mb-1.5">
+        <div className="font-semibold text-xs text-slate-200 font-mono flex items-center gap-2">
+          {name}
+        </div>
+        {renderSeverityBadge(severity)}
+      </div>
+      {description && <p className="text-xs text-slate-400 mb-2">{description}</p>}
+    </>
+  );
+
   const footerContent = (
     <div className="flex items-center justify-between w-full">
       <div className="flex items-center gap-2 text-xs font-mono">
@@ -178,56 +189,48 @@ severity = "warning"
         )}
         {(saveError || policyError) && (
           <span className="text-rose-400 flex items-center gap-1.5 font-semibold">
-            <AlertCircle className="w-3.5 h-3.5" />
+            <AlertTriangle className="w-3.5 h-3.5" />
             {saveError || policyError}
           </span>
         )}
-        {!saveSuccess && !saveError && !policyError && (
-          <span className="text-slate-500">
-            .cddmrules.toml active — boundary isolation &amp; zero-duplication policies
-          </span>
-        )}
       </div>
-
       <div className="flex items-center gap-2">
         <button
-          type="button"
-          onClick={handleSave}
-          disabled={isPolicyLoading}
-          className="px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-mono text-xs font-semibold flex items-center gap-1.5 disabled:opacity-50 transition-colors shadow-lg shadow-indigo-900/30"
+          onClick={handleEvaluate}
+          disabled={isEvaluating}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium transition-colors border border-slate-700 cursor-pointer disabled:opacity-50"
         >
-          <Save className="w-3.5 h-3.5" />
-          {isPolicyLoading ? "Saving..." : "Save Policies"}
+          <Play className={`w-3.5 h-3.5 ${isEvaluating ? "animate-spin" : ""}`} />
+          {isEvaluating ? "Evaluating..." : "Evaluate Now"}
         </button>
-        <button
-          type="button"
-          onClick={onClose}
-          className="px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-mono text-xs font-semibold transition-colors"
-        >
-          Close
-        </button>
+        {activeTab === "editor" && (
+          <button
+            onClick={handleSave}
+            disabled={isPolicyLoading}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium transition-colors shadow-sm cursor-pointer disabled:opacity-50"
+          >
+            <Save className="w-3.5 h-3.5" />
+            {isPolicyLoading ? "Saving..." : "Save Policies"}
+          </button>
+        )}
       </div>
     </div>
   );
 
   return (
     <Win2xWindow
-      id="cddm-policy-rules-modal"
-      windowType="policy-rules"
+      id="cddm-policy-modal"
       title="Architectural Boundary & Anti-Duplication Policy Studio"
-      subtitle="Boundary Isolation, Zero Duplication & Token Limits"
-      badge="Policy Studio"
-      icon={<Scale className="w-4 h-4 text-purple-400" />}
+      icon={<ShieldCheck className="w-4 h-4 text-purple-400" />}
       isOpen={isOpen}
       onClose={onClose}
-      initialWidth={880}
-      initialHeight={640}
+      initialWidth={850}
+      initialHeight={620}
       footer={footerContent}
     >
-      <div className="flex flex-col h-full bg-slate-950 text-slate-100">
-        {/* Navigation Tabs Header */}
-        <div className="flex items-center justify-between border-b border-slate-800/80 bg-slate-900/60 px-4 py-2.5">
-          <div className="flex items-center gap-1.5">
+      <div className="flex flex-col h-full bg-slate-950/80 text-slate-200">
+        <div className="flex items-center justify-between px-6 py-3 border-b border-slate-800 bg-slate-900/40">
+          <div className="flex items-center gap-2">
             <button
               onClick={() => setActiveTab("rules")}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${
@@ -236,7 +239,7 @@ severity = "warning"
                   : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"
               }`}
             >
-              <Layers className="w-3.5 h-3.5" />
+              <ShieldCheck className="w-3.5 h-3.5 text-purple-400" />
               Active Policies (
               {(policyConfig?.boundaries?.length || 0) +
                 (policyConfig?.zero_duplication?.length || 0) +
@@ -268,18 +271,16 @@ severity = "warning"
           </div>
         </div>
 
-        {/* Tab 1: Rules Overview */}
         {activeTab === "rules" && (
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
             <div>
               <h3 className="text-sm font-semibold text-slate-200 flex items-center gap-2 mb-3">
                 <Layers className="w-4 h-4 text-indigo-400" />
-                Cross-Layer Boundary Isolation Rules ({policyConfig?.boundaries?.length || 0})
+                Cross-Layer Boundary Isolation
               </h3>
               {!policyConfig?.boundaries || policyConfig.boundaries.length === 0 ? (
                 <div className="p-4 rounded-lg bg-slate-900/60 border border-slate-800/80 text-xs text-slate-400">
-                  No architectural boundary isolation rules active. Edit .cddmrules.toml to define
-                  layer boundaries.
+                  No boundary rules configured.
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-3">
@@ -288,15 +289,7 @@ severity = "warning"
                       key={idx}
                       className="p-3.5 rounded-lg bg-slate-900/70 border border-slate-800 hover:border-slate-700 transition-colors"
                     >
-                      <div className="flex items-center justify-between mb-1.5">
-                        <div className="font-semibold text-xs text-slate-200 font-mono flex items-center gap-2">
-                          {b.name}
-                        </div>
-                        {renderSeverityBadge(b.severity)}
-                      </div>
-                      {b.description && (
-                        <p className="text-xs text-slate-400 mb-2">{b.description}</p>
-                      )}
+                      {renderPolicyRuleHeader(b.name, b.severity, b.description)}
                       <div className="flex items-center gap-2 text-xs font-mono">
                         <span className="text-slate-400">Source:</span>
                         <span className="px-2 py-0.5 bg-slate-800/80 text-indigo-300 rounded border border-slate-700/60">
@@ -324,11 +317,11 @@ severity = "warning"
             <div>
               <h3 className="text-sm font-semibold text-slate-200 flex items-center gap-2 mb-3">
                 <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                Zero Duplication Critical Zones ({policyConfig?.zero_duplication?.length || 0})
+                Zero Duplication Zones
               </h3>
               {!policyConfig?.zero_duplication || policyConfig.zero_duplication.length === 0 ? (
                 <div className="p-4 rounded-lg bg-slate-900/60 border border-slate-800/80 text-xs text-slate-400">
-                  No zero-duplication zones configured.
+                  No zero-duplication zones.
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-3">
@@ -337,15 +330,7 @@ severity = "warning"
                       key={idx}
                       className="p-3.5 rounded-lg bg-slate-900/70 border border-slate-800 hover:border-slate-700 transition-colors"
                     >
-                      <div className="flex items-center justify-between mb-1.5">
-                        <div className="font-semibold text-xs text-slate-200 font-mono flex items-center gap-2">
-                          {z.name}
-                        </div>
-                        {renderSeverityBadge(z.severity)}
-                      </div>
-                      {z.description && (
-                        <p className="text-xs text-slate-400 mb-2">{z.description}</p>
-                      )}
+                      {renderPolicyRuleHeader(z.name, z.severity, z.description)}
                       <div className="flex items-center gap-2 text-xs font-mono">
                         <span className="text-slate-400">Protected Pattern:</span>
                         <span className="px-2 py-0.5 bg-slate-800/80 text-emerald-300 rounded border border-slate-700/60">
@@ -361,11 +346,11 @@ severity = "warning"
             <div>
               <h3 className="text-sm font-semibold text-slate-200 flex items-center gap-2 mb-3">
                 <Sliders className="w-4 h-4 text-cyan-400" />
-                Clone Token &amp; Occurrence Limits ({policyConfig?.limits?.length || 0})
+                Clone & Occurrence Limits
               </h3>
               {!policyConfig?.limits || policyConfig.limits.length === 0 ? (
                 <div className="p-4 rounded-lg bg-slate-900/60 border border-slate-800/80 text-xs text-slate-400">
-                  No clone limit rules configured.
+                  No limit rules configured.
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-3">
@@ -374,15 +359,7 @@ severity = "warning"
                       key={idx}
                       className="p-3.5 rounded-lg bg-slate-900/70 border border-slate-800 hover:border-slate-700 transition-colors"
                     >
-                      <div className="flex items-center justify-between mb-1.5">
-                        <div className="font-semibold text-xs text-slate-200 font-mono flex items-center gap-2">
-                          {l.name}
-                        </div>
-                        {renderSeverityBadge(l.severity)}
-                      </div>
-                      {l.description && (
-                        <p className="text-xs text-slate-400 mb-2">{l.description}</p>
-                      )}
+                      {renderPolicyRuleHeader(l.name, l.severity, l.description)}
                       <div className="flex flex-wrap items-center gap-3 text-xs font-mono">
                         <div className="flex items-center gap-1.5">
                           <span className="text-slate-400">Pattern:</span>
@@ -411,7 +388,6 @@ severity = "warning"
           </div>
         )}
 
-        {/* Tab 2: Violations Inspector */}
         {activeTab === "violations" && (
           <div className="flex-1 overflow-y-auto p-6 space-y-4">
             <div className="flex items-center justify-between">
