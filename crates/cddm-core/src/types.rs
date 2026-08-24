@@ -23,6 +23,8 @@ pub enum ScanPhase {
     Discovery,
     /// Parsing source code into normalized token streams
     Tokenization,
+    /// Tree-sitter AST Merkle subtree parsing and structural hashing
+    AstAnalysis,
     /// Winnowing rolling hash index construction
     Indexing,
     /// Pairwise clone matching and interval merging
@@ -48,6 +50,7 @@ impl AsRef<str> for ScanPhase {
         match self {
             Self::Discovery => "Discovery",
             Self::Tokenization => "Tokenization",
+            Self::AstAnalysis => "AstAnalysis",
             Self::Indexing => "Indexing",
             Self::Merging => "Merging",
             Self::Scoring => "Scoring",
@@ -328,6 +331,7 @@ mod tests {
         let phases = [
             ScanPhase::Discovery,
             ScanPhase::Tokenization,
+            ScanPhase::AstAnalysis,
             ScanPhase::Indexing,
             ScanPhase::Merging,
             ScanPhase::Scoring,

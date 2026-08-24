@@ -1,10 +1,9 @@
 #!/usr/bin/env bun
 /**
  * Cross-platform Conventional Commits Validator for CDDM.
- * Enforces Conventional Commits specification for all git commits.
+ * Enforces Conventional Commits specification for all git commits using native Bun APIs.
  */
 
-import { readFileSync, existsSync } from "node:fs";
 import { hasEmoji } from "./check-no-emojis";
 
 export const CONVENTIONAL_COMMIT_REGEX =
@@ -85,13 +84,19 @@ export function validateCommitMessage(message: string): ValidationResult {
 }
 
 async function main() {
-  const commitMsgFile = process.argv[2];
-  if (!commitMsgFile || !existsSync(commitMsgFile)) {
+  const commitMsgPath = process.argv[2];
+  if (!commitMsgPath) {
     console.log("No commit message file provided, skipping validation.");
     process.exit(0);
   }
 
-  const content = readFileSync(commitMsgFile, "utf-8");
+  const commitMsgFile = Bun.file(commitMsgPath);
+  if (!(await commitMsgFile.exists())) {
+    console.log("Commit message file does not exist, skipping validation.");
+    process.exit(0);
+  }
+
+  const content = await commitMsgFile.text();
   const result = validateCommitMessage(content);
 
   if (!result.valid) {

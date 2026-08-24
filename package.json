@@ -4,6 +4,7 @@
   "private": true,
   "description": "Root workspace scripts for CDDM (Code De-Duplication Meister)",
   "scripts": {
+    "dev": "bun scripts/dev.ts",
     "prepare": "bun scripts/setup-hooks.ts",
     "fmt": "cargo fmt && vp fmt",
     "fmt:check": "cargo fmt --check && vp check",

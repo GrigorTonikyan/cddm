@@ -33,6 +33,7 @@ export const DEFAULT_IGNORED_DIRS = new Set([
   "dist",
   "coverage",
   ".vscode",
+  ".cddm",
 ]);
 
 export const DEFAULT_IGNORED_EXTENSIONS = new Set([
@@ -50,6 +51,7 @@ export const DEFAULT_IGNORED_EXTENSIONS = new Set([
   ".so",
   ".dylib",
   ".bin",
+  ".db",
   ".pdf",
 ]);
 

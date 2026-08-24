@@ -238,6 +238,21 @@ pub async fn run_scan(
     let _ = progress_tx
         .send(ScanProgress {
             scan_id: scan_id.clone(),
+            phase: ScanPhase::AstAnalysis,
+            files_processed: total_files,
+            total_files,
+            progress: 0.35,
+            message: "Analyzing AST subtrees & structural patterns...".to_string(),
+        })
+        .await;
+
+    if cancel_flag.load(Ordering::Relaxed) {
+        return Err("Scan cancelled".to_string());
+    }
+
+    let _ = progress_tx
+        .send(ScanProgress {
+            scan_id: scan_id.clone(),
             phase: ScanPhase::Indexing,
             files_processed: total_files,
             total_files,
@@ -424,6 +439,39 @@ pub async fn run_scan(
             });
 
             merged_pairs.sort_by_key(|b| std::cmp::Reverse(b.token_count));
+
+            for pair in &mut merged_pairs {
+                let ext_a = std::path::Path::new(&pair.file_a)
+                    .extension()
+                    .and_then(|e| e.to_str())
+                    .unwrap_or("");
+                let ext_b = std::path::Path::new(&pair.file_b)
+                    .extension()
+                    .and_then(|e| e.to_str())
+                    .unwrap_or("");
+
+                let snippet_a = crate::refactor::read_file_lines_range(
+                    std::path::Path::new(&pair.file_a),
+                    pair.start_line_a,
+                    pair.end_line_a,
+                )
+                .ok()
+                .map(|lines| lines.join("\n"));
+                let snippet_b = crate::refactor::read_file_lines_range(
+                    std::path::Path::new(&pair.file_b),
+                    pair.start_line_b,
+                    pair.end_line_b,
+                )
+                .ok()
+                .map(|lines| lines.join("\n"));
+
+                if let (Some(code_a), Some(code_b)) = (snippet_a, snippet_b) {
+                    let (classified_type, sim) =
+                        crate::ast::classify_ast_clone(&code_a, ext_a, &code_b, ext_b);
+                    pair.clone_type = classified_type;
+                    pair.similarity = sim;
+                }
+            }
 
             (merged_pairs, total_tokens)
         })
@@ -694,5 +742,122 @@ mod tests {
         assert_eq!(res2.total_files, 2);
         assert_eq!(res2.total_clones, res1.total_clones);
         assert_eq!(res2.duplication_percentage, res1.duplication_percentage);
+    }
+
+    #[tokio::test]
+    async fn test_exact_and_renamed_clone_classification() {
+        use std::fs::File;
+        use std::io::Write;
+        use tempfile::tempdir;
+
+        let dir = tempdir().unwrap();
+
+        // Exact clone pair
+        let exact_code = r#"
+            fn calculate_area(width: f64, height: f64) -> f64 {
+                let area = width * height;
+                println!("Calculated area: {}", area);
+                if area > 1000.0 {
+                    println!("Warning: large area");
+                }
+                area
+            }
+        "#;
+        let mut f1 = File::create(dir.path().join("exact1.rs")).unwrap();
+        writeln!(f1, "{}", exact_code).unwrap();
+        let mut f2 = File::create(dir.path().join("exact2.rs")).unwrap();
+        writeln!(f2, "{}", exact_code).unwrap();
+
+        // Renamed clone pair
+        let renamed_a = r#"
+            fn compute_perimeter(side_a: f64, side_b: f64) -> f64 {
+                let perimeter = (side_a + side_b) * 2.0;
+                println!("Calculated perimeter: {}", perimeter);
+                if perimeter > 500.0 {
+                    println!("Warning: large boundary");
+                }
+                perimeter
+            }
+        "#;
+        let renamed_b = r#"
+            fn eval_circumference(dim_x: f64, dim_y: f64) -> f64 {
+                let total_boundary = (dim_x + dim_y) * 2.0;
+                println!("Calculated boundary: {}", total_boundary);
+                if total_boundary > 500.0 {
+                    println!("Warning: massive border");
+                }
+                total_boundary
+            }
+        "#;
+        let mut f3 = File::create(dir.path().join("renamed1.rs")).unwrap();
+        writeln!(f3, "{}", renamed_a).unwrap();
+        let mut f4 = File::create(dir.path().join("renamed2.rs")).unwrap();
+        writeln!(f4, "{}", renamed_b).unwrap();
+
+        let config = make_test_config(&dir.path().to_string_lossy(), 20);
+        let result = run_test_scan(config).await.unwrap();
+
+        assert!(result.total_clones >= 2);
+        let exact_found = result.clone_pairs.iter().any(|p| {
+            p.clone_type == CloneType::Exact
+                && ((p.file_a.contains("exact1") && p.file_b.contains("exact2"))
+                    || (p.file_a.contains("exact2") && p.file_b.contains("exact1")))
+        });
+        assert!(
+            exact_found,
+            "Exact clone pair should be classified as Exact"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_polyglot_ast_scan() {
+        use std::fs::File;
+        use std::io::Write;
+        use tempfile::tempdir;
+
+        let dir = tempdir().unwrap();
+
+        // Go duplicate files
+        let go_code = r#"
+            package main
+            import "fmt"
+            func CalculateMetric(x int, y int) int {
+                res := x * y + 42
+                fmt.Printf("Result: %d\n", res)
+                return res
+            }
+        "#;
+        let mut go1 = File::create(dir.path().join("metric1.go")).unwrap();
+        writeln!(go1, "{}", go_code).unwrap();
+        let mut go2 = File::create(dir.path().join("metric2.go")).unwrap();
+        writeln!(go2, "{}", go_code).unwrap();
+
+        // Java duplicate files
+        let java_code = r#"
+            public class Processor {
+                public int computeBonus(int salary, int tenure) {
+                    int bonus = salary * tenure / 100;
+                    System.out.println("Bonus: " + bonus);
+                    return bonus;
+                }
+            }
+        "#;
+        let mut j1 = File::create(dir.path().join("Proc1.java")).unwrap();
+        writeln!(j1, "{}", java_code).unwrap();
+        let mut j2 = File::create(dir.path().join("Proc2.java")).unwrap();
+        writeln!(j2, "{}", java_code).unwrap();
+
+        let config = make_test_config(&dir.path().to_string_lossy(), 15);
+        let result = run_test_scan(config).await.unwrap();
+
+        assert_eq!(result.total_files, 4);
+        assert!(result.total_clones >= 2);
+        assert!(result.language_breakdown.iter().any(|l| l.language == "Go"));
+        assert!(
+            result
+                .language_breakdown
+                .iter()
+                .any(|l| l.language == "Java")
+        );
     }
 }
