@@ -5,6 +5,18 @@ All notable changes to **CDDM** (_Code De-Duplication Meister_) will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2026-08-24
+
+### Features
+
+- **ast-rewrite**: implement Tree-sitter AST-native parameter type inference and concrete syntax tree replacement engine (`cddm-core::ast::type_infer`, `cddm-core::ast::rewriter`)
+- **import-resolver**: implement cross-module import statement synthesizer and deduplicator across 8 polyglot languages (`cddm-core::ast::import_resolver`)
+- **verification**: implement closed-loop test suite verification runner with auto-detection for Cargo, Bun, NPM, Go, and Pytest (`cddm-core::refactor::verify_refactor_test_suite`)
+- **cli**: add `--ast`, `--fn-name`, `--target-module`, `--apply-branch`, `--verify`, and `--test-cmd` flags to `cddm refactor`
+- **api**: expose `POST /api/refactor/ast` and `POST /api/refactor/verify` Axum endpoints
+- **mcp**: add `cddm_ast_refactor` and `cddm_verify_refactor` stdio JSON-RPC 2.0 tools
+- **webui**: integrate AST-Native Rewrite tab and interactive test suite verification runner into `RefactorSandboxModal`
+
 ## [1.5.0] - 2026-08-24
 
 ### Features

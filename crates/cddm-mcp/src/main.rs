@@ -59,6 +59,8 @@ pub mod mcp_tools {
     pub const CHECK_SUPPRESSION: &str = "cddm_check_suppression";
     pub const APPLY_CLUSTER_REFACTOR: &str = "cddm_apply_cluster_refactor";
     pub const GENERATE_AI_PROMPT: &str = "cddm_generate_ai_prompt";
+    pub const AST_REFACTOR: &str = "cddm_ast_refactor";
+    pub const VERIFY_REFACTOR: &str = "cddm_verify_refactor";
 
     pub const PARAM_DIRECTORY: &str = "directory";
     pub const PARAM_MIN_TOKENS: &str = "min_tokens";
@@ -550,6 +552,67 @@ async fn handle_mcp_request(req: JsonRpcRequest) -> Option<JsonRpcResponse> {
                                 }
                             },
                             "required": ["function_name", "target_module", "occurrences"]
+                        }
+                    },
+                    {
+                        "name": mcp_tools::AST_REFACTOR,
+                        "description": "Synthesize a Tree-sitter AST-native refactoring transformation with inferred types, import synthesis, and concrete syntax tree node substitutions.",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "occurrences": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "path": { "type": "string" },
+                                            "start_line": { "type": "integer" },
+                                            "end_line": { "type": "integer" }
+                                        },
+                                        "required": ["path", "start_line", "end_line"]
+                                    },
+                                    "description": "List of clone occurrence locations"
+                                },
+                                "custom_function_name": {
+                                    "type": "string",
+                                    "description": "Optional extracted function name"
+                                },
+                                "target_module_path": {
+                                    "type": "string",
+                                    "description": "Optional target destination module or file path"
+                                },
+                                "custom_parameter_names": {
+                                    "type": "array",
+                                    "items": { "type": "string" },
+                                    "description": "Optional customized parameter names"
+                                }
+                            },
+                            "required": ["occurrences"]
+                        }
+                    },
+                    {
+                        "name": mcp_tools::VERIFY_REFACTOR,
+                        "description": "Run closed-loop test suite verification on the workspace or refactored branch to ensure zero behavioral regressions.",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "directory": {
+                                    "type": "string",
+                                    "description": "Workspace root directory (default: current directory)"
+                                },
+                                "test_command": {
+                                    "type": "string",
+                                    "description": "Optional custom test command (e.g. 'cargo test', 'bun test', 'pytest')"
+                                },
+                                "branch_name": {
+                                    "type": "string",
+                                    "description": "Optional Git branch name to test"
+                                },
+                                "timeout_seconds": {
+                                    "type": "integer",
+                                    "description": "Timeout in seconds (default: 60)"
+                                }
+                            }
                         }
                     }
                 ]
@@ -1147,6 +1210,119 @@ async fn handle_mcp_request(req: JsonRpcRequest) -> Option<JsonRpcResponse> {
                     }
                 }
 
+                mcp_tools::AST_REFACTOR => {
+                    let args = req.params.as_ref().and_then(|p| p.get("arguments"));
+                    if let Some(args_val) = args {
+                        let fn_name = args_val
+                            .get("custom_function_name")
+                            .and_then(|v| v.as_str());
+                        let target_mod =
+                            args_val.get("target_module_path").and_then(|v| v.as_str());
+                        let custom_params: Option<Vec<String>> = args_val
+                            .get("custom_parameter_names")
+                            .and_then(|v| v.as_array())
+                            .map(|arr| {
+                                arr.iter()
+                                    .filter_map(|x| x.as_str().map(|s| s.to_string()))
+                                    .collect()
+                            });
+
+                        let occurrences: Vec<cddm_core::CloneLocation> = args_val
+                            .get("occurrences")
+                            .and_then(|v| v.as_array())
+                            .map(|arr| {
+                                arr.iter()
+                                    .map(|item| {
+                                        let path = item
+                                            .get("path")
+                                            .and_then(|p| p.as_str())
+                                            .unwrap_or("")
+                                            .to_string();
+                                        let s_line = item
+                                            .get("start_line")
+                                            .and_then(|l| l.as_u64())
+                                            .unwrap_or(1)
+                                            as usize;
+                                        let e_line = item
+                                            .get("end_line")
+                                            .and_then(|l| l.as_u64())
+                                            .unwrap_or(s_line as u64)
+                                            as usize;
+                                        cddm_core::CloneLocation {
+                                            file: path,
+                                            start_line: s_line,
+                                            end_line: e_line,
+                                            author: None,
+                                        }
+                                    })
+                                    .collect()
+                            })
+                            .unwrap_or_default();
+
+                        if occurrences.is_empty() {
+                            return Some(make_error_response(
+                                req.id,
+                                rpc_errors::INVALID_PARAMS,
+                                "No occurrences provided for AST refactoring",
+                            ));
+                        }
+
+                        match cddm_core::generate_ast_cluster_refactor(
+                            &occurrences,
+                            fn_name,
+                            target_mod,
+                            custom_params.as_deref(),
+                        ) {
+                            Ok(ast_res) => {
+                                let json_str =
+                                    serde_json::to_string_pretty(&ast_res).unwrap_or_default();
+                                Some(make_text_response(req.id, json_str))
+                            }
+                            Err(err) => {
+                                Some(make_error_response(req.id, rpc_errors::INTERNAL_ERROR, err))
+                            }
+                        }
+                    } else {
+                        Some(make_error_response(
+                            req.id,
+                            rpc_errors::INVALID_PARAMS,
+                            "Missing arguments for cddm_ast_refactor",
+                        ))
+                    }
+                }
+
+                mcp_tools::VERIFY_REFACTOR => {
+                    let args = req.params.as_ref().and_then(|p| p.get("arguments"));
+                    let dir_str = args
+                        .and_then(|a| a.get("directory"))
+                        .and_then(|v| v.as_str())
+                        .unwrap_or(".");
+                    let test_cmd = args
+                        .and_then(|a| a.get("test_command"))
+                        .and_then(|v| v.as_str());
+                    let branch = args
+                        .and_then(|a| a.get("branch_name"))
+                        .and_then(|v| v.as_str());
+                    let timeout = args
+                        .and_then(|a| a.get("timeout_seconds"))
+                        .and_then(|v| v.as_u64());
+
+                    match cddm_core::verify_refactor_test_suite(
+                        Path::new(dir_str),
+                        test_cmd,
+                        branch,
+                        timeout,
+                    ) {
+                        Ok(v_res) => {
+                            let json_str = serde_json::to_string_pretty(&v_res).unwrap_or_default();
+                            Some(make_text_response(req.id, json_str))
+                        }
+                        Err(err) => {
+                            Some(make_error_response(req.id, rpc_errors::INTERNAL_ERROR, err))
+                        }
+                    }
+                }
+
                 _ => Some(make_error_response(
                     req.id,
                     rpc_errors::METHOD_NOT_FOUND,
@@ -1563,7 +1739,7 @@ mod tests {
     #[tokio::test]
     async fn test_mcp_tools_list() {
         let tools = list_mcp_items(mcp_methods::TOOLS_LIST, "tools").await;
-        assert_eq!(tools.len(), 11);
+        assert_eq!(tools.len(), 13);
         let tool_names: Vec<&str> = tools.iter().map(|t| t["name"].as_str().unwrap()).collect();
         assert!(tool_names.contains(&mcp_tools::SCAN_CODEBASE));
         assert!(tool_names.contains(&mcp_tools::GET_CLONE_PAIR));
@@ -1576,6 +1752,8 @@ mod tests {
         assert!(tool_names.contains(&mcp_tools::CHECK_SUPPRESSION));
         assert!(tool_names.contains(&mcp_tools::APPLY_CLUSTER_REFACTOR));
         assert!(tool_names.contains(&mcp_tools::GENERATE_AI_PROMPT));
+        assert!(tool_names.contains(&mcp_tools::AST_REFACTOR));
+        assert!(tool_names.contains(&mcp_tools::VERIFY_REFACTOR));
     }
 
     #[tokio::test]
@@ -1846,5 +2024,74 @@ mod tests {
         .expect("Expected response");
         assert!(resp.result.is_some());
         assert!(resp.result.unwrap()["resourceTemplates"].is_array());
+    }
+
+    #[tokio::test]
+    async fn test_mcp_ast_refactor_tool() {
+        use std::io::Write;
+        use tempfile::NamedTempFile;
+
+        let mut file_a = NamedTempFile::with_suffix(".rs").unwrap();
+        let mut file_b = NamedTempFile::with_suffix(".rs").unwrap();
+        writeln!(file_a, "fn a() {{\n    let x = 1;\n    let y = 2;\n}}").unwrap();
+        writeln!(file_b, "fn b() {{\n    let x = 1;\n    let y = 2;\n}}").unwrap();
+        file_a.flush().unwrap();
+        file_b.flush().unwrap();
+
+        let resp = handle_mcp_request(make_test_req(
+            50,
+            mcp_methods::TOOLS_CALL,
+            Some(json!({
+                "name": mcp_tools::AST_REFACTOR,
+                "arguments": {
+                    "custom_function_name": "mcp_ast_helper",
+                    "occurrences": [
+                        {
+                            "path": file_a.path().to_str().unwrap(),
+                            "start_line": 2,
+                            "end_line": 3
+                        },
+                        {
+                            "path": file_b.path().to_str().unwrap(),
+                            "start_line": 2,
+                            "end_line": 3
+                        }
+                    ]
+                }
+            })),
+        ))
+        .await
+        .expect("Expected response");
+
+        assert!(resp.error.is_none());
+        let text = resp.result.unwrap()["content"][0]["text"]
+            .as_str()
+            .unwrap()
+            .to_string();
+        assert!(text.contains("mcp_ast_helper"));
+    }
+
+    #[tokio::test]
+    async fn test_mcp_verify_refactor_tool() {
+        let resp = handle_mcp_request(make_test_req(
+            51,
+            mcp_methods::TOOLS_CALL,
+            Some(json!({
+                "name": mcp_tools::VERIFY_REFACTOR,
+                "arguments": {
+                    "directory": ".",
+                    "test_command": "cargo --version"
+                }
+            })),
+        ))
+        .await
+        .expect("Expected response");
+
+        assert!(resp.error.is_none());
+        let text = resp.result.unwrap()["content"][0]["text"]
+            .as_str()
+            .unwrap()
+            .to_string();
+        assert!(text.contains("cargo"));
     }
 }

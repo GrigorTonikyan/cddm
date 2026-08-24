@@ -29,6 +29,7 @@
 | **v1.3.0** | Stable Release | Historical Trends & Turnkey Workflows       | Git timeline duplication trajectories (`cddm trend`), turnkey CI workflow generator (`cddm init`, `hook`).     |
 | **v1.4.0** | Stable Release | AST Suppressions & Refactor Sandbox         | Intelligent `.cddmignore` engine, inline comment directives, interactive WebUI refactoring sandbox studio.     |
 | **v1.5.0** | Stable Release | Polyglot Expansion & AI Prompt Synthesizer  | 16 Tree-sitter AST grammars (Ruby, PHP, Swift, Bash, Lua, JSON, HTML), AI refactor prompt engine, PR comments. |
+| **v1.6.0** | Stable Release | AST-Native Rewrite & Test Verification      | Tree-sitter CST node substitution, type-aware helper synthesis, import generation, closed-loop test runner.    |
 
 ---
 
@@ -548,6 +549,59 @@ CI/CD pipelines in GitHub Actions, GitLab CI, and Azure Pipelines need a turnkey
 
 ---
 
+### EP-20: AST-Native Rewrite Engine with Inferred Typing & CST Node Substitutions
+
+- **Target Milestone**: `v1.6.0`
+- **Component**: `crates/cddm-core`, `crates/cddm-cli`, `crates/cddm-mcp`, `webui`
+- **Priority**: `High`
+- **Status**: `Completed (v1.6.0)`
+
+#### Problem Statement
+
+Textual diff patch synthesis can produce fragile substitutions when parameter variances require typed signatures, module imports, and syntax validation. An AST-native rewrite engine directly transforms the Tree-sitter Concrete Syntax Tree (CST), inferring parameter types, generating necessary imports, and validating syntactical correctness.
+
+#### Specification & Architecture
+
+1. **Type Inference Engine (`cddm-core::ast::type_infer`)**:
+   - Infer language-specific parameter types (e.g. `&str`, `number`, `int`, `string`) across Rust, TypeScript, JavaScript, Python, Go, Java, C#, and C/C++.
+   - Format target language function signatures (`pub fn name(...)`, `export function name(...)`, `def name(...):`).
+2. **Import Synthesizer (`cddm-core::ast::import_resolver`)**:
+   - Generate appropriate module import statements (`use crate::...`, `import { ... }`, `from ... import ...`).
+   - Deduplicate existing imports.
+3. **AST Rewriter (`cddm-core::ast::rewriter`)**:
+   - Substitute clone occurrence CST nodes with synthesized helper call sites.
+   - Validate syntax of transformed source files with Tree-sitter parsers.
+4. **Tooling & Studio Integration**:
+   - Add `cddm refactor --ast` CLI option and `POST /api/refactor/ast` endpoint.
+   - Register `cddm_ast_refactor` MCP tool.
+   - Add AST-Native Rewrite tab with inferred parameter badges to `RefactorSandboxModal.tsx`.
+
+---
+
+### EP-21: Closed-Loop Test Suite Verification Runner
+
+- **Target Milestone**: `v1.6.0`
+- **Component**: `crates/cddm-core`, `crates/cddm-cli`, `crates/cddm-mcp`, `webui`
+- **Priority**: `High`
+- **Status**: `Completed (v1.6.0)`
+
+#### Problem Statement
+
+Automated refactorings should be verifiable in a single click or command invocation to guarantee that no functional regressions have been introduced into the workspace or refactored branch.
+
+#### Specification & Architecture
+
+1. **Test Runner Engine (`cddm-core::refactor`)**:
+   - Auto-detect workspace build system (`Cargo.toml` -> `cargo test --workspace`, `package.json` -> `bun test`, `go.mod` -> `go test ./...`) or run custom test commands.
+   - Capture execution time, exit codes, stdout, and stderr.
+2. **Tooling & Studio Integration**:
+   - Add `cddm refactor --verify [--test-cmd <CMD>]` CLI option.
+   - Add Axum endpoint `POST /api/refactor/verify`.
+   - Register `cddm_verify_refactor` MCP tool.
+   - Add "Run Test Verification" button with status output terminal to `RefactorSandboxModal.tsx`.
+
+---
+
 ## 3. Prioritized Action Checklist
 
 ```markdown
@@ -627,8 +681,19 @@ CI/CD pipelines in GitHub Actions, GitLab CI, and Azure Pipelines need a turnkey
 - [x] Implement AI-augmented refactoring prompt synthesizer in `cddm-core::ai_prompt` [EP-18]
 - [x] Add `cddm refactor --prompt` CLI option and Axum endpoint `POST /api/refactor/ai-prompt` [EP-18]
 - [x] Implement MCP tool `cddm_generate_ai_prompt` [EP-18]
-- [x] Add "Copy AI Prompt" action button to `RefactorSandboxModal.tsx` in WebUI Studio [EP-18]
 - [x] Implement turnkey PR/MR markdown quality gate comment generator (`cddm comment`) in `cddm-core::pr_comment` [EP-19]
+
+### Milestone v1.6.0 (AST-Native Rewrite Engine & Type-Aware Automated Refactoring)
+
+- [x] Implement Tree-sitter parameter type inference & signature formatting in `cddm-core::ast::type_infer` [EP-20]
+- [x] Implement cross-module import statement synthesizer in `cddm-core::ast::import_resolver` [EP-20]
+- [x] Implement AST CST node replacement & syntax validation in `cddm-core::ast::rewriter` [EP-20]
+- [x] Implement multi-file AST cluster refactoring in `cddm-core::refactor` [EP-20]
+- [x] Implement closed-loop test suite verification in `cddm-core::refactor` [EP-21]
+- [x] Add CLI flags `--ast`, `--fn-name`, `--target-module`, `--verify`, `--test-cmd` to `cddm refactor` [EP-20, EP-21]
+- [x] Expose Axum REST endpoints `POST /api/refactor/ast` and `POST /api/refactor/verify` in `cddm-cli::serve` [EP-20, EP-21]
+- [x] Expose MCP tools `cddm_ast_refactor` and `cddm_verify_refactor` in `cddm-mcp` [EP-20, EP-21]
+- [x] Implement WebUI Studio AST-Native Rewrite tab, inferred parameter badges, and Test Suite Verification panel in `RefactorSandboxModal.tsx` [EP-20, EP-21]
 ```
 
 ---

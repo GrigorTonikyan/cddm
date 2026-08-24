@@ -181,6 +181,24 @@
   - [x] Implement `cddm_core::pr_comment::generate_pr_markdown_comment` with DRY Health Score, threshold evaluation, and clone summary table
   - [x] Add `cddm comment [DIR] [--fail-threshold <N>] [--platform github|gitlab|azure] [--output <PATH>]` CLI subcommand
 
+### Milestone v1.6.0: AST-Native Rewrite Engine & Type-Aware Automated Refactoring
+
+- [x] **[EP-20] AST-Native Rewrite Engine with Inferred Typing & CST Node Substitutions**
+  - [x] Implement parameter type inference and language-specific signature formatting in `crates/cddm-core/src/ast/type_infer.rs`
+  - [x] Implement module import statement synthesizer & deduplication in `crates/cddm-core/src/ast/import_resolver.rs`
+  - [x] Implement AST CST node replacement & syntax validator in `crates/cddm-core/src/ast/rewriter.rs`
+  - [x] Implement multi-file AST cluster refactoring engine in `crates/cddm-core/src/refactor.rs`
+  - [x] Add CLI flags `--ast`, `--fn-name`, `--target-module` to `cddm refactor` command in `crates/cddm-cli/src/main.rs`
+  - [x] Expose Axum REST endpoint `POST /api/refactor/ast` in `crates/cddm-cli/src/serve.rs`
+  - [x] Expose MCP tool `cddm_ast_refactor` in `crates/cddm-mcp/src/main.rs`
+  - [x] Implement AST-Native Rewrite tab and inferred parameter badges in `RefactorSandboxModal.tsx`
+- [x] **[EP-21] Closed-Loop Test Suite Verification Runner**
+  - [x] Implement automated test suite execution and result capture in `crates/cddm-core/src/refactor.rs`
+  - [x] Add CLI flags `--verify` and `--test-cmd` to `cddm refactor` command in `crates/cddm-cli/src/main.rs`
+  - [x] Expose Axum REST endpoint `POST /api/refactor/verify` in `crates/cddm-cli/src/serve.rs`
+  - [x] Expose MCP tool `cddm_verify_refactor` in `crates/cddm-mcp/src/main.rs`
+  - [x] Implement "Run Test Verification" button and interactive status output in `RefactorSandboxModal.tsx`
+
 ---
 
 ## Completed Milestones (Verified)
@@ -198,3 +216,4 @@
 - [x] **v1.3.0**: Historical Duplication Trends & Turnkey CI/CD Workflow Generator with `cddm trend`, `cddm hook`, `cddm init`, `cddm_get_timeline` MCP tool, `cddm://workspace/timeline` resource, and WebUI Studio `TimelineExplorerModal`.
 - [x] **v1.4.0**: Intelligent AST Suppression Engine & Interactive Auto-Refactor Sandbox Studio with `.cddmignore` glob rules, per-path threshold overrides, inline comment directives (`// cddm:ignore`, `/* cddm:ignore-start */`), test/mock/generated auto-filtering, `cddm ignore` CLI, parameterized refactor sandbox, transactional Git branch application (`gix`), MCP suppression tools/resources, and WebUI `SuppressionRulesModal` & `RefactorSandboxModal`.
 - [x] **v1.5.0**: Polyglot AST Expansion (16 Tree-sitter languages: Ruby, PHP, Swift, Bash, Lua, JSON, HTML) & AI Refactoring Prompt Synthesizer with `cddm refactor --prompt`, `POST /api/refactor/ai-prompt`, MCP `cddm_generate_ai_prompt`, WebUI Studio "Copy AI Prompt" button, and turnkey PR/MR markdown quality gate comment generator (`cddm comment`).
+- [x] **v1.6.0**: AST-Native Rewrite Engine & Type-Aware Automated Refactoring with Tree-sitter parameter typing, import synthesis, CST node substitution, closed-loop test verification (`cddm refactor --ast --verify`), Axum endpoints (`/api/refactor/ast`, `/api/refactor/verify`), MCP tools (`cddm_ast_refactor`, `cddm_verify_refactor`), and WebUI Studio AST-Native tabs & test runner panel.

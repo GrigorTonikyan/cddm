@@ -397,6 +397,90 @@ Synthesizes a structured AI refactoring prompt specification tailored for AI cod
 
 ---
 
+### `POST /api/refactor/ast`
+
+Synthesizes a Tree-sitter AST-native refactoring transformation with inferred parameter types, module import generation, and CST node substitutions.
+
+**Request Body** (`application/json`):
+
+```json
+{
+  "cluster_id": 1,
+  "occurrences": [
+    { "file": "src/auth/login.rs", "start_line": 10, "end_line": 25 },
+    { "file": "src/auth/register.rs", "start_line": 15, "end_line": 30 }
+  ],
+  "custom_function_name": "validate_credentials",
+  "target_module_path": "src/auth/common.rs",
+  "custom_parameter_names": ["username", "password"]
+}
+```
+
+**Response** (`200 OK`):
+
+```json
+{
+  "cluster_id": 1,
+  "function_name": "validate_credentials",
+  "target_module_path": "src/auth/common.rs",
+  "helper_signature": "pub fn validate_credentials(username: &str, password: &str)",
+  "helper_function_code": "pub fn validate_credentials(username: &str, password: &str) {\n    ...\n}",
+  "inferred_parameters": [
+    {
+      "name": "username",
+      "inferred_type": "&str",
+      "original_values": ["user_a", "user_b"]
+    }
+  ],
+  "rewritten_files": [
+    {
+      "file_path": "src/auth/login.rs",
+      "original_line_count": 120,
+      "new_line_count": 105,
+      "call_sites_count": 1,
+      "rewritten_source": "...",
+      "imports_added": ["use crate::auth::common::validate_credentials;"]
+    }
+  ],
+  "unified_patch": "--- a/src/auth/login.rs\n+++ b/src/auth/login.rs\n...",
+  "total_lines_saved": 24,
+  "syntax_valid": true
+}
+```
+
+---
+
+### `POST /api/refactor/verify`
+
+Runs closed-loop test suite verification against the workspace or a dedicated refactored branch to ensure zero behavioral regressions.
+
+**Request Body** (`application/json`):
+
+```json
+{
+  "directory": ".",
+  "test_command": "cargo test --workspace",
+  "branch_name": "cddm/refactor-cluster-1",
+  "timeout_seconds": 60
+}
+```
+
+**Response** (`200 OK`):
+
+```json
+{
+  "success": true,
+  "exit_code": 0,
+  "duration_ms": 1420,
+  "command_executed": "cargo test --workspace",
+  "stdout_snippet": "test result: ok. 178 passed; 0 failed",
+  "stderr_snippet": "",
+  "message": "Test suite verification passed with exit code 0"
+}
+```
+
+---
+
 ### `GET /api/events`
 
 Subscribes to live Server-Sent Events (SSE) stream for real-time background file change notifications, progress tracking, and re-scan results.
@@ -476,16 +560,22 @@ Continuously watches workspace for source modifications and automatically execut
 
 ### Command: `cddm refactor [OPTIONS]`
 
-Generates automated refactoring patch recommendations for duplicate code clones.
+Generates automated refactoring patch recommendations for duplicate code clones via textual diffs or Tree-sitter AST transformations.
 
-| Flag           | Short | Type      | Default | Description                                      |
-| :------------- | :---- | :-------- | :------ | :----------------------------------------------- |
-| `--pair`       | `-p`  | `usize`   | None    | Target clone pair 1-based index to refactor      |
-| `--cluster`    | `-c`  | `usize`   | None    | Target clone cluster 1-based index to refactor   |
-| `--prompt`     |       | `bool`    | `false` | Synthesize structured AI refactoring prompt spec |
-| `--output`     | `-o`  | `PathBuf` | None    | Write generated unified patch or prompt to file  |
-| `--directory`  |       | `PathBuf` | `"."`   | Target codebase directory path                   |
-| `--min-tokens` | `-m`  | `usize`   | `50`    | Minimum token clone threshold                    |
+| Flag              | Short | Type      | Default | Description                                            |
+| :---------------- | :---- | :-------- | :------ | :----------------------------------------------------- |
+| `--pair`          | `-p`  | `usize`   | None    | Target clone pair 1-based index to refactor            |
+| `--cluster`       | `-c`  | `usize`   | None    | Target clone cluster 1-based index to refactor         |
+| `--ast`           |       | `bool`    | `false` | Enable Tree-sitter AST-native typed rewrite engine     |
+| `--fn-name`       |       | `String`  | None    | Custom extracted function name                         |
+| `--target-module` |       | `PathBuf` | None    | Custom destination file path for extracted helper      |
+| `--apply-branch`  |       | `String`  | None    | Apply refactoring to a dedicated Git branch            |
+| `--verify`        |       | `bool`    | `false` | Run closed-loop test suite verification after refactor |
+| `--test-cmd`      |       | `String`  | None    | Custom test command for verification                   |
+| `--prompt`        |       | `bool`    | `false` | Synthesize structured AI refactoring prompt spec       |
+| `--output`        | `-o`  | `PathBuf` | None    | Write generated unified patch or prompt to file        |
+| `--directory`     |       | `PathBuf` | `"."`   | Target codebase directory path                         |
+| `--min-tokens`    | `-m`  | `usize`   | `50`    | Minimum token clone threshold                          |
 
 ### Command: `cddm comment [DIRECTORY]`
 
@@ -637,6 +727,28 @@ Synthesizes a structured AI refactoring prompt specification detailing clone loc
 | `parameters`          | `string[]` | No       | `[]`    | Identified parameter names and variations          |
 | `occurrences`         | `object[]` | No       | `[]`    | Explicit array of `{ file, start_line, end_line }` |
 | `custom_instructions` | `string`   | No       | None    | Optional architectural constraints for the AI      |
+
+#### `cddm_ast_refactor`
+
+Synthesizes a Tree-sitter AST-native refactoring transformation with inferred types, import synthesis, and concrete syntax tree node substitutions.
+
+| Parameter                | Type       | Required | Default | Description                                          |
+| :----------------------- | :--------- | :------- | :------ | :--------------------------------------------------- |
+| `occurrences`            | `object[]` | Yes      | None    | Array of `{ path, start_line, end_line }` to rewrite |
+| `custom_function_name`   | `string`   | No       | None    | Optional extracted helper function name              |
+| `target_module_path`     | `string`   | No       | None    | Optional destination module path                     |
+| `custom_parameter_names` | `string[]` | No       | `[]`    | Optional customized parameter names                  |
+
+#### `cddm_verify_refactor`
+
+Executes closed-loop automated test suite verification against the workspace or a specified Git branch.
+
+| Parameter         | Type     | Required | Default | Description                               |
+| :---------------- | :------- | :------- | :------ | :---------------------------------------- |
+| `directory`       | `string` | No       | `"."`   | Workspace directory path                  |
+| `test_command`    | `string` | No       | None    | Custom test command (e.g. `cargo test`)   |
+| `branch_name`     | `string` | No       | None    | Optional Git branch to verify             |
+| `timeout_seconds` | `number` | No       | `60`    | Maximum test execution timeout in seconds |
 
 ### Resources
 

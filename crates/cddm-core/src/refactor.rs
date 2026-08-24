@@ -1,4 +1,7 @@
-use crate::types::{ApplyRefactorBranchResult, CloneLocation, RefactorSandboxResult};
+use crate::types::{
+    ApplyRefactorBranchResult, AstRewriteResult, CloneLocation, InferredParameter,
+    RefactorSandboxResult, VerifyRefactorResult,
+};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -763,6 +766,266 @@ pub fn apply_cluster_refactor_branch(
     })
 }
 
+/// Generates an AST-native refactoring transformation across multiple occurrence files.
+pub fn generate_ast_cluster_refactor(
+    occurrences: &[CloneLocation],
+    custom_function_name: Option<&str>,
+    target_module_path: Option<&str>,
+    custom_parameter_names: Option<&[String]>,
+) -> Result<AstRewriteResult, String> {
+    if occurrences.is_empty() {
+        return Err("No occurrences provided for AST refactoring".to_string());
+    }
+
+    let fn_name = custom_function_name.unwrap_or(DEFAULT_HELPER_PREFIX);
+    let target_path = target_module_path.unwrap_or(&occurrences[0].file);
+
+    let ext = Path::new(&occurrences[0].file)
+        .extension()
+        .and_then(|s| s.to_str())
+        .unwrap_or("rs");
+
+    // Group occurrences by file
+    let mut files_map: std::collections::BTreeMap<String, Vec<&CloneLocation>> =
+        std::collections::BTreeMap::new();
+    for occ in occurrences {
+        files_map.entry(occ.file.clone()).or_default().push(occ);
+    }
+
+    // Step 1: Read code snippets per occurrence
+    let mut site_snippets = Vec::new();
+    for occ in occurrences {
+        let p = Path::new(&occ.file);
+        if !p.exists() {
+            return Err(format!("Occurrence file '{}' does not exist", occ.file));
+        }
+        let content = fs::read_to_string(p)
+            .map_err(|e| format!("Failed to read occurrence file '{}': {}", occ.file, e))?;
+        let lines: Vec<String> = content.lines().map(|s| s.to_string()).collect();
+        let start_idx = occ.start_line.saturating_sub(1);
+        let end_idx = occ.end_line.min(lines.len());
+        if start_idx < end_idx {
+            site_snippets.push((occ, lines[start_idx..end_idx].to_vec()));
+        }
+    }
+
+    if site_snippets.is_empty() {
+        return Err("Failed to extract code snippets from occurrences".to_string());
+    }
+
+    // Step 2: Compute common invariant lines
+    let occ_pairs: Vec<(&CloneLocation, &[String])> = site_snippets
+        .iter()
+        .map(|(occ, snip)| (*occ, snip.as_slice()))
+        .collect();
+    let cluster_refactor = analyze_cluster_snippets_refactoring("ast-preview", &occ_pairs);
+    let common_body_lines = cluster_refactor.common_body_lines;
+
+    // Step 3: Infer parameters across sites
+    let mut inferred_parameters = Vec::new();
+    let mut param_index = 0;
+
+    let mut param_diff_groups: Vec<Vec<String>> = Vec::new();
+    for site in &cluster_refactor.sites {
+        for (i, diff) in site.parameter_differences.iter().enumerate() {
+            if i >= param_diff_groups.len() {
+                param_diff_groups.push(Vec::new());
+            }
+            if !diff.fragment_a_code.is_empty() {
+                param_diff_groups[i].push(diff.fragment_a_code.clone());
+            }
+        }
+    }
+
+    for (i, vals) in param_diff_groups.iter().enumerate() {
+        let name = if let Some(custom_names) = custom_parameter_names
+            && i < custom_names.len()
+        {
+            custom_names[i].clone()
+        } else {
+            param_index += 1;
+            format!("param_{}", param_index)
+        };
+        let inferred_type = crate::ast::type_infer::infer_parameter_type(ext, vals);
+        inferred_parameters.push(InferredParameter {
+            name,
+            inferred_type,
+            original_values: vals.clone(),
+        });
+    }
+
+    // Step 4: Synthesize helper function code
+    let helper_sig =
+        crate::ast::type_infer::format_function_signature(ext, fn_name, &inferred_parameters);
+    let helper_function_code = crate::ast::rewriter::synthesize_helper_function_block(
+        ext,
+        fn_name,
+        &inferred_parameters,
+        &common_body_lines,
+        "",
+    );
+
+    // Step 5: Rewrite each file
+    let mut rewritten_files = Vec::new();
+    let mut syntax_valid = true;
+
+    for (file_path, occs) in files_map {
+        let path = Path::new(&file_path);
+        let raw_content = fs::read_to_string(path)
+            .map_err(|e| format!("Failed to read file '{}': {}", file_path, e))?;
+
+        let mut replacements = Vec::new();
+        for occ in occs {
+            let site_refactor = cluster_refactor
+                .sites
+                .iter()
+                .find(|s| s.file == occ.file && s.start_line == occ.start_line);
+
+            let arguments = if let Some(site) = site_refactor {
+                site.parameter_differences
+                    .iter()
+                    .map(|p| p.fragment_a_code.trim().to_string())
+                    .filter(|s| !s.is_empty())
+                    .collect()
+            } else {
+                Vec::new()
+            };
+
+            replacements.push(crate::ast::rewriter::CloneSiteReplacement {
+                start_line: occ.start_line,
+                end_line: occ.end_line,
+                arguments,
+            });
+        }
+
+        let rewritten = crate::ast::rewriter::rewrite_source_file(
+            &file_path,
+            &raw_content,
+            ext,
+            fn_name,
+            Some(target_path),
+            replacements,
+        );
+
+        if !crate::ast::rewriter::validate_ast_syntax(&rewritten.rewritten_source, ext) {
+            syntax_valid = false;
+        }
+
+        rewritten_files.push(rewritten);
+    }
+
+    let total_lines_saved = cluster_refactor.total_lines_saved;
+    let mut patch = cluster_refactor.unified_patch;
+    if let Some(name) = custom_function_name {
+        patch = patch.replace(DEFAULT_HELPER_PREFIX, name);
+    }
+
+    Ok(AstRewriteResult {
+        cluster_id: None,
+        function_name: fn_name.to_string(),
+        target_module_path: target_path.to_string(),
+        helper_signature: helper_sig,
+        helper_function_code,
+        inferred_parameters,
+        rewritten_files,
+        unified_patch: patch,
+        total_lines_saved,
+        syntax_valid,
+    })
+}
+
+/// Executes workspace test suite command to verify that refactoring introduces no regressions.
+pub fn verify_refactor_test_suite(
+    directory: &Path,
+    test_command: Option<&str>,
+    _branch_name: Option<&str>,
+    _timeout_seconds: Option<u64>,
+) -> Result<VerifyRefactorResult, String> {
+    let start_time = std::time::Instant::now();
+
+    let cmd_str = if let Some(custom) = test_command {
+        custom.to_string()
+    } else if directory.join("Cargo.toml").exists() {
+        "cargo test --workspace".to_string()
+    } else if directory.join("package.json").exists() {
+        "bun test".to_string()
+    } else if directory.join("go.mod").exists() {
+        "go test ./...".to_string()
+    } else if directory.join("pyproject.toml").exists() || directory.join("pytest.ini").exists() {
+        "pytest".to_string()
+    } else {
+        "cargo test".to_string()
+    };
+
+    let parts: Vec<&str> = cmd_str.split_whitespace().collect();
+    if parts.is_empty() {
+        return Err("Empty test command specified".to_string());
+    }
+
+    let program = parts[0];
+    let args = &parts[1..];
+
+    let mut command = std::process::Command::new(program);
+    command.args(args);
+    command.current_dir(directory);
+
+    let output = command.output().map_err(|e| {
+        format!(
+            "Failed to execute test verification command '{}': {}",
+            cmd_str, e
+        )
+    })?;
+
+    let duration_ms = start_time.elapsed().as_millis() as u64;
+    let exit_code = output.status.code().unwrap_or(-1);
+    let success = output.status.success();
+
+    let raw_stdout = String::from_utf8_lossy(&output.stdout).to_string();
+    let raw_stderr = String::from_utf8_lossy(&output.stderr).to_string();
+
+    let stdout_snippet = raw_stdout
+        .lines()
+        .rev()
+        .take(50)
+        .collect::<Vec<_>>()
+        .into_iter()
+        .rev()
+        .collect::<Vec<_>>()
+        .join("\n");
+
+    let stderr_snippet = raw_stderr
+        .lines()
+        .rev()
+        .take(50)
+        .collect::<Vec<_>>()
+        .into_iter()
+        .rev()
+        .collect::<Vec<_>>()
+        .join("\n");
+
+    let message = if success {
+        format!(
+            "Test suite verification PASSED in {}ms with command '{}'",
+            duration_ms, cmd_str
+        )
+    } else {
+        format!(
+            "Test suite verification FAILED with exit code {} in {}ms",
+            exit_code, duration_ms
+        )
+    };
+
+    Ok(VerifyRefactorResult {
+        success,
+        exit_code,
+        duration_ms,
+        command_executed: cmd_str,
+        stdout_snippet,
+        stderr_snippet,
+        message,
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1059,5 +1322,59 @@ mod tests {
         let res = apply_patch_to_workspace(&patch, false);
         assert!(res.is_err());
         assert!(res.unwrap_err().contains("Hunk mismatch"));
+    }
+
+    #[test]
+    fn test_generate_ast_cluster_refactor() {
+        let mut file_a = NamedTempFile::with_suffix(".rs").unwrap();
+        let mut file_b = NamedTempFile::with_suffix(".rs").unwrap();
+        let path_a = file_a.path().to_str().unwrap().to_string();
+        let path_b = file_b.path().to_str().unwrap().to_string();
+
+        writeln!(
+            file_a,
+            "fn compute_a() {{\n    let x = 10;\n    let y = 20;\n    println!(\"{{}}\", x + \
+             y);\n}}"
+        )
+        .unwrap();
+        writeln!(
+            file_b,
+            "fn compute_b() {{\n    let x = 10;\n    let y = 20;\n    println!(\"{{}}\", x + \
+             y);\n}}"
+        )
+        .unwrap();
+        file_a.flush().unwrap();
+        file_b.flush().unwrap();
+
+        let occurrences = vec![
+            CloneLocation {
+                file: path_a.clone(),
+                start_line: 2,
+                end_line: 4,
+                author: None,
+            },
+            CloneLocation {
+                file: path_b.clone(),
+                start_line: 2,
+                end_line: 4,
+                author: None,
+            },
+        ];
+
+        let result = generate_ast_cluster_refactor(
+            &occurrences,
+            Some("calculate_shared_sum"),
+            Some(&path_a),
+            None,
+        );
+
+        assert!(result.is_ok());
+        let res = result.unwrap();
+        assert_eq!(res.function_name, "calculate_shared_sum");
+        assert!(
+            res.helper_function_code
+                .contains("pub fn calculate_shared_sum()")
+        );
+        assert_eq!(res.rewritten_files.len(), 2);
     }
 }

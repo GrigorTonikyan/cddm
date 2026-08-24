@@ -114,4 +114,121 @@ describe("RefactorSandboxModal Component", () => {
 
     expect(mockGenerateAiPrompt).toHaveBeenCalled();
   });
+
+  it("should switch to AST-Native Rewrite tab and render AST synthesis results", async () => {
+    const mockPreviewAst = vi.fn().mockResolvedValue({
+      function_name: "custom_shared_helper",
+      target_module_path: "src/shared.ts",
+      helper_signature: "export function custom_shared_helper(x: number): void",
+      helper_function_code:
+        "export function custom_shared_helper(x: number): void {\n  console.log(x);\n}",
+      inferred_parameters: [
+        {
+          name: "x",
+          inferred_type: "number",
+          original_values: ["1"],
+        },
+      ],
+      rewritten_files: [
+        {
+          file_path: "src/a.ts",
+          original_line_count: 50,
+          new_line_count: 30,
+          call_sites_count: 1,
+          rewritten_source: "",
+          imports_added: ["import { custom_shared_helper } from './shared';"],
+        },
+      ],
+      unified_patch: "",
+      total_lines_saved: 20,
+      syntax_valid: true,
+    });
+
+    useCDDMStore.setState({
+      previewAstRefactor: mockPreviewAst,
+      astRewriteResult: {
+        function_name: "custom_shared_helper",
+        target_module_path: "src/shared.ts",
+        helper_signature: "export function custom_shared_helper(x: number): void",
+        helper_function_code:
+          "export function custom_shared_helper(x: number): void {\n  console.log(x);\n}",
+        inferred_parameters: [
+          {
+            name: "x",
+            inferred_type: "number",
+            original_values: ["1"],
+          },
+        ],
+        rewritten_files: [
+          {
+            file_path: "src/a.ts",
+            original_line_count: 50,
+            new_line_count: 30,
+            call_sites_count: 1,
+            rewritten_source: "",
+            imports_added: ["import { custom_shared_helper } from './shared';"],
+          },
+        ],
+        unified_patch: "",
+        total_lines_saved: 20,
+        syntax_valid: true,
+      },
+    });
+
+    render(
+      <Win2xManagerProvider>
+        <RefactorSandboxModal isOpen={true} onClose={() => {}} />
+      </Win2xManagerProvider>,
+    );
+
+    const astTabBtn = screen.getByText(/AST-Native Rewrite/);
+    expect(astTabBtn).toBeDefined();
+    fireEvent.click(astTabBtn);
+
+    expect(screen.getByText("Synthesized Function Implementation")).toBeDefined();
+    expect(screen.getByText("Transformed Source Files (1)")).toBeDefined();
+    expect(screen.getByText("x:")).toBeDefined();
+    expect(screen.getByText("number")).toBeDefined();
+  });
+
+  it("should trigger test suite verification when Run Test Verification is clicked", async () => {
+    const mockVerify = vi.fn().mockResolvedValue({
+      success: true,
+      exit_code: 0,
+      duration_ms: 120,
+      command_executed: "cargo test",
+      stdout_snippet: "test result: ok. 10 passed",
+      stderr_snippet: "",
+      message: "Suite passed",
+    });
+
+    useCDDMStore.setState({
+      verifyRefactorTestSuite: mockVerify,
+      verifyResult: {
+        success: true,
+        exit_code: 0,
+        duration_ms: 120,
+        command_executed: "cargo test",
+        stdout_snippet: "test result: ok. 10 passed",
+        stderr_snippet: "",
+        message: "Suite passed",
+      },
+    });
+
+    render(
+      <Win2xManagerProvider>
+        <RefactorSandboxModal isOpen={true} onClose={() => {}} />
+      </Win2xManagerProvider>,
+    );
+
+    const verifyBtn = screen.getByText("Run Test Verification");
+    expect(verifyBtn).toBeDefined();
+    fireEvent.click(verifyBtn);
+
+    expect(mockVerify).toHaveBeenCalledWith(
+      expect.objectContaining({
+        directory: ".",
+      }),
+    );
+  });
 });

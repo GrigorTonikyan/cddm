@@ -28,6 +28,8 @@ export const API_ROUTES = {
   REFACTOR_SANDBOX: "/api/refactor/sandbox",
   REFACTOR_APPLY_BRANCH: "/api/refactor/apply-branch",
   REFACTOR_AI_PROMPT: "/api/refactor/ai-prompt",
+  REFACTOR_AST: "/api/refactor/ast",
+  REFACTOR_VERIFY: "/api/refactor/verify",
 } as const;
 
 /**

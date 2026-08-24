@@ -71,6 +71,16 @@ export interface CDDMStoreState {
   isSandboxLoading: boolean;
   sandboxError: string | null;
 
+  /** AST rewrite preview state */
+  astRewriteResult: import("../types/cddm-types").AstRewriteResult | null;
+  isAstLoading: boolean;
+  astError: string | null;
+
+  /** Test verification state */
+  verifyResult: import("../types/cddm-types").VerifyRefactorResult | null;
+  isVerifying: boolean;
+  verifyError: string | null;
+
   /** Updates the scan configuration */
   setConfig: (config: Partial<ScanConfig>) => void;
   /** Initiates a new code duplication scan */
@@ -108,6 +118,14 @@ export interface CDDMStoreState {
   previewRefactorSandbox: (
     req: import("../types/cddm-types").RefactorSandboxRequest,
   ) => Promise<import("../types/cddm-types").RefactorSandboxResult>;
+  /** Synthesizes an AST-native tree-sitter refactoring preview */
+  previewAstRefactor: (
+    req: import("../types/cddm-types").RefactorSandboxRequest,
+  ) => Promise<import("../types/cddm-types").AstRewriteResult>;
+  /** Runs closed-loop test suite verification */
+  verifyRefactorTestSuite: (
+    req: import("../types/cddm-types").VerifyRefactorRequest,
+  ) => Promise<import("../types/cddm-types").VerifyRefactorResult>;
   /** Applies refactoring patch to workspace or dedicated Git branch */
   applyRefactorBranch: (
     patch: string,
@@ -172,6 +190,14 @@ export const useCDDMStore = create<CDDMStoreState>((set, get) => ({
   sandboxResult: null,
   isSandboxLoading: false,
   sandboxError: null,
+
+  astRewriteResult: null,
+  isAstLoading: false,
+  astError: null,
+
+  verifyResult: null,
+  isVerifying: false,
+  verifyError: null,
 
   setViewMode: (viewMode) => set({ viewMode }),
   setSelectedCluster: (selectedCluster) => set({ selectedCluster }),
@@ -285,6 +311,58 @@ export const useCDDMStore = create<CDDMStoreState>((set, get) => ({
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to run sandbox simulation";
       set({ sandboxError: msg, isSandboxLoading: false });
+      throw err;
+    }
+  },
+
+  previewAstRefactor: async (req) => {
+    set({ isAstLoading: true, astError: null });
+    try {
+      const res = await fetch(API_ROUTES.REFACTOR_AST, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(req),
+      });
+      if (!res.ok) {
+        const errorText = await res.text().catch(() => res.statusText);
+        throw new Error(`AST refactor simulation failed (${res.status}): ${errorText}`);
+      }
+      const result = await res.json();
+      set({
+        astRewriteResult: result,
+        isAstLoading: false,
+        astError: null,
+      });
+      return result;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to synthesize AST refactoring";
+      set({ astError: msg, isAstLoading: false });
+      throw err;
+    }
+  },
+
+  verifyRefactorTestSuite: async (req) => {
+    set({ isVerifying: true, verifyError: null });
+    try {
+      const res = await fetch(API_ROUTES.REFACTOR_VERIFY, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(req),
+      });
+      if (!res.ok) {
+        const errorText = await res.text().catch(() => res.statusText);
+        throw new Error(`Test verification execution failed (${res.status}): ${errorText}`);
+      }
+      const result = await res.json();
+      set({
+        verifyResult: result,
+        isVerifying: false,
+        verifyError: null,
+      });
+      return result;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to execute test verification";
+      set({ verifyError: msg, isVerifying: false });
       throw err;
     }
   },
@@ -480,6 +558,10 @@ export const useCDDMStore = create<CDDMStoreState>((set, get) => ({
       sandboxRequest: null,
       sandboxResult: null,
       sandboxError: null,
+      astRewriteResult: null,
+      astError: null,
+      verifyResult: null,
+      verifyError: null,
     });
   },
 }));

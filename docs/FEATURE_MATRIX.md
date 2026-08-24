@@ -1,11 +1,11 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-24 | Rust: 161/161 PASS | WebUI: 130/130 PASS across 34 suites | Repository Scripts: 27/27 PASS | Playwright E2E: 11/11 PASS | CI Workflows: PASS
+> Last verified: 2026-08-24 | Rust: 178/178 PASS | WebUI: 132/132 PASS across 34 suites | Repository Scripts: 27/27 PASS | Playwright E2E: 11/11 PASS | CI Workflows: PASS
 
 ---
 
-## 1. Rust Backend — `cddm-core`, `cddm-cli`, `cddm-lsp`, `cddm-mcp` (161 unit tests)
+## 1. Rust Backend — `cddm-core`, `cddm-cli`, `cddm-lsp`, `cddm-mcp` (178 unit tests)
 
 ### Tokenization Engine (`crates/cddm-core/src/tokenizer.rs`)
 
@@ -256,15 +256,49 @@
 | F-22.1 | Passed quality gate Markdown comment formatting           | `pr_comment::tests::test_generate_pr_markdown_comment_passed`             | PASS   |
 | F-22.2 | Failed threshold quality gate with duplicate clones table | `pr_comment::tests::test_generate_pr_markdown_comment_failed_with_clones` | PASS   |
 
+### AST Type Inference & Signature Engine (`crates/cddm-core/src/ast/type_infer.rs`)
+
+| ID     | Feature Variant                                             | Test Function                                     | Result |
+| :----- | :---------------------------------------------------------- | :------------------------------------------------ | :----- |
+| F-23.1 | Numeric integer parameter type inference                    | `ast::type_infer::tests::test_infer_numeric_type` | PASS   |
+| F-23.2 | String literal parameter type inference                     | `ast::type_infer::tests::test_infer_string_type`  | PASS   |
+| F-23.3 | Boolean literal parameter type inference                    | `ast::type_infer::tests::test_infer_boolean_type` | PASS   |
+| F-23.4 | Multi-language function signature formatting (Rust, TS, Py) | `ast::type_infer::tests::test_format_signatures`  | PASS   |
+| F-23.5 | Dynamic call site formatting with arguments                 | `ast::type_infer::tests::test_format_call_site`   | PASS   |
+
+### Module Import Synthesizer (`crates/cddm-core/src/ast/import_resolver.rs`)
+
+| ID     | Feature Variant                                             | Test Function                                              | Result |
+| :----- | :---------------------------------------------------------- | :--------------------------------------------------------- | :----- |
+| F-24.1 | Cross-module Rust `use crate::...` import generation        | `ast::import_resolver::tests::test_generate_import_rust`   | PASS   |
+| F-24.2 | Cross-module TypeScript `import { ... }` import generation  | `ast::import_resolver::tests::test_generate_import_ts`     | PASS   |
+| F-24.3 | Cross-module Python `from ... import ...` import generation | `ast::import_resolver::tests::test_generate_import_python` | PASS   |
+| F-24.4 | Import deduplication detection when already present         | `ast::import_resolver::tests::test_is_import_present`      | PASS   |
+
+### AST Concrete Syntax Tree Rewriter (`crates/cddm-core/src/ast/rewriter.rs`)
+
+| ID     | Feature Variant                                         | Test Function                                        | Result |
+| :----- | :------------------------------------------------------ | :--------------------------------------------------- | :----- |
+| F-25.1 | Helper block synthesis with doc comments                | `ast::rewriter::tests::test_synthesize_helper_block` | PASS   |
+| F-25.2 | CST node replacement with call sites across lines       | `ast::rewriter::tests::test_rewrite_source_file`     | PASS   |
+| F-25.3 | Tree-sitter AST syntax validation on transformed source | `ast::rewriter::tests::test_validate_ast_syntax`     | PASS   |
+
+### AST Cluster Refactoring & Closed-Loop Verification (`crates/cddm-core/src/refactor.rs`)
+
+| ID     | Feature Variant                                   | Test Function                                         | Result |
+| :----- | :------------------------------------------------ | :---------------------------------------------------- | :----- |
+| F-26.1 | Multi-file AST cluster refactoring transformation | `refactor::tests::test_generate_ast_cluster_refactor` | PASS   |
+| F-26.2 | Closed-loop test suite verification execution     | `cddm_mcp::tests::test_mcp_verify_refactor_tool`      | PASS   |
+
 ---
 
-## 2. WebUI Frontend — React 19 + TypeScript + Vitest (130 unit tests across 34 suites)
+## 2. WebUI Frontend — React 19 + TypeScript + Vitest (132 unit tests across 34 suites)
 
 | Module             | Test Suite File                                                                  | Test Cases | Status |
 | :----------------- | :------------------------------------------------------------------------------- | :--------- | :----- |
 | Timeline Explorer  | `webui/src/components/__tests__/TimelineExplorerModal.test.tsx`                  | 3 tests    | PASS   |
 | Suppression Rules  | `webui/src/components/__tests__/SuppressionRulesModal.test.tsx`                  | 3 tests    | PASS   |
-| Refactor Sandbox   | `webui/src/components/__tests__/RefactorSandboxModal.test.tsx`                   | 4 tests    | PASS   |
+| Refactor Sandbox   | `webui/src/components/__tests__/RefactorSandboxModal.test.tsx`                   | 6 tests    | PASS   |
 | IDE Deeplinks      | `webui/src/utils/__tests__/ide-links.test.ts`                                    | 8 tests    | PASS   |
 | Store              | `webui/src/store/__tests__/cddm-store.test.ts`                                   | 11 tests   | PASS   |
 | App Shell          | `webui/src/components/__tests__/App.test.tsx`                                    | 5 tests    | PASS   |

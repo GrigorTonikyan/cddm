@@ -434,3 +434,63 @@ export interface AiRefactorPromptRequest {
 export interface AiPromptResponse {
   prompt: string;
 }
+
+/**
+ * Inferred parameter with extracted identifier name and language-specific type.
+ */
+export interface InferredParameter {
+  name: string;
+  inferred_type: string;
+  original_values: string[];
+}
+
+/**
+ * Source file rewritten via Tree-sitter AST node substitution.
+ */
+export interface AstRewrittenFile {
+  file_path: string;
+  original_line_count: number;
+  new_line_count: number;
+  call_sites_count: number;
+  rewritten_source: string;
+  imports_added: string[];
+}
+
+/**
+ * Complete result of an AST-native refactoring transformation across multiple files.
+ */
+export interface AstRewriteResult {
+  cluster_id?: number;
+  function_name: string;
+  target_module_path: string;
+  helper_signature: string;
+  helper_function_code: string;
+  inferred_parameters: InferredParameter[];
+  rewritten_files: AstRewrittenFile[];
+  unified_patch: string;
+  total_lines_saved: number;
+  syntax_valid: boolean;
+}
+
+/**
+ * Request payload to run closed-loop test suite verification.
+ */
+export interface VerifyRefactorRequest {
+  directory: string;
+  test_command?: string;
+  branch_name?: string;
+  timeout_seconds?: number;
+}
+
+/**
+ * Structured result of closed-loop test suite verification.
+ */
+export interface VerifyRefactorResult {
+  success: boolean;
+  exit_code: number;
+  duration_ms: number;
+  command_executed: string;
+  stdout_snippet: string;
+  stderr_snippet: string;
+  message: string;
+}

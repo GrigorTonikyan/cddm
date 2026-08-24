@@ -34,6 +34,7 @@ tsconfig.tsbuildinfo
 .nyc_output/
 .cddm/
 **/.cddm/
+crates/**/.cddmignore
 
 # Logs & temporary files
 /.logs/

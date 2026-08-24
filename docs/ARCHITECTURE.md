@@ -26,6 +26,8 @@ graph TD
         Blame["Git Blame Annotator (gix)"]
         Cluster["N-Way Graph Clustering (Disjoint-Set Union-Find)"]
         Refactor["Multi-Site Consensus Refactoring Synthesizer"]
+        AstRewrite["AST-Native Rewriter & Type Inferencer (Tree-sitter CST)"]
+        VerifyEngine["Closed-Loop Test Suite Verifier (refactor.rs)"]
         Sandbox["Refactor Sandbox & Transactional Git Brancher (gix)"]
         Timeline["Git History Timeline & Trend Analyzer (gix)"]
         Workflow["Turnkey CI/CD & Hook Generator (workflow.rs)"]
@@ -48,7 +50,9 @@ graph TD
     Detector --> Blame
     Detector --> Cluster
     Cluster --> Refactor
+    Cluster --> AstRewrite
     Refactor --> Sandbox
+    AstRewrite --> VerifyEngine
     Timeline --> Detector
     Workflow --> Detector
 ```

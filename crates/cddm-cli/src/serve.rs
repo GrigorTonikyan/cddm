@@ -68,6 +68,12 @@ pub const ROUTE_API_REFACTOR_APPLY_BRANCH: &str = "/api/refactor/apply-branch";
 /// API endpoint path for synthesizing an LLM AI refactoring prompt specification.
 pub const ROUTE_API_REFACTOR_AI_PROMPT: &str = "/api/refactor/ai-prompt";
 
+/// API endpoint path for AST-native tree-sitter refactoring preview.
+pub const ROUTE_API_REFACTOR_AST: &str = "/api/refactor/ast";
+
+/// API endpoint path for closed-loop test suite verification.
+pub const ROUTE_API_REFACTOR_VERIFY: &str = "/api/refactor/verify";
+
 /// Default localhost IPv4 binding.
 pub const DEFAULT_HOST_IP: [u8; 4] = [127, 0, 0, 1];
 
@@ -241,6 +247,8 @@ pub fn build_app_with_state(state: AppState) -> Router {
             ROUTE_API_REFACTOR_AI_PROMPT,
             post(refactor_ai_prompt_handler),
         )
+        .route(ROUTE_API_REFACTOR_AST, post(refactor_ast_handler))
+        .route(ROUTE_API_REFACTOR_VERIFY, post(refactor_verify_handler))
         .fallback(static_asset_handler)
         .layer(CorsLayer::permissive())
         .with_state(state)
@@ -628,6 +636,33 @@ async fn refactor_ai_prompt_handler(
     Ok(Json(AiPromptResponse { prompt }))
 }
 
+async fn refactor_ast_handler(
+    Json(payload): Json<cddm_core::RefactorSandboxRequest>,
+) -> Result<Json<cddm_core::AstRewriteResult>, (StatusCode, String)> {
+    cddm_core::generate_ast_cluster_refactor(
+        &payload.occurrences,
+        payload.custom_function_name.as_deref(),
+        payload.target_module_path.as_deref(),
+        payload.custom_parameter_names.as_deref(),
+    )
+    .map(Json)
+    .map_err(|e| (StatusCode::BAD_REQUEST, e))
+}
+
+async fn refactor_verify_handler(
+    Json(payload): Json<cddm_core::VerifyRefactorRequest>,
+) -> Result<Json<cddm_core::VerifyRefactorResult>, (StatusCode, String)> {
+    let dir = Path::new(&payload.directory);
+    cddm_core::verify_refactor_test_suite(
+        dir,
+        payload.test_command.as_deref(),
+        payload.branch_name.as_deref(),
+        payload.timeout_seconds,
+    )
+    .map(Json)
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))
+}
+
 async fn static_asset_handler(uri: Uri) -> impl IntoResponse {
     let path = uri.path().trim_start_matches('/');
     let asset_path = if path.is_empty() { INDEX_HTML } else { path };
@@ -969,5 +1004,43 @@ mod tests {
         let Json(body) = res.unwrap();
         assert!(body.prompt.contains("shared_helper"));
         assert!(body.prompt.contains("src/utils.rs"));
+    }
+
+    #[tokio::test]
+    async fn test_refactor_ast_handler() {
+        let mut file_a = NamedTempFile::with_suffix(".rs").unwrap();
+        let mut file_b = NamedTempFile::with_suffix(".rs").unwrap();
+        writeln!(file_a, "fn a() {{\n    let x = 1;\n    let y = 2;\n}}").unwrap();
+        writeln!(file_b, "fn b() {{\n    let x = 1;\n    let y = 2;\n}}").unwrap();
+        file_a.flush().unwrap();
+        file_b.flush().unwrap();
+
+        let req = cddm_core::RefactorSandboxRequest {
+            cluster_id: Some(1),
+            occurrences: vec![
+                CloneLocation {
+                    file: file_a.path().to_str().unwrap().to_string(),
+                    start_line: 2,
+                    end_line: 3,
+                    author: None,
+                },
+                CloneLocation {
+                    file: file_b.path().to_str().unwrap().to_string(),
+                    start_line: 2,
+                    end_line: 3,
+                    author: None,
+                },
+            ],
+            custom_function_name: Some("ast_shared_compute".to_string()),
+            target_module_path: None,
+            custom_parameter_names: None,
+        };
+
+        let res = refactor_ast_handler(Json(req)).await;
+        assert!(res.is_ok());
+        let Json(body) = res.unwrap();
+        assert_eq!(body.function_name, "ast_shared_compute");
+        assert!(body.helper_function_code.contains("ast_shared_compute"));
+        assert_eq!(body.rewritten_files.len(), 2);
     }
 }

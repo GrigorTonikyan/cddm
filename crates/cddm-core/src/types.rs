@@ -541,6 +541,91 @@ pub struct ApplyRefactorBranchResult {
     pub message: String,
 }
 
+/// Represents an inferred parameter with extracted name and language-specific type.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct InferredParameter {
+    /// Synthesized or customized parameter name
+    pub name: String,
+    /// Inferred language-appropriate type (e.g. &str, number, int)
+    pub inferred_type: String,
+    /// Original occurrence values across clone fragments
+    pub original_values: Vec<String>,
+}
+
+/// Represents a source file rewritten via AST node substitution.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct AstRewrittenFile {
+    /// Target file path
+    pub file_path: String,
+    /// Original line count before rewrite
+    pub original_line_count: usize,
+    /// New line count after rewrite
+    pub new_line_count: usize,
+    /// Number of clone call sites replaced
+    pub call_sites_count: usize,
+    /// Full transformed file source code
+    pub rewritten_source: String,
+    /// Any import/use statements added
+    pub imports_added: Vec<String>,
+}
+
+/// Complete result of an AST-native refactoring transformation across multiple files.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct AstRewriteResult {
+    /// Cluster ID if applicable
+    pub cluster_id: Option<usize>,
+    /// Extracted helper function name
+    pub function_name: String,
+    /// Destination module or file path
+    pub target_module_path: String,
+    /// Full generated function signature header
+    pub helper_signature: String,
+    /// Full generated helper function code block
+    pub helper_function_code: String,
+    /// Inferred parameters
+    pub inferred_parameters: Vec<InferredParameter>,
+    /// Transformed files
+    pub rewritten_files: Vec<AstRewrittenFile>,
+    /// Synthesized unified diff patch for preview
+    pub unified_patch: String,
+    /// Estimated net lines of code saved
+    pub total_lines_saved: usize,
+    /// Whether the rewritten code parses cleanly into the target AST grammar
+    pub syntax_valid: bool,
+}
+
+/// Request to run test suite verification on refactored workspace or branch.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct VerifyRefactorRequest {
+    /// Workspace root directory
+    pub directory: String,
+    /// Optional custom test command (e.g. "cargo test", "bun test", "pytest")
+    pub test_command: Option<String>,
+    /// Optional branch to test against
+    pub branch_name: Option<String>,
+    /// Timeout in seconds (default: 60)
+    pub timeout_seconds: Option<u64>,
+}
+
+/// Result of running closed-loop test suite verification.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct VerifyRefactorResult {
+    /// Whether test suite exited with code 0
+    pub success: bool,
+    /// Process exit code
+    pub exit_code: i32,
+    /// Execution duration in milliseconds
+    pub duration_ms: u64,
+    /// Exact command line executed
+    pub command_executed: String,
+    /// Trailing stdout output snippet
+    pub stdout_snippet: String,
+    /// Trailing stderr output snippet
+    pub stderr_snippet: String,
+    /// Status message
+    pub message: String,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

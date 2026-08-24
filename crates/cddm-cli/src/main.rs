@@ -1,8 +1,9 @@
 #![forbid(unsafe_code)]
 
 use cddm_core::{
-    CloneCluster, CloneStatus, DiffScanResult, ScanConfig, ScanResult, analyze_clone_refactoring,
-    analyze_cluster_refactoring, refactor::ClusterRefactorSuggestion, run_diff_scan, run_scan,
+    CloneCluster, CloneLocation, CloneStatus, DiffScanResult, ScanConfig, ScanResult,
+    analyze_clone_refactoring, analyze_cluster_refactoring, refactor::ClusterRefactorSuggestion,
+    run_diff_scan, run_scan,
 };
 use clap::{Parser, Subcommand, ValueEnum};
 use comfy_table::{Cell, Color, Table};
@@ -181,6 +182,30 @@ enum Commands {
         /// Synthesize and print structured AI prompt specification for LLM agents
         #[arg(long, default_value_t = false)]
         prompt: bool,
+
+        /// Use AST-native tree-sitter rewrite engine to synthesize typed helper and AST substitutions
+        #[arg(long, default_value_t = false)]
+        ast: bool,
+
+        /// Custom extracted helper function name (default: extracted_shared_helper)
+        #[arg(long)]
+        fn_name: Option<String>,
+
+        /// Target destination module path (default: first occurrence file)
+        #[arg(long)]
+        target_module: Option<String>,
+
+        /// Create Git branch and apply refactoring changes directly
+        #[arg(long)]
+        apply_branch: Option<String>,
+
+        /// Execute workspace test suite to verify refactored code has zero regressions
+        #[arg(long, default_value_t = false)]
+        verify: bool,
+
+        /// Custom test command to execute during verification (e.g. 'cargo test', 'bun test')
+        #[arg(long)]
+        test_cmd: Option<String>,
 
         /// Specific language(s) to scan
         #[arg(short, long)]
@@ -624,6 +649,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             min_tokens,
             output,
             prompt,
+            ast,
+            fn_name,
+            target_module,
+            apply_branch,
+            verify,
+            test_cmd,
             languages,
             ignore,
         } => {
@@ -652,7 +683,115 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             let result = run_scan(config, tx, cancel_flag).await?;
 
-            if let Some(c_idx) = cluster {
+            let patch_to_apply: String;
+
+            if ast {
+                let occurrences = if let Some(c_idx) = cluster {
+                    if result.clone_clusters.is_empty() {
+                        println!("No duplicate code clone clusters found to refactor.");
+                        return Ok(());
+                    }
+                    let target_idx = if c_idx > 0 && c_idx <= result.clone_clusters.len() {
+                        c_idx - 1
+                    } else {
+                        0
+                    };
+                    result.clone_clusters[target_idx].occurrences.clone()
+                } else {
+                    if result.clone_pairs.is_empty() {
+                        println!("No duplicate code clone pairs found to refactor.");
+                        return Ok(());
+                    }
+                    let target_idx = if pair > 0 && pair <= result.clone_pairs.len() {
+                        pair - 1
+                    } else {
+                        0
+                    };
+                    let selected = &result.clone_pairs[target_idx];
+                    vec![
+                        CloneLocation {
+                            file: selected.file_a.clone(),
+                            start_line: selected.start_line_a,
+                            end_line: selected.end_line_a,
+                            author: selected.author_a.clone(),
+                        },
+                        CloneLocation {
+                            file: selected.file_b.clone(),
+                            start_line: selected.start_line_b,
+                            end_line: selected.end_line_b,
+                            author: selected.author_b.clone(),
+                        },
+                    ]
+                };
+
+                let ast_res = cddm_core::generate_ast_cluster_refactor(
+                    &occurrences,
+                    fn_name.as_deref(),
+                    target_module.as_deref(),
+                    None,
+                )?;
+
+                patch_to_apply = ast_res.unified_patch.clone();
+
+                if prompt {
+                    let prompt_req = cddm_core::AiRefactorPromptRequest {
+                        clone_type: cddm_core::CloneType::Exact,
+                        similarity: 1.0,
+                        token_count: 100,
+                        lines_saved_est: ast_res.total_lines_saved,
+                        function_name: ast_res.function_name.clone(),
+                        target_module: ast_res.target_module_path.clone(),
+                        occurrences: occurrences
+                            .iter()
+                            .map(|occ| {
+                                let snippet = fs::read_to_string(&occ.file).unwrap_or_default();
+                                let lines: Vec<&str> = snippet.lines().collect();
+                                let sub = if occ.start_line > 0 && occ.start_line <= lines.len() {
+                                    let end = occ.end_line.min(lines.len());
+                                    lines[occ.start_line - 1..end].join("\n")
+                                } else {
+                                    String::new()
+                                };
+                                cddm_core::AiOccurrenceContext {
+                                    path: occ.file.clone(),
+                                    span: cddm_core::LineSpan {
+                                        line_start: occ.start_line,
+                                        line_end: occ.end_line,
+                                        byte_offset: 0,
+                                    },
+                                    snippet: sub,
+                                }
+                            })
+                            .collect(),
+                        invariant_body: ast_res.helper_function_code.clone(),
+                        parameters: ast_res
+                            .inferred_parameters
+                            .iter()
+                            .map(|p| format!("{}: {}", p.name, p.inferred_type))
+                            .collect(),
+                        custom_instructions: None,
+                    };
+                    let prompt_text = cddm_core::generate_ai_refactor_prompt(&prompt_req);
+                    println!("{}", prompt_text);
+                    if let Some(out_path) = output {
+                        fs::write(&out_path, &prompt_text)?;
+                        println!(
+                            "\nAI refactoring prompt written to '{}'.",
+                            out_path.display()
+                        );
+                    }
+                } else {
+                    print_ast_refactor_recommendation(cluster, &ast_res);
+
+                    if let Some(out_path) = output {
+                        fs::write(&out_path, &ast_res.unified_patch)?;
+                        println!(
+                            "\nAST-native unified patch written to '{}'.",
+                            out_path.display()
+                        );
+                    }
+                }
+            } else if let Some(c_idx) = cluster {
                 if result.clone_clusters.is_empty() {
                     println!("No duplicate code clone clusters found to refactor.");
                     return Ok(());
@@ -675,6 +814,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     &selected_cluster.id.to_string(),
                     &selected_cluster.occurrences,
                 )?;
+                patch_to_apply = suggestion.unified_patch.clone();
 
                 if prompt {
                     let prompt_req = cddm_core::AiRefactorPromptRequest {
@@ -764,6 +904,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     &selected.file_b,
                     (selected.start_line_b, selected.end_line_b),
                 )?;
+                patch_to_apply = suggestion.unified_patch.clone();
 
                 if prompt {
                     let snippet_a = fs::read_to_string(&selected.file_a).unwrap_or_default();
@@ -835,6 +976,66 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     if let Some(out_path) = output {
                         fs::write(&out_path, &suggestion.unified_patch)?;
                         println!("\nUnified patch written to '{}'.", out_path.display());
+                    }
+                }
+            }
+
+            if let Some(branch_name) = apply_branch
+                && !patch_to_apply.is_empty()
+            {
+                match cddm_core::apply_cluster_refactor_branch(
+                    &directory,
+                    &patch_to_apply,
+                    Some(&branch_name),
+                    true,
+                ) {
+                    Ok(res) => {
+                        println!(
+                            "\n[PASS] Refactoring patch applied to branch '{}':",
+                            branch_name
+                        );
+                        println!("  Modified files ({}):", res.modified_files.len());
+                        for f in &res.modified_files {
+                            println!("    - {}", f);
+                        }
+                    }
+                    Err(e) => {
+                        eprintln!(
+                            "\n[ERROR] Failed to apply refactoring to branch '{}': {}",
+                            branch_name, e
+                        );
+                    }
+                }
+            }
+
+            if verify {
+                println!("\n=== CDDM — Closed-Loop Test Suite Verification ===");
+                match cddm_core::verify_refactor_test_suite(
+                    &directory,
+                    test_cmd.as_deref(),
+                    None,
+                    None,
+                ) {
+                    Ok(v_res) => {
+                        if v_res.success {
+                            println!(
+                                "[PASS] {} (Exit Code: 0, Duration: {}ms)",
+                                v_res.command_executed, v_res.duration_ms
+                            );
+                        } else {
+                            println!(
+                                "[FAIL] {} (Exit Code: {}, Duration: {}ms)",
+                                v_res.command_executed, v_res.exit_code, v_res.duration_ms
+                            );
+                            if !v_res.stderr_snippet.is_empty() {
+                                println!("\n--- Stderr Output ---\n{}", v_res.stderr_snippet);
+                            } else if !v_res.stdout_snippet.is_empty() {
+                                println!("\n--- Stdout Output ---\n{}", v_res.stdout_snippet);
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        eprintln!("[ERROR] Test verification failed to execute: {}", e);
                     }
                 }
             }
@@ -1535,6 +1736,63 @@ fn print_cluster_refactor_recommendation(
     }
     println!("\n--- Generated Multi-File Unified Patch Preview ---\n");
     println!("{}", suggestion.unified_patch);
+}
+
+fn print_ast_refactor_recommendation(
+    cluster_id: Option<usize>,
+    result: &cddm_core::AstRewriteResult,
+) {
+    println!("\n=== CDDM — AST-Native Tree-sitter Refactoring Transformation ===");
+    if let Some(cid) = cluster_id {
+        println!("{:<24} Cluster #{}", "Cluster Target:", cid);
+    }
+    println!("{:<24} {}", "Extracted Helper:", result.function_name);
+    println!("{:<24} {}", "Helper Signature:", result.helper_signature);
+    println!("{:<24} {}", "Target Module:", result.target_module_path);
+    println!(
+        "{:<24} {} lines",
+        "Total Lines Saved:", result.total_lines_saved
+    );
+    println!(
+        "{:<24} {}",
+        "Syntax Validated:",
+        if result.syntax_valid {
+            "[PASS]"
+        } else {
+            "[FAIL]"
+        }
+    );
+    println!(
+        "{:<24} {} files",
+        "Rewritten Files:",
+        result.rewritten_files.len()
+    );
+
+    if !result.inferred_parameters.is_empty() {
+        println!("\n--- Inferred Parameters ---");
+        for (i, param) in result.inferred_parameters.iter().enumerate() {
+            println!(
+                "  Param {}: {} ({})",
+                i + 1,
+                param.name,
+                param.inferred_type
+            );
+        }
+    }
+
+    println!("\n--- Synthesized Helper Implementation ---\n");
+    println!("{}", result.helper_function_code);
+
+    println!("--- Transformed Source Files ---");
+    for file in &result.rewritten_files {
+        println!(
+            "  File: {} ({} -> {} lines, {} call sites replaced)",
+            file.file_path, file.original_line_count, file.new_line_count, file.call_sites_count
+        );
+        for imp in &file.imports_added {
+            println!("    + Added Import: {}", imp);
+        }
+    }
 }
 
 fn print_trend_console_report(trend: &cddm_core::TimelineTrend) {
