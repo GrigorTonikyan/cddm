@@ -91,6 +91,7 @@ export interface ScanResult {
   clone_clusters: CloneCluster[];
   duration_ms: number;
   language_breakdown: LanguageStats[];
+  policy_violations?: PolicyViolation[];
 }
 
 /**
@@ -108,6 +109,8 @@ export interface ScanConfig {
   ignore_tests?: boolean;
   ignore_mocks?: boolean;
   ignore_generated?: boolean;
+  rules_path?: string;
+  enforce_policies?: boolean;
 }
 
 /**
@@ -493,4 +496,82 @@ export interface VerifyRefactorResult {
   stdout_snippet: string;
   stderr_snippet: string;
   message: string;
+}
+
+/**
+ * Architectural policy violation severity.
+ */
+export type PolicySeverity = "Error" | "Warning" | "Info";
+
+/**
+ * Architectural boundary rule.
+ */
+export interface BoundaryRule {
+  name: string;
+  description?: string;
+  source: string;
+  forbidden_targets: string[];
+  severity: PolicySeverity;
+}
+
+/**
+ * Zero duplication zone rule.
+ */
+export interface ZeroDuplicationRule {
+  name: string;
+  description?: string;
+  pattern: string;
+  severity: PolicySeverity;
+}
+
+/**
+ * Clone token limit and cluster occurrence rule.
+ */
+export interface LimitRule {
+  name: string;
+  description?: string;
+  pattern: string;
+  max_tokens?: number;
+  max_occurrences?: number;
+  severity: PolicySeverity;
+}
+
+/**
+ * Complete architectural policy configuration.
+ */
+export interface PolicyConfig {
+  boundaries: BoundaryRule[];
+  zero_duplication: ZeroDuplicationRule[];
+  limits: LimitRule[];
+  raw_toml?: string;
+}
+
+/**
+ * Architectural policy violation record.
+ */
+export interface PolicyViolation {
+  rule_name: string;
+  rule_type: string;
+  severity: PolicySeverity;
+  message: string;
+  file_a: string;
+  start_line_a: number;
+  end_line_a: number;
+  file_b?: string;
+  start_line_b?: number;
+  end_line_b?: number;
+  cluster_id?: number;
+  token_count: number;
+}
+
+/**
+ * Architectural policy evaluation result.
+ */
+export interface PolicyEvaluationResult {
+  passed: boolean;
+  total_violations: number;
+  error_count: number;
+  warning_count: number;
+  info_count: number;
+  violations: PolicyViolation[];
 }

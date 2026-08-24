@@ -61,6 +61,7 @@ pub mod mcp_tools {
     pub const GENERATE_AI_PROMPT: &str = "cddm_generate_ai_prompt";
     pub const AST_REFACTOR: &str = "cddm_ast_refactor";
     pub const VERIFY_REFACTOR: &str = "cddm_verify_refactor";
+    pub const CHECK_POLICIES: &str = "cddm_check_policies";
 
     pub const PARAM_DIRECTORY: &str = "directory";
     pub const PARAM_MIN_TOKENS: &str = "min_tokens";
@@ -79,6 +80,7 @@ pub mod mcp_tools {
     pub const PARAM_PATH: &str = "path";
     pub const PARAM_LINE: &str = "line";
     pub const PARAM_CDDMIGNORE: &str = "cddmignore";
+    pub const PARAM_RULES: &str = "rules";
     pub const PARAM_IGNORE_TESTS: &str = "ignore_tests";
     pub const PARAM_IGNORE_MOCKS: &str = "ignore_mocks";
     pub const PARAM_IGNORE_GENERATED: &str = "ignore_generated";
@@ -94,6 +96,7 @@ pub mod mcp_resources {
     pub const URI_WORKSPACE_CLUSTERS: &str = "cddm://workspace/clusters";
     pub const URI_WORKSPACE_TIMELINE: &str = "cddm://workspace/timeline";
     pub const URI_WORKSPACE_SUPPRESSIONS: &str = "cddm://workspace/suppressions";
+    pub const URI_WORKSPACE_POLICIES: &str = "cddm://workspace/policies";
     pub const MIME_APPLICATION_JSON: &str = "application/json";
 }
 
@@ -258,6 +261,8 @@ async fn run_scan_from_mcp_args(
         ignore_tests: false,
         ignore_mocks: false,
         ignore_generated: true,
+        rules_path: None,
+        enforce_policies: false,
     };
 
     let (tx, _rx) = mpsc::channel(100);
@@ -614,6 +619,27 @@ async fn handle_mcp_request(req: JsonRpcRequest) -> Option<JsonRpcResponse> {
                                 }
                             }
                         }
+                    },
+                    {
+                        "name": mcp_tools::CHECK_POLICIES,
+                        "description": "Evaluate architectural boundary and zero-duplication policies against the workspace (.cddmrules.toml).",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                mcp_tools::PARAM_DIRECTORY: {
+                                    "type": "string",
+                                    "description": "Target codebase directory path (default: current directory)"
+                                },
+                                mcp_tools::PARAM_RULES: {
+                                    "type": "string",
+                                    "description": "Custom path to .cddmrules.toml file"
+                                },
+                                mcp_tools::PARAM_MIN_TOKENS: {
+                                    "type": "number",
+                                    "description": format!("Minimum token threshold (default: {})", DEFAULT_MIN_TOKENS)
+                                }
+                            }
+                        }
                     }
                 ]
             })),
@@ -679,6 +705,8 @@ async fn handle_mcp_request(req: JsonRpcRequest) -> Option<JsonRpcResponse> {
                             ignore_tests: false,
                             ignore_mocks: false,
                             ignore_generated: true,
+                            rules_path: None,
+                            enforce_policies: false,
                         };
 
                         let (tx, _rx) = mpsc::channel(100);
@@ -1323,6 +1351,70 @@ async fn handle_mcp_request(req: JsonRpcRequest) -> Option<JsonRpcResponse> {
                     }
                 }
 
+                mcp_tools::CHECK_POLICIES => {
+                    let args = req.params.as_ref().and_then(|p| p.get("arguments"));
+                    let dir = args
+                        .and_then(|a| a.get(mcp_tools::PARAM_DIRECTORY))
+                        .and_then(|d| d.as_str())
+                        .unwrap_or(DEFAULT_DIRECTORY);
+                    let rules_path = args
+                        .and_then(|a| a.get(mcp_tools::PARAM_RULES))
+                        .and_then(|r| r.as_str())
+                        .map(|s| s.to_string());
+                    let min_tokens =
+                        args.and_then(|a| a.get(mcp_tools::PARAM_MIN_TOKENS))
+                            .and_then(|t| t.as_u64())
+                            .unwrap_or(DEFAULT_MIN_TOKENS as u64) as usize;
+
+                    let config = ScanConfig {
+                        directory: dir.to_string(),
+                        min_tokens,
+                        languages: vec![],
+                        ignore_patterns: ScanConfig::default().ignore_patterns,
+                        detect_type2: true,
+                        scan_self: true,
+                        enable_git_blame: false,
+                        cache_dir: None,
+                        enable_cache: true,
+                        cddmignore_path: None,
+                        ignore_tests: false,
+                        ignore_mocks: false,
+                        ignore_generated: true,
+                        rules_path: rules_path.clone(),
+                        enforce_policies: true,
+                    };
+
+                    let (tx, _rx) = mpsc::channel(100);
+                    let cancel_flag = Arc::new(AtomicBool::new(false));
+
+                    match run_scan(config, tx, cancel_flag).await {
+                        Ok(res) => {
+                            let engine = if let Some(ref p) = rules_path {
+                                cddm_core::PolicyEngine::from_file(Path::new(p))
+                                    .unwrap_or_else(|_| cddm_core::PolicyEngine::empty())
+                            } else {
+                                let root_path = Path::new(cddm_core::DEFAULT_RULES_FILE);
+                                if root_path.exists() {
+                                    cddm_core::PolicyEngine::from_file(root_path)
+                                        .unwrap_or_else(|_| cddm_core::PolicyEngine::empty())
+                                } else {
+                                    cddm_core::PolicyEngine::empty()
+                                }
+                            };
+                            let eval = engine.evaluate(&res);
+                            Some(make_text_response(
+                                req.id,
+                                serde_json::to_string_pretty(&eval).unwrap_or_default(),
+                            ))
+                        }
+                        Err(err) => Some(make_error_response(
+                            req.id,
+                            rpc_errors::INTERNAL_ERROR,
+                            format!("Scan failed during policy check: {err}"),
+                        )),
+                    }
+                }
+
                 _ => Some(make_error_response(
                     req.id,
                     rpc_errors::METHOD_NOT_FOUND,
@@ -1364,6 +1456,12 @@ async fn handle_mcp_request(req: JsonRpcRequest) -> Option<JsonRpcResponse> {
                         "uri": mcp_resources::URI_WORKSPACE_SUPPRESSIONS,
                         "name": "Workspace Suppression Rules",
                         "description": "Active .cddmignore suppression rules, threshold overrides, and filter directives.",
+                        "mimeType": mcp_resources::MIME_APPLICATION_JSON
+                    },
+                    {
+                        "uri": mcp_resources::URI_WORKSPACE_POLICIES,
+                        "name": "Workspace Architectural Policy Rules",
+                        "description": "Active .cddmrules.toml boundary and anti-duplication policy rules.",
                         "mimeType": mcp_resources::MIME_APPLICATION_JSON
                     }
                 ]
@@ -1511,6 +1609,30 @@ async fn handle_mcp_request(req: JsonRpcRequest) -> Option<JsonRpcResponse> {
                             "contents": [
                                 {
                                     "uri": mcp_resources::URI_WORKSPACE_SUPPRESSIONS,
+                                    "mimeType": mcp_resources::MIME_APPLICATION_JSON,
+                                    "text": serde_json::to_string_pretty(engine.config()).unwrap_or_default()
+                                }
+                            ]
+                        })),
+                        error: None,
+                    })
+                }
+
+                mcp_resources::URI_WORKSPACE_POLICIES => {
+                    let root_path = Path::new(cddm_core::DEFAULT_RULES_FILE);
+                    let engine = if root_path.exists() {
+                        cddm_core::PolicyEngine::from_file(root_path)
+                            .unwrap_or_else(|_| cddm_core::PolicyEngine::empty())
+                    } else {
+                        cddm_core::PolicyEngine::empty()
+                    };
+                    Some(JsonRpcResponse {
+                        jsonrpc: JSONRPC_VERSION.to_string(),
+                        id: req.id,
+                        result: Some(json!({
+                            "contents": [
+                                {
+                                    "uri": mcp_resources::URI_WORKSPACE_POLICIES,
                                     "mimeType": mcp_resources::MIME_APPLICATION_JSON,
                                     "text": serde_json::to_string_pretty(engine.config()).unwrap_or_default()
                                 }
@@ -1739,7 +1861,7 @@ mod tests {
     #[tokio::test]
     async fn test_mcp_tools_list() {
         let tools = list_mcp_items(mcp_methods::TOOLS_LIST, "tools").await;
-        assert_eq!(tools.len(), 13);
+        assert_eq!(tools.len(), 14);
         let tool_names: Vec<&str> = tools.iter().map(|t| t["name"].as_str().unwrap()).collect();
         assert!(tool_names.contains(&mcp_tools::SCAN_CODEBASE));
         assert!(tool_names.contains(&mcp_tools::GET_CLONE_PAIR));
@@ -1754,6 +1876,7 @@ mod tests {
         assert!(tool_names.contains(&mcp_tools::GENERATE_AI_PROMPT));
         assert!(tool_names.contains(&mcp_tools::AST_REFACTOR));
         assert!(tool_names.contains(&mcp_tools::VERIFY_REFACTOR));
+        assert!(tool_names.contains(&mcp_tools::CHECK_POLICIES));
     }
 
     #[tokio::test]
@@ -1834,7 +1957,7 @@ mod tests {
     #[tokio::test]
     async fn test_mcp_resources_list() {
         let resources = list_mcp_items(mcp_methods::RESOURCES_LIST, "resources").await;
-        assert_eq!(resources.len(), 5);
+        assert_eq!(resources.len(), 6);
         assert_eq!(resources[0]["uri"], mcp_resources::URI_WORKSPACE_HEALTH);
         assert_eq!(resources[1]["uri"], mcp_resources::URI_WORKSPACE_CLONES);
         assert_eq!(resources[2]["uri"], mcp_resources::URI_WORKSPACE_CLUSTERS);
@@ -1843,6 +1966,7 @@ mod tests {
             resources[4]["uri"],
             mcp_resources::URI_WORKSPACE_SUPPRESSIONS
         );
+        assert_eq!(resources[5]["uri"], mcp_resources::URI_WORKSPACE_POLICIES);
     }
 
     #[tokio::test]
@@ -2093,5 +2217,45 @@ mod tests {
             .unwrap()
             .to_string();
         assert!(text.contains("cargo"));
+    }
+
+    #[tokio::test]
+    async fn test_mcp_check_policies_tool_and_resource() {
+        let tools = list_mcp_items(mcp_methods::TOOLS_LIST, "tools").await;
+        assert!(tools.iter().any(|t| t["name"] == mcp_tools::CHECK_POLICIES));
+
+        let resources = list_mcp_items(mcp_methods::RESOURCES_LIST, "resources").await;
+        assert!(
+            resources
+                .iter()
+                .any(|r| r["uri"] == mcp_resources::URI_WORKSPACE_POLICIES)
+        );
+
+        let resp_call = handle_mcp_request(make_test_req(
+            60,
+            mcp_methods::TOOLS_CALL,
+            Some(json!({
+                "name": mcp_tools::CHECK_POLICIES,
+                "arguments": {
+                    "directory": "."
+                }
+            })),
+        ))
+        .await
+        .expect("Expected response");
+
+        assert!(resp_call.error.is_none());
+
+        let resp_read = handle_mcp_request(make_test_req(
+            61,
+            mcp_methods::RESOURCES_READ,
+            Some(json!({
+                "uri": mcp_resources::URI_WORKSPACE_POLICIES
+            })),
+        ))
+        .await
+        .expect("Expected response");
+
+        assert!(resp_read.error.is_none());
     }
 }

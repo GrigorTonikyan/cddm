@@ -30,6 +30,8 @@ export const API_ROUTES = {
   REFACTOR_AI_PROMPT: "/api/refactor/ai-prompt",
   REFACTOR_AST: "/api/refactor/ast",
   REFACTOR_VERIFY: "/api/refactor/verify",
+  POLICY_RULES: "/api/policy/rules",
+  POLICY_EVALUATE: "/api/policy/evaluate",
 } as const;
 
 /**

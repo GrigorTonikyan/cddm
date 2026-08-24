@@ -77,6 +77,21 @@ pub fn generate_pr_markdown_comment(
         out.push('\n');
     }
 
+    if !scan_result.policy_violations.is_empty() {
+        out.push_str("### Architectural Policy Violations\n\n");
+        out.push_str("| Rule | Type | Severity | Location | Message |\n");
+        out.push_str("| :--- | :--- | :--- | :--- | :--- |\n");
+
+        for v in scan_result.policy_violations.iter().take(5) {
+            let loc = format!("{}:{}-{}", v.file_a, v.start_line_a, v.end_line_a);
+            out.push_str(&format!(
+                "| `{}` | `{}` | `{}` | `{}` | {} |\n",
+                v.rule_name, v.rule_type, v.severity, loc, v.message
+            ));
+        }
+        out.push('\n');
+    }
+
     out.push_str("### Developer Action Guide\n\n");
     out.push_str("To reproduce this analysis locally:\n");
     out.push_str("```bash\n");
@@ -125,6 +140,7 @@ mod tests {
             clone_clusters: vec![],
             duration_ms: 120,
             language_breakdown: vec![],
+            policy_violations: vec![],
         };
 
         let comment = generate_pr_markdown_comment(&scan_result, 15.0, WorkflowPlatform::GitHub);
@@ -152,15 +168,16 @@ mod tests {
                 start_line_b: 15,
                 end_line_b: 35,
                 token_count: 85,
-                similarity: 0.92,
+                similarity: 1.0,
                 fragment_hash: "hash123".to_string(),
-                clone_type: CloneType::Renamed,
+                clone_type: CloneType::Exact,
                 author_a: None,
                 author_b: None,
             }],
             clone_clusters: vec![],
             duration_ms: 250,
             language_breakdown: vec![],
+            policy_violations: vec![],
         };
 
         let comment = generate_pr_markdown_comment(&scan_result, 15.0, WorkflowPlatform::GitLab);

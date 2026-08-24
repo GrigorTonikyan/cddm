@@ -1,11 +1,12 @@
 use crate::cache::{CACHE_SCHEMA_VERSION, CachedFileEntry, DiskFingerprintCache};
 use crate::fingerprint::{Fingerprint, MIN_K_GRAM, WINDOW_OFFSET, winnow};
 use crate::grammar::get_grammar_for_path;
+use crate::policy::PolicyEngine;
 use crate::suppression::SuppressionEngine;
 use crate::tokenizer::tokenize;
 use crate::types::{
-    ClonePair, CloneType, DEFAULT_CACHE_FILE, LanguageStats, MAX_HEALTH_SCORE, MIN_HEALTH_SCORE,
-    ScanConfig, ScanPhase, ScanProgress, ScanResult,
+    ClonePair, CloneType, DEFAULT_CACHE_FILE, DEFAULT_RULES_FILE, LanguageStats, MAX_HEALTH_SCORE,
+    MIN_HEALTH_SCORE, ScanConfig, ScanPhase, ScanProgress, ScanResult,
 };
 use ignore::WalkBuilder;
 use rayon::prelude::*;
@@ -94,6 +95,17 @@ pub async fn run_scan(
         }
     };
 
+    let policy_engine = if let Some(path_str) = &config.rules_path {
+        PolicyEngine::from_file(Path::new(path_str)).unwrap_or_else(|_| PolicyEngine::empty())
+    } else {
+        let root_rules = Path::new(&config.directory).join(DEFAULT_RULES_FILE);
+        if root_rules.exists() {
+            PolicyEngine::from_file(&root_rules).unwrap_or_else(|_| PolicyEngine::empty())
+        } else {
+            PolicyEngine::empty()
+        }
+    };
+
     let walker = WalkBuilder::new(&config.directory);
 
     let mut files_to_process = Vec::new();
@@ -134,6 +146,7 @@ pub async fn run_scan(
             clone_clusters: vec![],
             duration_ms: start_time.elapsed().as_millis() as u64,
             language_breakdown: vec![],
+            policy_violations: vec![],
         });
     }
 
@@ -585,7 +598,7 @@ pub async fn run_scan(
     let clone_clusters = crate::cluster::cluster_clone_pairs(&merged_pairs);
     let total_clusters = clone_clusters.len();
 
-    Ok(ScanResult {
+    let mut scan_result = ScanResult {
         scan_id,
         total_files,
         total_tokens,
@@ -597,7 +610,13 @@ pub async fn run_scan(
         clone_clusters,
         duration_ms: start_time.elapsed().as_millis() as u64,
         language_breakdown,
-    })
+        policy_violations: Vec::new(),
+    };
+
+    let policy_eval = policy_engine.evaluate(&scan_result);
+    scan_result.policy_violations = policy_eval.violations;
+
+    Ok(scan_result)
 }
 
 #[cfg(test)]
@@ -621,6 +640,8 @@ mod tests {
             ignore_tests: false,
             ignore_mocks: false,
             ignore_generated: true,
+            rules_path: None,
+            enforce_policies: false,
         }
     }
 
@@ -897,6 +918,142 @@ mod tests {
                 .language_breakdown
                 .iter()
                 .any(|l| l.language == "Java")
+        );
+    }
+
+    #[tokio::test]
+    async fn test_polyglot_expansion_scan() {
+        use tempfile::tempdir;
+        let dir = tempdir().unwrap();
+
+        let zig_code = r#"
+            const std = @import("std");
+            pub fn computeSum(a: i32, b: i32, c: i32, d: i32) i32 {
+                const total = a + b + c + d + 100;
+                std.debug.print("Calculated sum: {d}\n", .{total});
+                return total * 2;
+            }
+        "#;
+        write_test_file(dir.path().join("a.zig"), zig_code);
+        write_test_file(dir.path().join("b.zig"), zig_code);
+
+        let scala_code = r#"
+            object Helper {
+                def processData(input: String, prefix: String, suffix: String): String = {
+                    val formatted = prefix + "_" + input.trim.toUpperCase + "_" + suffix
+                    println(s"Processing string payload: $formatted")
+                    formatted + "_PROCESSED"
+                }
+            }
+        "#;
+        write_test_file(dir.path().join("a.scala"), scala_code);
+        write_test_file(dir.path().join("b.scala"), scala_code);
+
+        let elixir_code = r#"
+            defmodule Calculator do
+                def multiply_and_add(a, b, c, d) do
+                    sum = a + b + c + d
+                    result = sum * 2 + 42
+                    IO.puts("Result calculation computed: #{result}")
+                    result
+                end
+            end
+        "#;
+        write_test_file(dir.path().join("calc1.ex"), elixir_code);
+        write_test_file(dir.path().join("calc2.ex"), elixir_code);
+
+        let sql_code = r#"
+            SELECT u.id, u.username, u.email, COUNT(p.id) as post_count, SUM(p.views) as total_views
+            FROM users u
+            INNER JOIN posts p ON u.id = p.user_id
+            WHERE u.active = 1 AND u.created_at >= '2026-01-01'
+            GROUP BY u.id, u.username, u.email
+            HAVING post_count > 5 AND total_views > 1000
+            ORDER BY post_count DESC, total_views DESC;
+        "#;
+        write_test_file(dir.path().join("query1.sql"), sql_code);
+        write_test_file(dir.path().join("query2.sql"), sql_code);
+
+        let config = make_test_config(&dir.path().to_string_lossy(), 15);
+        let result = run_test_scan(config).await.unwrap();
+
+        assert_eq!(result.total_files, 8);
+        assert!(result.total_clones >= 4);
+        assert!(
+            result
+                .language_breakdown
+                .iter()
+                .any(|l| l.language == "Zig")
+        );
+        assert!(
+            result
+                .language_breakdown
+                .iter()
+                .any(|l| l.language == "Scala")
+        );
+        assert!(
+            result
+                .language_breakdown
+                .iter()
+                .any(|l| l.language == "Elixir")
+        );
+        assert!(
+            result
+                .language_breakdown
+                .iter()
+                .any(|l| l.language == "SQL")
+        );
+    }
+
+    #[tokio::test]
+    async fn test_scan_with_policy_engine() {
+        use tempfile::tempdir;
+        let dir = tempdir().unwrap();
+
+        std::fs::create_dir_all(dir.path().join("src/domain")).unwrap();
+        std::fs::create_dir_all(dir.path().join("src/presentation")).unwrap();
+        std::fs::create_dir_all(dir.path().join("src/auth")).unwrap();
+
+        let code = r#"
+            pub fn validate_credentials(user: &str, pass: &str) -> bool {
+                let valid = user.len() > 3 && pass.len() > 8;
+                valid
+            }
+        "#;
+        write_test_file(dir.path().join("src/domain/user.rs"), code);
+        write_test_file(dir.path().join("src/presentation/user.rs"), code);
+        write_test_file(dir.path().join("src/auth/auth_helper.rs"), code);
+
+        let rules_toml = r#"
+[[boundaries]]
+name = "domain-isolation"
+source = "src/domain/**"
+forbidden_targets = ["src/presentation/**"]
+severity = "error"
+
+[[zero_duplication]]
+name = "auth-protection"
+pattern = "src/auth/**"
+severity = "error"
+"#;
+        write_test_file(dir.path().join(".cddmrules.toml"), rules_toml);
+
+        let config = make_test_config(&dir.path().to_string_lossy(), 10);
+        let result = run_test_scan(config).await.unwrap();
+
+        assert!(result.total_clones >= 1);
+        assert!(!result.policy_violations.is_empty());
+        assert!(
+            result
+                .policy_violations
+                .iter()
+                .any(|v| v.rule_name == "domain-isolation")
+        );
+        assert!(
+            result
+                .policy_violations
+                .iter()
+                .any(|v| v.rule_name == "auth-protection")
         );
     }
 }

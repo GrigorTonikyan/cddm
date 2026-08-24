@@ -157,6 +157,36 @@ pub fn generate_workspace_diagnostics(
         }
     }
 
+    for violation in &scan_result.policy_violations {
+        let path = if Path::new(&violation.file_a).is_absolute() {
+            PathBuf::from(&violation.file_a)
+        } else {
+            workspace_root.join(&violation.file_a)
+        };
+
+        if let Some(url) = path_to_url(&path) {
+            let range = line_range_to_lsp_range(violation.start_line_a, violation.end_line_a);
+            let sev = match violation.severity {
+                cddm_core::PolicySeverity::Error => DiagnosticSeverity::ERROR,
+                cddm_core::PolicySeverity::Warning => DiagnosticSeverity::WARNING,
+                cddm_core::PolicySeverity::Info => DiagnosticSeverity::INFORMATION,
+            };
+            let code = format!("CDDM-Policy-{}", violation.rule_name);
+            let diag = Diagnostic {
+                range,
+                severity: Some(sev),
+                code: Some(NumberOrString::String(code)),
+                code_description: None,
+                source: Some("CDDM-Policy".to_string()),
+                message: violation.message.clone(),
+                related_information: None,
+                tags: None,
+                data: None,
+            };
+            file_diagnostics.entry(url).or_default().push(diag);
+        }
+    }
+
     file_diagnostics
 }
 

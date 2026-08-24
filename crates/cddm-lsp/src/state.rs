@@ -54,6 +54,8 @@ impl ServerStateInner {
             ignore_tests: false,
             ignore_mocks: false,
             ignore_generated: true,
+            rules_path: None,
+            enforce_policies: false,
         }
     }
 }

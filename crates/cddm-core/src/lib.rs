@@ -8,6 +8,7 @@ pub mod diff;
 pub mod fingerprint;
 pub mod grammar;
 pub mod io;
+pub mod policy;
 pub mod pr_comment;
 pub mod refactor;
 pub mod sarif;
@@ -25,6 +26,7 @@ pub use cluster::cluster_clone_pairs;
 pub use detector::run_scan;
 pub use diff::{get_changed_files_between_refs, run_diff_scan};
 pub use io::{FileSource, MMAP_THRESHOLD_BYTES, read_file_source};
+pub use policy::PolicyEngine;
 pub use pr_comment::generate_pr_markdown_comment;
 pub use refactor::{
     ApplyPatchResult, ClusterRefactorSuggestion, ClusterSiteRefactor, ParameterDifference,
@@ -39,13 +41,14 @@ pub use suppression::SuppressionEngine;
 pub use timeline::collect_git_timeline;
 pub use types::{
     ApplyRefactorBranchRequest, ApplyRefactorBranchResult, AstRewriteResult, AstRewrittenFile,
-    CloneCluster, CloneLocation, ClonePair, CloneStatus, CloneType, DEFAULT_CACHE_FILE,
-    DEFAULT_DIRECTORY, DEFAULT_IGNORE_PATTERNS, DEFAULT_MIN_TOKENS, DiffClonePair, DiffScanResult,
-    DiffSummary, FileChurnMetric, HookStatus, InferredParameter, LanguageStats, LineSpan,
-    MAX_HEALTH_SCORE, MIN_HEALTH_SCORE, NormalizedToken, RefactorSandboxRequest,
-    RefactorSandboxResult, ScanConfig, ScanPhase, ScanProgress, ScanResult, SuppressionConfig,
-    SuppressionDirective, SuppressionRule, TimelineSnapshot, TimelineTrend, VerifyRefactorRequest,
-    VerifyRefactorResult, WorkflowPlatform,
+    BoundaryRule, CloneCluster, CloneLocation, ClonePair, CloneStatus, CloneType,
+    DEFAULT_CACHE_FILE, DEFAULT_DIRECTORY, DEFAULT_IGNORE_PATTERNS, DEFAULT_MIN_TOKENS,
+    DEFAULT_RULES_FILE, DiffClonePair, DiffScanResult, DiffSummary, FileChurnMetric, HookStatus,
+    InferredParameter, LanguageStats, LimitRule, LineSpan, MAX_HEALTH_SCORE, MIN_HEALTH_SCORE,
+    NormalizedToken, PolicyConfig, PolicyEvaluationResult, PolicySeverity, PolicyViolation,
+    RefactorSandboxRequest, RefactorSandboxResult, ScanConfig, ScanPhase, ScanProgress, ScanResult,
+    SuppressionConfig, SuppressionDirective, SuppressionRule, TimelineSnapshot, TimelineTrend,
+    VerifyRefactorRequest, VerifyRefactorResult, WorkflowPlatform, ZeroDuplicationRule,
 };
 pub use watcher::CddmWatcher;
 pub use workflow::{

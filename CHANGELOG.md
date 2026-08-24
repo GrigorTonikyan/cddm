@@ -5,6 +5,20 @@ All notable changes to **CDDM** (_Code De-Duplication Meister_) will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] - 2026-08-24
+
+### Features
+
+- **policy**: implement architectural boundary isolation, zero-duplication critical zones, and clone limit policy engine via `.cddmrules.toml` (`cddm-core::policy`)
+- **polyglot**: expand native Tree-sitter AST engine to 22 languages with Kotlin, Zig, Scala, Elixir, SQL, and Dockerfile parsers (`cddm-core::ast::parser`, `cddm-core::grammar`)
+- **cli**: add `cddm rules init` and `cddm rules check` subcommands, plus `--rules` and `--enforce-policies` options to `scan`, `diff`, and `rules` commands
+- **sarif**: map architectural policy violations to SARIF 2.1.0 rules (`CDDM_BOUNDARY`, `CDDM_ZERO_DUP`, `CDDM_LIMIT`) with counterpart `relatedLocations`
+- **api**: expose `GET/POST /api/policy/rules` and `POST /api/policy/evaluate` Axum endpoints
+- **lsp**: surface real-time architectural policy violation diagnostics in IDEs (`cddm-lsp::diagnostics`)
+- **mcp**: add `cddm_check_policies` tool and `cddm://workspace/policies` resource to MCP server
+- **webui**: integrate `PolicyRulesModal` Studio with active policy inspector, violation cards, and live `.cddmrules.toml` TOML editor
+- **ci**: add Architectural Policy Violations table to PR/MR quality gate comments (`cddm-core::pr_comment`)
+
 ## [1.6.0] - 2026-08-24
 
 ### Features

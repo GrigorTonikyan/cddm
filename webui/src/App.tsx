@@ -8,12 +8,14 @@ import { useCDDMStore } from "./store/cddm-store";
 import { TimelineExplorerModal } from "./components/TimelineExplorerModal";
 import { SuppressionRulesModal } from "./components/SuppressionRulesModal";
 import { RefactorSandboxModal } from "./components/RefactorSandboxModal";
+import { PolicyRulesModal } from "./components/PolicyRulesModal";
 import {
   Scissors,
   Terminal,
   Sparkles,
   ShieldCheck,
   ShieldAlert,
+  Scale,
   Sliders,
   Award,
   FileDown,
@@ -41,6 +43,8 @@ export const App: React.FC = () => {
     setIsSuppressionModalOpen,
     isRefactorSandboxOpen,
     setIsRefactorSandboxOpen,
+    isPolicyRulesModalOpen,
+    setIsPolicyRulesModalOpen,
   } = useCDDMStore();
 
   return (
@@ -116,6 +120,15 @@ export const App: React.FC = () => {
           >
             <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
             <span>Suppression Rules</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsPolicyRulesModalOpen(true)}
+            className="px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 hover:bg-slate-800 text-slate-300 flex items-center gap-1.5 transition-colors shadow-sm"
+          >
+            <Scale className="w-3.5 h-3.5 text-purple-400" />
+            <span>Policy Studio</span>
           </button>
 
           {results && (
@@ -199,6 +212,12 @@ export const App: React.FC = () => {
       <RefactorSandboxModal
         isOpen={isRefactorSandboxOpen}
         onClose={() => setIsRefactorSandboxOpen(false)}
+      />
+
+      {/* Architectural Policy Rules Studio Modal */}
+      <PolicyRulesModal
+        isOpen={isPolicyRulesModalOpen}
+        onClose={() => setIsPolicyRulesModalOpen(false)}
       />
 
       {/* Footer */}

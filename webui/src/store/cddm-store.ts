@@ -53,6 +53,7 @@ export interface CDDMStoreState {
   isTimelineModalOpen: boolean;
   isSuppressionModalOpen: boolean;
   isRefactorSandboxOpen: boolean;
+  isPolicyRulesModalOpen: boolean;
 
   /** Historical timeline data and loading state */
   timelineData: import("../types/cddm-types").TimelineTrend | null;
@@ -64,6 +65,11 @@ export interface CDDMStoreState {
   suppressionConfig: import("../types/cddm-types").SuppressionConfig | null;
   isSuppressionLoading: boolean;
   suppressionError: string | null;
+
+  /** Policy rules state */
+  policyConfig: import("../types/cddm-types").PolicyConfig | null;
+  isPolicyLoading: boolean;
+  policyError: string | null;
 
   /** Refactor sandbox state */
   sandboxRequest: import("../types/cddm-types").RefactorSandboxRequest | null;
@@ -101,24 +107,27 @@ export interface CDDMStoreState {
   /** Applies synthesized refactoring patch directly to workspace */
   applyPatch: (patch: string, dryRun?: boolean) => Promise<ApplyPatchResult>;
 
-  /** Fetches Git timeline historical duplication data */
+  /** Historical timeline & git hooks */
   fetchTimeline: (directory?: string, maxSamples?: number, minTokens?: number) => Promise<void>;
-  /** Fetches Git hook installation status */
   fetchHookStatus: (directory?: string) => Promise<void>;
-  /** Installs a Git hook for automated quality enforcement */
   installHook: (hookType: string, failThreshold?: number, minTokens?: number) => Promise<string>;
 
-  /** Fetches active suppression configuration */
+  /** Suppression rules management */
   fetchSuppressionRules: () => Promise<void>;
-  /** Saves updated suppression rules and .cddmignore */
   saveSuppressionRules: (config: import("../types/cddm-types").SuppressionConfig) => Promise<void>;
-  /** Opens the interactive refactor sandbox modal and loads preview */
+
+  /** Policy rules management */
+  fetchPolicyRules: () => Promise<void>;
+  savePolicyRules: (config: import("../types/cddm-types").PolicyConfig) => Promise<void>;
+  evaluatePolicyRules: (
+    directory?: string,
+  ) => Promise<import("../types/cddm-types").PolicyEvaluationResult>;
+
+  /** Refactor sandbox management */
   openRefactorSandbox: (req: import("../types/cddm-types").RefactorSandboxRequest) => Promise<void>;
-  /** Runs sandbox preview with updated parameters */
   previewRefactorSandbox: (
     req: import("../types/cddm-types").RefactorSandboxRequest,
   ) => Promise<import("../types/cddm-types").RefactorSandboxResult>;
-  /** Synthesizes an AST-native tree-sitter refactoring preview */
   previewAstRefactor: (
     req: import("../types/cddm-types").RefactorSandboxRequest,
   ) => Promise<import("../types/cddm-types").AstRewriteResult>;
@@ -145,6 +154,7 @@ export interface CDDMStoreState {
   setIsTimelineModalOpen: (open: boolean) => void;
   setIsSuppressionModalOpen: (open: boolean) => void;
   setIsRefactorSandboxOpen: (open: boolean) => void;
+  setIsPolicyRulesModalOpen: (open: boolean) => void;
 }
 
 /**
@@ -176,6 +186,7 @@ export const useCDDMStore = create<CDDMStoreState>((set, get) => ({
   isTimelineModalOpen: false,
   isSuppressionModalOpen: false,
   isRefactorSandboxOpen: false,
+  isPolicyRulesModalOpen: false,
 
   timelineData: null,
   isTimelineLoading: false,
@@ -185,6 +196,10 @@ export const useCDDMStore = create<CDDMStoreState>((set, get) => ({
   suppressionConfig: null,
   isSuppressionLoading: false,
   suppressionError: null,
+
+  policyConfig: null,
+  isPolicyLoading: false,
+  policyError: null,
 
   sandboxRequest: null,
   sandboxResult: null,
@@ -227,6 +242,61 @@ export const useCDDMStore = create<CDDMStoreState>((set, get) => ({
     }
   },
   setIsRefactorSandboxOpen: (isRefactorSandboxOpen) => set({ isRefactorSandboxOpen }),
+  setIsPolicyRulesModalOpen: (isPolicyRulesModalOpen) => {
+    set({ isPolicyRulesModalOpen });
+    if (isPolicyRulesModalOpen && !get().policyConfig && !get().isPolicyLoading) {
+      void get().fetchPolicyRules();
+    }
+  },
+
+  fetchPolicyRules: async () => {
+    set({ isPolicyLoading: true, policyError: null });
+    try {
+      const res = await fetch(API_ROUTES.POLICY_RULES);
+      if (!res.ok) {
+        throw new Error(`Failed to fetch policy rules (${res.status})`);
+      }
+      const data = await res.json();
+      set({ policyConfig: data, isPolicyLoading: false, policyError: null });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to load policy rules";
+      set({ policyError: msg, isPolicyLoading: false });
+    }
+  },
+
+  savePolicyRules: async (config) => {
+    set({ isPolicyLoading: true, policyError: null });
+    try {
+      const res = await fetch(API_ROUTES.POLICY_RULES, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(config),
+      });
+      if (!res.ok) {
+        throw new Error(`Failed to save policy rules (${res.status})`);
+      }
+      set({ policyConfig: config, isPolicyLoading: false, policyError: null });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to save policy rules";
+      set({ policyError: msg, isPolicyLoading: false });
+      throw err;
+    }
+  },
+
+  evaluatePolicyRules: async (directory?: string) => {
+    const { config } = get();
+    const dir = directory ?? config.directory;
+    const res = await fetch(API_ROUTES.POLICY_EVALUATE, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ directory: dir }),
+    });
+    if (!res.ok) {
+      const errorText = await res.text().catch(() => res.statusText);
+      throw new Error(`Policy evaluation failed (${res.status}): ${errorText}`);
+    }
+    return await res.json();
+  },
 
   fetchSuppressionRules: async () => {
     set({ isSuppressionLoading: true, suppressionError: null });
@@ -551,10 +621,13 @@ export const useCDDMStore = create<CDDMStoreState>((set, get) => ({
       isTimelineModalOpen: false,
       isSuppressionModalOpen: false,
       isRefactorSandboxOpen: false,
+      isPolicyRulesModalOpen: false,
       timelineData: null,
       timelineError: null,
       suppressionConfig: null,
       suppressionError: null,
+      policyConfig: null,
+      policyError: null,
       sandboxRequest: null,
       sandboxResult: null,
       sandboxError: null,

@@ -21,6 +21,12 @@ pub fn get_tree_sitter_language(extension: &str) -> Option<Language> {
         "lua" => Some(tree_sitter_lua::LANGUAGE.into()),
         "json" => Some(tree_sitter_json::LANGUAGE.into()),
         "html" | "htm" => Some(tree_sitter_html::LANGUAGE.into()),
+        "kt" | "kts" => Some(tree_sitter_kotlin_ng::LANGUAGE.into()),
+        "zig" | "zon" => Some(tree_sitter_zig::LANGUAGE.into()),
+        "scala" | "sc" => Some(tree_sitter_scala::LANGUAGE.into()),
+        "ex" | "exs" => Some(tree_sitter_elixir::LANGUAGE.into()),
+        "sql" | "dsql" => Some(tree_sitter_sequel::LANGUAGE.into()),
+        "dockerfile" | "containerfile" => Some(tree_sitter_containerfile::LANGUAGE.into()),
         _ => None,
     }
 }
@@ -170,5 +176,59 @@ mod tests {
         let tree = parse_ast_tree(code, "html").expect("HTML AST parsing failed");
         let root = tree.root_node();
         assert_eq!(root.kind(), "document");
+    }
+
+    #[test]
+    fn test_parse_kotlin_ast() {
+        let code = "package app\n\nfun main(args: Array<String>) {\n    val msg = \"Hello \
+                    Kotlin\"\n    println(msg)\n}\n";
+        let tree = parse_ast_tree(code, "kt").expect("Kotlin AST parsing failed");
+        let root = tree.root_node();
+        assert!(root.child_count() > 0);
+    }
+
+    #[test]
+    fn test_parse_zig_ast() {
+        let code = "const std = @import(\"std\");\npub fn main() void {\n    const stdout = \
+                    std.io.getStdOut().writer();\n}\n";
+        let tree = parse_ast_tree(code, "zig").expect("Zig AST parsing failed");
+        let root = tree.root_node();
+        assert!(root.child_count() > 0);
+    }
+
+    #[test]
+    fn test_parse_scala_ast() {
+        let code = "object Main {\n  def main(args: Array[String]): Unit = {\n    val greeting = \
+                    \"Hello Scala\"\n    println(greeting)\n  }\n}\n";
+        let tree = parse_ast_tree(code, "scala").expect("Scala AST parsing failed");
+        let root = tree.root_node();
+        assert!(root.child_count() > 0);
+    }
+
+    #[test]
+    fn test_parse_elixir_ast() {
+        let code = "defmodule Math do\n  def double(x) do\n    x * 2\n  end\nend\n";
+        let tree = parse_ast_tree(code, "ex").expect("Elixir AST parsing failed");
+        let root = tree.root_node();
+        assert!(root.child_count() > 0);
+    }
+
+    #[test]
+    fn test_parse_sql_ast() {
+        let code = "SELECT u.id, u.name, COUNT(o.id) as order_count FROM users u LEFT JOIN orders \
+                    o ON u.id = o.user_id WHERE u.active = 1 GROUP BY u.id, u.name ORDER BY \
+                    order_count DESC;";
+        let tree = parse_ast_tree(code, "sql").expect("SQL AST parsing failed");
+        let root = tree.root_node();
+        assert!(root.child_count() > 0);
+    }
+
+    #[test]
+    fn test_parse_dockerfile_ast() {
+        let code = "FROM rust:1.85 as builder\nWORKDIR /app\nCOPY . .\nRUN cargo build \
+                    --release\nCMD [\"./target/release/cddm\"]\n";
+        let tree = parse_ast_tree(code, "dockerfile").expect("Dockerfile AST parsing failed");
+        let root = tree.root_node();
+        assert!(root.child_count() > 0);
     }
 }

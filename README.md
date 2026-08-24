@@ -8,8 +8,8 @@
 [![Vite Plus](https://img.shields.io/badge/vite%2B-0.2.9-purple.svg)](https://viteplus.dev)
 [![TypeScript](https://img.shields.io/badge/typescript-7.0-blue.svg)](https://www.typescriptlang.org)
 [![React](https://img.shields.io/badge/react-19.2-61dafb.svg)](https://react.dev)
-[![npm version](https://img.shields.io/badge/npm-1.6.0-red.svg)](https://www.npmjs.com/package/cddm)
-[![crates.io](https://img.shields.io/badge/crates.io-1.6.0-brightgreen.svg)](https://crates.io/crates/cddm)
+[![npm version](https://img.shields.io/badge/npm-1.7.0-red.svg)](https://www.npmjs.com/package/cddm)
+[![crates.io](https://img.shields.io/badge/crates.io-1.7.0-brightgreen.svg)](https://crates.io/crates/cddm)
 
 ---
 
@@ -55,6 +55,7 @@ Whether integrated into **CI/CD pipelines**, used via the **Terminal CLI**, expl
 | **Language Server (LSP)**        | Real-time in-editor duplicate code diagnostics, one-click refactoring code actions, and hover tooltips for IDEs (`cddm-lsp`).          |
 | **Embedded Studio WebUI**        | High-performance interactive React 19 dashboard served directly from the single compiled binary via `axum` & `rust-embed`.             |
 | **AI Agent MCP Server**          | Stdio JSON-RPC 2.0 protocol (`cddm-mcp`) allowing AI assistants (Claude, Antigravity, Cursor) to inspect duplication programmatically. |
+| **Boundary Policy Engine**       | Enforce cross-layer boundary isolation, zero-duplication zones, and token caps via `.cddmrules.toml`.                                  |
 | **Rayon Parallel Pipeline**      | Multi-threaded file discovery, AST parsing, and fingerprint indexing across all available CPU cores.                                   |
 
 ---

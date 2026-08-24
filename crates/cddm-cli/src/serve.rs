@@ -74,6 +74,12 @@ pub const ROUTE_API_REFACTOR_AST: &str = "/api/refactor/ast";
 /// API endpoint path for closed-loop test suite verification.
 pub const ROUTE_API_REFACTOR_VERIFY: &str = "/api/refactor/verify";
 
+/// API endpoint path for architectural policy rules retrieval and configuration.
+pub const ROUTE_API_POLICY_RULES: &str = "/api/policy/rules";
+
+/// API endpoint path for on-demand policy evaluation against scan results.
+pub const ROUTE_API_POLICY_EVALUATE: &str = "/api/policy/evaluate";
+
 /// Default localhost IPv4 binding.
 pub const DEFAULT_HOST_IP: [u8; 4] = [127, 0, 0, 1];
 
@@ -238,6 +244,11 @@ pub fn build_app_with_state(state: AppState) -> Router {
             ROUTE_API_SUPPRESSION_RULES,
             get(suppression_rules_get_handler).post(suppression_rules_post_handler),
         )
+        .route(
+            ROUTE_API_POLICY_RULES,
+            get(policy_rules_get_handler).post(policy_rules_post_handler),
+        )
+        .route(ROUTE_API_POLICY_EVALUATE, post(policy_evaluate_handler))
         .route(ROUTE_API_REFACTOR_SANDBOX, post(refactor_sandbox_handler))
         .route(
             ROUTE_API_REFACTOR_APPLY_BRANCH,
@@ -592,6 +603,63 @@ async fn suppression_rules_post_handler(
         "status": "ok",
         "message": "Successfully saved .cddmignore suppression rules"
     })))
+}
+
+async fn policy_rules_get_handler() -> Json<cddm_core::PolicyConfig> {
+    let root_path = Path::new(cddm_core::DEFAULT_RULES_FILE);
+    let engine = if root_path.exists() {
+        cddm_core::PolicyEngine::from_file(root_path)
+            .unwrap_or_else(|_| cddm_core::PolicyEngine::empty())
+    } else {
+        cddm_core::PolicyEngine::empty()
+    };
+    Json(engine.config().clone())
+}
+
+async fn policy_rules_post_handler(
+    Json(config): Json<cddm_core::PolicyConfig>,
+) -> Result<Json<serde_json::Value>, (StatusCode, String)> {
+    let engine = cddm_core::PolicyEngine::new(config).map_err(|e| (StatusCode::BAD_REQUEST, e))?;
+    let raw_toml = engine
+        .to_toml_string()
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))?;
+    fs::write(cddm_core::DEFAULT_RULES_FILE, &raw_toml).map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("Failed to save .cddmrules.toml: {e}"),
+        )
+    })?;
+    Ok(Json(serde_json::json!({
+        "status": "ok",
+        "message": "Successfully saved .cddmrules.toml architectural policy rules"
+    })))
+}
+
+async fn policy_evaluate_handler(
+    State(state): State<AppState>,
+    Json(config): Json<Option<cddm_core::PolicyConfig>>,
+) -> Result<Json<cddm_core::PolicyEvaluationResult>, (StatusCode, String)> {
+    let engine = if let Some(cfg) = config {
+        cddm_core::PolicyEngine::new(cfg).map_err(|e| (StatusCode::BAD_REQUEST, e))?
+    } else {
+        let root_path = Path::new(cddm_core::DEFAULT_RULES_FILE);
+        if root_path.exists() {
+            cddm_core::PolicyEngine::from_file(root_path)
+                .map_err(|e| (StatusCode::BAD_REQUEST, e))?
+        } else {
+            cddm_core::PolicyEngine::empty()
+        }
+    };
+
+    let latest_lock = state.latest_result.read().await;
+    if let Some(ref scan_result) = *latest_lock {
+        Ok(Json(engine.evaluate(scan_result)))
+    } else {
+        Err((
+            StatusCode::NOT_FOUND,
+            "No active scan results available to evaluate".to_string(),
+        ))
+    }
 }
 
 async fn refactor_sandbox_handler(
@@ -1042,5 +1110,69 @@ mod tests {
         assert_eq!(body.function_name, "ast_shared_compute");
         assert!(body.helper_function_code.contains("ast_shared_compute"));
         assert_eq!(body.rewritten_files.len(), 2);
+    }
+
+    #[tokio::test]
+    async fn test_policy_rules_get_and_post_handlers() {
+        let (state, _) = build_app();
+        let get_res = policy_rules_get_handler().await;
+        let Json(cfg) = get_res;
+        assert!(cfg.boundaries.is_empty() || !cfg.boundaries.is_empty());
+
+        let new_cfg = cddm_core::PolicyConfig {
+            boundaries: vec![cddm_core::BoundaryRule {
+                name: "test-boundary".to_string(),
+                description: None,
+                source: "src/domain/**".to_string(),
+                forbidden_targets: vec!["src/web/**".to_string()],
+                severity: cddm_core::PolicySeverity::Error,
+            }],
+            zero_duplication: vec![],
+            limits: vec![],
+            raw_toml: None,
+        };
+
+        let post_res = policy_rules_post_handler(Json(new_cfg.clone())).await;
+        assert!(post_res.is_ok());
+
+        // Test evaluate handler with active scan result
+        let scan_result = ScanResult {
+            scan_id: "test-eval".to_string(),
+            total_files: 2,
+            total_tokens: 100,
+            total_clones: 1,
+            total_clusters: 0,
+            duplication_percentage: 10.0,
+            dry_health_score: 90.0,
+            clone_pairs: vec![cddm_core::ClonePair {
+                file_a: "src/domain/entity.rs".to_string(),
+                start_line_a: 1,
+                end_line_a: 10,
+                file_b: "src/web/controller.rs".to_string(),
+                start_line_b: 1,
+                end_line_b: 10,
+                token_count: 50,
+                similarity: 1.0,
+                fragment_hash: "hash123".to_string(),
+                clone_type: cddm_core::CloneType::Exact,
+                author_a: None,
+                author_b: None,
+            }],
+            clone_clusters: vec![],
+            duration_ms: 50,
+            language_breakdown: vec![],
+            policy_violations: vec![],
+        };
+
+        {
+            let mut latest = state.latest_result.write().await;
+            *latest = Some(scan_result);
+        }
+
+        let eval_res = policy_evaluate_handler(State(state), Json(Some(new_cfg))).await;
+        assert!(eval_res.is_ok());
+        let Json(eval_body) = eval_res.unwrap();
+        assert!(!eval_body.violations.is_empty());
+        assert_eq!(eval_body.violations[0].rule_name, "test-boundary");
     }
 }

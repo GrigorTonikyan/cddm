@@ -1,4 +1,4 @@
-use crate::types::{ClonePair, CloneType, ScanResult};
+use crate::types::{ClonePair, CloneType, PolicySeverity, PolicyViolation, ScanResult};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -21,6 +21,9 @@ pub mod sarif_rules {
     pub const RULE_ID_RENAMED: &str = "CDDM002";
     pub const RULE_ID_NEAR_MISS: &str = "CDDM003";
     pub const RULE_ID_SEMANTIC: &str = "CDDM004";
+    pub const RULE_ID_BOUNDARY: &str = "CDDM_BOUNDARY";
+    pub const RULE_ID_ZERO_DUP: &str = "CDDM_ZERO_DUP";
+    pub const RULE_ID_LIMIT: &str = "CDDM_LIMIT";
 }
 
 /// SARIF taxonomy tags for static analysis categorizations.
@@ -285,6 +288,36 @@ fn build_rule_catalog() -> Vec<SarifRule> {
             "### Remediation\n\nStandardize divergent implementations on a single canonical \
              architecture or standard library primitive.",
         ),
+        make_sarif_rule(
+            sarif_rules::RULE_ID_BOUNDARY,
+            "ArchitectureBoundaryViolation",
+            "Architecture Boundary Policy Violation",
+            "Code duplication detected across disallowed architectural domain boundaries.",
+            "Refactor shared logic into an approved common module to preserve boundary \
+             encapsulation.",
+            "### Remediation\n\nMove common functionality into a designated shared kernel or \
+             domain module rather than duplicating logic across isolation boundaries.",
+        ),
+        make_sarif_rule(
+            sarif_rules::RULE_ID_ZERO_DUP,
+            "ZeroDuplicationZoneViolation",
+            "Zero Duplication Zone Policy Violation",
+            "Code duplication detected inside a protected security or critical zero-duplication \
+             path.",
+            "Eliminate duplication within the protected module to maintain strict maintainability \
+             and security standards.",
+            "### Remediation\n\nRefactor and unify code within this security-critical subsystem \
+             to guarantee zero copy-paste logic.",
+        ),
+        make_sarif_rule(
+            sarif_rules::RULE_ID_LIMIT,
+            "CloneLimitPolicyViolation",
+            "Clone Limit Policy Violation",
+            "Code clone exceeds configured maximum token limit or cluster occurrence count.",
+            "Consolidate large or highly duplicated clusters into reusable abstractions.",
+            "### Remediation\n\nExtract and parameterize this large or frequently repeated code \
+             fragment to reduce duplication density.",
+        ),
     ]
 }
 
@@ -379,14 +412,92 @@ fn map_clone_pair_to_sarif_result(pair: &ClonePair) -> SarifResult {
     }
 }
 
+/// Converts a PolicyViolation into a standard SARIF Result.
+fn map_policy_violation_to_sarif_result(v: &PolicyViolation) -> SarifResult {
+    let (rule_id, rule_index) = match v.rule_type.as_str() {
+        "boundary" => (sarif_rules::RULE_ID_BOUNDARY, 4),
+        "zero_duplication" => (sarif_rules::RULE_ID_ZERO_DUP, 5),
+        _ => (sarif_rules::RULE_ID_LIMIT, 6),
+    };
+
+    let level = match v.severity {
+        PolicySeverity::Error => sarif_severity::ERROR.to_string(),
+        PolicySeverity::Warning => sarif_severity::WARNING.to_string(),
+        PolicySeverity::Info => sarif_severity::RECOMMENDATION.to_string(),
+    };
+
+    let primary_location = SarifLocation {
+        physical_location: SarifPhysicalLocation {
+            artifact_location: SarifArtifactLocation {
+                uri: v.file_a.clone(),
+                uri_base_id: Some("%SRCROOT%".to_string()),
+            },
+            region: SarifRegion {
+                start_line: v.start_line_a,
+                end_line: v.end_line_a,
+            },
+        },
+    };
+
+    let mut related_locations = Vec::new();
+    if let (Some(file_b), Some(start_b), Some(end_b)) = (&v.file_b, v.start_line_b, v.end_line_b) {
+        related_locations.push(SarifRelatedLocation {
+            id: 1,
+            physical_location: SarifPhysicalLocation {
+                artifact_location: SarifArtifactLocation {
+                    uri: file_b.clone(),
+                    uri_base_id: Some("%SRCROOT%".to_string()),
+                },
+                region: SarifRegion {
+                    start_line: start_b,
+                    end_line: end_b,
+                },
+            },
+            message: SarifMessage {
+                text: "Offending counterpart location".to_string(),
+            },
+        });
+    }
+
+    let mut partial_fingerprints = HashMap::new();
+    partial_fingerprints.insert(
+        "primaryLocationLineHash".to_string(),
+        compute_line_hash(&v.file_a, v.start_line_a, v.end_line_a),
+    );
+
+    SarifResult {
+        rule_id: rule_id.to_string(),
+        rule_index,
+        level,
+        message: SarifMessage {
+            text: v.message.clone(),
+        },
+        locations: vec![primary_location],
+        related_locations,
+        partial_fingerprints,
+        properties: SarifResultProperties {
+            token_count: v.token_count,
+            similarity: 1.0,
+            clone_type: v.rule_type.clone(),
+            fragment_hash: String::new(),
+            author_a: None,
+            author_b: None,
+        },
+    }
+}
+
 /// Generates a fully compliant OASIS SARIF v2.1.0 report struct from a CDDM ScanResult.
 pub fn generate_sarif_report(result: &ScanResult) -> SarifReport {
     let rules = build_rule_catalog();
-    let sarif_results = result
+    let mut sarif_results: Vec<SarifResult> = result
         .clone_pairs
         .iter()
         .map(map_clone_pair_to_sarif_result)
         .collect();
+
+    for violation in &result.policy_violations {
+        sarif_results.push(map_policy_violation_to_sarif_result(violation));
+    }
 
     SarifReport {
         schema: SARIF_SCHEMA_URI.to_string(),
@@ -429,6 +540,7 @@ mod tests {
             total_clusters: 2,
             duplication_percentage: 8.5,
             dry_health_score: 91.5,
+            policy_violations: vec![],
             clone_pairs: vec![
                 ClonePair {
                     file_a: "src/auth/login.rs".to_string(),
@@ -481,7 +593,7 @@ mod tests {
 
         let run = &sarif.runs[0];
         assert_eq!(run.tool.driver.name, TOOL_NAME);
-        assert_eq!(run.tool.driver.rules.len(), 4);
+        assert_eq!(run.tool.driver.rules.len(), 7);
         assert_eq!(run.results.len(), 2);
 
         // Verify result 1 (Exact clone)
@@ -536,6 +648,57 @@ mod tests {
         let deserialized: SarifReport = serde_json::from_str(&json_str).unwrap();
         assert_eq!(deserialized.runs.len(), 1);
         assert_eq!(deserialized.runs[0].results.len(), 2);
+    }
+
+    #[test]
+    fn test_sarif_policy_violations_mapping() {
+        let mut scan_result = create_test_scan_result();
+        scan_result.policy_violations = vec![
+            PolicyViolation {
+                rule_name: "domain-isolation".to_string(),
+                rule_type: "boundary".to_string(),
+                severity: PolicySeverity::Error,
+                message: "Boundary violation between domain and presentation".to_string(),
+                file_a: "src/domain/user.rs".to_string(),
+                start_line_a: 10,
+                end_line_a: 20,
+                file_b: Some("src/presentation/user.rs".to_string()),
+                start_line_b: Some(30),
+                end_line_b: Some(40),
+                cluster_id: None,
+                token_count: 50,
+            },
+            PolicyViolation {
+                rule_name: "auth-zero-dup".to_string(),
+                rule_type: "zero_duplication".to_string(),
+                severity: PolicySeverity::Error,
+                message: "Zero duplication violation in auth".to_string(),
+                file_a: "src/auth/token.rs".to_string(),
+                start_line_a: 5,
+                end_line_a: 15,
+                file_b: None,
+                start_line_b: None,
+                end_line_b: None,
+                cluster_id: None,
+                token_count: 45,
+            },
+        ];
+
+        let sarif = generate_sarif_report(&scan_result);
+        assert_eq!(sarif.runs[0].results.len(), 4); // 2 clone pairs + 2 policy violations
+        let boundary_res = sarif.runs[0]
+            .results
+            .iter()
+            .find(|r| r.rule_id == sarif_rules::RULE_ID_BOUNDARY)
+            .expect("Boundary SARIF result not found");
+        assert_eq!(boundary_res.level, "error");
+        assert_eq!(
+            boundary_res.locations[0]
+                .physical_location
+                .artifact_location
+                .uri,
+            "src/domain/user.rs"
+        );
     }
 
     #[test]

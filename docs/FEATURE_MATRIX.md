@@ -1,11 +1,11 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-24 | Rust: 178/178 PASS | WebUI: 132/132 PASS across 34 suites | Repository Scripts: 27/27 PASS | Playwright E2E: 11/11 PASS | CI Workflows: PASS
+> Last verified: 2026-08-24 | Rust: 193/193 PASS | WebUI: 136/136 PASS across 35 suites | Repository Scripts: 27/27 PASS | Playwright E2E: 11/11 PASS | CI Workflows: PASS
 
 ---
 
-## 1. Rust Backend — `cddm-core`, `cddm-cli`, `cddm-lsp`, `cddm-mcp` (178 unit tests)
+## 1. Rust Backend — `cddm-core`, `cddm-cli`, `cddm-lsp`, `cddm-mcp` (193 unit tests)
 
 ### Tokenization Engine (`crates/cddm-core/src/tokenizer.rs`)
 
@@ -79,11 +79,17 @@
 | F-06.14 | Lua AST parsing produces `chunk` root                    | `ast::parser::tests::test_parse_lua_ast`                     | PASS   |
 | F-06.15 | JSON AST parsing produces `document` root                | `ast::parser::tests::test_parse_json_ast`                    | PASS   |
 | F-06.16 | HTML AST parsing produces `document` root                | `ast::parser::tests::test_parse_html_ast`                    | PASS   |
-| F-06.17 | Blake3 Merkle subtree hashing extracts depth >= 2 nodes  | `ast::hasher::tests::test_ast_subtree_hashing`               | PASS   |
-| F-06.18 | Exact identical text clone classification (Type-1)       | `ast::hasher::tests::test_exact_clone_classification`        | PASS   |
-| F-06.19 | Renamed identifier clone classification (Type-2)         | `ast::hasher::tests::test_renamed_clone_classification`      | PASS   |
-| F-06.20 | Modified statement near-miss clone detection (Type-3)    | `ast::hasher::tests::test_near_miss_clone_classification`    | PASS   |
-| F-06.21 | AST Merkle subtree structural semantic matching (Type-4) | `ast::hasher::tests::test_ast_semantic_clone_classification` | PASS   |
+| F-06.17 | Kotlin AST parsing produces root node                    | `ast::parser::tests::test_parse_kotlin_ast`                  | PASS   |
+| F-06.18 | Zig AST parsing produces root node                       | `ast::parser::tests::test_parse_zig_ast`                     | PASS   |
+| F-06.19 | Scala AST parsing produces root node                     | `ast::parser::tests::test_parse_scala_ast`                   | PASS   |
+| F-06.20 | Elixir AST parsing produces root node                    | `ast::parser::tests::test_parse_elixir_ast`                  | PASS   |
+| F-06.21 | SQL AST parsing produces root node                       | `ast::parser::tests::test_parse_sql_ast`                     | PASS   |
+| F-06.22 | Dockerfile AST parsing produces root node                | `ast::parser::tests::test_parse_dockerfile_ast`              | PASS   |
+| F-06.23 | Blake3 Merkle subtree hashing extracts depth >= 2 nodes  | `ast::hasher::tests::test_ast_subtree_hashing`               | PASS   |
+| F-06.24 | Exact identical text clone classification (Type-1)       | `ast::hasher::tests::test_exact_clone_classification`        | PASS   |
+| F-06.25 | Renamed identifier clone classification (Type-2)         | `ast::hasher::tests::test_renamed_clone_classification`      | PASS   |
+| F-06.26 | Modified statement near-miss clone detection (Type-3)    | `ast::hasher::tests::test_near_miss_clone_classification`    | PASS   |
+| F-06.27 | AST Merkle subtree structural semantic matching (Type-4) | `ast::hasher::tests::test_ast_semantic_clone_classification` | PASS   |
 
 ### Persistent redb Disk Cache (`crates/cddm-core/src/cache.rs`)
 
@@ -290,46 +296,57 @@
 | F-26.1 | Multi-file AST cluster refactoring transformation | `refactor::tests::test_generate_ast_cluster_refactor` | PASS   |
 | F-26.2 | Closed-loop test suite verification execution     | `cddm_mcp::tests::test_mcp_verify_refactor_tool`      | PASS   |
 
+### Architectural Policy & Anti-Duplication Engine (`crates/cddm-core/src/policy.rs`)
+
+| ID     | Feature Variant                                         | Test Function                                                | Result |
+| :----- | :------------------------------------------------------ | :----------------------------------------------------------- | :----- |
+| F-27.1 | TOML policy parser and starter template generation      | `policy::tests::test_starter_template_is_valid`              | PASS   |
+| F-27.2 | Cross-layer boundary isolation violations detection     | `policy::tests::test_boundary_rule_violation`                | PASS   |
+| F-27.3 | Zero-duplication critical zones enforcement             | `policy::tests::test_zero_duplication_rule_violation`        | PASS   |
+| F-27.4 | Clone token limit and multi-site occurrence enforcement | `policy::tests::test_limits_rule_violation`                  | PASS   |
+| F-27.5 | MCP policy tools, resources & LSP diagnostics           | `cddm_mcp::tests::test_mcp_check_policies_tool_and_resource` | PASS   |
+
 ---
 
-## 2. WebUI Frontend — React 19 + TypeScript + Vitest (132 unit tests across 34 suites)
+## 2. WebUI Frontend — React 19 + TypeScript + Vitest (136 unit tests across 35 suites)
 
-| Module             | Test Suite File                                                                  | Test Cases | Status |
-| :----------------- | :------------------------------------------------------------------------------- | :--------- | :----- |
-| Timeline Explorer  | `webui/src/components/__tests__/TimelineExplorerModal.test.tsx`                  | 3 tests    | PASS   |
-| Suppression Rules  | `webui/src/components/__tests__/SuppressionRulesModal.test.tsx`                  | 3 tests    | PASS   |
-| Refactor Sandbox   | `webui/src/components/__tests__/RefactorSandboxModal.test.tsx`                   | 6 tests    | PASS   |
-| IDE Deeplinks      | `webui/src/utils/__tests__/ide-links.test.ts`                                    | 8 tests    | PASS   |
-| Store              | `webui/src/store/__tests__/cddm-store.test.ts`                                   | 11 tests   | PASS   |
-| App Shell          | `webui/src/components/__tests__/App.test.tsx`                                    | 5 tests    | PASS   |
-| Config Panel       | `webui/src/components/__tests__/ScanConfigPanel.test.tsx`                        | 4 tests    | PASS   |
-| Progress Bar       | `webui/src/components/__tests__/ScanProgressBar.test.tsx`                        | 3 tests    | PASS   |
-| Results View       | `webui/src/components/__tests__/ScanResults.test.tsx`                            | 6 tests    | PASS   |
-| Clone Pair Card    | `webui/src/components/__tests__/ClonePairCard.test.tsx`                          | 2 tests    | PASS   |
-| Clone Cluster Card | `webui/src/components/__tests__/CloneClusterCard.test.tsx`                       | 2 tests    | PASS   |
-| Diff Viewer        | `webui/src/components/__tests__/DiffViewer.test.tsx`                             | 3 tests    | PASS   |
-| Refactor Modal     | `webui/src/components/__tests__/RefactorPatchModal.test.tsx`                     | 3 tests    | PASS   |
-| Duplication Map    | `webui/src/components/__tests__/DuplicationTreemap.test.tsx`                     | 3 tests    | PASS   |
-| Treemap Explorer   | `webui/src/components/__tests__/TreemapExplorerModal.test.tsx`                   | 3 tests    | PASS   |
-| Health Audit       | `webui/src/components/__tests__/HealthAuditModal.test.tsx`                       | 3 tests    | PASS   |
-| Export Report      | `webui/src/components/__tests__/ExportReportModal.test.tsx`                      | 3 tests    | PASS   |
-| Lang Analytics     | `webui/src/components/__tests__/LanguageAnalyticsModal.test.tsx`                 | 2 tests    | PASS   |
-| Config Modal       | `webui/src/components/__tests__/ScanConfigModal.test.tsx`                        | 2 tests    | PASS   |
-| Clone Diff Modal   | `webui/src/components/__tests__/ClonePairDiffModal.test.tsx`                     | 3 tests    | PASS   |
-| Type System        | `webui/src/types/__tests__/cddm-types.test.ts`                                   | 2 tests    | PASS   |
-| UI Badge           | `webui/src/components/ui/__tests__/badge.test.tsx`                               | 2 tests    | PASS   |
-| UI Icon Button     | `webui/src/components/ui/__tests__/icon-button.test.tsx`                         | 2 tests    | PASS   |
-| UI Card            | `webui/src/components/ui/__tests__/collapsible-card.test.tsx`                    | 2 tests    | PASS   |
-| UI Code Block      | `webui/src/components/ui/__tests__/code-block.test.tsx`                          | 3 tests    | PASS   |
-| Win2x Geometry     | `webui/src/components/ui/win2x-manager/__tests__/geometry-engine.test.ts`        | 7 tests    | PASS   |
-| Win2x Driver       | `webui/src/components/ui/win2x-manager/__tests__/pointer-driver.test.ts`         | 2 tests    | PASS   |
-| Win2x Storage      | `webui/src/components/ui/win2x-manager/__tests__/storage-adapter.test.ts`        | 5 tests    | PASS   |
-| Win2x ScrollLock   | `webui/src/components/ui/win2x-manager/__tests__/use-body-scroll-lock.test.ts`   | 3 tests    | PASS   |
-| Win2x Drag Hook    | `webui/src/components/ui/win2x-manager/__tests__/use-pointer-drag.test.ts`       | 2 tests    | PASS   |
-| Win2x Resize Hook  | `webui/src/components/ui/win2x-manager/__tests__/use-pointer-resize.test.ts`     | 2 tests    | PASS   |
-| Win2x Context      | `webui/src/components/ui/win2x-manager/__tests__/win2x-manager-context.test.tsx` | 5 tests    | PASS   |
-| Win2x Window       | `webui/src/components/ui/win2x-manager/__tests__/win2x-window.test.tsx`          | 13 tests   | PASS   |
-| Win2x Tab Bar      | `webui/src/components/ui/win2x-manager/__tests__/tab-bar.test.tsx`               | 4 tests    | PASS   |
+| Module              | Test Suite File                                                                  | Test Cases | Status |
+| :------------------ | :------------------------------------------------------------------------------- | :--------- | :----- |
+| Policy Rules Studio | `webui/src/components/__tests__/PolicyRulesModal.test.tsx`                       | 4 tests    | PASS   |
+| Timeline Explorer   | `webui/src/components/__tests__/TimelineExplorerModal.test.tsx`                  | 3 tests    | PASS   |
+| Suppression Rules   | `webui/src/components/__tests__/SuppressionRulesModal.test.tsx`                  | 3 tests    | PASS   |
+| Refactor Sandbox    | `webui/src/components/__tests__/RefactorSandboxModal.test.tsx`                   | 6 tests    | PASS   |
+| IDE Deeplinks       | `webui/src/utils/__tests__/ide-links.test.ts`                                    | 8 tests    | PASS   |
+| Store               | `webui/src/store/__tests__/cddm-store.test.ts`                                   | 11 tests   | PASS   |
+| App Shell           | `webui/src/components/__tests__/App.test.tsx`                                    | 5 tests    | PASS   |
+| Config Panel        | `webui/src/components/__tests__/ScanConfigPanel.test.tsx`                        | 4 tests    | PASS   |
+| Progress Bar        | `webui/src/components/__tests__/ScanProgressBar.test.tsx`                        | 3 tests    | PASS   |
+| Results View        | `webui/src/components/__tests__/ScanResults.test.tsx`                            | 6 tests    | PASS   |
+| Clone Pair Card     | `webui/src/components/__tests__/ClonePairCard.test.tsx`                          | 2 tests    | PASS   |
+| Clone Cluster Card  | `webui/src/components/__tests__/CloneClusterCard.test.tsx`                       | 2 tests    | PASS   |
+| Diff Viewer         | `webui/src/components/__tests__/DiffViewer.test.tsx`                             | 3 tests    | PASS   |
+| Refactor Modal      | `webui/src/components/__tests__/RefactorPatchModal.test.tsx`                     | 3 tests    | PASS   |
+| Duplication Map     | `webui/src/components/__tests__/DuplicationTreemap.test.tsx`                     | 3 tests    | PASS   |
+| Treemap Explorer    | `webui/src/components/__tests__/TreemapExplorerModal.test.tsx`                   | 3 tests    | PASS   |
+| Health Audit        | `webui/src/components/__tests__/HealthAuditModal.test.tsx`                       | 3 tests    | PASS   |
+| Export Report       | `webui/src/components/__tests__/ExportReportModal.test.tsx`                      | 3 tests    | PASS   |
+| Lang Analytics      | `webui/src/components/__tests__/LanguageAnalyticsModal.test.tsx`                 | 2 tests    | PASS   |
+| Config Modal        | `webui/src/components/__tests__/ScanConfigModal.test.tsx`                        | 2 tests    | PASS   |
+| Clone Diff Modal    | `webui/src/components/__tests__/ClonePairDiffModal.test.tsx`                     | 3 tests    | PASS   |
+| Type System         | `webui/src/types/__tests__/cddm-types.test.ts`                                   | 2 tests    | PASS   |
+| UI Badge            | `webui/src/components/ui/__tests__/badge.test.tsx`                               | 2 tests    | PASS   |
+| UI Icon Button      | `webui/src/components/ui/__tests__/icon-button.test.tsx`                         | 2 tests    | PASS   |
+| UI Card             | `webui/src/components/ui/__tests__/collapsible-card.test.tsx`                    | 2 tests    | PASS   |
+| UI Code Block       | `webui/src/components/ui/__tests__/code-block.test.tsx`                          | 3 tests    | PASS   |
+| Win2x Geometry      | `webui/src/components/ui/win2x-manager/__tests__/geometry-engine.test.ts`        | 7 tests    | PASS   |
+| Win2x Driver        | `webui/src/components/ui/win2x-manager/__tests__/pointer-driver.test.ts`         | 2 tests    | PASS   |
+| Win2x Storage       | `webui/src/components/ui/win2x-manager/__tests__/storage-adapter.test.ts`        | 5 tests    | PASS   |
+| Win2x ScrollLock    | `webui/src/components/ui/win2x-manager/__tests__/use-body-scroll-lock.test.ts`   | 3 tests    | PASS   |
+| Win2x Drag Hook     | `webui/src/components/ui/win2x-manager/__tests__/use-pointer-drag.test.ts`       | 2 tests    | PASS   |
+| Win2x Resize Hook   | `webui/src/components/ui/win2x-manager/__tests__/use-pointer-resize.test.ts`     | 2 tests    | PASS   |
+| Win2x Context       | `webui/src/components/ui/win2x-manager/__tests__/win2x-manager-context.test.tsx` | 5 tests    | PASS   |
+| Win2x Window        | `webui/src/components/ui/win2x-manager/__tests__/win2x-window.test.tsx`          | 13 tests   | PASS   |
+| Win2x Tab Bar       | `webui/src/components/ui/win2x-manager/__tests__/tab-bar.test.tsx`               | 4 tests    | PASS   |
 
 ---
 

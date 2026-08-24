@@ -17,19 +17,20 @@
 +----------------------------------------------------------------------------------------------------+
 ```
 
-| Milestone  | Target Horizon | Strategic Focus                             | Key Deliverables                                                                                               |
-| :--------- | :------------- | :------------------------------------------ | :------------------------------------------------------------------------------------------------------------- |
-| **v0.2.0** | Short-term     | CI/CD Integration & AI Agent Tooling        | SARIF `--format sarif`, expanded MCP tools (`get_clone_context`, `suggest_refactor`), official GitHub Action.  |
-| **v0.3.0** | Mid-term       | Caching, Differential Scans & Refactoring   | Embedded `redb` disk cache, `cddm diff <branch>`, automated patch synthesis (`cddm refactor`).                 |
-| **v0.4.0** | Mid-term       | WebUI Studio & Visual Analytics             | Side-by-side Monaco diff visualizer, D3 hierarchical duplication treemap, historical Git trend graph.          |
-| **v0.5.0** | Long-term      | AST Pipeline & Extended Polyglot            | Integrated AST Merkle subtree matching, Type-3 near-miss detection, Go, C/C++, Java Tree-sitter parsers.       |
-| **v1.0.0** | Stable Release | High-Throughput Enterprise Engine           | AVX2/NEON SIMD vectorization, memory-mapped zero-copy I/O, semantic AST graph clones (Type-4).                 |
-| **v1.1.0** | Stable Release | N-Way Clustering & Multi-Site Deduplication | Disjoint-Set Union-Find clustering, multi-site patch synthesis, N-way cluster cards, Axum cluster endpoint.    |
-| **v1.2.0** | Stable Release | Language Server Protocol & IDE Extensions   | Full LSP 3.17 daemon (`crates/cddm-lsp`), official VS Code extension, inline diagnostics & code actions.       |
-| **v1.3.0** | Stable Release | Historical Trends & Turnkey Workflows       | Git timeline duplication trajectories (`cddm trend`), turnkey CI workflow generator (`cddm init`, `hook`).     |
-| **v1.4.0** | Stable Release | AST Suppressions & Refactor Sandbox         | Intelligent `.cddmignore` engine, inline comment directives, interactive WebUI refactoring sandbox studio.     |
-| **v1.5.0** | Stable Release | Polyglot Expansion & AI Prompt Synthesizer  | 16 Tree-sitter AST grammars (Ruby, PHP, Swift, Bash, Lua, JSON, HTML), AI refactor prompt engine, PR comments. |
-| **v1.6.0** | Stable Release | AST-Native Rewrite & Test Verification      | Tree-sitter CST node substitution, type-aware helper synthesis, import generation, closed-loop test runner.    |
+| Milestone  | Target Horizon | Strategic Focus                             | Key Deliverables                                                                                                 |
+| :--------- | :------------- | :------------------------------------------ | :--------------------------------------------------------------------------------------------------------------- |
+| **v0.2.0** | Short-term     | CI/CD Integration & AI Agent Tooling        | SARIF `--format sarif`, expanded MCP tools (`get_clone_context`, `suggest_refactor`), official GitHub Action.    |
+| **v0.3.0** | Mid-term       | Caching, Differential Scans & Refactoring   | Embedded `redb` disk cache, `cddm diff <branch>`, automated patch synthesis (`cddm refactor`).                   |
+| **v0.4.0** | Mid-term       | WebUI Studio & Visual Analytics             | Side-by-side Monaco diff visualizer, D3 hierarchical duplication treemap, historical Git trend graph.            |
+| **v0.5.0** | Long-term      | AST Pipeline & Extended Polyglot            | Integrated AST Merkle subtree matching, Type-3 near-miss detection, Go, C/C++, Java Tree-sitter parsers.         |
+| **v1.0.0** | Stable Release | High-Throughput Enterprise Engine           | AVX2/NEON SIMD vectorization, memory-mapped zero-copy I/O, semantic AST graph clones (Type-4).                   |
+| **v1.1.0** | Stable Release | N-Way Clustering & Multi-Site Deduplication | Disjoint-Set Union-Find clustering, multi-site patch synthesis, N-way cluster cards, Axum cluster endpoint.      |
+| **v1.2.0** | Stable Release | Language Server Protocol & IDE Extensions   | Full LSP 3.17 daemon (`crates/cddm-lsp`), official VS Code extension, inline diagnostics & code actions.         |
+| **v1.3.0** | Stable Release | Historical Trends & Turnkey Workflows       | Git timeline duplication trajectories (`cddm trend`), turnkey CI workflow generator (`cddm init`, `hook`).       |
+| **v1.4.0** | Stable Release | AST Suppressions & Refactor Sandbox         | Intelligent `.cddmignore` engine, inline comment directives, interactive WebUI refactoring sandbox studio.       |
+| **v1.5.0** | Stable Release | Polyglot Expansion & AI Prompt Synthesizer  | 16 Tree-sitter AST grammars (Ruby, PHP, Swift, Bash, Lua, JSON, HTML), AI refactor prompt engine, PR comments.   |
+| **v1.6.0** | Stable Release | AST-Native Rewrite & Test Verification      | Tree-sitter CST node substitution, type-aware helper synthesis, import generation, closed-loop test runner.      |
+| **v1.7.0** | Stable Release | Boundary Policies & Polyglot Expansion      | Architectural `.cddmrules.toml`, boundary isolation, zero-dup zones, limits, Kotlin/Zig/Scala/Elixir/SQL/Docker. |
 
 ---
 
@@ -602,6 +603,55 @@ Automated refactorings should be verifiable in a single click or command invocat
 
 ---
 
+### EP-22: Architecture Boundary & Anti-Duplication Policy Engine (`.cddmrules.toml`)
+
+- **Target Milestone**: `v1.7.0`
+- **Component**: `crates/cddm-core`, `crates/cddm-cli`, `crates/cddm-lsp`, `crates/cddm-mcp`, `webui`
+- **Priority**: `High`
+- **Status**: `Completed (v1.7.0)`
+
+#### Problem Statement
+
+Large codebases and monorepos require enforceable architectural boundary isolation, zero-duplication zones for security-critical packages, and clone size limits to prevent architectural drift across clean-architecture layers.
+
+#### Specification & Architecture
+
+1. **Policy Configuration (`.cddmrules.toml`)**:
+   - Boundary rules (`[[boundaries]]`): Disallow duplication between architectural layers (e.g. domain core copied into presentation or infrastructure).
+   - Zero-duplication rules (`[[zero_duplication]]`): Enforce 0% duplication across security, auth, and crypto modules.
+   - Limit rules (`[[limits]]`): Enforce maximum token thresholds and multi-site occurrence caps.
+2. **Scan & CI/CD Pipeline Integration**:
+   - Integrate `PolicyEngine` evaluation into scan execution pipeline and fail CI if violations exceed policy severity.
+   - Map violations to SARIF 2.1.0 rules (`CDDM_BOUNDARY`, `CDDM_ZERO_DUP`, `CDDM_LIMIT`).
+   - Add `cddm rules init` and `cddm rules check` CLI commands plus `--rules` and `--enforce-policies` options.
+   - Expose Axum endpoints `GET/POST /api/policy/rules` and `POST /api/policy/evaluate`.
+   - Expose MCP tool `cddm_check_policies` and MCP resource `cddm://workspace/policies`.
+   - Surface real-time inline LSP diagnostics in IDEs.
+   - Implement `PolicyRulesModal.tsx` in CDDM Studio for visual inspection and live TOML editing.
+
+---
+
+### EP-23: Polyglot Language Expansion (Kotlin, Zig, Scala, Elixir, SQL, Dockerfile)
+
+- **Target Milestone**: `v1.7.0`
+- **Component**: `crates/cddm-core`
+- **Priority**: `Medium`
+- **Status**: `Completed (v1.7.0)`
+
+#### Problem Statement
+
+Extend CDDM's Tree-sitter AST parsing, comment stripping, and keyword lexing capabilities to support modern systems, JVM, and infrastructure languages (Kotlin, Zig, Scala, Elixir, SQL, and Dockerfile).
+
+#### Specification & Architecture
+
+1. **Grammar & Lexer Definitions (`cddm-core::grammar`)**:
+   - Register language extensions, line and block comment delimiters, and language keywords.
+2. **Tree-sitter AST Dispatch (`cddm-core::ast::parser`)**:
+   - Integrate `tree-sitter-kotlin-ng`, `tree-sitter-zig`, `tree-sitter-scala`, `tree-sitter-elixir`, `tree-sitter-sequel`, and `tree-sitter-containerfile`.
+   - Add AST parsing and clone detection unit tests across all 6 new languages.
+
+---
+
 ## 3. Prioritized Action Checklist
 
 ```markdown
@@ -694,6 +744,17 @@ Automated refactorings should be verifiable in a single click or command invocat
 - [x] Expose Axum REST endpoints `POST /api/refactor/ast` and `POST /api/refactor/verify` in `cddm-cli::serve` [EP-20, EP-21]
 - [x] Expose MCP tools `cddm_ast_refactor` and `cddm_verify_refactor` in `cddm-mcp` [EP-20, EP-21]
 - [x] Implement WebUI Studio AST-Native Rewrite tab, inferred parameter badges, and Test Suite Verification panel in `RefactorSandboxModal.tsx` [EP-20, EP-21]
+
+### Milestone v1.7.0 (Architectural Boundary Policy Engine & Polyglot Expansion)
+
+- [x] Implement `.cddmrules.toml` policy parser, cross-layer boundaries, zero-dup zones, and token limits in `cddm-core::policy` [EP-22]
+- [x] Integrate `PolicyEngine` evaluation into scan pipeline and emit SARIF violation rules in `cddm-core::sarif` [EP-22]
+- [x] Add `cddm rules init` and `cddm rules check` CLI commands plus `--rules` and `--enforce-policies` options in `cddm-cli` [EP-22]
+- [x] Expose Axum REST endpoints `GET/POST /api/policy/rules` and `POST /api/policy/evaluate` in `cddm-cli::serve` [EP-22]
+- [x] Expose MCP tool `cddm_check_policies` and MCP resource `cddm://workspace/policies` in `cddm-mcp` [EP-22]
+- [x] Surface real-time architectural policy diagnostics in `cddm-lsp::diagnostics` [EP-22]
+- [x] Implement `PolicyRulesModal.tsx` visual studio and live TOML editor in WebUI Studio [EP-22]
+- [x] Implement Tree-sitter parsers for Kotlin, Zig, Scala, Elixir, SQL, and Dockerfile in `cddm-core::ast::parser` [EP-23]
 ```
 
 ---

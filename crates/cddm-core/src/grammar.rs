@@ -795,12 +795,192 @@ pub const SUPPORTED_LANGUAGES: &[LanguageGrammar] = &[
         block_comment: Some(("<!--", "-->")),
     },
     make_c_style_grammar("JSON", &["json"], &["true", "false", "null"]),
+    LanguageGrammar {
+        name: "Zig",
+        extensions: &["zig", "zon"],
+        keywords: &[
+            "fn",
+            "const",
+            "var",
+            "pub",
+            "test",
+            "struct",
+            "enum",
+            "union",
+            "error",
+            "inline",
+            "comptime",
+            "extern",
+            "export",
+            "defer",
+            "errdefer",
+            "if",
+            "else",
+            "switch",
+            "while",
+            "for",
+            "return",
+            "break",
+            "continue",
+            "unreachable",
+            "try",
+            "catch",
+            "async",
+            "await",
+            "suspend",
+            "resume",
+            "anytype",
+            "void",
+            "bool",
+            "true",
+            "false",
+            "null",
+            "undefined",
+        ],
+        line_comment: "//",
+        block_comment: None,
+    },
+    make_c_style_grammar(
+        "Scala",
+        &["scala", "sc"],
+        &[
+            "def",
+            "val",
+            "var",
+            "class",
+            "trait",
+            "object",
+            "case",
+            "extends",
+            "with",
+            "package",
+            "import",
+            "return",
+            "if",
+            "else",
+            "match",
+            "for",
+            "while",
+            "do",
+            "try",
+            "catch",
+            "finally",
+            "throw",
+            "new",
+            "this",
+            "super",
+            "null",
+            "true",
+            "false",
+            "abstract",
+            "final",
+            "private",
+            "protected",
+            "override",
+            "implicit",
+            "lazy",
+            "sealed",
+            "type",
+            "yield",
+            "given",
+            "using",
+            "enum",
+        ],
+    ),
+    LanguageGrammar {
+        name: "Elixir",
+        extensions: &["ex", "exs"],
+        keywords: &[
+            "def",
+            "defp",
+            "defmodule",
+            "defmacro",
+            "defstruct",
+            "defprotocol",
+            "defimpl",
+            "do",
+            "end",
+            "if",
+            "unless",
+            "case",
+            "cond",
+            "with",
+            "for",
+            "receive",
+            "try",
+            "catch",
+            "rescue",
+            "after",
+            "raise",
+            "throw",
+            "import",
+            "require",
+            "alias",
+            "use",
+            "fn",
+            "nil",
+            "true",
+            "false",
+            "when",
+            "and",
+            "or",
+            "not",
+            "in",
+        ],
+        line_comment: "#",
+        block_comment: None,
+    },
+    LanguageGrammar {
+        name: "Dockerfile",
+        extensions: &["dockerfile", "containerfile"],
+        keywords: &[
+            "FROM",
+            "RUN",
+            "CMD",
+            "LABEL",
+            "EXPOSE",
+            "ENV",
+            "ADD",
+            "COPY",
+            "ENTRYPOINT",
+            "VOLUME",
+            "USER",
+            "WORKDIR",
+            "ARG",
+            "ONBUILD",
+            "STOPSIGNAL",
+            "HEALTHCHECK",
+            "SHELL",
+            "from",
+            "run",
+            "cmd",
+            "copy",
+            "add",
+            "env",
+            "workdir",
+            "expose",
+            "entrypoint",
+        ],
+        line_comment: "#",
+        block_comment: None,
+    },
 ];
 
 /// Gets the grammar definition for a given file path based on its extension.
 ///
 /// Returns `None` if the extension is not recognized.
 pub fn get_grammar_for_path(path: &Path) -> Option<&'static LanguageGrammar> {
+    if let Some(file_name) = path.file_name().and_then(|f| f.to_str()) {
+        let lower = file_name.to_lowercase();
+        if (lower == "dockerfile"
+            || lower.starts_with("dockerfile.")
+            || lower == "containerfile"
+            || lower.starts_with("containerfile."))
+            && let Some(g) = SUPPORTED_LANGUAGES.iter().find(|g| g.name == "Dockerfile")
+        {
+            return Some(g);
+        }
+    }
     let ext = path.extension()?.to_str()?;
     let ext = ext.to_lowercase();
     SUPPORTED_LANGUAGES
@@ -828,6 +1008,32 @@ mod tests {
         assert_eq!(get_grammar_for_path(py_path).unwrap().name, "Python");
         assert_eq!(get_grammar_for_path(go_path).unwrap().name, "Go");
         assert_eq!(get_grammar_for_path(css_path).unwrap().name, "CSS");
+        assert_eq!(
+            get_grammar_for_path(Path::new("main.zig")).unwrap().name,
+            "Zig"
+        );
+        assert_eq!(
+            get_grammar_for_path(Path::new("App.scala")).unwrap().name,
+            "Scala"
+        );
+        assert_eq!(
+            get_grammar_for_path(Path::new("module.ex")).unwrap().name,
+            "Elixir"
+        );
+        assert_eq!(
+            get_grammar_for_path(Path::new("schema.sql")).unwrap().name,
+            "SQL"
+        );
+        assert_eq!(
+            get_grammar_for_path(Path::new("Dockerfile")).unwrap().name,
+            "Dockerfile"
+        );
+        assert_eq!(
+            get_grammar_for_path(Path::new("service.dockerfile"))
+                .unwrap()
+                .name,
+            "Dockerfile"
+        );
 
         assert!(get_grammar_for_path(unknown_path).is_none());
         assert!(get_grammar_for_path(no_ext_path).is_none());
@@ -844,6 +1050,15 @@ mod tests {
         assert!(py_grammar.keywords.contains(&"def"));
         assert_eq!(py_grammar.line_comment, "#");
         assert_eq!(py_grammar.block_comment, None);
+
+        let zig_grammar = get_grammar_for_path(Path::new("test.zig")).unwrap();
+        assert!(zig_grammar.keywords.contains(&"comptime"));
+
+        let scala_grammar = get_grammar_for_path(Path::new("test.scala")).unwrap();
+        assert!(scala_grammar.keywords.contains(&"trait"));
+
+        let elixir_grammar = get_grammar_for_path(Path::new("test.ex")).unwrap();
+        assert!(elixir_grammar.keywords.contains(&"defmodule"));
     }
 
     #[test]
@@ -860,6 +1075,6 @@ mod tests {
 
     #[test]
     fn test_supported_language_count() {
-        assert!(SUPPORTED_LANGUAGES.len() >= 12);
+        assert!(SUPPORTED_LANGUAGES.len() >= 20);
     }
 }

@@ -201,6 +201,25 @@
 
 ---
 
+### Milestone v1.7.0: Architectural Boundary Policy Engine & Polyglot Expansion
+
+- [x] **[EP-22] Architecture Boundary & Anti-Duplication Policy Engine (`.cddmrules.toml`)**
+  - [x] Implement `PolicyEngine`, `BoundaryRule`, `ZeroDuplicationRule`, `LimitRule` in `crates/cddm-core/src/policy.rs`
+  - [x] Integrate policy evaluation into scan execution pipeline in `crates/cddm-core/src/detector.rs`
+  - [x] Map policy violations to SARIF 2.1.0 rules (`CDDM_BOUNDARY`, `CDDM_ZERO_DUP`, `CDDM_LIMIT`) in `sarif.rs`
+  - [x] Add CLI subcommand `cddm rules init` and `cddm rules check` plus `--rules` and `--enforce-policies` flags in `crates/cddm-cli/src/main.rs`
+  - [x] Expose Axum REST endpoints `GET/POST /api/policy/rules` and `POST /api/policy/evaluate` in `crates/cddm-cli/src/serve.rs`
+  - [x] Surface LSP policy diagnostics in `crates/cddm-lsp/src/diagnostics.rs`
+  - [x] Expose MCP tool `cddm_check_policies` and MCP resource `cddm://workspace/policies` in `crates/cddm-mcp/src/main.rs`
+  - [x] Implement `PolicyRulesModal.tsx` Studio visualizer with active policy inspector and live TOML editor in `webui/`
+- [x] **[EP-23] Polyglot Language Expansion (Kotlin, Zig, Scala, Elixir, SQL, Dockerfile)**
+  - [x] Integrate Tree-sitter parsers (`tree-sitter-kotlin-ng`, `tree-sitter-zig`, `tree-sitter-scala`, `tree-sitter-elixir`, `tree-sitter-sequel`, `tree-sitter-containerfile`)
+  - [x] Implement keyword lexers, line/block comment strippers, and grammar definitions in `crates/cddm-core/src/grammar.rs`
+  - [x] Add AST parser dispatch branches in `crates/cddm-core/src/ast/parser.rs`
+  - [x] Add unit tests verifying parsing and clone detection across all 6 new languages in `crates/cddm-core/`
+
+---
+
 ## Completed Milestones (Verified)
 
 - [x] **v0.1.0**: Initial Rust core engine, Winnowing rolling hash, CLI scanner.
@@ -217,3 +236,4 @@
 - [x] **v1.4.0**: Intelligent AST Suppression Engine & Interactive Auto-Refactor Sandbox Studio with `.cddmignore` glob rules, per-path threshold overrides, inline comment directives (`// cddm:ignore`, `/* cddm:ignore-start */`), test/mock/generated auto-filtering, `cddm ignore` CLI, parameterized refactor sandbox, transactional Git branch application (`gix`), MCP suppression tools/resources, and WebUI `SuppressionRulesModal` & `RefactorSandboxModal`.
 - [x] **v1.5.0**: Polyglot AST Expansion (16 Tree-sitter languages: Ruby, PHP, Swift, Bash, Lua, JSON, HTML) & AI Refactoring Prompt Synthesizer with `cddm refactor --prompt`, `POST /api/refactor/ai-prompt`, MCP `cddm_generate_ai_prompt`, WebUI Studio "Copy AI Prompt" button, and turnkey PR/MR markdown quality gate comment generator (`cddm comment`).
 - [x] **v1.6.0**: AST-Native Rewrite Engine & Type-Aware Automated Refactoring with Tree-sitter parameter typing, import synthesis, CST node substitution, closed-loop test verification (`cddm refactor --ast --verify`), Axum endpoints (`/api/refactor/ast`, `/api/refactor/verify`), MCP tools (`cddm_ast_refactor`, `cddm_verify_refactor`), and WebUI Studio AST-Native tabs & test runner panel.
+- [x] **v1.7.0**: Architectural Boundary & Anti-Duplication Policy Engine (`.cddmrules.toml`) and Polyglot Language Expansion (Kotlin, Zig, Scala, Elixir, SQL, Dockerfile) across core engine, CLI (`rules init`, `rules check`, `--rules`, `--enforce-policies`), REST API (`/api/policy/*`), LSP diagnostics, MCP server (`cddm_check_policies`, `cddm://workspace/policies`), SARIF reporting (`CDDM_BOUNDARY`, `CDDM_ZERO_DUP`, `CDDM_LIMIT`), and WebUI Policy Studio modal.

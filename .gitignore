@@ -35,6 +35,7 @@ tsconfig.tsbuildinfo
 .cddm/
 **/.cddm/
 crates/**/.cddmignore
+crates/**/.cddmrules.toml
 
 # Logs & temporary files
 /.logs/
