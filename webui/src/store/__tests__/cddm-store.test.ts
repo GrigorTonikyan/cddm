@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vite-plus/test";
+import { describe, it, expect, beforeEach, vi } from "vite-plus/test";
 import { useCDDMStore } from "../cddm-store";
 
 describe("useCDDMStore Zustand Store", () => {
@@ -30,13 +30,45 @@ describe("useCDDMStore Zustand Store", () => {
     expect(config.directory).toBe("./src");
   });
 
-  it("should handle mock scan start fallback", async () => {
+  it("should handle successful scan execution", async () => {
+    const mockScanResult = {
+      scan_id: "scan-test-123",
+      total_files: 10,
+      total_tokens: 5000,
+      total_clones: 2,
+      duplication_percentage: 3.5,
+      dry_health_score: 95.0,
+      duration_ms: 120,
+      clone_pairs: [],
+      language_breakdown: [],
+    };
+
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(mockScanResult),
+    } as Response);
+
     await useCDDMStore.getState().startScan();
-    const { results, isScanning } = useCDDMStore.getState();
+    const { results, isScanning, error, activeScanId } = useCDDMStore.getState();
     expect(isScanning).toBe(false);
-    expect(results).not.toBeNull();
-    expect(results?.scan_id).toBe("demo-scan-123");
-    expect(results?.total_clones).toBe(3);
+    expect(error).toBeNull();
+    expect(results).toEqual(mockScanResult);
+    expect(activeScanId).toBe("scan-test-123");
+  });
+
+  it("should handle scan failure gracefully", async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+      statusText: "Internal Server Error",
+      text: () => Promise.resolve("Disk read failure"),
+    } as Response);
+
+    await useCDDMStore.getState().startScan();
+    const { results, isScanning, error } = useCDDMStore.getState();
+    expect(isScanning).toBe(false);
+    expect(results).toBeNull();
+    expect(error).toContain("Scan request failed (500)");
   });
 
   it("should cancel scan and set error state", () => {
@@ -67,18 +99,33 @@ describe("useCDDMStore Zustand Store", () => {
     await scanPromise1;
   });
 
-  it("should reset all state on resetScan", () => {
-    useCDDMStore.setState({
-      isScanning: true,
-      error: "err",
-      results: {} as any,
-      progress: {} as any,
-    });
+  it("should manage modal open states and clear them on resetScan", () => {
+    const store = useCDDMStore.getState();
+    expect(store.isScanConfigOpen).toBe(false);
+    expect(store.isHealthAuditOpen).toBe(false);
+    expect(store.isExportReportOpen).toBe(false);
+    expect(store.isTreemapModalOpen).toBe(false);
+    expect(store.isLanguageModalOpen).toBe(false);
+
+    store.setIsScanConfigOpen(true);
+    store.setIsHealthAuditOpen(true);
+    store.setIsExportReportOpen(true);
+    store.setIsTreemapModalOpen(true);
+    store.setIsLanguageModalOpen(true);
+
+    const updated = useCDDMStore.getState();
+    expect(updated.isScanConfigOpen).toBe(true);
+    expect(updated.isHealthAuditOpen).toBe(true);
+    expect(updated.isExportReportOpen).toBe(true);
+    expect(updated.isTreemapModalOpen).toBe(true);
+    expect(updated.isLanguageModalOpen).toBe(true);
+
     useCDDMStore.getState().resetScan();
-    const state = useCDDMStore.getState();
-    expect(state.isScanning).toBe(false);
-    expect(state.error).toBeNull();
-    expect(state.results).toBeNull();
-    expect(state.progress).toBeNull();
+    const reset = useCDDMStore.getState();
+    expect(reset.isScanConfigOpen).toBe(false);
+    expect(reset.isHealthAuditOpen).toBe(false);
+    expect(reset.isExportReportOpen).toBe(false);
+    expect(reset.isTreemapModalOpen).toBe(false);
+    expect(reset.isLanguageModalOpen).toBe(false);
   });
 });

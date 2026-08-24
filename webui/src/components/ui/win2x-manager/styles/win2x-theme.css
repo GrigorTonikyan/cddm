@@ -1,0 +1,254 @@
+/**
+ * Scoped CSS Custom Properties for win2x-manager
+ */
+
+:root,
+[data-win2x-theme="dark"] {
+  /* Surface & Background Colors */
+  --win2x-bg-base: #0f172a;
+  --win2x-bg-acrylic: rgba(15, 23, 42, 0.88);
+  --win2x-bg-acrylic-moving: rgba(15, 23, 42, 0.98);
+  --win2x-bg-titlebar: rgba(2, 6, 23, 0.92);
+  --win2x-bg-card: rgba(2, 6, 23, 0.7);
+  --win2x-bg-card-header: rgba(15, 23, 42, 0.6);
+  --win2x-bg-card-header-hover: rgba(30, 41, 59, 0.4);
+  --win2x-bg-code: rgba(2, 6, 23, 0.85);
+  --win2x-bg-backdrop: rgba(2, 6, 23, 0.8);
+  --win2x-bg-pill: rgba(15, 23, 42, 0.92);
+  --win2x-bg-pill-hover: rgba(30, 41, 59, 0.95);
+  --win2x-bg-btn-hover: rgba(30, 41, 59, 0.8);
+  --win2x-bg-btn-active: rgba(51, 65, 85, 0.9);
+  --win2x-bg-danger-hover: #e11d48;
+
+  /* Borders & Dividers */
+  --win2x-border-window: rgba(71, 85, 105, 0.75);
+  --win2x-border-titlebar: rgba(30, 41, 59, 0.8);
+  --win2x-border-card: rgba(30, 41, 59, 0.8);
+  --win2x-border-pill: rgba(71, 85, 105, 0.8);
+  --win2x-border-code: rgba(30, 41, 59, 0.8);
+  --win2x-border-badge-indigo: rgba(99, 102, 241, 0.4);
+  --win2x-border-badge-emerald: rgba(16, 185, 129, 0.4);
+  --win2x-border-badge-rose: rgba(244, 63, 94, 0.4);
+  --win2x-border-badge-amber: rgba(245, 158, 11, 0.4);
+  --win2x-border-badge-slate: rgba(100, 116, 139, 0.4);
+  --win2x-border-badge-cyan: rgba(6, 182, 212, 0.4);
+
+  /* Text & Foreground */
+  --win2x-text-primary: #f8fafc;
+  --win2x-text-secondary: #94a3b8;
+  --win2x-text-muted: #64748b;
+  --win2x-text-title: #f1f5f9;
+  --win2x-text-subtitle: #94a3b8;
+  --win2x-text-code: #cbd5e1;
+
+  /* Semantic Accents */
+  --win2x-accent-primary: #6366f1;
+  --win2x-accent-hover: #818cf8;
+  --win2x-accent-active: #4f46e5;
+  --win2x-accent-glow: rgba(99, 102, 241, 0.25);
+
+  /* Badge Color Variants */
+  --win2x-badge-indigo-bg: rgba(49, 46, 129, 0.5);
+  --win2x-badge-indigo-text: #a5b4fc;
+  --win2x-badge-emerald-bg: rgba(6, 78, 59, 0.5);
+  --win2x-badge-emerald-text: #6ee7b7;
+  --win2x-badge-rose-bg: rgba(136, 19, 55, 0.5);
+  --win2x-badge-rose-text: #fda4af;
+  --win2x-badge-amber-bg: rgba(120, 53, 15, 0.5);
+  --win2x-badge-amber-text: #fcd34d;
+  --win2x-badge-slate-bg: rgba(30, 41, 59, 0.6);
+  --win2x-badge-slate-text: #cbd5e1;
+  --win2x-badge-cyan-bg: rgba(22, 78, 99, 0.5);
+  --win2x-badge-cyan-text: #67e8f9;
+
+  /* Code Block Variants */
+  --win2x-code-neutral-bg: rgba(2, 6, 23, 0.85);
+  --win2x-code-neutral-text: #cbd5e1;
+  --win2x-code-added-bg: rgba(6, 78, 59, 0.3);
+  --win2x-code-added-border: rgba(16, 185, 129, 0.4);
+  --win2x-code-added-text: #6ee7b7;
+  --win2x-code-removed-bg: rgba(136, 19, 55, 0.3);
+  --win2x-code-removed-border: rgba(244, 63, 94, 0.4);
+  --win2x-code-removed-text: #fda4af;
+  --win2x-code-highlight-bg: rgba(49, 46, 129, 0.4);
+  --win2x-code-highlight-border: rgba(99, 102, 241, 0.5);
+  --win2x-code-highlight-text: #c7d2fe;
+
+  /* Geometry & Radii */
+  --win2x-radius-window: 16px;
+  --win2x-radius-card: 12px;
+  --win2x-radius-pill: 12px;
+  --win2x-radius-button: 6px;
+  --win2x-radius-badge: 9999px;
+
+  /* Elevation Shadows & Blurs */
+  --win2x-shadow-window: 0 25px 50px -12px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  --win2x-shadow-pill: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 8px 10px -6px rgba(0, 0, 0, 0.6);
+  --win2x-blur-acrylic: 24px;
+  --win2x-blur-backdrop: 8px;
+
+  /* Transitions & Animation Timings */
+  --win2x-transition-fast: 100ms cubic-bezier(0.16, 1, 0.3, 1);
+  --win2x-transition-normal: 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  --win2x-transition-slow: 200ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Z-Index Stacking */
+  --win2x-z-backdrop: 9990;
+  --win2x-z-window: 9995;
+  --win2x-z-handle: 9997;
+  --win2x-z-pill: 9999;
+}
+
+[data-win2x-theme="light"] {
+  /* Surface & Background Colors */
+  --win2x-bg-base: #f8fafc;
+  --win2x-bg-acrylic: rgba(248, 250, 252, 0.92);
+  --win2x-bg-acrylic-moving: rgba(248, 250, 252, 0.98);
+  --win2x-bg-titlebar: rgba(241, 245, 249, 0.94);
+  --win2x-bg-card: rgba(255, 255, 255, 0.85);
+  --win2x-bg-card-header: rgba(241, 245, 249, 0.8);
+  --win2x-bg-card-header-hover: rgba(226, 232, 240, 0.6);
+  --win2x-bg-code: rgba(241, 245, 249, 0.95);
+  --win2x-bg-backdrop: rgba(15, 23, 42, 0.4);
+  --win2x-bg-pill: rgba(255, 255, 255, 0.95);
+  --win2x-bg-pill-hover: rgba(241, 245, 249, 0.98);
+  --win2x-bg-btn-hover: rgba(226, 232, 240, 0.8);
+  --win2x-bg-btn-active: rgba(203, 213, 225, 0.9);
+  --win2x-bg-danger-hover: #e11d48;
+
+  /* Borders & Dividers */
+  --win2x-border-window: rgba(203, 213, 225, 0.9);
+  --win2x-border-titlebar: rgba(226, 232, 240, 0.9);
+  --win2x-border-card: rgba(226, 232, 240, 0.9);
+  --win2x-border-pill: rgba(203, 213, 225, 0.9);
+  --win2x-border-code: rgba(226, 232, 240, 0.9);
+  --win2x-border-badge-indigo: rgba(99, 102, 241, 0.3);
+  --win2x-border-badge-emerald: rgba(16, 185, 129, 0.3);
+  --win2x-border-badge-rose: rgba(244, 63, 94, 0.3);
+  --win2x-border-badge-amber: rgba(245, 158, 11, 0.3);
+  --win2x-border-badge-slate: rgba(148, 163, 184, 0.3);
+  --win2x-border-badge-cyan: rgba(6, 182, 212, 0.3);
+
+  /* Text & Foreground */
+  --win2x-text-primary: #0f172a;
+  --win2x-text-secondary: #475569;
+  --win2x-text-muted: #64748b;
+  --win2x-text-title: #0f172a;
+  --win2x-text-subtitle: #475569;
+  --win2x-text-code: #1e293b;
+
+  /* Semantic Accents */
+  --win2x-accent-primary: #4f46e5;
+  --win2x-accent-hover: #6366f1;
+  --win2x-accent-active: #4338ca;
+  --win2x-accent-glow: rgba(99, 102, 241, 0.15);
+
+  /* Badge Color Variants */
+  --win2x-badge-indigo-bg: rgba(224, 231, 255, 0.85);
+  --win2x-badge-indigo-text: #4338ca;
+  --win2x-badge-emerald-bg: rgba(209, 250, 229, 0.85);
+  --win2x-badge-emerald-text: #065f46;
+  --win2x-badge-rose-bg: rgba(255, 228, 230, 0.85);
+  --win2x-badge-rose-text: #9f1239;
+  --win2x-badge-amber-bg: rgba(254, 243, 199, 0.85);
+  --win2x-badge-amber-text: #92400e;
+  --win2x-badge-slate-bg: rgba(241, 245, 249, 0.85);
+  --win2x-badge-slate-text: #334155;
+  --win2x-badge-cyan-bg: rgba(207, 250, 254, 0.85);
+  --win2x-badge-cyan-text: #155e75;
+
+  /* Code Block Variants */
+  --win2x-code-neutral-bg: rgba(248, 250, 252, 0.95);
+  --win2x-code-neutral-text: #1e293b;
+  --win2x-code-added-bg: rgba(209, 250, 229, 0.5);
+  --win2x-code-added-border: rgba(16, 185, 129, 0.5);
+  --win2x-code-added-text: #065f46;
+  --win2x-code-removed-bg: rgba(255, 228, 230, 0.5);
+  --win2x-code-removed-border: rgba(244, 63, 94, 0.5);
+  --win2x-code-removed-text: #9f1239;
+  --win2x-code-highlight-bg: rgba(224, 231, 255, 0.5);
+  --win2x-code-highlight-border: rgba(99, 102, 241, 0.5);
+  --win2x-code-highlight-text: #3730a3;
+
+  /* Elevation Shadows */
+  --win2x-shadow-window: 0 20px 40px -10px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.08);
+  --win2x-shadow-pill: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+}
+
+[data-win2x-theme="high-contrast"] {
+  /* High-Contrast WCAG AAA Solid Surfaces */
+  --win2x-bg-base: #000000;
+  --win2x-bg-acrylic: #000000;
+  --win2x-bg-acrylic-moving: #000000;
+  --win2x-bg-titlebar: #000000;
+  --win2x-bg-card: #000000;
+  --win2x-bg-card-header: #000000;
+  --win2x-bg-card-header-hover: #1c1917;
+  --win2x-bg-code: #000000;
+  --win2x-bg-backdrop: rgba(0, 0, 0, 0.92);
+  --win2x-bg-pill: #000000;
+  --win2x-bg-pill-hover: #1c1917;
+  --win2x-bg-btn-hover: #ffffff;
+  --win2x-bg-btn-active: #ffff00;
+  --win2x-bg-danger-hover: #ff0055;
+
+  /* 2px Solid High-Visibility Borders */
+  --win2x-border-window: #ffffff;
+  --win2x-border-titlebar: #ffffff;
+  --win2x-border-card: #ffffff;
+  --win2x-border-pill: #ffffff;
+  --win2x-border-code: #ffffff;
+  --win2x-border-badge-indigo: #00ffff;
+  --win2x-border-badge-emerald: #00ff00;
+  --win2x-border-badge-rose: #ff0055;
+  --win2x-border-badge-amber: #ffff00;
+  --win2x-border-badge-slate: #ffffff;
+  --win2x-border-badge-cyan: #00ffff;
+
+  /* Vivid High-Contrast Foreground */
+  --win2x-text-primary: #ffffff;
+  --win2x-text-secondary: #ffff00;
+  --win2x-text-muted: #00ffff;
+  --win2x-text-title: #ffffff;
+  --win2x-text-subtitle: #ffff00;
+  --win2x-text-code: #00ff00;
+
+  /* High-Contrast Accents */
+  --win2x-accent-primary: #ffff00;
+  --win2x-accent-hover: #ffffff;
+  --win2x-accent-active: #00ffff;
+  --win2x-accent-glow: rgba(255, 255, 0, 0.4);
+
+  /* High-Contrast Badges */
+  --win2x-badge-indigo-bg: #000000;
+  --win2x-badge-indigo-text: #00ffff;
+  --win2x-badge-emerald-bg: #000000;
+  --win2x-badge-emerald-text: #00ff00;
+  --win2x-badge-rose-bg: #000000;
+  --win2x-badge-rose-text: #ff0055;
+  --win2x-badge-amber-bg: #000000;
+  --win2x-badge-amber-text: #ffff00;
+  --win2x-badge-slate-bg: #000000;
+  --win2x-badge-slate-text: #ffffff;
+  --win2x-badge-cyan-bg: #000000;
+  --win2x-badge-cyan-text: #00ffff;
+
+  /* High-Contrast Code Blocks */
+  --win2x-code-neutral-bg: #000000;
+  --win2x-code-neutral-text: #ffffff;
+  --win2x-code-added-bg: #000000;
+  --win2x-code-added-border: #00ff00;
+  --win2x-code-added-text: #00ff00;
+  --win2x-code-removed-bg: #000000;
+  --win2x-code-removed-border: #ff0055;
+  --win2x-code-removed-text: #ff0055;
+  --win2x-code-highlight-bg: #000000;
+  --win2x-code-highlight-border: #ffff00;
+  --win2x-code-highlight-text: #ffff00;
+
+  /* Crisp Shadows & Disables Blur Overhead */
+  --win2x-shadow-window: 0 0 0 2px #ffffff;
+  --win2x-shadow-pill: 0 0 0 2px #ffffff;
+  --win2x-blur-acrylic: 0px;
+  --win2x-blur-backdrop: 0px;
+}

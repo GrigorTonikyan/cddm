@@ -1,0 +1,19 @@
+@import "../../styles/theme.css";
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--cddm-ui-z-backdrop);
+  background-color: var(--cddm-ui-bg-backdrop);
+  backdrop-filter: blur(var(--cddm-ui-blur-backdrop));
+  -webkit-backdrop-filter: blur(var(--cddm-ui-blur-backdrop));
+  transition: opacity var(--cddm-ui-transition-normal);
+  pointer-events: auto;
+
+  &.transparent {
+    background-color: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    pointer-events: none;
+  }
+}

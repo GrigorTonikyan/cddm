@@ -3,6 +3,7 @@ import { ClonePair } from "../types/cddm-types";
 import { parsePath, FormattedPath } from "../utils/path-utils";
 import { DiffViewer } from "./DiffViewer";
 import { RefactorPatchModal } from "./RefactorPatchModal";
+import { ClonePairDiffModal } from "./ClonePairDiffModal";
 import {
   ChevronDown,
   ChevronRight,
@@ -12,6 +13,7 @@ import {
   Sparkles,
   Wand2,
   Tag,
+  Columns2,
 } from "lucide-react";
 
 export interface ClonePairCardProps {
@@ -42,6 +44,7 @@ const FilePathSummary: React.FC<FilePathSummaryProps> = ({ parsed, startLine, en
 export const ClonePairCard: React.FC<ClonePairCardProps> = ({ pair, index }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isRefactorOpen, setIsRefactorOpen] = useState(false);
+  const [isDiffModalOpen, setIsDiffModalOpen] = useState(false);
 
   const pathA = parsePath(pair.file_a);
   const pathB = parsePath(pair.file_b);
@@ -150,6 +153,19 @@ export const ClonePairCard: React.FC<ClonePairCardProps> = ({ pair, index }) => 
                   <span className="text-slate-300">Author B: {pair.author_b}</span>
                 </div>
               )}
+              {/* Diff Inspector Modal Button */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsDiffModalOpen(true);
+                }}
+                className="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs flex items-center gap-1.5 transition-colors border border-slate-700/60 shadow-sm"
+              >
+                <Columns2 className="w-3.5 h-3.5 text-indigo-400" />
+                Diff Inspector
+              </button>
+
               {/* Refactor Advisor Button */}
               <button
                 type="button"
@@ -177,6 +193,14 @@ export const ClonePairCard: React.FC<ClonePairCardProps> = ({ pair, index }) => 
           />
         </div>
       )}
+
+      {/* Standalone Diff Inspector Modal */}
+      <ClonePairDiffModal
+        isOpen={isDiffModalOpen}
+        onClose={() => setIsDiffModalOpen(false)}
+        pair={pair}
+        index={index}
+      />
 
       {/* Refactor Patch Synthesis Modal */}
       <RefactorPatchModal

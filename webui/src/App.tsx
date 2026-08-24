@@ -2,12 +2,20 @@ import React from "react";
 import { ScanConfigPanel } from "./components/ScanConfigPanel";
 import { ScanProgressBar } from "./components/ScanProgressBar";
 import { ScanResults } from "./components/ScanResults";
-import { Scissors, Terminal, Sparkles, ShieldCheck } from "lucide-react";
+import { ScanConfigModal } from "./components/ScanConfigModal";
+import { Scissors, Terminal, Sparkles, ShieldCheck, Sliders, Award, FileDown } from "lucide-react";
 import { APP_VERSION } from "./constants/cddm-constants";
 import { useCDDMStore } from "./store/cddm-store";
 
 export const App: React.FC = () => {
-  const { error } = useCDDMStore();
+  const {
+    error,
+    results,
+    isScanConfigOpen,
+    setIsScanConfigOpen,
+    setIsHealthAuditOpen,
+    setIsExportReportOpen,
+  } = useCDDMStore();
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-indigo-500/30 selection:text-indigo-200">
@@ -15,7 +23,7 @@ export const App: React.FC = () => {
       <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-gradient-to-b from-indigo-950/20 via-purple-950/10 to-transparent pointer-events-none blur-3xl -z-10" />
 
       {/* Header Bar */}
-      <header className="bg-slate-900/90 border-b border-slate-800/80 px-6 py-4 flex items-center justify-between sticky top-0 z-50 backdrop-blur-md shadow-lg">
+      <header className="bg-slate-900/90 border-b border-slate-800/80 px-6 py-4 flex flex-wrap items-center justify-between gap-3 sticky top-0 z-50 backdrop-blur-md shadow-lg">
         <div className="flex items-center gap-3">
           <div className="p-2.5 bg-gradient-to-tr from-indigo-600 to-purple-600 rounded-xl shadow-lg shadow-indigo-900/30">
             <Scissors className="w-5 h-5 text-white" />
@@ -33,14 +41,44 @@ export const App: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-3 text-xs font-mono text-slate-400">
+        <div className="flex flex-wrap items-center gap-2.5 text-xs font-mono text-slate-400">
+          <button
+            type="button"
+            onClick={() => setIsScanConfigOpen(true)}
+            className="px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 hover:bg-slate-800 text-slate-300 flex items-center gap-1.5 transition-colors shadow-sm"
+          >
+            <Sliders className="w-3.5 h-3.5 text-indigo-400" />
+            <span>Config Window</span>
+          </button>
+
+          {results && (
+            <>
+              <button
+                type="button"
+                onClick={() => setIsHealthAuditOpen(true)}
+                className="px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 hover:bg-slate-800 text-slate-300 flex items-center gap-1.5 transition-colors shadow-sm"
+              >
+                <Award className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Health Audit</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsExportReportOpen(true)}
+                className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold flex items-center gap-1.5 transition-colors shadow-sm"
+              >
+                <FileDown className="w-3.5 h-3.5" />
+                <span>Reports</span>
+              </button>
+            </>
+          )}
+
           <div className="hidden sm:flex items-center gap-1.5 bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800/80">
             <Terminal className="w-3.5 h-3.5 text-indigo-400" />
             <span>cddm serve</span>
           </div>
-          <div className="flex items-center gap-1.5 bg-indigo-950/60 text-indigo-300 px-3 py-1.5 rounded-lg border border-indigo-800/60 shadow-sm">
+          <div className="hidden md:flex items-center gap-1.5 bg-indigo-950/60 text-indigo-300 px-3 py-1.5 rounded-lg border border-indigo-800/60 shadow-sm">
             <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-            <span>M61 Winnowing Engine</span>
+            <span>M61 Winnowing</span>
           </div>
         </div>
       </header>
@@ -57,6 +95,9 @@ export const App: React.FC = () => {
         <ScanProgressBar />
         <ScanResults />
       </main>
+
+      {/* Global Config Modal */}
+      <ScanConfigModal isOpen={isScanConfigOpen} onClose={() => setIsScanConfigOpen(false)} />
 
       {/* Footer */}
       <footer className="border-t border-slate-900 py-6 text-center text-xs text-slate-500 font-mono bg-slate-950/80">

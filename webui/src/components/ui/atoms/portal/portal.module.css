@@ -1,0 +1,5 @@
+@import "../../styles/theme.css";
+
+.portalContainer {
+  position: static;
+}

@@ -1,0 +1,140 @@
+@import "../../styles/win2x-theme.css";
+
+.snapAssistZone {
+  position: fixed;
+  z-index: 9895;
+  box-sizing: border-box;
+  padding: 16px;
+  background-color: var(--win2x-bg-acrylic, rgba(15, 23, 42, 0.88));
+  border: 2px dashed var(--win2x-accent-primary, #6366f1);
+  border-radius: var(--win2x-radius-window, 12px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(var(--win2x-blur-acrylic, 24px));
+  -webkit-backdrop-filter: blur(var(--win2x-blur-acrylic, 24px));
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: assistFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  overflow: hidden;
+}
+
+@keyframes assistFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.titleArea {
+  display: flex;
+  align-items: center;
+}
+
+.title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--win2x-text-primary, #f8fafc);
+}
+
+.dismissBtn {
+  background: transparent;
+  border: none;
+  color: var(--win2x-text-muted, #94a3b8);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--win2x-transition-fast, 150ms ease);
+}
+
+.dismissBtn:hover {
+  color: var(--win2x-text-primary, #f8fafc);
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+  overflow-y: auto;
+  flex: 1;
+  padding: 4px;
+}
+
+.candidateCard {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px;
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  outline: none;
+  transition: all var(--win2x-transition-fast, 150ms ease);
+}
+
+.candidateCard:hover {
+  background-color: rgba(99, 102, 241, 0.15);
+  border-color: var(--win2x-accent-primary, #6366f1);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.cardIconWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: 6px;
+  background-color: rgba(49, 46, 129, 0.5);
+}
+
+.cardInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+}
+
+.cardTitle {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--win2x-text-primary, #f8fafc);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cardSubtitle {
+  font-size: 0.7rem;
+  color: var(--win2x-text-muted, #94a3b8);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cardBadge {
+  font-size: 0.65rem;
+  padding: 2px 6px;
+  border-radius: 9999px;
+  background-color: rgba(99, 102, 241, 0.25);
+  color: #a5b4fc;
+  font-family: ui-monospace, monospace;
+}

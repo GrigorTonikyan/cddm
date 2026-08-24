@@ -1,0 +1,48 @@
+@import "../../styles/theme.css";
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  border-radius: var(--cddm-ui-radius-button);
+  color: var(--cddm-ui-text-muted);
+  transition:
+    color var(--cddm-ui-transition-fast),
+    background-color var(--cddm-ui-transition-fast);
+  padding: 0.25rem;
+  line-height: 1;
+
+  &:hover {
+    color: var(--cddm-ui-text-primary);
+    background-color: var(--cddm-ui-bg-btn-hover);
+  }
+
+  &:active {
+    background-color: var(--cddm-ui-bg-btn-active);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* Danger variant */
+  &.variantDanger:hover {
+    background-color: var(--cddm-ui-bg-danger-hover);
+    color: #ffffff;
+  }
+
+  /* Sizes */
+  &.sizeSm {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  &.sizeMd {
+    width: 2rem;
+    height: 1.75rem;
+  }
+}

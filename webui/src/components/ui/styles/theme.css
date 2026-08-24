@@ -1,0 +1,83 @@
+/**
+ * Shared Design Tokens for the Atomic UI Component Library.
+ * Fully parameterized CSS custom properties with zero magic values.
+ */
+
+:root {
+  /* Surfaces & Backgrounds */
+  --cddm-ui-bg-base: #0f172a;
+  --cddm-ui-bg-card: rgba(2, 6, 23, 0.7);
+  --cddm-ui-bg-card-header: rgba(15, 23, 42, 0.6);
+  --cddm-ui-bg-card-header-hover: rgba(30, 41, 59, 0.4);
+  --cddm-ui-bg-code: rgba(2, 6, 23, 0.85);
+  --cddm-ui-bg-backdrop: rgba(2, 6, 23, 0.8);
+  --cddm-ui-bg-btn-hover: rgba(30, 41, 59, 0.8);
+  --cddm-ui-bg-btn-active: rgba(51, 65, 85, 0.9);
+  --cddm-ui-bg-danger-hover: #e11d48;
+
+  /* Borders & Dividers */
+  --cddm-ui-border-card: rgba(30, 41, 59, 0.8);
+  --cddm-ui-border-code: rgba(30, 41, 59, 0.8);
+  --cddm-ui-border-badge-indigo: rgba(99, 102, 241, 0.4);
+  --cddm-ui-border-badge-emerald: rgba(16, 185, 129, 0.4);
+  --cddm-ui-border-badge-rose: rgba(244, 63, 94, 0.4);
+  --cddm-ui-border-badge-amber: rgba(245, 158, 11, 0.4);
+  --cddm-ui-border-badge-slate: rgba(100, 116, 139, 0.4);
+  --cddm-ui-border-badge-cyan: rgba(6, 182, 212, 0.4);
+
+  /* Typography Colors */
+  --cddm-ui-text-primary: #f8fafc;
+  --cddm-ui-text-secondary: #94a3b8;
+  --cddm-ui-text-muted: #64748b;
+  --cddm-ui-text-title: #f1f5f9;
+  --cddm-ui-text-code: #cbd5e1;
+
+  /* Accent & Status Colors */
+  --cddm-ui-accent-primary: #6366f1;
+  --cddm-ui-accent-hover: #818cf8;
+  --cddm-ui-accent-active: #4f46e5;
+  --cddm-ui-success-text: #34d399;
+
+  /* Badge Color Variants */
+  --cddm-ui-badge-indigo-bg: rgba(49, 46, 129, 0.5);
+  --cddm-ui-badge-indigo-text: #a5b4fc;
+  --cddm-ui-badge-emerald-bg: rgba(6, 78, 59, 0.5);
+  --cddm-ui-badge-emerald-text: #6ee7b7;
+  --cddm-ui-badge-rose-bg: rgba(136, 19, 55, 0.5);
+  --cddm-ui-badge-rose-text: #fda4af;
+  --cddm-ui-badge-amber-bg: rgba(120, 53, 15, 0.5);
+  --cddm-ui-badge-amber-text: #fcd34d;
+  --cddm-ui-badge-slate-bg: rgba(30, 41, 59, 0.6);
+  --cddm-ui-badge-slate-text: #cbd5e1;
+  --cddm-ui-badge-cyan-bg: rgba(22, 78, 99, 0.5);
+  --cddm-ui-badge-cyan-text: #67e8f9;
+
+  /* Code Block Variants */
+  --cddm-ui-code-neutral-bg: rgba(2, 6, 23, 0.85);
+  --cddm-ui-code-neutral-text: #cbd5e1;
+  --cddm-ui-code-added-bg: rgba(6, 78, 59, 0.3);
+  --cddm-ui-code-added-border: rgba(16, 185, 129, 0.4);
+  --cddm-ui-code-added-text: #6ee7b7;
+  --cddm-ui-code-removed-bg: rgba(136, 19, 55, 0.3);
+  --cddm-ui-code-removed-border: rgba(244, 63, 94, 0.4);
+  --cddm-ui-code-removed-text: #fda4af;
+  --cddm-ui-code-highlight-bg: rgba(49, 46, 129, 0.4);
+  --cddm-ui-code-highlight-border: rgba(99, 102, 241, 0.5);
+  --cddm-ui-code-highlight-text: #c7d2fe;
+
+  /* Radii */
+  --cddm-ui-radius-card: 12px;
+  --cddm-ui-radius-button: 6px;
+  --cddm-ui-radius-badge: 9999px;
+
+  /* Blurs & Shadows */
+  --cddm-ui-blur-backdrop: 8px;
+
+  /* Transitions */
+  --cddm-ui-transition-fast: 100ms cubic-bezier(0.16, 1, 0.3, 1);
+  --cddm-ui-transition-normal: 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  --cddm-ui-transition-slow: 200ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Z-Indices */
+  --cddm-ui-z-backdrop: 9990;
+}

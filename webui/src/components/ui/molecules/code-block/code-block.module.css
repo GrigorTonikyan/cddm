@@ -1,0 +1,115 @@
+@import "../../styles/theme.css";
+
+.container {
+  border-radius: var(--cddm-ui-radius-card);
+  border: 1px solid var(--cddm-ui-border-code);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+
+  /* Color Variant Modifiers */
+  &.variantNeutral {
+    background-color: var(--cddm-ui-code-neutral-bg);
+    color: var(--cddm-ui-code-neutral-text);
+  }
+
+  &.variantAdded {
+    background-color: var(--cddm-ui-code-added-bg);
+    border-color: var(--cddm-ui-code-added-border);
+    color: var(--cddm-ui-code-added-text);
+  }
+
+  &.variantRemoved {
+    background-color: var(--cddm-ui-code-removed-bg);
+    border-color: var(--cddm-ui-code-removed-border);
+    color: var(--cddm-ui-code-removed-text);
+  }
+
+  &.variantHighlight {
+    background-color: var(--cddm-ui-code-highlight-bg);
+    border-color: var(--cddm-ui-code-highlight-border);
+    color: var(--cddm-ui-code-highlight-text);
+  }
+}
+
+.header {
+  padding: 0.375rem 0.75rem;
+  background-color: var(--cddm-ui-bg-card-header);
+  border-bottom: 1px solid inherit;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.fileInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.filename {
+  font-weight: 600;
+  color: var(--cddm-ui-text-primary);
+}
+
+.lineRange {
+  color: var(--cddm-ui-text-muted);
+}
+
+.copyButton {
+  padding: 0.25rem;
+  border-radius: var(--cddm-ui-radius-button);
+  color: var(--cddm-ui-text-muted);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    color var(--cddm-ui-transition-fast),
+    background-color var(--cddm-ui-transition-fast);
+
+  &:hover {
+    color: var(--cddm-ui-text-primary);
+    background-color: var(--cddm-ui-bg-btn-hover);
+  }
+}
+
+.checkIcon {
+  color: var(--cddm-ui-success-text);
+}
+
+.codeArea {
+  padding: 0.75rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  overflow-x: auto;
+  overflow-y: auto;
+  user-select: text;
+  max-height: 15rem;
+}
+
+.pre {
+  margin: 0;
+  white-space: pre;
+  font-family: inherit;
+  overflow: visible;
+  display: inline-block;
+  min-width: 100%;
+}
+
+.emptyPlaceholder {
+  color: var(--cddm-ui-text-muted);
+  font-style: italic;
+  user-select: none;
+}

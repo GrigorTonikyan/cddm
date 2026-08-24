@@ -1,16 +1,18 @@
-// Atomic Primitives
-export * from "./atoms/Portal";
-export * from "./atoms/Backdrop";
-export * from "./atoms/Badge";
-export * from "./atoms/IconButton";
-export * from "./atoms/ResizeHandle";
-export * from "./atoms/WindowControls";
+/**
+ * Atomic UI Component System
+ *
+ * Universal, design-tokenized presentational atoms and molecules.
+ */
 
-// Molecular Components
-export * from "./molecules/ResizeHandleGroup";
-export * from "./molecules/TitleBar";
-export * from "./molecules/CollapsibleCard";
-export * from "./molecules/CodeBlock";
+// Constants & Types
+export * from "./constants/ui-constants";
 
-// Organism Windows
-export * from "./organisms/Window";
+// Atoms
+export * from "./atoms/portal/portal";
+export * from "./atoms/backdrop/backdrop";
+export * from "./atoms/badge/badge";
+export * from "./atoms/icon-button/icon-button";
+
+// Molecules
+export * from "./molecules/collapsible-card/collapsible-card";
+export * from "./molecules/code-block/code-block";

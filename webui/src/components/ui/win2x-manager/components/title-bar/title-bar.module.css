@@ -1,0 +1,75 @@
+@import "../../styles/win2x-theme.css";
+
+.titleBar {
+  flex-shrink: 0;
+  padding: 0.625rem 1rem;
+  background-color: var(--win2x-bg-titlebar);
+  border-bottom: 1px solid var(--win2x-border-titlebar);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  user-select: none;
+  touch-action: none;
+  cursor: move;
+
+  &.rounded {
+    border-top-left-radius: var(--win2x-radius-window);
+    border-top-right-radius: var(--win2x-radius-window);
+  }
+
+  &.notRounded {
+    border-radius: 0;
+  }
+}
+
+.infoArea {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 0;
+  padding-right: 1rem;
+  pointer-events: none;
+}
+
+.iconWrapper {
+  padding: 0.375rem;
+  border-radius: var(--win2x-radius-button);
+  background-color: rgba(49, 46, 129, 0.5);
+  border: 1px solid var(--win2x-border-badge-indigo);
+  color: var(--win2x-accent-hover);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.textContainer {
+  min-width: 0;
+}
+
+.title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--win2x-text-title);
+  letter-spacing: 0.025em;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.subtitle {
+  font-size: 0.6875rem;
+  color: var(--win2x-text-subtitle);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  margin: 0.125rem 0 0 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1;
+}
+
+.controlsArea {
+  flex-shrink: 0;
+  pointer-events: auto;
+}

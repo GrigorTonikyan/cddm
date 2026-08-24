@@ -88,6 +88,7 @@ export interface ScanConfig {
 export type ScanPhase =
   | "Discovery"
   | "Tokenization"
+  | "AstAnalysis"
   | "Indexing"
   | "Merging"
   | "Scoring"
@@ -187,24 +188,3 @@ export interface TreemapRect {
   height: number;
   node: TreemapNode;
 }
-
-/**
- * Windows 11 persistent window state for draggable/resizable modals.
- */
-export interface ModalWindowState {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  isMaximized: boolean;
-  isMinimized: boolean;
-}
-
-export const DEFAULT_MODAL_WINDOW_STATE: ModalWindowState = {
-  x: -1, // -1 denotes center dynamically on first open
-  y: -1,
-  width: 920,
-  height: 680,
-  isMaximized: false,
-  isMinimized: false,
-};

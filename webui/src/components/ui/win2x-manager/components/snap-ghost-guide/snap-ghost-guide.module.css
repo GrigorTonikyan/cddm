@@ -1,0 +1,14 @@
+.snapGhost {
+  position: fixed;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  background-color: var(--win2x-color-snap-ghost-bg, rgba(79, 70, 229, 0.2));
+  border: 2px solid var(--win2x-color-snap-ghost-border, rgba(79, 70, 229, 0.5));
+  border-radius: var(--win2x-radius, 8px);
+  backdrop-filter: blur(4px);
+  will-change: transform, width, height;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1) inset;
+  z-index: 9890;
+}

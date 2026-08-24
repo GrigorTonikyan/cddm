@@ -2,6 +2,10 @@ import React, { useState, useMemo } from "react";
 import { useCDDMStore } from "../store/cddm-store";
 import { ClonePairCard } from "./ClonePairCard";
 import { DuplicationTreemap } from "./DuplicationTreemap";
+import { TreemapExplorerModal } from "./TreemapExplorerModal";
+import { LanguageAnalyticsModal } from "./LanguageAnalyticsModal";
+import { HealthAuditModal } from "./HealthAuditModal";
+import { ExportReportModal } from "./ExportReportModal";
 import { parsePath, getLanguageStyle } from "../utils/path-utils";
 import {
   Activity,
@@ -18,6 +22,9 @@ import {
   CheckCircle2,
   PieChart,
   LayoutGrid,
+  Maximize2,
+  FileDown,
+  Sliders,
 } from "lucide-react";
 
 export interface ScanResultsProps {
@@ -60,7 +67,18 @@ const SummaryCard: React.FC<SummaryCardProps> = ({ title, value, subtitle, icon 
 );
 
 export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
-  const { results } = useCDDMStore();
+  const {
+    results,
+    isTreemapModalOpen,
+    isLanguageModalOpen,
+    isHealthAuditOpen,
+    isExportReportOpen,
+    setIsTreemapModalOpen,
+    setIsLanguageModalOpen,
+    setIsHealthAuditOpen,
+    setIsExportReportOpen,
+    setIsScanConfigOpen,
+  } = useCDDMStore();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLang, setSelectedLang] = useState<string>("ALL");
@@ -68,6 +86,7 @@ export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
   const [sortBy, setSortBy] = useState<"similarity" | "tokens" | "name">("similarity");
   const [currentPage, setCurrentPage] = useState(1);
   const [analyticsView, setAnalyticsView] = useState<"treemap" | "languages">("treemap");
+
   const itemsPerPage = 25;
 
   // Language Breakdown total tokens calculation
@@ -122,22 +141,60 @@ export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
 
   const scoreColor =
     results.dry_health_score >= 80
-      ? "text-emerald-400 border-emerald-500/40 bg-emerald-950/20 shadow-emerald-950/30"
+      ? "text-emerald-400 border-emerald-500/40 bg-emerald-950/20 shadow-emerald-950/30 hover:border-emerald-400/80"
       : results.dry_health_score >= 60
-        ? "text-amber-400 border-amber-500/40 bg-amber-950/20 shadow-amber-950/30"
-        : "text-rose-400 border-rose-500/40 bg-rose-950/20 shadow-rose-950/30";
+        ? "text-amber-400 border-amber-500/40 bg-amber-950/20 shadow-amber-950/30 hover:border-amber-400/80"
+        : "text-rose-400 border-rose-500/40 bg-rose-950/20 shadow-rose-950/30 hover:border-rose-400/80";
 
   return (
     <div className={`space-y-6 ${className}`}>
+      {/* Action Bar Header with Quick Launch Buttons */}
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-900/60 p-3 rounded-xl border border-slate-800 text-xs font-mono">
+        <div className="flex items-center gap-2 text-slate-300 font-bold">
+          <Activity className="w-4 h-4 text-indigo-400" />
+          <span>Codebase Analysis Overview</span>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setIsScanConfigOpen(true)}
+            className="px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 hover:bg-slate-800 text-slate-300 flex items-center gap-1.5 transition-colors shadow-sm"
+          >
+            <Sliders className="w-3.5 h-3.5 text-indigo-400" />
+            <span>Scan Settings</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsHealthAuditOpen(true)}
+            className="px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 hover:bg-slate-800 text-slate-300 flex items-center gap-1.5 transition-colors shadow-sm"
+          >
+            <Award className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Health Audit</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsExportReportOpen(true)}
+            className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold flex items-center gap-1.5 transition-colors shadow-sm"
+          >
+            <FileDown className="w-3.5 h-3.5" />
+            <span>Export & Reports</span>
+          </button>
+        </div>
+      </div>
+
       {/* Top Metrics Cards Banner */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        {/* DRY Health Score Card */}
+        {/* DRY Health Score Card (Clickable to open HealthAuditModal) */}
         <div
-          className={`border rounded-xl p-4 flex flex-col justify-between shadow-lg relative overflow-hidden ${scoreColor}`}
+          onClick={() => setIsHealthAuditOpen(true)}
+          className={`border rounded-xl p-4 flex flex-col justify-between shadow-lg relative overflow-hidden cursor-pointer transition-all ${scoreColor}`}
+          title="Click to open full DRY Health Score Audit Window"
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider opacity-90">
-              DRY Health Score
+            <span className="text-xs font-bold uppercase tracking-wider opacity-90 flex items-center gap-1.5">
+              <span>DRY Health Score</span>
+              <Maximize2 className="w-3 h-3 opacity-60" />
             </span>
             <Award className="w-5 h-5" />
           </div>
@@ -203,36 +260,55 @@ export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
 
       {/* Visual Analytics Toolbar & Views */}
       <div className="space-y-3">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
               Visual Analytics
             </span>
           </div>
-          <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-lg border border-slate-800 text-xs font-mono">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-lg border border-slate-800 text-xs font-mono">
+              <button
+                type="button"
+                onClick={() => setAnalyticsView("treemap")}
+                className={`px-3 py-1 rounded-md flex items-center gap-1.5 transition-all ${
+                  analyticsView === "treemap"
+                    ? "bg-indigo-600 text-white font-semibold shadow-sm"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                <LayoutGrid className="w-3.5 h-3.5" />
+                Duplication Treemap
+              </button>
+              <button
+                type="button"
+                onClick={() => setAnalyticsView("languages")}
+                className={`px-3 py-1 rounded-md flex items-center gap-1.5 transition-all ${
+                  analyticsView === "languages"
+                    ? "bg-indigo-600 text-white font-semibold shadow-sm"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                <PieChart className="w-3.5 h-3.5" />
+                Language Breakdown
+              </button>
+            </div>
+
+            {/* Expand Active View to Window */}
             <button
               type="button"
-              onClick={() => setAnalyticsView("treemap")}
-              className={`px-3 py-1 rounded-md flex items-center gap-1.5 transition-all ${
-                analyticsView === "treemap"
-                  ? "bg-indigo-600 text-white font-semibold shadow-sm"
-                  : "text-slate-400 hover:text-slate-200"
-              }`}
+              onClick={() => {
+                if (analyticsView === "treemap") {
+                  setIsTreemapModalOpen(true);
+                } else {
+                  setIsLanguageModalOpen(true);
+                }
+              }}
+              className="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 text-xs font-mono flex items-center gap-1.5 transition-colors"
+              title="Open current analytics view into a dedicated desktop modal window"
             >
-              <LayoutGrid className="w-3.5 h-3.5" />
-              Duplication Treemap
-            </button>
-            <button
-              type="button"
-              onClick={() => setAnalyticsView("languages")}
-              className={`px-3 py-1 rounded-md flex items-center gap-1.5 transition-all ${
-                analyticsView === "languages"
-                  ? "bg-indigo-600 text-white font-semibold shadow-sm"
-                  : "text-slate-400 hover:text-slate-200"
-              }`}
-            >
-              <PieChart className="w-3.5 h-3.5" />
-              Language Breakdown
+              <Maximize2 className="w-3.5 h-3.5 text-indigo-400" />
+              <span>Open in Window</span>
             </button>
           </div>
         </div>
@@ -482,6 +558,39 @@ export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
           </div>
         )}
       </div>
+
+      {/* Win2x Modals */}
+      <TreemapExplorerModal
+        isOpen={isTreemapModalOpen}
+        onClose={() => setIsTreemapModalOpen(false)}
+        clonePairs={results.clone_pairs}
+        totalTokens={results.total_tokens}
+        selectedFilterPath={searchTerm}
+        onSelectFilterPath={(p) => {
+          setSearchTerm(p);
+          setCurrentPage(1);
+        }}
+      />
+
+      <LanguageAnalyticsModal
+        isOpen={isLanguageModalOpen}
+        onClose={() => setIsLanguageModalOpen(false)}
+        languages={results.language_breakdown}
+        totalTokens={results.total_tokens}
+        totalFiles={results.total_files}
+      />
+
+      <HealthAuditModal
+        isOpen={isHealthAuditOpen}
+        onClose={() => setIsHealthAuditOpen(false)}
+        results={results}
+      />
+
+      <ExportReportModal
+        isOpen={isExportReportOpen}
+        onClose={() => setIsExportReportOpen(false)}
+        results={results}
+      />
     </div>
   );
 };

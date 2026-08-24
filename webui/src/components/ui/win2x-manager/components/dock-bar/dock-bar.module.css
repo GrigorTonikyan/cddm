@@ -1,0 +1,198 @@
+@import "../../styles/win2x-theme.css";
+
+.dockBar {
+  position: fixed;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: var(--win2x-z-dock, 9999);
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+  pointer-events: none; /* Let clicks pass through empty space */
+}
+
+.dockGlobalControls {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background-color: var(--win2x-bg-acrylic);
+  border: 1px solid var(--win2x-border-window);
+  border-radius: var(--win2x-radius-pill, 12px);
+  box-shadow: var(--win2x-shadow-window);
+  backdrop-filter: blur(var(--win2x-blur-acrylic));
+  -webkit-backdrop-filter: blur(var(--win2x-blur-acrylic));
+}
+
+.divider {
+  width: 1px;
+  height: 1.25rem;
+  background-color: var(--win2x-border-titlebar);
+  margin: 0 0.25rem;
+}
+
+.layoutBtn {
+  background: transparent;
+  border: none;
+  color: var(--win2x-text-muted);
+  padding: 0.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all var(--win2x-transition-fast);
+
+  &:hover {
+    color: var(--win2x-text-primary);
+    background-color: rgba(255, 255, 255, 0.08);
+  }
+}
+
+.dockPillContainer {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+/* Minimized Dock Pill */
+.pill {
+  position: relative;
+  pointer-events: auto;
+  padding: 0.625rem 1rem;
+  border-radius: var(--win2x-radius-pill);
+  background-color: var(--win2x-bg-pill);
+  border: 1px solid var(--win2x-border-pill);
+  box-shadow: var(--win2x-shadow-pill);
+  backdrop-filter: blur(var(--win2x-blur-acrylic));
+  -webkit-backdrop-filter: blur(var(--win2x-blur-acrylic));
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  user-select: none;
+  font-size: 0.75rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  outline: none;
+  transition:
+    background-color var(--win2x-transition-fast),
+    transform var(--win2x-transition-fast),
+    border-color var(--win2x-transition-fast);
+  animation: slideUp var(--win2x-transition-slow) ease-out;
+
+  &:hover {
+    background-color: var(--win2x-bg-pill-hover);
+    transform: translateY(-2px);
+  }
+
+  &:focus-visible {
+    border-color: var(--win2x-accent-primary);
+    box-shadow: 0 0 0 2px var(--win2x-accent-hover);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.pillIconWrapper {
+  padding: 0.375rem;
+  border-radius: var(--win2x-radius-button);
+  background-color: rgba(49, 46, 129, 0.5);
+  border: 1px solid var(--win2x-border-badge-indigo);
+  color: var(--win2x-accent-hover);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dockDragHandle {
+  pointer-events: auto;
+  cursor: grab;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.25rem;
+  background-color: var(--win2x-bg-acrylic);
+  border: 1px solid var(--win2x-border-window);
+  border-radius: var(--win2x-radius-pill, 12px);
+  box-shadow: var(--win2x-shadow-window);
+  backdrop-filter: blur(var(--win2x-blur-acrylic));
+  -webkit-backdrop-filter: blur(var(--win2x-blur-acrylic));
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.pillTextGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  max-width: 14rem;
+}
+
+.pillTitle {
+  font-weight: 700;
+  color: var(--win2x-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pillSubtitle {
+  font-size: 0.65rem;
+  color: var(--win2x-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pillBadge {
+  font-size: 0.6rem;
+  font-family: ui-monospace, monospace;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 9999px;
+  background-color: rgba(99, 102, 241, 0.25);
+  color: #a5b4fc;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+.pillControls {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.pillRestoreBtn,
+.pillCloseBtn {
+  padding: 0.25rem;
+  color: var(--win2x-text-muted);
+  border-radius: var(--win2x-radius-button);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    color var(--win2x-transition-fast),
+    background-color var(--win2x-transition-fast);
+
+  &:hover {
+    color: var(--win2x-text-primary);
+    background-color: rgba(255, 255, 255, 0.08);
+  }
+}
+
+.pillCloseBtn:hover {
+  color: #fb7185;
+  background-color: rgba(225, 29, 72, 0.2);
+}

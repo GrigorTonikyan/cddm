@@ -1,0 +1,72 @@
+@import "../../styles/win2x-theme.css";
+
+.handle {
+  position: absolute;
+  user-select: none;
+  touch-action: none;
+  z-index: var(--win2x-z-handle);
+
+  &.top {
+    top: 0;
+    left: 0.5rem;
+    right: 0.5rem;
+    height: 0.375rem;
+    cursor: ns-resize;
+  }
+
+  &.bottom {
+    bottom: 0;
+    left: 0.5rem;
+    right: 0.5rem;
+    height: 0.375rem;
+    cursor: ns-resize;
+  }
+
+  &.left {
+    top: 0.5rem;
+    bottom: 0.5rem;
+    left: 0;
+    width: 0.375rem;
+    cursor: ew-resize;
+  }
+
+  &.right {
+    top: 0.5rem;
+    bottom: 0.5rem;
+    right: 0;
+    width: 0.375rem;
+    cursor: ew-resize;
+  }
+
+  &.topLeft {
+    top: 0;
+    left: 0;
+    width: 0.875rem;
+    height: 0.875rem;
+    cursor: nwse-resize;
+  }
+
+  &.topRight {
+    top: 0;
+    right: 0;
+    width: 0.875rem;
+    height: 0.875rem;
+    cursor: nesw-resize;
+  }
+
+  &.bottomLeft {
+    bottom: 0;
+    left: 0;
+    width: 0.875rem;
+    height: 0.875rem;
+    cursor: nesw-resize;
+  }
+
+  &.bottomRight {
+    bottom: 0;
+    right: 0;
+    width: 0.875rem;
+    height: 0.875rem;
+    cursor: nwse-resize;
+  }
+}

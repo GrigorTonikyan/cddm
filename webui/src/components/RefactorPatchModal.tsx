@@ -2,7 +2,8 @@ import React, { useEffect, useState, useCallback } from "react";
 import { API_ROUTES } from "../constants/cddm-constants";
 import { RefactorRequest, RefactorSuggestion } from "../types/cddm-types";
 import { parsePath } from "../utils/path-utils";
-import { Window, CollapsibleCard, CodeBlock } from "./ui";
+import { CollapsibleCard, CodeBlock, BADGE_VARIANTS, CODE_BLOCK_VARIANTS } from "./ui";
+import { Win2xWindow } from "./ui/win2x-manager";
 import {
   Sparkles,
   Download,
@@ -45,16 +46,16 @@ export const RefactorPatchModal: React.FC<RefactorPatchModalProps> = ({
   const fetchSuggestion = useCallback(async () => {
     setLoading(true);
     setError(null);
-    try {
-      const payload: RefactorRequest = {
-        file_a: fileA,
-        start_line_a: startLineA,
-        end_line_a: endLineA,
-        file_b: fileB,
-        start_line_b: startLineB,
-        end_line_b: endLineB,
-      };
+    const payload: RefactorRequest = {
+      file_a: fileA,
+      start_line_a: startLineA,
+      end_line_a: endLineA,
+      file_b: fileB,
+      start_line_b: startLineB,
+      end_line_b: endLineB,
+    };
 
+    try {
       const res = await fetch(API_ROUTES.REFACTOR, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -62,7 +63,10 @@ export const RefactorPatchModal: React.FC<RefactorPatchModalProps> = ({
       });
 
       if (!res.ok) {
-        throw new Error(`Refactoring analysis failed (${res.status}: ${await res.text()})`);
+        const errorText = await res.text().catch(() => res.statusText);
+        throw new Error(
+          `Refactoring analysis failed (${res.status}): ${errorText || res.statusText}`,
+        );
       }
 
       const data = (await res.json()) as RefactorSuggestion;
@@ -128,11 +132,14 @@ export const RefactorPatchModal: React.FC<RefactorPatchModalProps> = ({
   );
 
   return (
-    <Window
+    <Win2xWindow
+      id={`refactor-patch-${fileA}:${startLineA}-${endLineA}_${fileB}:${startLineB}-${endLineB}`}
+      windowType="refactor-advisor"
       isOpen={isOpen}
       onClose={onClose}
       title="Automated Refactoring Advisor"
-      subtitle="Synthesized unified patch & deduplication recommendation"
+      subtitle={`${parsedA.filename}:${startLineA} <-> ${parsedB.filename}:${startLineB}`}
+      badge={`L${startLineA}-${endLineA}`}
       icon={<Sparkles className="w-4 h-4 text-indigo-400" />}
       footer={footerContent}
       initialWidth={920}
@@ -165,7 +172,7 @@ export const RefactorPatchModal: React.FC<RefactorPatchModalProps> = ({
             icon={<GitBranch className="w-4 h-4" />}
             title="Strategy & Overview"
             badgeCount={`~${suggestion.lines_saved} lines saved`}
-            badgeVariant="emerald"
+            badgeVariant={BADGE_VARIANTS.EMERALD}
             defaultOpen={true}
           >
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
@@ -223,7 +230,7 @@ export const RefactorPatchModal: React.FC<RefactorPatchModalProps> = ({
               icon={<AlertCircle className="w-4 h-4" />}
               title="Parameter Variances"
               badgeCount={suggestion.parameter_differences.length}
-              badgeVariant="amber"
+              badgeVariant={BADGE_VARIANTS.AMBER}
               defaultOpen={true}
             >
               <div className="space-y-3">
@@ -236,18 +243,16 @@ export const RefactorPatchModal: React.FC<RefactorPatchModalProps> = ({
                       filename={parsedA.filename}
                       lineRange={`L${diff.line_number_a}`}
                       code={diff.fragment_a_code}
-                      variant="removed"
+                      variant={CODE_BLOCK_VARIANTS.REMOVED}
                       showCopy={true}
-                      maxHeightClass="max-h-40"
                       emptyPlaceholder="<empty>"
                     />
                     <CodeBlock
                       filename={parsedB.filename}
                       lineRange={`L${diff.line_number_b}`}
                       code={diff.fragment_b_code}
-                      variant="added"
+                      variant={CODE_BLOCK_VARIANTS.ADDED}
                       showCopy={true}
-                      maxHeightClass="max-h-40"
                       emptyPlaceholder="<empty>"
                     />
                   </div>
@@ -260,7 +265,7 @@ export const RefactorPatchModal: React.FC<RefactorPatchModalProps> = ({
           <CollapsibleCard
             icon={<FileCode2 className="w-4 h-4" />}
             title="Unified Diff (.patch)"
-            badgeVariant="cyan"
+            badgeVariant={BADGE_VARIANTS.CYAN}
             defaultOpen={true}
             actions={
               <>
@@ -329,6 +334,6 @@ export const RefactorPatchModal: React.FC<RefactorPatchModalProps> = ({
           </CollapsibleCard>
         </div>
       ) : null}
-    </Window>
+    </Win2xWindow>
   );
 };

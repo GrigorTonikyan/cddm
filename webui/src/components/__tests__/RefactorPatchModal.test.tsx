@@ -2,6 +2,7 @@ import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vite-plus/test";
 import { RefactorPatchModal } from "../RefactorPatchModal";
 import { RefactorSuggestion } from "../../types/cddm-types";
+import { Win2xManagerProvider } from "../ui/win2x-manager/context/win2x-manager-context";
 
 describe("RefactorPatchModal Component", () => {
   const mockSuggestion: RefactorSuggestion = {
@@ -21,16 +22,18 @@ describe("RefactorPatchModal Component", () => {
 
   it("should return null when not open", () => {
     const { container } = render(
-      <RefactorPatchModal
-        isOpen={false}
-        onClose={() => {}}
-        fileA="src/a.ts"
-        startLineA={10}
-        endLineA={12}
-        fileB="src/b.ts"
-        startLineB={20}
-        endLineB={22}
-      />,
+      <Win2xManagerProvider>
+        <RefactorPatchModal
+          isOpen={false}
+          onClose={() => {}}
+          fileA="src/a.ts"
+          startLineA={10}
+          endLineA={12}
+          fileB="src/b.ts"
+          startLineB={20}
+          endLineB={22}
+        />
+      </Win2xManagerProvider>,
     );
     expect(container.firstChild).toBeNull();
   });
@@ -44,16 +47,18 @@ describe("RefactorPatchModal Component", () => {
     const onClose = vi.fn();
 
     render(
-      <RefactorPatchModal
-        isOpen={true}
-        onClose={onClose}
-        fileA="src/a.ts"
-        startLineA={10}
-        endLineA={12}
-        fileB="src/b.ts"
-        startLineB={20}
-        endLineB={22}
-      />,
+      <Win2xManagerProvider>
+        <RefactorPatchModal
+          isOpen={true}
+          onClose={onClose}
+          fileA="src/a.ts"
+          startLineA={10}
+          endLineA={12}
+          fileB="src/b.ts"
+          startLineB={20}
+          endLineB={22}
+        />
+      </Win2xManagerProvider>,
     );
 
     expect(screen.getByText("Automated Refactoring Advisor")).toBeDefined();
@@ -78,16 +83,18 @@ describe("RefactorPatchModal Component", () => {
     const onClose = vi.fn();
 
     render(
-      <RefactorPatchModal
-        isOpen={true}
-        onClose={onClose}
-        fileA="src/a.ts"
-        startLineA={10}
-        endLineA={12}
-        fileB="src/b.ts"
-        startLineB={20}
-        endLineB={22}
-      />,
+      <Win2xManagerProvider>
+        <RefactorPatchModal
+          isOpen={true}
+          onClose={onClose}
+          fileA="src/a.ts"
+          startLineA={10}
+          endLineA={12}
+          fileB="src/b.ts"
+          startLineB={20}
+          endLineB={22}
+        />
+      </Win2xManagerProvider>,
     );
 
     await waitFor(() => {

@@ -1,0 +1,11 @@
+@import "../../styles/win2x-theme.css";
+
+.container {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+
+  & .handleItem {
+    pointer-events: auto;
+  }
+}

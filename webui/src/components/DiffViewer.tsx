@@ -113,15 +113,20 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
       ]);
 
       if (!resA.ok) {
-        throw new Error(`Failed to load Fragment A snippet (${resA.status}: ${await resA.text()})`);
+        const errorTextA = await resA.text().catch(() => resA.statusText);
+        throw new Error(
+          `Failed to load Fragment A snippet (${resA.status}): ${errorTextA || resA.statusText}`,
+        );
       }
       if (!resB.ok) {
-        throw new Error(`Failed to load Fragment B snippet (${resB.status}: ${await resB.text()})`);
+        const errorTextB = await resB.text().catch(() => resB.statusText);
+        throw new Error(
+          `Failed to load Fragment B snippet (${resB.status}): ${errorTextB || resB.statusText}`,
+        );
       }
 
       const dataA = (await resA.json()) as SnippetResponse;
       const dataB = (await resB.json()) as SnippetResponse;
-
       setSnippetA(dataA);
       setSnippetB(dataB);
     } catch (err: unknown) {

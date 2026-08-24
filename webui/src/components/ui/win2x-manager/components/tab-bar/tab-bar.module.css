@@ -1,0 +1,156 @@
+@import "../../styles/win2x-theme.css";
+
+.tabBar {
+  display: flex;
+  align-items: center;
+  background-color: var(--win2x-bg-titlebar);
+  border-bottom: 1px solid var(--win2x-border-titlebar);
+  padding: 0 0.5rem;
+  height: 2.5rem;
+  position: relative;
+  user-select: none;
+}
+
+.scrollContainer {
+  display: flex;
+  flex: 1;
+  overflow-x: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+  scroll-behavior: smooth;
+  height: 100%;
+}
+
+.scrollContainer::-webkit-scrollbar {
+  display: none;
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 0.75rem;
+  height: 100%;
+  border: none;
+  background: transparent;
+  color: var(--win2x-text-muted);
+  cursor: pointer;
+  position: relative;
+  min-width: 120px;
+  max-width: 240px;
+  transition: all var(--win2x-transition-fast);
+  border-right: 1px solid var(--win2x-border-titlebar);
+}
+
+.tab:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: var(--win2x-text-primary);
+}
+
+.tab.active {
+  background-color: var(--win2x-bg-acrylic);
+  color: var(--win2x-text-primary);
+  border-bottom: 2px solid var(--win2x-accent-primary);
+}
+
+.tab.active::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--win2x-accent-primary);
+}
+
+.tabIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.tabTitle {
+  flex: 1;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.tabBadge {
+  font-size: 0.65rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 9999px;
+  background-color: rgba(255, 255, 255, 0.1);
+  font-weight: 600;
+}
+
+.badge-indigo,
+.badge-blue {
+  background-color: var(--win2x-badge-indigo-bg);
+  color: var(--win2x-badge-indigo-text);
+}
+.badge-emerald {
+  background-color: var(--win2x-badge-emerald-bg);
+  color: var(--win2x-badge-emerald-text);
+}
+.badge-rose {
+  background-color: var(--win2x-badge-rose-bg);
+  color: var(--win2x-badge-rose-text);
+}
+.badge-amber {
+  background-color: var(--win2x-badge-amber-bg);
+  color: var(--win2x-badge-amber-text);
+}
+.badge-slate {
+  background-color: var(--win2x-badge-slate-bg);
+  color: var(--win2x-badge-slate-text);
+}
+.badge-cyan {
+  background-color: var(--win2x-badge-cyan-bg);
+  color: var(--win2x-badge-cyan-text);
+}
+
+.tabClose {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 4px;
+  opacity: 0;
+  transition: all var(--win2x-transition-fast);
+}
+
+.tab:hover .tabClose,
+.tab.active .tabClose {
+  opacity: 1;
+}
+
+.tabClose:hover {
+  background-color: rgba(244, 63, 94, 0.2);
+  color: #fb7185;
+}
+
+.scrollBtn,
+.addBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 100%;
+  border: none;
+  background: transparent;
+  color: var(--win2x-text-muted);
+  cursor: pointer;
+  transition: all var(--win2x-transition-fast);
+}
+
+.scrollBtn:hover,
+.addBtn:hover {
+  color: var(--win2x-text-primary);
+  background-color: rgba(255, 255, 255, 0.05);
+}

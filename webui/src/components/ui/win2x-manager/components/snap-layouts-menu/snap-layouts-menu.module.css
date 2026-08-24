@@ -1,0 +1,89 @@
+@import "../../styles/win2x-theme.css";
+
+.menuContainer {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 10000;
+  width: 290px;
+  padding: 10px;
+  background-color: var(--win2x-bg-acrylic, rgba(15, 23, 42, 0.88));
+  border: 1px solid var(--win2x-border-window, rgba(255, 255, 255, 0.12));
+  border-radius: var(--win2x-radius-window, 12px);
+  box-shadow:
+    0 16px 36px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(var(--win2x-blur-acrylic, 24px));
+  -webkit-backdrop-filter: blur(var(--win2x-blur-acrylic, 24px));
+  user-select: none;
+  animation: flyoutIn 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: top right;
+}
+
+@keyframes flyoutIn {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.layoutCard {
+  position: relative;
+  width: 100%;
+  height: 56px;
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  overflow: hidden;
+  padding: 3px;
+  transition: border-color var(--win2x-transition-fast, 150ms ease);
+}
+
+.layoutCard:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.slotsWrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.slotButton {
+  position: absolute;
+  margin: 0;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 3px;
+  background-color: rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  outline: none;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--win2x-transition-fast, 150ms ease);
+}
+
+.slotButton:hover,
+.slotHovered {
+  background-color: var(--win2x-accent-primary, #6366f1) !important;
+  border-color: var(--win2x-accent-hover, #818cf8) !important;
+  box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+  z-index: 2;
+}
+
+.slotIndicator {
+  display: none;
+}

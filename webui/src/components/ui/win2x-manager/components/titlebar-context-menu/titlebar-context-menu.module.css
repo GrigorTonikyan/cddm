@@ -1,0 +1,76 @@
+@import "../../styles/win2x-theme.css";
+
+.contextMenu {
+  position: fixed;
+  z-index: 10001;
+  min-width: 180px;
+  padding: 6px;
+  background-color: var(--win2x-bg-acrylic, rgba(15, 23, 42, 0.92));
+  border: 1px solid var(--win2x-border-window, rgba(255, 255, 255, 0.12));
+  border-radius: var(--win2x-radius-window, 10px);
+  box-shadow:
+    0 16px 36px rgba(0, 0, 0, 0.65),
+    0 0 0 1px rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(var(--win2x-blur-acrylic, 24px));
+  -webkit-backdrop-filter: blur(var(--win2x-blur-acrylic, 24px));
+  user-select: none;
+  font-family: inherit;
+  font-size: 0.8125rem;
+  animation: contextMenuIn 0.14s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes contextMenuIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 6px 10px;
+  border: none;
+  background: transparent;
+  color: var(--win2x-text-primary, #f8fafc);
+  font-size: 0.8125rem;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color var(--win2x-transition-fast, 150ms ease);
+}
+
+.menuItem:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.menuItem:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.divider {
+  height: 1px;
+  background-color: var(--win2x-border-titlebar, rgba(255, 255, 255, 0.08));
+  margin: 4px 2px;
+}
+
+.closeItem {
+  color: #fb7185;
+}
+
+.closeItem:hover:not(:disabled) {
+  background-color: rgba(225, 29, 72, 0.15) !important;
+}
+
+.shortcutHint {
+  margin-left: auto;
+  font-size: 0.7rem;
+  opacity: 0.5;
+  font-family: ui-monospace, monospace;
+}
