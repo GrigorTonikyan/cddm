@@ -178,6 +178,10 @@ enum Commands {
         #[arg(short, long)]
         output: Option<PathBuf>,
 
+        /// Synthesize and print structured AI prompt specification for LLM agents
+        #[arg(long, default_value_t = false)]
+        prompt: bool,
+
         /// Specific language(s) to scan
         #[arg(short, long)]
         languages: Vec<String>,
@@ -296,6 +300,29 @@ enum Commands {
         #[arg(short = 'w', long, default_value_t = false)]
         write: bool,
     },
+
+    /// Generate formatted Markdown summary comment for Pull Requests / Merge Requests
+    Comment {
+        /// Directory path to scan (default: current directory)
+        #[arg(default_value = cddm_core::DEFAULT_DIRECTORY)]
+        directory: PathBuf,
+
+        /// Minimum token count to consider as duplicate clone
+        #[arg(short, long, default_value_t = cddm_core::DEFAULT_MIN_TOKENS)]
+        min_tokens: usize,
+
+        /// Duplication percentage threshold to fail on (default: 15.0)
+        #[arg(long, default_value_t = 15.0)]
+        fail_threshold: f64,
+
+        /// Target CI/CD platform format: github, gitlab, or azure
+        #[arg(short, long, value_enum, default_value_t = PlatformChoice::Github)]
+        platform: PlatformChoice,
+
+        /// Output file path to write Markdown comment to (default: stdout)
+        #[arg(short, long)]
+        output: Option<PathBuf>,
+    },
 }
 
 #[derive(Subcommand, Debug, Clone, PartialEq)]
@@ -389,6 +416,16 @@ impl std::fmt::Display for PlatformChoice {
             Self::Github => write!(f, "GitHub Actions"),
             Self::Gitlab => write!(f, "GitLab CI"),
             Self::Azure => write!(f, "Azure Pipelines"),
+        }
+    }
+}
+
+impl From<PlatformChoice> for cddm_core::WorkflowPlatform {
+    fn from(choice: PlatformChoice) -> Self {
+        match choice {
+            PlatformChoice::Github => cddm_core::WorkflowPlatform::GitHub,
+            PlatformChoice::Gitlab => cddm_core::WorkflowPlatform::GitLab,
+            PlatformChoice::Azure => cddm_core::WorkflowPlatform::Azure,
         }
     }
 }
@@ -586,6 +623,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             directory,
             min_tokens,
             output,
+            prompt,
             languages,
             ignore,
         } => {
@@ -638,14 +676,68 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     &selected_cluster.occurrences,
                 )?;
 
-                print_cluster_refactor_recommendation(selected_cluster, &suggestion);
+                if prompt {
+                    let prompt_req = cddm_core::AiRefactorPromptRequest {
+                        clone_type: selected_cluster.clone_type.clone(),
+                        similarity: selected_cluster.similarity,
+                        token_count: selected_cluster.token_count,
+                        lines_saved_est: suggestion.total_lines_saved,
+                        function_name: suggestion.suggested_function_name.clone(),
+                        target_module: suggestion.target_module_hint.clone(),
+                        occurrences: selected_cluster
+                            .occurrences
+                            .iter()
+                            .map(|occ| {
+                                let snippet = fs::read_to_string(&occ.file).unwrap_or_default();
+                                let lines: Vec<&str> = snippet.lines().collect();
+                                let sub = if occ.start_line > 0 && occ.start_line <= lines.len() {
+                                    let end = occ.end_line.min(lines.len());
+                                    lines[occ.start_line - 1..end].join("\n")
+                                } else {
+                                    String::new()
+                                };
+                                cddm_core::AiOccurrenceContext {
+                                    path: occ.file.clone(),
+                                    span: cddm_core::LineSpan {
+                                        line_start: occ.start_line,
+                                        line_end: occ.end_line,
+                                        byte_offset: 0,
+                                    },
+                                    snippet: sub,
+                                }
+                            })
+                            .collect(),
+                        invariant_body: suggestion.common_body_lines.join("\n"),
+                        parameters: suggestion
+                            .sites
+                            .iter()
+                            .flat_map(|s| {
+                                s.parameter_differences
+                                    .iter()
+                                    .map(|p| p.fragment_a_code.clone())
+                            })
+                            .collect(),
+                        custom_instructions: None,
+                    };
+                    let prompt_text = cddm_core::generate_ai_refactor_prompt(&prompt_req);
+                    println!("{}", prompt_text);
+                    if let Some(out_path) = output {
+                        fs::write(&out_path, &prompt_text)?;
+                        println!(
+                            "\nAI refactoring prompt written to '{}'.",
+                            out_path.display()
+                        );
+                    }
+                } else {
+                    print_cluster_refactor_recommendation(selected_cluster, &suggestion);
 
-                if let Some(out_path) = output {
-                    fs::write(&out_path, &suggestion.unified_patch)?;
-                    println!(
-                        "\nMulti-site unified patch written to '{}'.",
-                        out_path.display()
-                    );
+                    if let Some(out_path) = output {
+                        fs::write(&out_path, &suggestion.unified_patch)?;
+                        println!(
+                            "\nMulti-site unified patch written to '{}'.",
+                            out_path.display()
+                        );
+                    }
                 }
             } else {
                 if result.clone_pairs.is_empty() {
@@ -673,11 +765,77 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     (selected.start_line_b, selected.end_line_b),
                 )?;
 
-                print_refactor_recommendation(selected, &suggestion);
+                if prompt {
+                    let snippet_a = fs::read_to_string(&selected.file_a).unwrap_or_default();
+                    let lines_a: Vec<&str> = snippet_a.lines().collect();
+                    let sub_a =
+                        if selected.start_line_a > 0 && selected.start_line_a <= lines_a.len() {
+                            let end = selected.end_line_a.min(lines_a.len());
+                            lines_a[selected.start_line_a - 1..end].join("\n")
+                        } else {
+                            String::new()
+                        };
+                    let snippet_b = fs::read_to_string(&selected.file_b).unwrap_or_default();
+                    let lines_b: Vec<&str> = snippet_b.lines().collect();
+                    let sub_b =
+                        if selected.start_line_b > 0 && selected.start_line_b <= lines_b.len() {
+                            let end = selected.end_line_b.min(lines_b.len());
+                            lines_b[selected.start_line_b - 1..end].join("\n")
+                        } else {
+                            String::new()
+                        };
 
-                if let Some(out_path) = output {
-                    fs::write(&out_path, &suggestion.unified_patch)?;
-                    println!("\nUnified patch written to '{}'.", out_path.display());
+                    let prompt_req = cddm_core::AiRefactorPromptRequest {
+                        clone_type: selected.clone_type.clone(),
+                        similarity: selected.similarity,
+                        token_count: selected.token_count,
+                        lines_saved_est: suggestion.lines_saved,
+                        function_name: suggestion.suggested_function_name.clone(),
+                        target_module: suggestion.target_module_hint.clone(),
+                        occurrences: vec![
+                            cddm_core::AiOccurrenceContext {
+                                path: selected.file_a.clone(),
+                                span: cddm_core::LineSpan {
+                                    line_start: selected.start_line_a,
+                                    line_end: selected.end_line_a,
+                                    byte_offset: 0,
+                                },
+                                snippet: sub_a,
+                            },
+                            cddm_core::AiOccurrenceContext {
+                                path: selected.file_b.clone(),
+                                span: cddm_core::LineSpan {
+                                    line_start: selected.start_line_b,
+                                    line_end: selected.end_line_b,
+                                    byte_offset: 0,
+                                },
+                                snippet: sub_b,
+                            },
+                        ],
+                        invariant_body: suggestion.common_body_lines.join("\n"),
+                        parameters: suggestion
+                            .parameter_differences
+                            .iter()
+                            .map(|p| p.fragment_a_code.clone())
+                            .collect(),
+                        custom_instructions: None,
+                    };
+                    let prompt_text = cddm_core::generate_ai_refactor_prompt(&prompt_req);
+                    println!("{}", prompt_text);
+                    if let Some(out_path) = output {
+                        fs::write(&out_path, &prompt_text)?;
+                        println!(
+                            "\nAI refactoring prompt written to '{}'.",
+                            out_path.display()
+                        );
+                    }
+                } else {
+                    print_refactor_recommendation(selected, &suggestion);
+
+                    if let Some(out_path) = output {
+                        fs::write(&out_path, &suggestion.unified_patch)?;
+                        println!("\nUnified patch written to '{}'.", out_path.display());
+                    }
                 }
             }
         }
@@ -1002,6 +1160,54 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 );
             } else {
                 println!("{}", content);
+            }
+        }
+
+        Commands::Comment {
+            directory,
+            min_tokens,
+            fail_threshold,
+            platform,
+            output,
+        } => {
+            let config = ScanConfig {
+                directory: directory.to_string_lossy().to_string(),
+                min_tokens,
+                languages: vec![],
+                ignore_patterns: ScanConfig::default().ignore_patterns,
+                detect_type2: true,
+                scan_self: true,
+                enable_git_blame: false,
+                cache_dir: None,
+                enable_cache: true,
+                cddmignore_path: None,
+                ignore_tests: false,
+                ignore_mocks: false,
+                ignore_generated: true,
+            };
+
+            let (tx, _rx) = mpsc::channel(100);
+            let cancel_flag = Arc::new(AtomicBool::new(false));
+            let result = run_scan(config, tx, cancel_flag).await?;
+
+            let comment_text =
+                cddm_core::generate_pr_markdown_comment(&result, fail_threshold, platform.into());
+
+            if let Some(out_path) = output {
+                if let Some(parent) = out_path.parent() {
+                    fs::create_dir_all(parent)?;
+                }
+                fs::write(&out_path, &comment_text)?;
+                println!(
+                    "[PASS] Pull Request markdown comment written to '{}'",
+                    out_path.display()
+                );
+            } else {
+                println!("{}", comment_text);
+            }
+
+            if result.duplication_percentage > fail_threshold {
+                std::process::exit(1);
             }
         }
     }

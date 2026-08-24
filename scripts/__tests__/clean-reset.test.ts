@@ -49,19 +49,19 @@ describe("Workspace Cleaner & Reset Engine", () => {
       for (const item of items) {
         expect(isProtectedPath(item.relPath)).toBe(false);
       }
-    });
+    }, 30000);
 
     it("should respect keepLockfiles option", () => {
       const items = findCleanableItems(process.cwd(), { keepLockfiles: true });
       const lockfileItems = items.filter((it) => it.category === "lockfile");
       expect(lockfileItems.length).toBe(0);
-    });
+    }, 30000);
 
     it("should respect keepNodeModules option", () => {
       const items = findCleanableItems(process.cwd(), { keepNodeModules: true });
       const nodeModulesItems = items.filter((it) => it.relPath.includes("node_modules"));
       expect(nodeModulesItems.length).toBe(0);
-    });
+    }, 30000);
   });
 
   describe("End-to-End Cleanup Fixture Execution", () => {

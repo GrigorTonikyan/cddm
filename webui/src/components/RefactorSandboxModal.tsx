@@ -14,7 +14,11 @@ import {
   Sliders,
   TrendingDown,
 } from "lucide-react";
-import { RefactorSandboxRequest } from "../types/cddm-types";
+import {
+  AiOccurrenceContext,
+  AiRefactorPromptRequest,
+  RefactorSandboxRequest,
+} from "../types/cddm-types";
 
 export interface RefactorSandboxModalProps {
   isOpen: boolean;
@@ -29,12 +33,15 @@ export const RefactorSandboxModal: React.FC<RefactorSandboxModalProps> = ({ isOp
     sandboxError,
     previewRefactorSandbox,
     applyRefactorBranch,
+    generateAiPrompt,
   } = useCDDMStore();
 
   const [customFunctionName, setCustomFunctionName] = useState<string>("");
   const [targetModulePath, setTargetModulePath] = useState<string>("");
   const [branchName, setBranchName] = useState<string>("");
   const [copiedPatch, setCopiedPatch] = useState<boolean>(false);
+  const [copiedPrompt, setCopiedPrompt] = useState<boolean>(false);
+  const [isGeneratingPrompt, setIsGeneratingPrompt] = useState<boolean>(false);
   const [downloaded, setDownloaded] = useState<boolean>(false);
   const [isApplyingBranch, setIsApplyingBranch] = useState<boolean>(false);
   const [branchAppliedSuccess, setBranchAppliedSuccess] = useState<string | null>(null);
@@ -129,6 +136,40 @@ export const RefactorSandboxModal: React.FC<RefactorSandboxModalProps> = ({ isOp
     }
   };
 
+  const handleCopyAiPrompt = async () => {
+    if (!sandboxRequest) return;
+    setIsGeneratingPrompt(true);
+    try {
+      const occurrences: AiOccurrenceContext[] = (sandboxRequest.occurrences || []).map((occ) => ({
+        path: occ.file,
+        span: { line_start: occ.start_line, line_end: occ.end_line, byte_offset: 0 },
+        snippet: "",
+      }));
+      const promptReq: AiRefactorPromptRequest = {
+        clone_type: "Renamed",
+        similarity: 0.95,
+        token_count: 100,
+        lines_saved_est: sandboxResult?.total_lines_saved ?? occurrences.length * 10,
+        function_name:
+          customFunctionName.trim() || sandboxResult?.function_name || "extracted_helper",
+        target_module:
+          targetModulePath.trim() || sandboxResult?.target_module_path || "src/utils.rs",
+        occurrences,
+        invariant_body: currentPatch || "",
+        parameters: [],
+        custom_instructions: undefined,
+      };
+      const promptText = await generateAiPrompt(promptReq);
+      await navigator.clipboard.writeText(promptText);
+      setCopiedPrompt(true);
+      setTimeout(() => setCopiedPrompt(false), 2000);
+    } catch {
+      // ignore
+    } finally {
+      setIsGeneratingPrompt(false);
+    }
+  };
+
   const footerContent = (
     <div className="flex items-center justify-between w-full">
       <div className="flex items-center gap-2 text-xs font-mono">
@@ -146,6 +187,19 @@ export const RefactorSandboxModal: React.FC<RefactorSandboxModalProps> = ({ isOp
         )}
       </div>
       <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={handleCopyAiPrompt}
+          disabled={isGeneratingPrompt}
+          className="px-3 py-1.5 rounded-lg bg-purple-950/80 hover:bg-purple-900 border border-purple-700/50 disabled:opacity-50 text-purple-200 font-mono text-xs flex items-center gap-1.5 transition-colors shadow-sm"
+        >
+          {copiedPrompt ? (
+            <Check className="w-3.5 h-3.5 text-emerald-400" />
+          ) : (
+            <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+          )}
+          {copiedPrompt ? "Prompt Copied" : isGeneratingPrompt ? "Generating..." : "Copy AI Prompt"}
+        </button>
         <button
           type="button"
           onClick={handleCopyPatch}

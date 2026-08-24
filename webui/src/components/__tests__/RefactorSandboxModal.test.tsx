@@ -89,4 +89,29 @@ describe("RefactorSandboxModal Component", () => {
     fireEvent.change(branchInput, { target: { value: "cddm/custom-refactor-branch" } });
     expect(branchInput.value).toBe("cddm/custom-refactor-branch");
   });
+
+  it("should render and handle Copy AI Prompt action", async () => {
+    const mockGenerateAiPrompt = vi.fn().mockResolvedValue("AI Refactor Prompt markdown");
+    Object.assign(navigator, {
+      clipboard: {
+        writeText: vi.fn().mockResolvedValue(undefined),
+      },
+    });
+
+    useCDDMStore.setState({
+      generateAiPrompt: mockGenerateAiPrompt,
+    });
+
+    render(
+      <Win2xManagerProvider>
+        <RefactorSandboxModal isOpen={true} onClose={() => {}} />
+      </Win2xManagerProvider>,
+    );
+
+    const copyPromptBtn = screen.getByText("Copy AI Prompt");
+    expect(copyPromptBtn).toBeDefined();
+    fireEvent.click(copyPromptBtn);
+
+    expect(mockGenerateAiPrompt).toHaveBeenCalled();
+  });
 });

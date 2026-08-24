@@ -27,6 +27,7 @@ export const API_ROUTES = {
   SUPPRESSION_RULES: "/api/suppression/rules",
   REFACTOR_SANDBOX: "/api/refactor/sandbox",
   REFACTOR_APPLY_BRANCH: "/api/refactor/apply-branch",
+  REFACTOR_AI_PROMPT: "/api/refactor/ai-prompt",
 } as const;
 
 /**

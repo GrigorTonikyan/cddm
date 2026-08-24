@@ -58,6 +58,7 @@ pub mod mcp_tools {
     pub const GET_TIMELINE: &str = "cddm_get_timeline";
     pub const CHECK_SUPPRESSION: &str = "cddm_check_suppression";
     pub const APPLY_CLUSTER_REFACTOR: &str = "cddm_apply_cluster_refactor";
+    pub const GENERATE_AI_PROMPT: &str = "cddm_generate_ai_prompt";
 
     pub const PARAM_DIRECTORY: &str = "directory";
     pub const PARAM_MIN_TOKENS: &str = "min_tokens";
@@ -504,6 +505,51 @@ async fn handle_mcp_request(req: JsonRpcRequest) -> Option<JsonRpcResponse> {
                                 }
                             },
                             "required": [mcp_tools::PARAM_PATCH]
+                        }
+                    },
+                    {
+                        "name": mcp_tools::GENERATE_AI_PROMPT,
+                        "description": "Generate structured, test-driven AI refactoring prompt specification for LLM coding assistants to eliminate duplicate code clone pairs or clusters.",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "function_name": {
+                                    "type": "string",
+                                    "description": "Proposed extracted function name (e.g. normalize_input)"
+                                },
+                                "target_module": {
+                                    "type": "string",
+                                    "description": "Target module path for the extracted helper (e.g. src/utils.rs)"
+                                },
+                                "invariant_body": {
+                                    "type": "string",
+                                    "description": "Extracted invariant code body"
+                                },
+                                "parameters": {
+                                    "type": "array",
+                                    "items": { "type": "string" },
+                                    "description": "List of variable identifiers to parameterize"
+                                },
+                                "occurrences": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "path": { "type": "string" },
+                                            "start_line": { "type": "integer" },
+                                            "end_line": { "type": "integer" },
+                                            "snippet": { "type": "string" }
+                                        },
+                                        "required": ["path", "start_line", "end_line"]
+                                    },
+                                    "description": "List of clone occurrence locations"
+                                },
+                                "custom_instructions": {
+                                    "type": "string",
+                                    "description": "Optional architectural instructions or constraints"
+                                }
+                            },
+                            "required": ["function_name", "target_module", "occurrences"]
                         }
                     }
                 ]
@@ -997,6 +1043,110 @@ async fn handle_mcp_request(req: JsonRpcRequest) -> Option<JsonRpcResponse> {
                     }
                 }
 
+                mcp_tools::GENERATE_AI_PROMPT => {
+                    let args = req.params.as_ref().and_then(|p| p.get("arguments"));
+                    if let Some(args_val) = args {
+                        let fn_name = args_val
+                            .get("function_name")
+                            .and_then(|v| v.as_str())
+                            .unwrap_or("extracted_helper");
+                        let target_mod = args_val
+                            .get("target_module")
+                            .and_then(|v| v.as_str())
+                            .unwrap_or("src/utils.rs");
+                        let inv_body = args_val
+                            .get("invariant_body")
+                            .and_then(|v| v.as_str())
+                            .unwrap_or("");
+                        let custom_inst = args_val
+                            .get("custom_instructions")
+                            .and_then(|v| v.as_str())
+                            .map(|s| s.to_string());
+                        let params: Vec<String> = args_val
+                            .get("parameters")
+                            .and_then(|v| v.as_array())
+                            .map(|arr| {
+                                arr.iter()
+                                    .filter_map(|x| x.as_str().map(|s| s.to_string()))
+                                    .collect()
+                            })
+                            .unwrap_or_default();
+
+                        let occurrences: Vec<cddm_core::AiOccurrenceContext> = args_val
+                            .get("occurrences")
+                            .and_then(|v| v.as_array())
+                            .map(|arr| {
+                                arr.iter()
+                                    .map(|item| {
+                                        let path = item
+                                            .get("path")
+                                            .and_then(|p| p.as_str())
+                                            .unwrap_or("")
+                                            .to_string();
+                                        let s_line = item
+                                            .get("start_line")
+                                            .and_then(|l| l.as_u64())
+                                            .unwrap_or(1)
+                                            as usize;
+                                        let e_line = item
+                                            .get("end_line")
+                                            .and_then(|l| l.as_u64())
+                                            .unwrap_or(s_line as u64)
+                                            as usize;
+                                        let snippet = item
+                                            .get("snippet")
+                                            .and_then(|s| s.as_str())
+                                            .map(|s| s.to_string())
+                                            .unwrap_or_else(|| {
+                                                let file_content = std::fs::read_to_string(&path)
+                                                    .unwrap_or_default();
+                                                let lines: Vec<&str> =
+                                                    file_content.lines().collect();
+                                                if s_line > 0 && s_line <= lines.len() {
+                                                    let end = e_line.min(lines.len());
+                                                    lines[s_line - 1..end].join("\n")
+                                                } else {
+                                                    String::new()
+                                                }
+                                            });
+                                        cddm_core::AiOccurrenceContext {
+                                            path,
+                                            span: cddm_core::LineSpan {
+                                                line_start: s_line,
+                                                line_end: e_line,
+                                                byte_offset: 0,
+                                            },
+                                            snippet,
+                                        }
+                                    })
+                                    .collect()
+                            })
+                            .unwrap_or_default();
+
+                        let prompt_req = cddm_core::AiRefactorPromptRequest {
+                            clone_type: cddm_core::CloneType::Renamed,
+                            similarity: 0.90,
+                            token_count: 100,
+                            lines_saved_est: occurrences.len() * 10,
+                            function_name: fn_name.to_string(),
+                            target_module: target_mod.to_string(),
+                            occurrences,
+                            invariant_body: inv_body.to_string(),
+                            parameters: params,
+                            custom_instructions: custom_inst,
+                        };
+
+                        let prompt_text = cddm_core::generate_ai_refactor_prompt(&prompt_req);
+                        Some(make_text_response(req.id, prompt_text))
+                    } else {
+                        Some(make_error_response(
+                            req.id,
+                            rpc_errors::INVALID_PARAMS,
+                            "Missing arguments for cddm_generate_ai_prompt",
+                        ))
+                    }
+                }
+
                 _ => Some(make_error_response(
                     req.id,
                     rpc_errors::METHOD_NOT_FOUND,
@@ -1413,7 +1563,7 @@ mod tests {
     #[tokio::test]
     async fn test_mcp_tools_list() {
         let tools = list_mcp_items(mcp_methods::TOOLS_LIST, "tools").await;
-        assert_eq!(tools.len(), 10);
+        assert_eq!(tools.len(), 11);
         let tool_names: Vec<&str> = tools.iter().map(|t| t["name"].as_str().unwrap()).collect();
         assert!(tool_names.contains(&mcp_tools::SCAN_CODEBASE));
         assert!(tool_names.contains(&mcp_tools::GET_CLONE_PAIR));
@@ -1425,6 +1575,41 @@ mod tests {
         assert!(tool_names.contains(&mcp_tools::GET_TIMELINE));
         assert!(tool_names.contains(&mcp_tools::CHECK_SUPPRESSION));
         assert!(tool_names.contains(&mcp_tools::APPLY_CLUSTER_REFACTOR));
+        assert!(tool_names.contains(&mcp_tools::GENERATE_AI_PROMPT));
+    }
+
+    #[tokio::test]
+    async fn test_mcp_generate_ai_prompt_tool() {
+        let resp = handle_mcp_request(make_test_req(
+            16,
+            mcp_methods::TOOLS_CALL,
+            Some(json!({
+                "name": mcp_tools::GENERATE_AI_PROMPT,
+                "arguments": {
+                    "function_name": "compute_total",
+                    "target_module": "src/calc.rs",
+                    "occurrences": [
+                        {
+                            "path": "src/a.rs",
+                            "start_line": 1,
+                            "end_line": 5,
+                            "snippet": "let x = a + b;"
+                        }
+                    ],
+                    "invariant_body": "let x = a + b;",
+                    "parameters": ["a", "b"]
+                }
+            })),
+        ))
+        .await
+        .expect("Expected response");
+
+        assert!(resp.error.is_none());
+        let res = resp.result.unwrap();
+        let content = res["content"][0]["text"].as_str().unwrap();
+        assert!(content.contains("compute_total"));
+        assert!(content.contains("src/calc.rs"));
+        assert!(content.contains("src/a.rs:1-5"));
     }
 
     #[tokio::test]

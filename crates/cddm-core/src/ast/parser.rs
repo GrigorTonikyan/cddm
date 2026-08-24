@@ -14,6 +14,13 @@ pub fn get_tree_sitter_language(extension: &str) -> Option<Language> {
         }
         "java" => Some(tree_sitter_java::LANGUAGE.into()),
         "cs" => Some(tree_sitter_c_sharp::LANGUAGE.into()),
+        "rb" | "rake" | "gemspec" => Some(tree_sitter_ruby::LANGUAGE.into()),
+        "php" | "phtml" => Some(tree_sitter_php::LANGUAGE_PHP.into()),
+        "swift" => Some(tree_sitter_swift::LANGUAGE.into()),
+        "sh" | "bash" => Some(tree_sitter_bash::LANGUAGE.into()),
+        "lua" => Some(tree_sitter_lua::LANGUAGE.into()),
+        "json" => Some(tree_sitter_json::LANGUAGE.into()),
+        "html" | "htm" => Some(tree_sitter_html::LANGUAGE.into()),
         _ => None,
     }
 }
@@ -102,5 +109,66 @@ mod tests {
         let tree = parse_ast_tree(code, "cs").expect("C# AST parsing failed");
         let root = tree.root_node();
         assert_eq!(root.kind(), "compilation_unit");
+    }
+
+    #[test]
+    fn test_parse_ruby_ast() {
+        let code = "def calculate_area(width, height)\n  width * height\nend";
+        let tree = parse_ast_tree(code, "rb").expect("Ruby AST parsing failed");
+        let root = tree.root_node();
+        assert_eq!(root.kind(), "program");
+    }
+
+    #[test]
+    fn test_parse_php_ast() {
+        let code = "<?php\nfunction formatName(string $first, string $last): string {\n    return \
+                    $first . ' ' . $last;\n}\n";
+        let tree = parse_ast_tree(code, "php").expect("PHP AST parsing failed");
+        let root = tree.root_node();
+        assert_eq!(root.kind(), "program");
+    }
+
+    #[test]
+    fn test_parse_swift_ast() {
+        let code = "func computeScore(base: Int, multiplier: Int) -> Int {\n    return base * \
+                    multiplier\n}\n";
+        let tree = parse_ast_tree(code, "swift").expect("Swift AST parsing failed");
+        let root = tree.root_node();
+        assert_eq!(root.kind(), "source_file");
+    }
+
+    #[test]
+    fn test_parse_bash_ast() {
+        let code = "#!/bin/bash\nfunction deploy() {\n  echo 'Deploying artifact...'\n  tar -czf \
+                    dist.tar.gz ./dist\n}\n";
+        let tree = parse_ast_tree(code, "sh").expect("Bash AST parsing failed");
+        let root = tree.root_node();
+        assert_eq!(root.kind(), "program");
+    }
+
+    #[test]
+    fn test_parse_lua_ast() {
+        let code = "function factorial(n)\n  if n == 0 then return 1 else return n * factorial(n \
+                    - 1) end\nend";
+        let tree = parse_ast_tree(code, "lua").expect("Lua AST parsing failed");
+        let root = tree.root_node();
+        assert_eq!(root.kind(), "chunk");
+    }
+
+    #[test]
+    fn test_parse_json_ast() {
+        let code = "{\"name\": \"cddm\", \"version\": \"1.5.0\", \"active\": true}";
+        let tree = parse_ast_tree(code, "json").expect("JSON AST parsing failed");
+        let root = tree.root_node();
+        assert_eq!(root.kind(), "document");
+    }
+
+    #[test]
+    fn test_parse_html_ast() {
+        let code = "<!DOCTYPE html><html><head><title>CDDM</title></head><body><h1>Hello</h1></\
+                    body></html>";
+        let tree = parse_ast_tree(code, "html").expect("HTML AST parsing failed");
+        let root = tree.root_node();
+        assert_eq!(root.kind(), "document");
     }
 }

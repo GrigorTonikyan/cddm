@@ -360,6 +360,43 @@ Applies a synthesized refactoring patch directly to the workspace with optional 
 
 ---
 
+### `POST /api/refactor/ai-prompt`
+
+Synthesizes a structured AI refactoring prompt specification tailored for AI coding assistants.
+
+**Request Body** (`application/json`):
+
+```json
+{
+  "clone_type": "Renamed",
+  "similarity": 0.95,
+  "token_count": 120,
+  "lines_saved_est": 25,
+  "function_name": "validate_credentials",
+  "target_module": "src/auth/common.rs",
+  "occurrences": [
+    {
+      "path": "src/auth/login.rs",
+      "span": { "line_start": 10, "line_end": 25, "byte_offset": 0 },
+      "snippet": "..."
+    }
+  ],
+  "invariant_body": "...",
+  "parameters": ["username: &str", "password: &str"],
+  "custom_instructions": "Ensure zero unsafe code."
+}
+```
+
+**Response** (`200 OK`):
+
+```json
+{
+  "prompt": "# Code De-Duplication & Refactoring Specification\n..."
+}
+```
+
+---
+
 ### `GET /api/events`
 
 Subscribes to live Server-Sent Events (SSE) stream for real-time background file change notifications, progress tracking, and re-scan results.
@@ -441,13 +478,25 @@ Continuously watches workspace for source modifications and automatically execut
 
 Generates automated refactoring patch recommendations for duplicate code clones.
 
-| Flag           | Short | Type      | Default | Description                                    |
-| :------------- | :---- | :-------- | :------ | :--------------------------------------------- |
-| `--pair`       | `-p`  | `usize`   | None    | Target clone pair 1-based index to refactor    |
-| `--cluster`    | `-c`  | `usize`   | None    | Target clone cluster 1-based index to refactor |
-| `--output`     | `-o`  | `PathBuf` | None    | Write generated unified patch to file          |
-| `--directory`  |       | `PathBuf` | `"."`   | Target codebase directory path                 |
-| `--min-tokens` | `-m`  | `usize`   | `50`    | Minimum token clone threshold                  |
+| Flag           | Short | Type      | Default | Description                                      |
+| :------------- | :---- | :-------- | :------ | :----------------------------------------------- |
+| `--pair`       | `-p`  | `usize`   | None    | Target clone pair 1-based index to refactor      |
+| `--cluster`    | `-c`  | `usize`   | None    | Target clone cluster 1-based index to refactor   |
+| `--prompt`     |       | `bool`    | `false` | Synthesize structured AI refactoring prompt spec |
+| `--output`     | `-o`  | `PathBuf` | None    | Write generated unified patch or prompt to file  |
+| `--directory`  |       | `PathBuf` | `"."`   | Target codebase directory path                   |
+| `--min-tokens` | `-m`  | `usize`   | `50`    | Minimum token clone threshold                    |
+
+### Command: `cddm comment [DIRECTORY]`
+
+Scans the repository and outputs a formatted Markdown summary table with DRY health metrics ready for CI pull request / merge request comments.
+
+| Flag               | Short | Type                    | Default  | Description                                    |
+| :----------------- | :---- | :---------------------- | :------- | :--------------------------------------------- |
+| `--fail-threshold` |       | `f64`                   | `15.0`   | Exit code 1 if duplication % exceeds threshold |
+| `--platform`       |       | `github\|gitlab\|azure` | `github` | Target CI workflow platform                    |
+| `--output`         | `-o`  | `PathBuf`               | None     | Write generated Markdown comment to file       |
+| `--min-tokens`     | `-m`  | `usize`                 | `50`     | Minimum token clone threshold                  |
 
 ### Command: `cddm serve`
 
@@ -575,6 +624,19 @@ Samples Git repository commit history and returns historical duplication traject
 | `directory`   | `string` | No       | `"."`   | Target repository directory path             |
 | `max_samples` | `number` | No       | `10`    | Maximum number of historical commits to walk |
 | `min_tokens`  | `number` | No       | `50`    | Minimum token clone threshold                |
+
+#### `cddm_generate_ai_prompt`
+
+Synthesizes a structured AI refactoring prompt specification detailing clone locations, invariant bodies, and parameter variations for AI assistants.
+
+| Parameter             | Type       | Required | Default | Description                                        |
+| :-------------------- | :--------- | :------- | :------ | :------------------------------------------------- |
+| `function_name`       | `string`   | No       | None    | Proposed helper function name                      |
+| `target_module`       | `string`   | No       | None    | Proposed destination file path                     |
+| `invariant_body`      | `string`   | No       | None    | Common logic extracted across occurrences          |
+| `parameters`          | `string[]` | No       | `[]`    | Identified parameter names and variations          |
+| `occurrences`         | `object[]` | No       | `[]`    | Explicit array of `{ file, start_line, end_line }` |
+| `custom_instructions` | `string`   | No       | None    | Optional architectural constraints for the AI      |
 
 ### Resources
 

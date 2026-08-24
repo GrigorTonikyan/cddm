@@ -1,3 +1,4 @@
+pub mod ai_prompt;
 pub mod ast;
 pub mod blame;
 pub mod cache;
@@ -7,6 +8,7 @@ pub mod diff;
 pub mod fingerprint;
 pub mod grammar;
 pub mod io;
+pub mod pr_comment;
 pub mod refactor;
 pub mod sarif;
 pub mod simd;
@@ -17,11 +19,13 @@ pub mod types;
 pub mod watcher;
 pub mod workflow;
 
+pub use ai_prompt::{AiOccurrenceContext, AiRefactorPromptRequest, generate_ai_refactor_prompt};
 pub use cache::{CachedFileEntry, DiskFingerprintCache};
 pub use cluster::cluster_clone_pairs;
 pub use detector::run_scan;
 pub use diff::{get_changed_files_between_refs, run_diff_scan};
 pub use io::{FileSource, MMAP_THRESHOLD_BYTES, read_file_source};
+pub use pr_comment::generate_pr_markdown_comment;
 pub use refactor::{
     ApplyPatchResult, ClusterRefactorSuggestion, ClusterSiteRefactor, ParameterDifference,
     RefactorSuggestion, analyze_clone_refactoring, analyze_cluster_refactoring,

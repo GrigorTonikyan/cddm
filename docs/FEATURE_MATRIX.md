@@ -1,11 +1,11 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-24 | Rust: 149/149 PASS | WebUI: 129/129 PASS across 34 suites | Repository Scripts: 27/27 PASS | Playwright E2E: 11/11 PASS | CI Workflows: PASS
+> Last verified: 2026-08-24 | Rust: 161/161 PASS | WebUI: 130/130 PASS across 34 suites | Repository Scripts: 27/27 PASS | Playwright E2E: 11/11 PASS | CI Workflows: PASS
 
 ---
 
-## 1. Rust Backend — `cddm-core`, `cddm-cli`, `cddm-lsp`, `cddm-mcp` (149 unit tests)
+## 1. Rust Backend — `cddm-core`, `cddm-cli`, `cddm-lsp`, `cddm-mcp` (161 unit tests)
 
 ### Tokenization Engine (`crates/cddm-core/src/tokenizer.rs`)
 
@@ -72,11 +72,18 @@
 | F-06.7  | C++ AST parsing produces `translation_unit` root         | `ast::parser::tests::test_parse_cpp_ast`                     | PASS   |
 | F-06.8  | Java AST parsing produces `program` root                 | `ast::parser::tests::test_parse_java_ast`                    | PASS   |
 | F-06.9  | C# AST parsing produces `compilation_unit` root          | `ast::parser::tests::test_parse_c_sharp_ast`                 | PASS   |
-| F-06.10 | Blake3 Merkle subtree hashing extracts depth >= 2 nodes  | `ast::hasher::tests::test_ast_subtree_hashing`               | PASS   |
-| F-06.11 | Exact identical text clone classification (Type-1)       | `ast::hasher::tests::test_exact_clone_classification`        | PASS   |
-| F-06.12 | Renamed identifier clone classification (Type-2)         | `ast::hasher::tests::test_renamed_clone_classification`      | PASS   |
-| F-06.13 | Modified statement near-miss clone detection (Type-3)    | `ast::hasher::tests::test_near_miss_clone_classification`    | PASS   |
-| F-06.14 | AST Merkle subtree structural semantic matching (Type-4) | `ast::hasher::tests::test_ast_semantic_clone_classification` | PASS   |
+| F-06.10 | Ruby AST parsing produces `program` root                 | `ast::parser::tests::test_parse_ruby_ast`                    | PASS   |
+| F-06.11 | PHP AST parsing produces `program` root                  | `ast::parser::tests::test_parse_php_ast`                     | PASS   |
+| F-06.12 | Swift AST parsing produces `source_file` root            | `ast::parser::tests::test_parse_swift_ast`                   | PASS   |
+| F-06.13 | Bash AST parsing produces `program` root                 | `ast::parser::tests::test_parse_bash_ast`                    | PASS   |
+| F-06.14 | Lua AST parsing produces `chunk` root                    | `ast::parser::tests::test_parse_lua_ast`                     | PASS   |
+| F-06.15 | JSON AST parsing produces `document` root                | `ast::parser::tests::test_parse_json_ast`                    | PASS   |
+| F-06.16 | HTML AST parsing produces `document` root                | `ast::parser::tests::test_parse_html_ast`                    | PASS   |
+| F-06.17 | Blake3 Merkle subtree hashing extracts depth >= 2 nodes  | `ast::hasher::tests::test_ast_subtree_hashing`               | PASS   |
+| F-06.18 | Exact identical text clone classification (Type-1)       | `ast::hasher::tests::test_exact_clone_classification`        | PASS   |
+| F-06.19 | Renamed identifier clone classification (Type-2)         | `ast::hasher::tests::test_renamed_clone_classification`      | PASS   |
+| F-06.20 | Modified statement near-miss clone detection (Type-3)    | `ast::hasher::tests::test_near_miss_clone_classification`    | PASS   |
+| F-06.21 | AST Merkle subtree structural semantic matching (Type-4) | `ast::hasher::tests::test_ast_semantic_clone_classification` | PASS   |
 
 ### Persistent redb Disk Cache (`crates/cddm-core/src/cache.rs`)
 
@@ -235,23 +242,29 @@
 | F-19.3 | In-process Git history revision walking and timeline trend | `timeline::tests::test_collect_git_timeline_real_workspace`            | PASS   |
 | F-19.4 | Non-Git directory error propagation in timeline analysis   | `timeline::tests::test_collect_git_timeline_non_git_dir`               | PASS   |
 
-### Turnkey CI/CD & Git Hook Manager (`crates/cddm-core/src/workflow.rs`)
+### AI Refactoring Prompt Synthesizer (`crates/cddm-core/src/ai_prompt.rs`)
 
-| ID     | Feature Variant                                            | Test Function                                     | Result |
-| :----- | :--------------------------------------------------------- | :------------------------------------------------ | :----- |
-| F-20.1 | GitHub Actions workflow YAML generation with SARIF upload  | `workflow::tests::test_generate_github_workflow`  | PASS   |
-| F-20.2 | GitLab CI configuration YAML generation                    | `workflow::tests::test_generate_gitlab_ci`        | PASS   |
-| F-20.3 | Azure DevOps pipelines YAML generation                     | `workflow::tests::test_generate_azure_pipelines`  | PASS   |
-| F-20.4 | Git hook lifecycle management (install, verify, uninstall) | `workflow::tests::test_git_hook_lifecycle`        | PASS   |
-| F-20.5 | Invalid hook type rejection with clear validation error    | `workflow::tests::test_install_invalid_hook_type` | PASS   |
+| ID     | Feature Variant                                              | Test Function                                          | Result |
+| :----- | :----------------------------------------------------------- | :----------------------------------------------------- | :----- |
+| F-21.1 | Structured Markdown AI prompt synthesis with invariant body  | `ai_prompt::tests::test_generate_ai_refactor_prompt`   | PASS   |
+| F-21.2 | Custom architectural instructions inclusion in prompt output | `ai_prompt::tests::test_ai_prompt_custom_instructions` | PASS   |
+
+### PR/MR Markdown Comment Formatter (`crates/cddm-core/src/pr_comment.rs`)
+
+| ID     | Feature Variant                                           | Test Function                                                             | Result |
+| :----- | :-------------------------------------------------------- | :------------------------------------------------------------------------ | :----- |
+| F-22.1 | Passed quality gate Markdown comment formatting           | `pr_comment::tests::test_generate_pr_markdown_comment_passed`             | PASS   |
+| F-22.2 | Failed threshold quality gate with duplicate clones table | `pr_comment::tests::test_generate_pr_markdown_comment_failed_with_clones` | PASS   |
 
 ---
 
-## 2. WebUI Frontend — React 19 + TypeScript + Vitest (123 unit tests across 32 suites)
+## 2. WebUI Frontend — React 19 + TypeScript + Vitest (130 unit tests across 34 suites)
 
 | Module             | Test Suite File                                                                  | Test Cases | Status |
 | :----------------- | :------------------------------------------------------------------------------- | :--------- | :----- |
 | Timeline Explorer  | `webui/src/components/__tests__/TimelineExplorerModal.test.tsx`                  | 3 tests    | PASS   |
+| Suppression Rules  | `webui/src/components/__tests__/SuppressionRulesModal.test.tsx`                  | 3 tests    | PASS   |
+| Refactor Sandbox   | `webui/src/components/__tests__/RefactorSandboxModal.test.tsx`                   | 4 tests    | PASS   |
 | IDE Deeplinks      | `webui/src/utils/__tests__/ide-links.test.ts`                                    | 8 tests    | PASS   |
 | Store              | `webui/src/store/__tests__/cddm-store.test.ts`                                   | 11 tests   | PASS   |
 | App Shell          | `webui/src/components/__tests__/App.test.tsx`                                    | 5 tests    | PASS   |

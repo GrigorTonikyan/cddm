@@ -165,6 +165,22 @@
   - [x] Expose MCP tool `cddm_apply_cluster_refactor`
   - [x] Implement WebUI `RefactorSandboxModal.tsx` with live syntax-colored diff preview, lines saved badges, and "Apply to Git Branch" button
 
+### Milestone v1.5.0: Polyglot AST Expansion & AI Refactoring Prompt Synthesizer
+
+- [x] **[EP-17] Polyglot Tree-sitter Grammar Expansion (Ruby, PHP, Swift, Bash, Lua, JSON, HTML)**
+  - [x] Integrate `tree-sitter-ruby`, `tree-sitter-php`, `tree-sitter-swift`, `tree-sitter-bash`, `tree-sitter-lua`, `tree-sitter-json`, and `tree-sitter-html` dependencies
+  - [x] Register language grammar keywords, extensions, and comment delimiters in `crates/cddm-core/src/grammar.rs`
+  - [x] Dispatch Tree-sitter parsers in `crates/cddm-core/src/ast/parser.rs` and verify AST parsing
+- [x] **[EP-18] AI-Augmented Refactoring Prompt Synthesizer & Context Exporter**
+  - [x] Implement `cddm_core::ai_prompt::generate_ai_refactor_prompt` generating structured prompt specifications for AI coding assistants
+  - [x] Add `--prompt` CLI flag to `cddm refactor` command
+  - [x] Expose Axum REST endpoint `POST /api/refactor/ai-prompt` in `crates/cddm-cli/src/serve.rs`
+  - [x] Expose MCP tool `cddm_generate_ai_prompt` in `crates/cddm-mcp/src/main.rs`
+  - [x] Add "Copy AI Prompt" action button in `RefactorSandboxModal.tsx` in CDDM Studio WebUI
+- [x] **[EP-19] Turnkey PR/MR Markdown Quality Gate Comment Generator**
+  - [x] Implement `cddm_core::pr_comment::generate_pr_markdown_comment` with DRY Health Score, threshold evaluation, and clone summary table
+  - [x] Add `cddm comment [DIR] [--fail-threshold <N>] [--platform github|gitlab|azure] [--output <PATH>]` CLI subcommand
+
 ---
 
 ## Completed Milestones (Verified)
@@ -181,3 +197,4 @@
 - [x] **v1.2.0**: Real-Time Language Server Protocol (LSP 3.17) Engine (`crates/cddm-lsp`), `cddm lsp` CLI daemon, official VS Code / Cursor Extension (`editors/vscode`), and multi-editor configuration guide (`docs/LSP_SETUP.md`).
 - [x] **v1.3.0**: Historical Duplication Trends & Turnkey CI/CD Workflow Generator with `cddm trend`, `cddm hook`, `cddm init`, `cddm_get_timeline` MCP tool, `cddm://workspace/timeline` resource, and WebUI Studio `TimelineExplorerModal`.
 - [x] **v1.4.0**: Intelligent AST Suppression Engine & Interactive Auto-Refactor Sandbox Studio with `.cddmignore` glob rules, per-path threshold overrides, inline comment directives (`// cddm:ignore`, `/* cddm:ignore-start */`), test/mock/generated auto-filtering, `cddm ignore` CLI, parameterized refactor sandbox, transactional Git branch application (`gix`), MCP suppression tools/resources, and WebUI `SuppressionRulesModal` & `RefactorSandboxModal`.
+- [x] **v1.5.0**: Polyglot AST Expansion (16 Tree-sitter languages: Ruby, PHP, Swift, Bash, Lua, JSON, HTML) & AI Refactoring Prompt Synthesizer with `cddm refactor --prompt`, `POST /api/refactor/ai-prompt`, MCP `cddm_generate_ai_prompt`, WebUI Studio "Copy AI Prompt" button, and turnkey PR/MR markdown quality gate comment generator (`cddm comment`).

@@ -5,6 +5,15 @@ All notable changes to **CDDM** (_Code De-Duplication Meister_) will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2026-08-24
+
+### Features
+
+- **polyglot**: expand native Tree-sitter AST engine from 9 to 16 languages with Ruby, PHP, Swift, Bash, Lua, JSON, and HTML parsers
+- **ai**: implement AI-augmented refactoring prompt synthesizer and context exporter (`cddm refactor --prompt`, `POST /api/refactor/ai-prompt`, MCP tool `cddm_generate_ai_prompt`, WebUI Studio "Copy AI Prompt" action)
+- **ci**: implement turnkey PR/MR Markdown quality gate comment generator with threshold compliance evaluation and clone rankings (`cddm comment`)
+- **webui**: integrate one-click AI prompt generation into `RefactorSandboxModal` with clipboard status feedback
+
 ## [1.4.0] - 2026-08-24
 
 ### Features

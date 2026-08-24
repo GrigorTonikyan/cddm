@@ -17,13 +17,18 @@
 +----------------------------------------------------------------------------------------------------+
 ```
 
-| Milestone  | Target Horizon | Strategic Focus                           | Key Deliverables                                                                                              |
-| :--------- | :------------- | :---------------------------------------- | :------------------------------------------------------------------------------------------------------------ |
-| **v0.2.0** | Short-term     | CI/CD Integration & AI Agent Tooling      | SARIF `--format sarif`, expanded MCP tools (`get_clone_context`, `suggest_refactor`), official GitHub Action. |
-| **v0.3.0** | Mid-term       | Caching, Differential Scans & Refactoring | Embedded `redb` disk cache, `cddm diff <branch>`, automated patch synthesis (`cddm refactor`).                |
-| **v0.4.0** | Mid-term       | WebUI Studio & Visual Analytics           | Side-by-side Monaco diff visualizer, D3 hierarchical duplication treemap, historical Git trend graph.         |
-| **v0.5.0** | Long-term      | AST Pipeline & Extended Polyglot          | Integrated AST Merkle subtree matching, Type-3 near-miss detection, Go, C/C++, Java Tree-sitter parsers.      |
-| **v1.0.0** | Stable Release | High-Throughput Enterprise Engine         | AVX2/NEON SIMD vectorization, memory-mapped zero-copy I/O, semantic AST graph clones (Type-4).                |
+| Milestone  | Target Horizon | Strategic Focus                             | Key Deliverables                                                                                               |
+| :--------- | :------------- | :------------------------------------------ | :------------------------------------------------------------------------------------------------------------- |
+| **v0.2.0** | Short-term     | CI/CD Integration & AI Agent Tooling        | SARIF `--format sarif`, expanded MCP tools (`get_clone_context`, `suggest_refactor`), official GitHub Action.  |
+| **v0.3.0** | Mid-term       | Caching, Differential Scans & Refactoring   | Embedded `redb` disk cache, `cddm diff <branch>`, automated patch synthesis (`cddm refactor`).                 |
+| **v0.4.0** | Mid-term       | WebUI Studio & Visual Analytics             | Side-by-side Monaco diff visualizer, D3 hierarchical duplication treemap, historical Git trend graph.          |
+| **v0.5.0** | Long-term      | AST Pipeline & Extended Polyglot            | Integrated AST Merkle subtree matching, Type-3 near-miss detection, Go, C/C++, Java Tree-sitter parsers.       |
+| **v1.0.0** | Stable Release | High-Throughput Enterprise Engine           | AVX2/NEON SIMD vectorization, memory-mapped zero-copy I/O, semantic AST graph clones (Type-4).                 |
+| **v1.1.0** | Stable Release | N-Way Clustering & Multi-Site Deduplication | Disjoint-Set Union-Find clustering, multi-site patch synthesis, N-way cluster cards, Axum cluster endpoint.    |
+| **v1.2.0** | Stable Release | Language Server Protocol & IDE Extensions   | Full LSP 3.17 daemon (`crates/cddm-lsp`), official VS Code extension, inline diagnostics & code actions.       |
+| **v1.3.0** | Stable Release | Historical Trends & Turnkey Workflows       | Git timeline duplication trajectories (`cddm trend`), turnkey CI workflow generator (`cddm init`, `hook`).     |
+| **v1.4.0** | Stable Release | AST Suppressions & Refactor Sandbox         | Intelligent `.cddmignore` engine, inline comment directives, interactive WebUI refactoring sandbox studio.     |
+| **v1.5.0** | Stable Release | Polyglot Expansion & AI Prompt Synthesizer  | 16 Tree-sitter AST grammars (Ruby, PHP, Swift, Bash, Lua, JSON, HTML), AI refactor prompt engine, PR comments. |
 
 ---
 
@@ -476,6 +481,73 @@ Consensus refactoring recommendations need a playground where developers can cus
 
 ---
 
+### EP-17: Polyglot Tree-sitter Grammar Expansion (Ruby, PHP, Swift, Bash, Lua, JSON, HTML)
+
+- **Target Milestone**: `v1.5.0`
+- **Component**: `crates/cddm-core`
+- **Priority**: `High`
+- **Status**: `Completed (v1.5.0)`
+
+#### Problem Statement
+
+CDDM supports 9 core languages with native Tree-sitter parsers. Modern polyglot engineering architectures require deep AST structural deduplication across Ruby, PHP, Swift, Bash scripts, Lua game engines, and structural markup (JSON, HTML).
+
+#### Specification & Architecture
+
+1. **Tree-sitter Grammars**:
+   - Register `tree-sitter-ruby`, `tree-sitter-php`, `tree-sitter-swift`, `tree-sitter-bash`, `tree-sitter-lua`, `tree-sitter-json`, and `tree-sitter-html` dependencies.
+2. **Language Registry**:
+   - Map extensions (`.rb`, `.rake`, `.gemspec`, `.php`, `.phtml`, `.swift`, `.sh`, `.bash`, `.lua`, `.json`, `.html`, `.htm`) in `crates/cddm-core/src/grammar.rs`.
+3. **Parser Dispatch**:
+   - Integrate Tree-sitter language mappings in `crates/cddm-core/src/ast/parser.rs` and verify AST parsing.
+
+---
+
+### EP-18: AI-Augmented Refactoring Prompt Synthesizer & Agent Context Exporter
+
+- **Target Milestone**: `v1.5.0`
+- **Component**: `crates/cddm-core`, `crates/cddm-cli`, `crates/cddm-mcp`, `webui`
+- **Priority**: `High`
+- **Status**: `Completed (v1.5.0)`
+
+#### Problem Statement
+
+Developers using AI coding assistants (e.g. Gemini, Antigravity, Claude, ChatGPT) require structured, contextual prompt specifications that detail duplicate clone locations, invariant logic bodies, parameter variance, and target architectures to generate clean refactorings.
+
+#### Specification & Architecture
+
+1. **Core Prompt Engine (`cddm-core::ai_prompt`)**:
+   - Synthesize standardized Markdown specifications including Clone Classification, Target Function & Module destination, Code Fragment Occurrences with line ranges, Invariant Body, and Parameter differences.
+2. **CLI & API Integration**:
+   - Add `cddm refactor --prompt` flag to print the synthesized prompt specification.
+   - Expose Axum `POST /api/refactor/ai-prompt` endpoint.
+3. **MCP Tool & WebUI Studio**:
+   - Expose `cddm_generate_ai_prompt` tool in `cddm-mcp`.
+   - Add "Copy AI Prompt" action button in `RefactorSandboxModal.tsx` in CDDM Studio WebUI.
+
+---
+
+### EP-19: Turnkey PR/MR Markdown Quality Gate Comment Generator
+
+- **Target Milestone**: `v1.5.0`
+- **Component**: `crates/cddm-core`, `crates/cddm-cli`
+- **Priority**: `Medium`
+- **Status**: `Completed (v1.5.0)`
+
+#### Problem Statement
+
+CI/CD pipelines in GitHub Actions, GitLab CI, and Azure Pipelines need a turnkey command to scan a repository, evaluate threshold compliance, and format an executive summary Markdown comment ready for PR/MR comment posting or step summaries.
+
+#### Specification & Architecture
+
+1. **Comment Formatter Engine (`cddm-core::pr_comment`)**:
+   - Generate formatted quality gate comments with pass/fail tags, DRY Health Score, Duplication Rate vs threshold, scanned tokens/files, top clone pairs table, and developer action guides.
+2. **CLI Subcommand**:
+   - Add `cddm comment [DIRECTORY] [--fail-threshold <N>] [--platform github|gitlab|azure] [--output <PATH>]`.
+   - Exit with non-zero status code if duplication percentage exceeds `--fail-threshold`.
+
+---
+
 ## 3. Prioritized Action Checklist
 
 ```markdown
@@ -548,6 +620,15 @@ Consensus refactoring recommendations need a playground where developers can cus
 - [x] Expose Axum endpoints for suppression rules and refactor sandbox simulation [EP-15, EP-16]
 - [x] Expose MCP tools `cddm_check_suppression`, `cddm_apply_cluster_refactor`, and resource `cddm://workspace/suppressions` [EP-15, EP-16]
 - [x] Implement WebUI `SuppressionRulesModal.tsx` and `RefactorSandboxModal.tsx` in CDDM Studio [EP-15, EP-16]
+
+### Milestone v1.5.0 (Polyglot AST Expansion & AI Refactoring Prompt Synthesizer)
+
+- [x] Implement Tree-sitter parsers for Ruby, PHP, Swift, Bash, Lua, JSON, and HTML [EP-17]
+- [x] Implement AI-augmented refactoring prompt synthesizer in `cddm-core::ai_prompt` [EP-18]
+- [x] Add `cddm refactor --prompt` CLI option and Axum endpoint `POST /api/refactor/ai-prompt` [EP-18]
+- [x] Implement MCP tool `cddm_generate_ai_prompt` [EP-18]
+- [x] Add "Copy AI Prompt" action button to `RefactorSandboxModal.tsx` in WebUI Studio [EP-18]
+- [x] Implement turnkey PR/MR markdown quality gate comment generator (`cddm comment`) in `cddm-core::pr_comment` [EP-19]
 ```
 
 ---

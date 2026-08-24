@@ -65,6 +65,9 @@ pub const ROUTE_API_REFACTOR_SANDBOX: &str = "/api/refactor/sandbox";
 /// API endpoint path for applying refactoring patch directly to a dedicated Git branch.
 pub const ROUTE_API_REFACTOR_APPLY_BRANCH: &str = "/api/refactor/apply-branch";
 
+/// API endpoint path for synthesizing an LLM AI refactoring prompt specification.
+pub const ROUTE_API_REFACTOR_AI_PROMPT: &str = "/api/refactor/ai-prompt";
+
 /// Default localhost IPv4 binding.
 pub const DEFAULT_HOST_IP: [u8; 4] = [127, 0, 0, 1];
 
@@ -233,6 +236,10 @@ pub fn build_app_with_state(state: AppState) -> Router {
         .route(
             ROUTE_API_REFACTOR_APPLY_BRANCH,
             post(refactor_apply_branch_handler),
+        )
+        .route(
+            ROUTE_API_REFACTOR_AI_PROMPT,
+            post(refactor_ai_prompt_handler),
         )
         .fallback(static_asset_handler)
         .layer(CorsLayer::permissive())
@@ -607,6 +614,20 @@ async fn refactor_apply_branch_handler(
     }
 }
 
+/// Response payload containing the synthesized AI refactoring prompt specification.
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+pub struct AiPromptResponse {
+    /// Formatted AI assistant prompt specification markdown
+    pub prompt: String,
+}
+
+async fn refactor_ai_prompt_handler(
+    Json(req): Json<cddm_core::AiRefactorPromptRequest>,
+) -> Result<Json<AiPromptResponse>, (StatusCode, String)> {
+    let prompt = cddm_core::generate_ai_refactor_prompt(&req);
+    Ok(Json(AiPromptResponse { prompt }))
+}
+
 async fn static_asset_handler(uri: Uri) -> impl IntoResponse {
     let path = uri.path().trim_start_matches('/');
     let asset_path = if path.is_empty() { INDEX_HTML } else { path };
@@ -918,5 +939,35 @@ mod tests {
         let Json(sandbox_res) = res.unwrap();
         assert_eq!(sandbox_res.function_name, "custom_compute");
         assert!(sandbox_res.unified_patch.contains("custom_compute"));
+    }
+
+    #[tokio::test]
+    async fn test_refactor_ai_prompt_handler() {
+        let req = cddm_core::AiRefactorPromptRequest {
+            clone_type: cddm_core::CloneType::Renamed,
+            similarity: 0.95,
+            token_count: 100,
+            lines_saved_est: 20,
+            function_name: "shared_helper".to_string(),
+            target_module: "src/utils.rs".to_string(),
+            occurrences: vec![cddm_core::AiOccurrenceContext {
+                path: "src/a.rs".to_string(),
+                span: cddm_core::LineSpan {
+                    line_start: 1,
+                    line_end: 10,
+                    byte_offset: 0,
+                },
+                snippet: "let x = 1;".to_string(),
+            }],
+            invariant_body: "let x = 1;".to_string(),
+            parameters: vec!["x".to_string()],
+            custom_instructions: None,
+        };
+
+        let res = refactor_ai_prompt_handler(Json(req)).await;
+        assert!(res.is_ok());
+        let Json(body) = res.unwrap();
+        assert!(body.prompt.contains("shared_helper"));
+        assert!(body.prompt.contains("src/utils.rs"));
     }
 }

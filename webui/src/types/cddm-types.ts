@@ -402,3 +402,35 @@ export interface HookStatus {
   pre_push_installed: boolean;
   hooks_dir: string;
 }
+
+/**
+ * Contextual code fragment occurrence for AI refactoring prompt synthesis.
+ */
+export interface AiOccurrenceContext {
+  path: string;
+  span: LineSpan;
+  snippet: string;
+}
+
+/**
+ * Structured request for synthesizing an AI refactoring prompt.
+ */
+export interface AiRefactorPromptRequest {
+  clone_type: CloneType;
+  similarity: number;
+  token_count: number;
+  lines_saved_est: number;
+  function_name: string;
+  target_module: string;
+  occurrences: AiOccurrenceContext[];
+  invariant_body: string;
+  parameters: string[];
+  custom_instructions?: string;
+}
+
+/**
+ * Response payload containing the synthesized AI prompt specification.
+ */
+export interface AiPromptResponse {
+  prompt: string;
+}

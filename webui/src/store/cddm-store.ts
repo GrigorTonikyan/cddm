@@ -114,6 +114,8 @@ export interface CDDMStoreState {
     branchName?: string,
     createBranch?: boolean,
   ) => Promise<import("../types/cddm-types").ApplyRefactorBranchResult>;
+  /** Synthesizes an LLM AI refactoring prompt specification */
+  generateAiPrompt: (req: import("../types/cddm-types").AiRefactorPromptRequest) => Promise<string>;
 
   /** Modal visibility setters */
   setIsScanConfigOpen: (open: boolean) => void;
@@ -310,6 +312,20 @@ export const useCDDMStore = create<CDDMStoreState>((set, get) => ({
       set({ patchStatusMessage: msg });
       throw err;
     }
+  },
+
+  generateAiPrompt: async (req) => {
+    const res = await fetch(API_ROUTES.REFACTOR_AI_PROMPT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(req),
+    });
+    if (!res.ok) {
+      const errorText = await res.text().catch(() => res.statusText);
+      throw new Error(`AI prompt generation failed (${res.status}): ${errorText}`);
+    }
+    const data: import("../types/cddm-types").AiPromptResponse = await res.json();
+    return data.prompt;
   },
 
   fetchTimeline: async (directory?: string, maxSamples: number = 10, minTokens?: number) => {

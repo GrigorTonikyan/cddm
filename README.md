@@ -8,8 +8,8 @@
 [![Vite Plus](https://img.shields.io/badge/vite%2B-0.2.9-purple.svg)](https://viteplus.dev)
 [![TypeScript](https://img.shields.io/badge/typescript-7.0-blue.svg)](https://www.typescriptlang.org)
 [![React](https://img.shields.io/badge/react-19.2-61dafb.svg)](https://react.dev)
-[![npm version](https://img.shields.io/badge/npm-1.4.0-red.svg)](https://www.npmjs.com/package/cddm)
-[![crates.io](https://img.shields.io/badge/crates.io-1.4.0-brightgreen.svg)](https://crates.io/crates/cddm)
+[![npm version](https://img.shields.io/badge/npm-1.5.0-red.svg)](https://www.npmjs.com/package/cddm)
+[![crates.io](https://img.shields.io/badge/crates.io-1.5.0-brightgreen.svg)](https://crates.io/crates/cddm)
 
 ---
 
@@ -162,11 +162,21 @@ cddm diff origin/main HEAD --fail-threshold 0.0
 
 ### `cddm refactor [OPTIONS]`
 
-Analyzes duplicate code clones and generates automated deduplication refactoring patches in unified `.patch` format.
+Analyzes duplicate code clones and generates automated deduplication refactoring patches in unified `.patch` format or AI prompt specifications.
 
 ```bash
 cddm refactor --pair 1
 cddm refactor --pair 2 --output patch.diff
+cddm refactor --pair 1 --prompt
+```
+
+### `cddm comment [DIRECTORY]`
+
+Scans the repository and outputs a formatted Markdown summary table with DRY health metrics ready for CI pull request / merge request comments.
+
+```bash
+cddm comment . --fail-threshold 15.0 --platform github
+cddm comment ./src --output pr-comment.md
 ```
 
 ### `cddm watch [DIRECTORY]`
@@ -291,6 +301,7 @@ CDDM includes a native stdio Model Context Protocol (MCP) server `cddm-mcp` for 
 - `cddm_check_suppression`: Checks if file paths or lines are suppressed by `.cddmignore` rules or inline comments.
 - `cddm_apply_cluster_refactor`: Applies a synthesized refactoring patch to the filesystem with optional Git branch creation.
 - `cddm_get_timeline`: Samples Git commit history and evaluates time-series DRY Health and duplication trajectory.
+- `cddm_generate_ai_prompt`: Synthesizes structured prompt specifications detailing clone locations and invariant bodies for AI assistants.
 - `cddm_export_sarif`: Generates OASIS SARIF v2.1.0 reports on demand.
 
 ### Exposed MCP Resources
