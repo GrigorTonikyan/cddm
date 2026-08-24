@@ -277,7 +277,7 @@ dependencies = [
 
 [[package]]
 name = "cddm-cli"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -300,7 +300,7 @@ dependencies = [
 
 [[package]]
 name = "cddm-core"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -333,7 +333,7 @@ dependencies = [
 
 [[package]]
 name = "cddm-mcp"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "anyhow",
  "async-trait",

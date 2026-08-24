@@ -5,6 +5,20 @@ All notable changes to **CDDM** (_Code De-Duplication Meister_) will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-08-24
+
+### Features
+
+- **core**: expand polyglot tree-sitter grammars and integrate ast merkle clone classifier (`964aeb7`)
+
+### Refactoring
+
+- **webui**: implement modular atomic UI primitives and win2x window manager (`b551fd9`)
+
+### Documentation
+
+- update feature matrix, roadmap, and architecture for milestone v0.5.0 (`21d9de1`)
+
 ## [0.5.0] - 2026-08-23
 
 ### Features
