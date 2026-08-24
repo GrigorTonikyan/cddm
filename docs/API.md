@@ -58,6 +58,7 @@ Execute a code duplication scan asynchronously.
   "total_files": 42,
   "total_tokens": 15230,
   "total_clones": 7,
+  "total_clusters": 3,
   "duplication_percentage": 4.85,
   "dry_health_score": 92.7,
   "clone_pairs": [
@@ -74,6 +75,35 @@ Execute a code duplication scan asynchronously.
       "clone_type": "Exact",
       "author_a": "Grigor Tonikyan (line 10, 2026-08-08)",
       "author_b": "Grigor Tonikyan (line 15, 2026-08-08)"
+    }
+  ],
+  "clone_clusters": [
+    {
+      "id": 1,
+      "occurrences": [
+        {
+          "file": "src/auth/login.rs",
+          "start_line": 10,
+          "end_line": 25,
+          "author": "Grigor Tonikyan"
+        },
+        {
+          "file": "src/auth/register.rs",
+          "start_line": 15,
+          "end_line": 30,
+          "author": "Grigor Tonikyan"
+        },
+        {
+          "file": "src/auth/reset.rs",
+          "start_line": 5,
+          "end_line": 20,
+          "author": "Grigor Tonikyan"
+        }
+      ],
+      "token_count": 50,
+      "similarity": 1.0,
+      "clone_type": "Exact",
+      "fragment_hash": "a1b2c3-d4e5f6"
     }
   ],
   "duration_ms": 54,
@@ -152,6 +182,47 @@ Synthesizes on-demand deduplication recommendations, parameter variance analysis
 
 ---
 
+### `POST /api/refactor-cluster`
+
+Synthesizes a multi-site consensus deduplication patch across $N \ge 2$ duplicate occurrences within an equivalence cluster.
+
+**Request Body** (`application/json`):
+
+```json
+{
+  "occurrences": [
+    { "file": "src/auth/login.rs", "start_line": 10, "end_line": 25 },
+    { "file": "src/auth/register.rs", "start_line": 15, "end_line": 30 },
+    { "file": "src/auth/reset.rs", "start_line": 5, "end_line": 20 }
+  ]
+}
+```
+
+**Response** (`200 OK`):
+
+```json
+{
+  "suggested_function_name": "extracted_shared_helper",
+  "strategy": "extract_multi_site_function",
+  "common_body_lines": ["let token = authenticate(&req)?;"],
+  "sites": [
+    { "file": "src/auth/login.rs", "start_line": 10, "end_line": 25, "parameter_differences": [] },
+    {
+      "file": "src/auth/register.rs",
+      "start_line": 15,
+      "end_line": 30,
+      "parameter_differences": []
+    },
+    { "file": "src/auth/reset.rs", "start_line": 5, "end_line": 20, "parameter_differences": [] }
+  ],
+  "target_module_hint": "Shared utility module or common crate",
+  "unified_patch": "--- a/src/auth/login.rs\n+++ b/src/auth/login.rs\n...\n--- a/src/auth/register.rs\n+++ b/src/auth/register.rs\n...",
+  "lines_saved": 24
+}
+```
+
+---
+
 ## 2. CLI Reference (`cddm`)
 
 ### Command: `cddm scan [DIRECTORY]`
@@ -190,12 +261,13 @@ Executes differential duplication scanning comparing current changes against a G
 
 Generates automated refactoring patch recommendations for duplicate code clones.
 
-| Flag           | Short | Type      | Default | Description                                 |
-| :------------- | :---- | :-------- | :------ | :------------------------------------------ |
-| `--pair`       | `-p`  | `usize`   | `1`     | Target clone pair 1-based index to refactor |
-| `--output`     | `-o`  | `PathBuf` | None    | Write generated unified patch to file       |
-| `--directory`  |       | `PathBuf` | `"."`   | Target codebase directory path              |
-| `--min-tokens` | `-m`  | `usize`   | `50`    | Minimum token clone threshold               |
+| Flag           | Short | Type      | Default | Description                                    |
+| :------------- | :---- | :-------- | :------ | :--------------------------------------------- |
+| `--pair`       | `-p`  | `usize`   | None    | Target clone pair 1-based index to refactor    |
+| `--cluster`    | `-c`  | `usize`   | None    | Target clone cluster 1-based index to refactor |
+| `--output`     | `-o`  | `PathBuf` | None    | Write generated unified patch to file          |
+| `--directory`  |       | `PathBuf` | `"."`   | Target codebase directory path                 |
+| `--min-tokens` | `-m`  | `usize`   | `50`    | Minimum token clone threshold                  |
 
 ### Command: `cddm serve`
 
@@ -203,7 +275,7 @@ Launches the Axum server delivering the interactive WebUI.
 
 | Flag     | Short | Type   | Default | Description               |
 | :------- | :---- | :----- | :------ | :------------------------ |
-| `--port` | `-p`  | `u16`  | `3000`  | HTTP server port          |
+| `--port` | `-p`  | `u16`  | `3001`  | HTTP server port          |
 | `--open` | `-o`  | `bool` | `false` | Auto-open default browser |
 
 ---
@@ -261,6 +333,27 @@ Performs invariant LCS analysis and produces a structural deduplication recommen
 | `start_line_b` | `number` | Yes      | 1-based start line of fragment B |
 | `end_line_b`   | `number` | Yes      | 1-based end line of fragment B   |
 
+#### `cddm_get_clone_cluster`
+
+Retrieves source snippet lines, token counts, and occurrences context for an N-way clone equivalence cluster.
+
+| Parameter    | Type     | Required | Default | Description                      |
+| :----------- | :------- | :------- | :------ | :------------------------------- |
+| `cluster_id` | `number` | Yes      | None    | 1-based cluster ID               |
+| `directory`  | `string` | No       | `"."`   | Target directory path to analyze |
+| `min_tokens` | `number` | No       | `50`    | Minimum token clone threshold    |
+
+#### `cddm_suggest_cluster_refactor`
+
+Performs multi-site consensus invariant analysis across an equivalence cluster and generates a unified multi-file `.patch`.
+
+| Parameter     | Type       | Required | Default | Description                                        |
+| :------------ | :--------- | :------- | :------ | :------------------------------------------------- |
+| `cluster_id`  | `number`   | No       | None    | Target 1-based cluster ID                          |
+| `occurrences` | `object[]` | No       | None    | Explicit array of `{ file, start_line, end_line }` |
+| `directory`   | `string`   | No       | `"."`   | Target directory path to analyze                   |
+| `min_tokens`  | `number`   | No       | `50`    | Minimum token clone threshold                      |
+
 #### `cddm_export_sarif`
 
 Executes duplication scan and returns OASIS SARIF v2.1.0 report for GitHub Code Scanning integration.
@@ -272,10 +365,11 @@ Executes duplication scan and returns OASIS SARIF v2.1.0 report for GitHub Code 
 
 ### Resources
 
-| URI                       | MIME Type          | Description                                                   |
-| :------------------------ | :----------------- | :------------------------------------------------------------ |
-| `cddm://workspace/health` | `application/json` | Real-time DRY Health Index, file metrics, and language stats. |
-| `cddm://workspace/clones` | `application/json` | Registry of active duplicate code clones across files.        |
+| URI                         | MIME Type          | Description                                                   |
+| :-------------------------- | :----------------- | :------------------------------------------------------------ |
+| `cddm://workspace/health`   | `application/json` | Real-time DRY Health Index, file metrics, and language stats. |
+| `cddm://workspace/clones`   | `application/json` | Registry of active duplicate code clones across files.        |
+| `cddm://workspace/clusters` | `application/json` | Disjoint-set partitioned N-way clone equivalence clusters.    |
 
 ### Prompts
 
@@ -290,7 +384,9 @@ Executes duplication scan and returns OASIS SARIF v2.1.0 report for GitHub Code 
 
 ```rust
 use cddm_core::{
-    run_scan, ScanConfig, ScanResult, generate_sarif_report, analyze_clone_refactoring,
+    run_scan, ScanConfig, ScanResult, generate_sarif_report,
+    analyze_clone_refactoring, analyze_cluster_refactoring,
+    cluster::cluster_clone_pairs, CloneLocation,
 };
 
 let config = ScanConfig {
@@ -305,11 +401,20 @@ let cancel_flag = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false))
 
 let result: ScanResult = run_scan(config, tx, cancel_flag).await.unwrap();
 println!("DRY Health Score: {:.1}", result.dry_health_score);
+println!("Equivalence Clusters: {}", result.total_clusters);
 
 // Generate OASIS SARIF 2.1.0 Report
 let sarif_report = generate_sarif_report(&result);
 
-// Analyze Clone Refactoring
+// Analyze Pairwise Clone Refactoring
 let suggestion = analyze_clone_refactoring("src/a.rs", (10, 25), "src/b.rs", (15, 30)).unwrap();
-println!("Patch:\n{}", suggestion.unified_patch);
+println!("Pairwise Patch:\n{}", suggestion.unified_patch);
+
+// Multi-Site Cluster Refactoring
+let cluster_suggestion = analyze_cluster_refactoring(&[
+    CloneLocation { file: "src/a.rs".to_string(), start_line: 10, end_line: 25, author: None },
+    CloneLocation { file: "src/b.rs".to_string(), start_line: 15, end_line: 30, author: None },
+    CloneLocation { file: "src/c.rs".to_string(), start_line: 5, end_line: 20, author: None },
+]).unwrap();
+println!("Multi-Site Unified Patch:\n{}", cluster_suggestion.unified_patch);
 ```

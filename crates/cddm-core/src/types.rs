@@ -100,6 +100,36 @@ pub enum CloneType {
     Semantic,
 }
 
+/// Represents a single occurrence/location of duplicate code in a file.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
+pub struct CloneLocation {
+    /// File path of the code occurrence
+    pub file: String,
+    /// 1-based start line
+    pub start_line: usize,
+    /// 1-based end line
+    pub end_line: usize,
+    /// Optional author attribution
+    pub author: Option<String>,
+}
+
+/// An N-way cluster (equivalence class) of code fragments sharing duplication across multiple locations.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct CloneCluster {
+    /// 1-based cluster index
+    pub id: usize,
+    /// The structural clone classification of this cluster
+    pub clone_type: CloneType,
+    /// Maximum or representative token count of the cluster
+    pub token_count: usize,
+    /// Average or representative similarity score (0.0 to 1.0)
+    pub similarity: f64,
+    /// Unique structural hash identifying this clone cluster
+    pub fragment_hash: String,
+    /// List of occurrences / locations belonging to this cluster
+    pub occurrences: Vec<CloneLocation>,
+}
+
 /// A matched pair of code fragments indicating a code clone.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct ClonePair {
@@ -153,12 +183,16 @@ pub struct ScanResult {
     pub total_tokens: usize,
     /// Total number of clone pairs detected
     pub total_clones: usize,
+    /// Total number of clone clusters (equivalence classes) detected
+    pub total_clusters: usize,
     /// Percentage of total tokens that are duplicated
     pub duplication_percentage: f64,
     /// DRY Health Index Score (0.0 to 100.0) evaluating structural modularity
     pub dry_health_score: f64,
     /// The list of clone pairs found
     pub clone_pairs: Vec<ClonePair>,
+    /// The list of N-way clone clusters found
+    pub clone_clusters: Vec<CloneCluster>,
     /// How long the scan took in milliseconds
     pub duration_ms: u64,
     /// Statistics broken down by programming language
@@ -370,6 +404,7 @@ mod tests {
             total_files: 10,
             total_tokens: 1000,
             total_clones: 5,
+            total_clusters: 1,
             duplication_percentage: 2.5,
             dry_health_score: 95.0,
             clone_pairs: vec![ClonePair {
@@ -385,6 +420,27 @@ mod tests {
                 clone_type: CloneType::Exact,
                 author_a: None,
                 author_b: None,
+            }],
+            clone_clusters: vec![CloneCluster {
+                id: 1,
+                clone_type: CloneType::Exact,
+                token_count: 50,
+                similarity: 1.0,
+                fragment_hash: "hash".to_string(),
+                occurrences: vec![
+                    CloneLocation {
+                        file: "a.rs".to_string(),
+                        start_line: 1,
+                        end_line: 10,
+                        author: None,
+                    },
+                    CloneLocation {
+                        file: "b.rs".to_string(),
+                        start_line: 2,
+                        end_line: 11,
+                        author: None,
+                    },
+                ],
             }],
             duration_ms: 100,
             language_breakdown: vec![LanguageStats {

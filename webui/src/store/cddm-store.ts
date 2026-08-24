@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { API_ROUTES, DEFAULT_SCAN_CONFIG } from "../constants/cddm-constants";
-import { ScanConfig, ScanProgress, ScanResult } from "../types/cddm-types";
+import { CloneCluster, ScanConfig, ScanProgress, ScanResult } from "../types/cddm-types";
 
 /**
  * Interface for CDDM Zustand Store State and Actions.
@@ -19,12 +19,18 @@ export interface CDDMStoreState {
   /** Error message if scan failed */
   error: string | null;
 
+  /** Active view mode for results list (pairwise vs n-way clusters) */
+  viewMode: "pairs" | "clusters";
+  /** Currently selected cluster for inspection or refactoring */
+  selectedCluster: CloneCluster | null;
+
   /** Global window modal visibility states */
   isScanConfigOpen: boolean;
   isHealthAuditOpen: boolean;
   isExportReportOpen: boolean;
   isTreemapModalOpen: boolean;
   isLanguageModalOpen: boolean;
+  isClusterRefactorModalOpen: boolean;
 
   /** Updates the scan configuration */
   setConfig: (config: Partial<ScanConfig>) => void;
@@ -35,12 +41,17 @@ export interface CDDMStoreState {
   /** Resets state to idle */
   resetScan: () => void;
 
+  /** View mode and cluster setters */
+  setViewMode: (viewMode: "pairs" | "clusters") => void;
+  setSelectedCluster: (selectedCluster: CloneCluster | null) => void;
+
   /** Modal visibility setters */
   setIsScanConfigOpen: (open: boolean) => void;
   setIsHealthAuditOpen: (open: boolean) => void;
   setIsExportReportOpen: (open: boolean) => void;
   setIsTreemapModalOpen: (open: boolean) => void;
   setIsLanguageModalOpen: (open: boolean) => void;
+  setIsClusterRefactorModalOpen: (open: boolean) => void;
 }
 
 /**
@@ -54,17 +65,26 @@ export const useCDDMStore = create<CDDMStoreState>((set, get) => ({
   isScanning: false,
   error: null,
 
+  viewMode: "pairs",
+  selectedCluster: null,
+
   isScanConfigOpen: false,
   isHealthAuditOpen: false,
   isExportReportOpen: false,
   isTreemapModalOpen: false,
   isLanguageModalOpen: false,
+  isClusterRefactorModalOpen: false,
+
+  setViewMode: (viewMode) => set({ viewMode }),
+  setSelectedCluster: (selectedCluster) => set({ selectedCluster }),
 
   setIsScanConfigOpen: (isScanConfigOpen) => set({ isScanConfigOpen }),
   setIsHealthAuditOpen: (isHealthAuditOpen) => set({ isHealthAuditOpen }),
   setIsExportReportOpen: (isExportReportOpen) => set({ isExportReportOpen }),
   setIsTreemapModalOpen: (isTreemapModalOpen) => set({ isTreemapModalOpen }),
   setIsLanguageModalOpen: (isLanguageModalOpen) => set({ isLanguageModalOpen }),
+  setIsClusterRefactorModalOpen: (isClusterRefactorModalOpen) =>
+    set({ isClusterRefactorModalOpen }),
 
   setConfig: (newConfig) => {
     set((state) => ({
@@ -109,11 +129,13 @@ export const useCDDMStore = create<CDDMStoreState>((set, get) => ({
       progress: null,
       isScanning: false,
       error: null,
+      selectedCluster: null,
       isScanConfigOpen: false,
       isHealthAuditOpen: false,
       isExportReportOpen: false,
       isTreemapModalOpen: false,
       isLanguageModalOpen: false,
+      isClusterRefactorModalOpen: false,
     });
   },
 }));

@@ -40,6 +40,32 @@ export interface ResizeSessionOptions {
   onResizeChange?: (rect: Win2xRect) => void;
 }
 
+function teardownPointerCapture(
+  containerElement: HTMLElement,
+  captureElement: HTMLElement,
+  pointerId: number,
+  handlePointerMove: (e: PointerEvent) => void,
+  handlePointerUp: (e: PointerEvent) => void,
+): void {
+  containerElement.removeAttribute(WIN2X_DATA_ATTRS.MOVING);
+  containerElement.style.willChange = "auto";
+  if (typeof document !== "undefined") {
+    document.body.style.userSelect = "";
+  }
+
+  if (typeof captureElement.releasePointerCapture === "function") {
+    try {
+      captureElement.releasePointerCapture(pointerId);
+    } catch {
+      // Safe fallback
+    }
+  }
+
+  captureElement.removeEventListener("pointermove", handlePointerMove);
+  captureElement.removeEventListener("pointerup", handlePointerUp);
+  captureElement.removeEventListener("pointercancel", handlePointerUp);
+}
+
 /**
  * Initiates a hardware-captured, RAF-throttled pointer drag session.
  */
@@ -151,6 +177,11 @@ export function startPointerDrag(
     }
   };
 
+  const handlePointerUp = () => {
+    cleanUp();
+    onDragEnd(currentX, currentY, currentSnapZone);
+  };
+
   const cleanUp = () => {
     isMoving = false;
     if (rafId !== null) {
@@ -162,28 +193,13 @@ export function startPointerDrag(
       snapTimer = null;
     }
 
-    containerElement.removeAttribute(WIN2X_DATA_ATTRS.MOVING);
-    containerElement.style.willChange = "auto";
-    if (typeof document !== "undefined") {
-      document.body.style.userSelect = "";
-    }
-
-    if (typeof captureElement.releasePointerCapture === "function") {
-      try {
-        captureElement.releasePointerCapture(pointerId);
-      } catch {
-        // Safe fallback
-      }
-    }
-
-    captureElement.removeEventListener("pointermove", handlePointerMove);
-    captureElement.removeEventListener("pointerup", handlePointerUp);
-    captureElement.removeEventListener("pointercancel", handlePointerUp);
-  };
-
-  const handlePointerUp = () => {
-    cleanUp();
-    onDragEnd(currentX, currentY, currentSnapZone);
+    teardownPointerCapture(
+      containerElement,
+      captureElement,
+      pointerId,
+      handlePointerMove,
+      handlePointerUp,
+    );
   };
 
   captureElement.addEventListener("pointermove", handlePointerMove, {
@@ -261,23 +277,13 @@ export function startPointerResize(
       rafId = null;
     }
 
-    containerElement.removeAttribute(WIN2X_DATA_ATTRS.MOVING);
-    containerElement.style.willChange = "auto";
-    if (typeof document !== "undefined") {
-      document.body.style.userSelect = "";
-    }
-
-    if (typeof captureElement.releasePointerCapture === "function") {
-      try {
-        captureElement.releasePointerCapture(pointerId);
-      } catch {
-        // Safe fallback
-      }
-    }
-
-    captureElement.removeEventListener("pointermove", handlePointerMove);
-    captureElement.removeEventListener("pointerup", handlePointerUp);
-    captureElement.removeEventListener("pointercancel", handlePointerUp);
+    teardownPointerCapture(
+      containerElement,
+      captureElement,
+      pointerId,
+      handlePointerMove,
+      handlePointerUp,
+    );
   };
 
   const handlePointerUp = () => {

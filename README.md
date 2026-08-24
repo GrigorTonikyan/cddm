@@ -49,6 +49,8 @@ Whether integrated into **CI/CD pipelines**, used via the **Terminal CLI**, expl
 | **Tree-sitter AST Hasher**       | Parse source trees into ASTs and hash subtrees with `blake3` to identify structural near-misses and semantic clones.                   |
 | **DRY Health Scoring**           | Computes a normalized 0.0 - 100.0 DRY codebase health score factoring in duplication ratio and cross-module cross-contamination.       |
 | **In-Process Git Blame**         | Powered by `gix` (`gitoxide`) to annotate duplicate fragments with author names and commit timestamps without spawning subprocesses.   |
+| **N-Way Graph Clustering**       | Disjoint-Set Union-Find algorithm partitioning pairwise clone graphs into transitive $N$-way equivalence classes.                      |
+| **Multi-Site Patch Synthesizer** | Computes multi-site consensus invariant lines and synthesizes unified multi-file `.patch` diffs across all clone occurrences.          |
 | **Embedded Studio WebUI**        | High-performance interactive React 19 dashboard served directly from the single compiled binary via `axum` & `rust-embed`.             |
 | **AI Agent MCP Server**          | Stdio JSON-RPC 2.0 protocol (`cddm-mcp`) allowing AI assistants (Claude, Antigravity, Cursor) to inspect duplication programmatically. |
 | **Rayon Parallel Pipeline**      | Multi-threaded file discovery, AST parsing, and fingerprint indexing across all available CPU cores.                                   |

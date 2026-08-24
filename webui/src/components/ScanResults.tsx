@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { useCDDMStore } from "../store/cddm-store";
 import { ClonePairCard } from "./ClonePairCard";
+import { CloneClusterCard } from "./CloneClusterCard";
 import { DuplicationTreemap } from "./DuplicationTreemap";
 import { TreemapExplorerModal } from "./TreemapExplorerModal";
 import { LanguageAnalyticsModal } from "./LanguageAnalyticsModal";
@@ -23,8 +24,7 @@ import {
   PieChart,
   LayoutGrid,
   Maximize2,
-  FileDown,
-  Sliders,
+  GitBranch,
 } from "lucide-react";
 
 export interface ScanResultsProps {
@@ -69,6 +69,8 @@ const SummaryCard: React.FC<SummaryCardProps> = ({ title, value, subtitle, icon 
 export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
   const {
     results,
+    viewMode,
+    setViewMode,
     isTreemapModalOpen,
     isLanguageModalOpen,
     isHealthAuditOpen,
@@ -77,7 +79,6 @@ export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
     setIsLanguageModalOpen,
     setIsHealthAuditOpen,
     setIsExportReportOpen,
-    setIsScanConfigOpen,
   } = useCDDMStore();
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -130,12 +131,54 @@ export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
       });
   }, [results?.clone_pairs, searchTerm, minSimilarity, selectedLang, sortBy]);
 
-  // Pagination Slice
-  const totalPages = Math.ceil(filteredPairs.length / itemsPerPage) || 1;
+  // Filter & Sort Clone Clusters
+  const filteredClusters = useMemo(() => {
+    if (!results || !results.clone_clusters) return [];
+    return results.clone_clusters
+      .filter((cluster) => {
+        const matchesSim = cluster.similarity * 100 >= minSimilarity;
+        if (!matchesSim) return false;
+
+        const term = searchTerm.toLowerCase().trim();
+        if (term) {
+          const matchesAnyFile = cluster.occurrences.some((loc) =>
+            loc.file.toLowerCase().includes(term),
+          );
+          if (!matchesAnyFile) return false;
+        }
+
+        if (selectedLang !== "ALL") {
+          const allowedExts = LANG_EXTENSIONS[selectedLang.toLowerCase()] || [];
+          const matchesAnyLang = cluster.occurrences.some((loc) => {
+            const ext = loc.file.split(".").pop()?.toLowerCase() || "";
+            return allowedExts.includes(ext);
+          });
+          if (!matchesAnyLang) return false;
+        }
+
+        return true;
+      })
+      .sort((a, b) => {
+        if (sortBy === "similarity") return b.similarity - a.similarity;
+        if (sortBy === "tokens") return b.token_count - a.token_count;
+        if (sortBy === "name") return a.id - b.id;
+        return 0;
+      });
+  }, [results?.clone_clusters, searchTerm, minSimilarity, selectedLang, sortBy]);
+
+  // Pagination Slice based on active viewMode
+  const activeItemsCount = viewMode === "pairs" ? filteredPairs.length : filteredClusters.length;
+  const totalPages = Math.ceil(activeItemsCount / itemsPerPage) || 1;
+
   const paginatedPairs = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
     return filteredPairs.slice(start, start + itemsPerPage);
   }, [filteredPairs, currentPage]);
+
+  const paginatedClusters = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredClusters.slice(start, start + itemsPerPage);
+  }, [filteredClusters, currentPage]);
 
   if (!results) return null;
 
@@ -148,43 +191,22 @@ export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
 
   return (
     <div className={`space-y-6 ${className}`}>
-      {/* Action Bar Header with Quick Launch Buttons */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-900/60 p-3 rounded-xl border border-slate-800 text-xs font-mono">
-        <div className="flex items-center gap-2 text-slate-300 font-bold">
+      {/* Results Header Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 pb-2 border-b border-slate-800/80">
+        <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
           <Activity className="w-4 h-4 text-indigo-400" />
           <span>Codebase Analysis Overview</span>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setIsScanConfigOpen(true)}
-            className="px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 hover:bg-slate-800 text-slate-300 flex items-center gap-1.5 transition-colors shadow-sm"
-          >
-            <Sliders className="w-3.5 h-3.5 text-indigo-400" />
-            <span>Scan Settings</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setIsHealthAuditOpen(true)}
-            className="px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 hover:bg-slate-800 text-slate-300 flex items-center gap-1.5 transition-colors shadow-sm"
-          >
-            <Award className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Health Audit</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setIsExportReportOpen(true)}
-            className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold flex items-center gap-1.5 transition-colors shadow-sm"
-          >
-            <FileDown className="w-3.5 h-3.5" />
-            <span>Export & Reports</span>
-          </button>
+        <div className="flex items-center gap-2 text-xs font-mono text-slate-400">
+          <span className="bg-slate-900 border border-slate-800/80 px-2.5 py-1 rounded-md">
+            Scan ID: <span className="text-slate-200">{results.scan_id.slice(0, 8)}</span>
+          </span>
         </div>
       </div>
 
       {/* Top Metrics Cards Banner */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
         {/* DRY Health Score Card (Clickable to open HealthAuditModal) */}
         <div
           onClick={() => setIsHealthAuditOpen(true)}
@@ -240,8 +262,16 @@ export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
         <SummaryCard
           title="Clone Pairs"
           value={results.total_clones.toLocaleString()}
-          subtitle="Identified duplicate fragments"
+          subtitle="Pairwise duplicate fragments"
           icon={<Activity className="w-5 h-5 text-indigo-400" />}
+        />
+
+        {/* Clone Clusters */}
+        <SummaryCard
+          title="Clone Clusters"
+          value={(results.total_clusters ?? results.clone_clusters?.length ?? 0).toLocaleString()}
+          subtitle="N-way equivalence classes"
+          icon={<GitBranch className="w-5 h-5 text-purple-400" />}
         />
 
         {/* Scan Duration */}
@@ -466,15 +496,50 @@ export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
         </div>
       </div>
 
-      {/* Clone Pair List Section */}
+      {/* Duplications List Section */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-bold text-slate-100 flex items-center gap-2">
-            <span>Detected Clone Pairs</span>
-            <span className="text-xs bg-indigo-950 text-indigo-300 border border-indigo-800/50 px-2.5 py-0.5 rounded-full font-mono">
-              {filteredPairs.length.toLocaleString()} matching pairs
-            </span>
-          </h3>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <h3 className="text-lg font-bold text-slate-100 flex items-center gap-2">
+              <span>
+                {viewMode === "pairs" ? "Detected Clone Pairs" : "Detected Clone Clusters"}
+              </span>
+            </h3>
+
+            {/* View Mode Toggle: Pairs vs Clusters */}
+            <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-lg border border-slate-800 text-xs font-mono">
+              <button
+                type="button"
+                onClick={() => {
+                  setViewMode("pairs");
+                  setCurrentPage(1);
+                }}
+                className={`px-3 py-1 rounded-md flex items-center gap-1.5 transition-all ${
+                  viewMode === "pairs"
+                    ? "bg-indigo-600 text-white font-semibold shadow-sm"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                <Activity className="w-3.5 h-3.5" />
+                <span>Pairwise ({filteredPairs.length})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setViewMode("clusters");
+                  setCurrentPage(1);
+                }}
+                className={`px-3 py-1 rounded-md flex items-center gap-1.5 transition-all ${
+                  viewMode === "clusters"
+                    ? "bg-purple-600 text-white font-semibold shadow-sm"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                <Layers className="w-3.5 h-3.5" />
+                <span>N-Way Clusters ({filteredClusters.length})</span>
+              </button>
+            </div>
+          </div>
 
           {/* Top Pagination Controls */}
           {totalPages > 1 && (
@@ -503,22 +568,46 @@ export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
         </div>
 
         {/* Cards Rendering */}
-        {filteredPairs.length === 0 ? (
+        {viewMode === "pairs" ? (
+          filteredPairs.length === 0 ? (
+            <div className="bg-slate-900/60 border border-slate-800/80 rounded-xl p-12 text-center text-slate-400 space-y-3">
+              <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto opacity-80" />
+              <h4 className="text-base font-semibold text-slate-200">No Clone Pairs Found</h4>
+              <p className="text-xs text-slate-400 max-w-md mx-auto">
+                No duplicate code fragments match your current search query or active filter
+                settings.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {paginatedPairs.map((pair, idx) => {
+                const globalIndex = (currentPage - 1) * itemsPerPage + idx + 1;
+                return (
+                  <ClonePairCard
+                    key={`${pair.file_a}-${pair.file_b}-${idx}`}
+                    pair={pair}
+                    index={globalIndex}
+                  />
+                );
+              })}
+            </div>
+          )
+        ) : filteredClusters.length === 0 ? (
           <div className="bg-slate-900/60 border border-slate-800/80 rounded-xl p-12 text-center text-slate-400 space-y-3">
             <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto opacity-80" />
-            <h4 className="text-base font-semibold text-slate-200">No Clone Pairs Found</h4>
+            <h4 className="text-base font-semibold text-slate-200">No Clone Clusters Found</h4>
             <p className="text-xs text-slate-400 max-w-md mx-auto">
-              No duplicate code fragments match your current search query or active filter settings.
+              No N-way clone clusters match your current search query or active filter settings.
             </p>
           </div>
         ) : (
           <div className="space-y-3">
-            {paginatedPairs.map((pair, idx) => {
+            {paginatedClusters.map((cluster, idx) => {
               const globalIndex = (currentPage - 1) * itemsPerPage + idx + 1;
               return (
-                <ClonePairCard
-                  key={`${pair.file_a}-${pair.file_b}-${idx}`}
-                  pair={pair}
+                <CloneClusterCard
+                  key={`cluster-${cluster.id}-${idx}`}
+                  cluster={cluster}
                   index={globalIndex}
                 />
               );
@@ -531,8 +620,8 @@ export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
           <div className="flex items-center justify-between bg-slate-900/60 border border-slate-800/80 rounded-xl p-4 font-mono text-xs text-slate-400">
             <div>
               Showing {(currentPage - 1) * itemsPerPage + 1}–
-              {Math.min(currentPage * itemsPerPage, filteredPairs.length)} of{" "}
-              {filteredPairs.length.toLocaleString()} clones
+              {Math.min(currentPage * itemsPerPage, activeItemsCount)} of{" "}
+              {activeItemsCount.toLocaleString()} {viewMode === "pairs" ? "clones" : "clusters"}
             </div>
             <div className="flex items-center gap-2">
               <button

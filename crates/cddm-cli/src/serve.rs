@@ -7,9 +7,8 @@ use axum::{
     routing::{get, post},
 };
 use cddm_core::{
-    ScanConfig, ScanResult,
-    grammar::get_grammar_for_path,
-    refactor::{RefactorSuggestion, analyze_clone_refactoring},
+    CloneLocation, ClusterRefactorSuggestion, RefactorSuggestion, ScanConfig, ScanResult,
+    analyze_clone_refactoring, analyze_cluster_refactoring, grammar::get_grammar_for_path,
     run_scan,
 };
 use rust_embed::RustEmbed;
@@ -32,6 +31,9 @@ pub const ROUTE_API_SNIPPET: &str = "/api/snippet";
 
 /// API endpoint path for on-demand refactoring patch synthesis.
 pub const ROUTE_API_REFACTOR: &str = "/api/refactor";
+
+/// API endpoint path for on-demand multi-site cluster refactoring patch synthesis.
+pub const ROUTE_API_REFACTOR_CLUSTER: &str = "/api/refactor-cluster";
 
 /// Default localhost IPv4 binding.
 pub const DEFAULT_HOST_IP: [u8; 4] = [127, 0, 0, 1];
@@ -105,6 +107,13 @@ pub struct RefactorRequest {
     pub end_line_b: usize,
 }
 
+/// Request payload for synthesizing multi-site cluster refactoring suggestions.
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ClusterRefactorRequest {
+    pub cluster_id: String,
+    pub occurrences: Vec<CloneLocation>,
+}
+
 /// Builds the Axum application router with all routes and middleware configured.
 pub fn build_app() -> Router {
     Router::new()
@@ -112,6 +121,7 @@ pub fn build_app() -> Router {
         .route(ROUTE_API_SCAN, post(scan_handler))
         .route(ROUTE_API_SNIPPET, get(snippet_handler))
         .route(ROUTE_API_REFACTOR, post(refactor_handler))
+        .route(ROUTE_API_REFACTOR_CLUSTER, post(refactor_cluster_handler))
         .fallback(static_asset_handler)
         .layer(CorsLayer::permissive())
 }
@@ -265,6 +275,15 @@ async fn refactor_handler(
     }
 }
 
+async fn refactor_cluster_handler(
+    Json(req): Json<ClusterRefactorRequest>,
+) -> Result<Json<ClusterRefactorSuggestion>, (StatusCode, String)> {
+    match analyze_cluster_refactoring(&req.cluster_id, &req.occurrences) {
+        Ok(suggestion) => Ok(Json(suggestion)),
+        Err(err) => Err((StatusCode::BAD_REQUEST, err)),
+    }
+}
+
 async fn static_asset_handler(uri: Uri) -> impl IntoResponse {
     let path = uri.path().trim_start_matches('/');
     let asset_path = if path.is_empty() { INDEX_HTML } else { path };
@@ -376,6 +395,51 @@ mod tests {
             suggestion.strategy,
             cddm_core::refactor::refactor_strategies::EXTRACT_FUNCTION
         );
+        assert!(suggestion.unified_patch.contains("--- a/"));
+    }
+
+    #[tokio::test]
+    async fn test_refactor_cluster_handler_success() {
+        let mut file_a = NamedTempFile::new().unwrap();
+        let mut file_b = NamedTempFile::new().unwrap();
+        let mut file_c = NamedTempFile::new().unwrap();
+
+        writeln!(file_a, "fn a() {{\n    let x = 1;\n    let y = 2;\n}}").unwrap();
+        writeln!(file_b, "fn b() {{\n    let x = 1;\n    let y = 2;\n}}").unwrap();
+        writeln!(file_c, "fn c() {{\n    let x = 1;\n    let y = 2;\n}}").unwrap();
+
+        let req = ClusterRefactorRequest {
+            cluster_id: "cluster-1".to_string(),
+            occurrences: vec![
+                CloneLocation {
+                    file: file_a.path().to_str().unwrap().to_string(),
+                    start_line: 2,
+                    end_line: 3,
+                    author: None,
+                },
+                CloneLocation {
+                    file: file_b.path().to_str().unwrap().to_string(),
+                    start_line: 2,
+                    end_line: 3,
+                    author: None,
+                },
+                CloneLocation {
+                    file: file_c.path().to_str().unwrap().to_string(),
+                    start_line: 2,
+                    end_line: 3,
+                    author: None,
+                },
+            ],
+        };
+
+        let result = refactor_cluster_handler(Json(req)).await;
+        assert!(result.is_ok());
+        let Json(suggestion) = result.unwrap();
+        assert_eq!(
+            suggestion.strategy,
+            cddm_core::refactor::refactor_strategies::EXTRACT_FUNCTION
+        );
+        assert_eq!(suggestion.sites.len(), 3);
         assert!(suggestion.unified_patch.contains("--- a/"));
     }
 }

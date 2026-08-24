@@ -108,6 +108,10 @@ test.describe("Windows 11 Desktop-Class Window Management System (win2x-manager)
     await expect(windows).toHaveCount(1);
     await expect(page.getByText("Scan Parameters & Engine Configuration")).toBeVisible();
 
+    // Close config window
+    await page.keyboard.press("Escape");
+    await expect(windows).toHaveCount(0);
+
     // 2. Run scan
     const runBtn = page.getByRole("button", { name: /Run Duplicate Analysis/i }).first();
     await runBtn.click();
@@ -133,6 +137,11 @@ test.describe("Windows 11 Desktop-Class Window Management System (win2x-manager)
     const diffBtn = page.getByRole("button", { name: /Diff Inspector/i }).first();
     await diffBtn.click();
     await expect(page.getByText(/Clone Pair #1 Diff Inspector/i)).toBeVisible();
+
+    // 6b. Open Refactor Advisor Modal from first clone pair
+    const refactorBtn = page.getByRole("button", { name: /Refactor Advisor/i }).first();
+    await refactorBtn.click();
+    await expect(page.getByText(/Automated Refactoring Advisor/i)).toBeVisible();
 
     // Verify all 5 modal windows exist in the win2x window manager simultaneously
     await expect(windows).toHaveCount(5);

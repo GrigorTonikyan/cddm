@@ -96,9 +96,11 @@ pub async fn run_scan(
             total_files: 0,
             total_tokens: 0,
             total_clones: 0,
+            total_clusters: 0,
             duplication_percentage: 0.0,
             dry_health_score: 100.0,
             clone_pairs: vec![],
+            clone_clusters: vec![],
             duration_ms: start_time.elapsed().as_millis() as u64,
             language_breakdown: vec![],
         });
@@ -531,14 +533,19 @@ pub async fn run_scan(
         })
         .await;
 
+    let clone_clusters = crate::cluster::cluster_clone_pairs(&merged_pairs);
+    let total_clusters = clone_clusters.len();
+
     Ok(ScanResult {
         scan_id,
         total_files,
         total_tokens,
         total_clones: merged_pairs.len(),
+        total_clusters,
         duplication_percentage,
         dry_health_score,
         clone_pairs: merged_pairs,
+        clone_clusters,
         duration_ms: start_time.elapsed().as_millis() as u64,
         language_breakdown,
     })
@@ -569,6 +576,11 @@ mod tests {
         run_scan(config, tx, Arc::new(AtomicBool::new(false))).await
     }
 
+    fn write_test_file(path: impl AsRef<std::path::Path>, content: &str) {
+        let mut file = std::fs::File::create(path).unwrap();
+        std::io::Write::write_all(&mut file, content.as_bytes()).unwrap();
+    }
+
     #[tokio::test]
     async fn test_empty_scan() {
         let result = run_test_scan(make_test_config("non_existent_dir", 50))
@@ -579,8 +591,6 @@ mod tests {
 
     #[tokio::test]
     async fn test_scan_with_real_duplicate_files() {
-        use std::fs::File;
-        use std::io::Write;
         use tempfile::tempdir;
 
         let dir = tempdir().unwrap();
@@ -605,17 +615,17 @@ mod tests {
             content, content, content, content, content, content
         );
 
-        let mut file_a = File::create(&file_a_path).unwrap();
-        writeln!(file_a, "{}", content_ext).unwrap();
-
-        let mut file_b = File::create(&file_b_path).unwrap();
-        writeln!(file_b, "{}", content_ext).unwrap();
+        write_test_file(&file_a_path, &content_ext);
+        write_test_file(&file_b_path, &content_ext);
 
         let result = run_test_scan(make_test_config(&dir.path().to_string_lossy(), 50))
             .await
             .unwrap();
         assert!(result.total_clones > 0);
         assert!(!result.clone_pairs.is_empty());
+        assert!(result.total_clusters > 0);
+        assert!(!result.clone_clusters.is_empty());
+        assert_eq!(result.clone_clusters[0].occurrences.len(), 2);
     }
 
     #[tokio::test]
@@ -628,15 +638,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_scan_language_filter() {
-        use std::fs::File;
-        use std::io::Write;
         use tempfile::tempdir;
 
         let dir = tempdir().unwrap();
-        let mut file_rs = File::create(dir.path().join("test.rs")).unwrap();
-        writeln!(file_rs, "fn main() {{}}").unwrap();
-        let mut file_py = File::create(dir.path().join("test.py")).unwrap();
-        writeln!(file_py, "def main(): pass").unwrap();
+        write_test_file(dir.path().join("test.rs"), "fn main() {}\n");
+        write_test_file(dir.path().join("test.py"), "def main(): pass\n");
 
         let mut config = make_test_config(&dir.path().to_string_lossy(), 50);
         config.languages = vec!["Rust".to_string()];
@@ -705,25 +711,17 @@ mod tests {
 
     #[tokio::test]
     async fn test_scan_with_disk_caching() {
-        use std::fs::File;
-        use std::io::Write;
         use tempfile::tempdir;
 
         let dir = tempdir().unwrap();
         let cache_db = dir.path().join("sub").join("test_cache.redb");
 
-        let file_a_path = dir.path().join("a.rs");
-        let file_b_path = dir.path().join("b.rs");
-
         let code =
             "fn compute_heavy_task() -> u64 { let mut v = 0; for i in 0..100 { v += i * 2; } v }\n";
         let code_long = format!("{} {} {} {} {}", code, code, code, code, code);
 
-        let mut fa = File::create(&file_a_path).unwrap();
-        writeln!(fa, "{}", code_long).unwrap();
-
-        let mut fb = File::create(&file_b_path).unwrap();
-        writeln!(fb, "{}", code_long).unwrap();
+        write_test_file(dir.path().join("a.rs"), &code_long);
+        write_test_file(dir.path().join("b.rs"), &code_long);
 
         let mut config = make_test_config(&dir.path().to_string_lossy(), 30);
         config.enable_cache = true;
@@ -746,8 +744,6 @@ mod tests {
 
     #[tokio::test]
     async fn test_exact_and_renamed_clone_classification() {
-        use std::fs::File;
-        use std::io::Write;
         use tempfile::tempdir;
 
         let dir = tempdir().unwrap();
@@ -763,10 +759,8 @@ mod tests {
                 area
             }
         "#;
-        let mut f1 = File::create(dir.path().join("exact1.rs")).unwrap();
-        writeln!(f1, "{}", exact_code).unwrap();
-        let mut f2 = File::create(dir.path().join("exact2.rs")).unwrap();
-        writeln!(f2, "{}", exact_code).unwrap();
+        write_test_file(dir.path().join("exact1.rs"), exact_code);
+        write_test_file(dir.path().join("exact2.rs"), exact_code);
 
         // Renamed clone pair
         let renamed_a = r#"
@@ -789,10 +783,8 @@ mod tests {
                 total_boundary
             }
         "#;
-        let mut f3 = File::create(dir.path().join("renamed1.rs")).unwrap();
-        writeln!(f3, "{}", renamed_a).unwrap();
-        let mut f4 = File::create(dir.path().join("renamed2.rs")).unwrap();
-        writeln!(f4, "{}", renamed_b).unwrap();
+        write_test_file(dir.path().join("renamed1.rs"), renamed_a);
+        write_test_file(dir.path().join("renamed2.rs"), renamed_b);
 
         let config = make_test_config(&dir.path().to_string_lossy(), 20);
         let result = run_test_scan(config).await.unwrap();
@@ -811,8 +803,6 @@ mod tests {
 
     #[tokio::test]
     async fn test_polyglot_ast_scan() {
-        use std::fs::File;
-        use std::io::Write;
         use tempfile::tempdir;
 
         let dir = tempdir().unwrap();
@@ -827,10 +817,8 @@ mod tests {
                 return res
             }
         "#;
-        let mut go1 = File::create(dir.path().join("metric1.go")).unwrap();
-        writeln!(go1, "{}", go_code).unwrap();
-        let mut go2 = File::create(dir.path().join("metric2.go")).unwrap();
-        writeln!(go2, "{}", go_code).unwrap();
+        write_test_file(dir.path().join("metric1.go"), go_code);
+        write_test_file(dir.path().join("metric2.go"), go_code);
 
         // Java duplicate files
         let java_code = r#"
@@ -842,10 +830,8 @@ mod tests {
                 }
             }
         "#;
-        let mut j1 = File::create(dir.path().join("Proc1.java")).unwrap();
-        writeln!(j1, "{}", java_code).unwrap();
-        let mut j2 = File::create(dir.path().join("Proc2.java")).unwrap();
-        writeln!(j2, "{}", java_code).unwrap();
+        write_test_file(dir.path().join("Proc1.java"), java_code);
+        write_test_file(dir.path().join("Proc2.java"), java_code);
 
         let config = make_test_config(&dir.path().to_string_lossy(), 15);
         let result = run_test_scan(config).await.unwrap();

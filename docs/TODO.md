@@ -104,6 +104,18 @@
 
 ---
 
+### Milestone v1.1.0: N-Way Clone Graph Clustering & Multi-Site Deduplication
+
+- [x] **[EP-11] N-Way Graph Clustering & Consensus Refactoring**
+  - [x] Implement `cddm_core::cluster::cluster_clone_pairs` via Disjoint-Set Union-Find
+  - [x] Implement `cddm_core::refactor::analyze_cluster_refactoring` multi-site consensus synthesizer
+  - [x] Add Axum endpoint `POST /api/refactor-cluster` in `cddm-cli`
+  - [x] Add `--cluster <ID>` option to `cddm refactor` CLI subcommand
+  - [x] Add MCP tools (`cddm_get_clone_cluster`, `cddm_suggest_cluster_refactor`) & resource `cddm://workspace/clusters`
+  - [x] Add WebUI Pairwise vs N-Way Clusters view tabs, `CloneClusterCard.tsx`, and unified multi-file `RefactorPatchModal.tsx`
+
+---
+
 ## Completed Milestones (Verified)
 
 - [x] **v0.1.0**: Initial Rust core engine, Winnowing rolling hash, CLI scanner.
@@ -114,3 +126,4 @@
 - [x] **v0.4.0**: Interactive WebUI Studio with side-by-side synchronized diff visualizer (`DiffViewer.tsx`), secure Axum snippet API (`GET /api/snippet`), on-demand refactoring patch synthesis (`POST /api/refactor`), and hierarchical Squarified Duplication Treemap (`DuplicationTreemap.tsx`).
 - [x] **v0.5.0**: AST Merkle Pipeline Integration (`ScanPhase::AstAnalysis`), dynamic clone classification (Type-1 Exact, Type-2 Renamed, Type-3 Near-Miss, Type-4 Semantic), dynamic similarity calculation, and polyglot Tree-sitter expansion with native parsers for Go, C, C++, Java, and C#.
 - [x] **v1.0.0**: Enterprise High-Throughput Engine with `memmap2` zero-copy I/O for large files, AVX2 and ARM NEON SIMD Mersenne-61 rolling hash vectorization, and Criterion throughput benchmarking suite.
+- [x] **v1.1.0**: N-Way Clone Graph Clustering & Multi-Site Deduplication Synthesis Engine with Disjoint-Set Union-Find transitive partitioning, consensus multi-file diff patches, Axum cluster API, CLI `--cluster`, MCP cluster tools & resources, and WebUI N-way cluster cards.

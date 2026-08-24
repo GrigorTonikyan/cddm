@@ -1,8 +1,8 @@
 #![forbid(unsafe_code)]
 
 use cddm_core::{
-    CloneStatus, DiffScanResult, ScanConfig, ScanResult, analyze_clone_refactoring, run_diff_scan,
-    run_scan,
+    CloneCluster, CloneStatus, DiffScanResult, ScanConfig, ScanResult, analyze_clone_refactoring,
+    analyze_cluster_refactoring, refactor::ClusterRefactorSuggestion, run_diff_scan, run_scan,
 };
 use clap::{Parser, Subcommand, ValueEnum};
 use comfy_table::{Cell, Color, Table};
@@ -123,6 +123,10 @@ enum Commands {
         /// Target clone pair 1-based index from scan report (default: 1)
         #[arg(short, long, default_value_t = 1)]
         pair: usize,
+
+        /// Target clone cluster 1-based index to synthesize a multi-site refactoring patch
+        #[arg(short, long)]
+        cluster: Option<usize>,
 
         /// Directory path to scan (default: current directory)
         #[arg(default_value = cddm_core::DEFAULT_DIRECTORY)]
@@ -330,6 +334,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         Commands::Refactor {
             pair,
+            cluster,
             directory,
             min_tokens,
             output,
@@ -357,35 +362,71 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             let result = run_scan(config, tx, cancel_flag).await?;
 
-            if result.clone_pairs.is_empty() {
-                println!("No duplicate code clone pairs found to refactor.");
-                return Ok(());
-            }
+            if let Some(c_idx) = cluster {
+                if result.clone_clusters.is_empty() {
+                    println!("No duplicate code clone clusters found to refactor.");
+                    return Ok(());
+                }
 
-            let target_idx = if pair > 0 && pair <= result.clone_pairs.len() {
-                pair - 1
+                let target_idx = if c_idx > 0 && c_idx <= result.clone_clusters.len() {
+                    c_idx - 1
+                } else {
+                    eprintln!(
+                        "Warning: Specified cluster index {} out of range (total: {}); defaulting \
+                         to 1.",
+                        c_idx,
+                        result.clone_clusters.len()
+                    );
+                    0
+                };
+
+                let selected_cluster = &result.clone_clusters[target_idx];
+                let suggestion = analyze_cluster_refactoring(
+                    &selected_cluster.id.to_string(),
+                    &selected_cluster.occurrences,
+                )?;
+
+                print_cluster_refactor_recommendation(selected_cluster, &suggestion);
+
+                if let Some(out_path) = output {
+                    fs::write(&out_path, &suggestion.unified_patch)?;
+                    println!(
+                        "\nMulti-site unified patch written to '{}'.",
+                        out_path.display()
+                    );
+                }
             } else {
-                eprintln!(
-                    "Warning: Specified pair index {} out of range (total: {}); defaulting to 1.",
-                    pair,
-                    result.clone_pairs.len()
-                );
-                0
-            };
+                if result.clone_pairs.is_empty() {
+                    println!("No duplicate code clone pairs found to refactor.");
+                    return Ok(());
+                }
 
-            let selected = &result.clone_pairs[target_idx];
-            let suggestion = analyze_clone_refactoring(
-                &selected.file_a,
-                (selected.start_line_a, selected.end_line_a),
-                &selected.file_b,
-                (selected.start_line_b, selected.end_line_b),
-            )?;
+                let target_idx = if pair > 0 && pair <= result.clone_pairs.len() {
+                    pair - 1
+                } else {
+                    eprintln!(
+                        "Warning: Specified pair index {} out of range (total: {}); defaulting to \
+                         1.",
+                        pair,
+                        result.clone_pairs.len()
+                    );
+                    0
+                };
 
-            print_refactor_recommendation(selected, &suggestion);
+                let selected = &result.clone_pairs[target_idx];
+                let suggestion = analyze_clone_refactoring(
+                    &selected.file_a,
+                    (selected.start_line_a, selected.end_line_a),
+                    &selected.file_b,
+                    (selected.start_line_b, selected.end_line_b),
+                )?;
 
-            if let Some(out_path) = output {
-                fs::write(&out_path, &suggestion.unified_patch)?;
-                println!("\nUnified patch written to '{}'.", out_path.display());
+                print_refactor_recommendation(selected, &suggestion);
+
+                if let Some(out_path) = output {
+                    fs::write(&out_path, &suggestion.unified_patch)?;
+                    println!("\nUnified patch written to '{}'.", out_path.display());
+                }
             }
         }
 
@@ -397,12 +438,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn scan_metrics_summary(result: &ScanResult) -> [(&'static str, String); 7] {
+fn scan_metrics_summary(result: &ScanResult) -> [(&'static str, String); 8] {
     [
         ("Scan ID", result.scan_id.clone()),
         ("Total Files", result.total_files.to_string()),
         ("Total Tokens", result.total_tokens.to_string()),
         ("Total Clone Pairs", result.total_clones.to_string()),
+        ("Total Clone Clusters", result.total_clusters.to_string()),
         (
             "Duplication Rate",
             format!("{:.2}%", result.duplication_percentage),
@@ -418,11 +460,56 @@ fn scan_metrics_summary(result: &ScanResult) -> [(&'static str, String); 7] {
 fn print_console_report(result: &ScanResult) {
     println!("\n=== CDDM — Code De-Duplication Meister Report ===");
     for (k, v) in scan_metrics_summary(result) {
-        println!("{:<18} {}", format!("{}:", k), v);
+        println!("{:<22} {}", format!("{}:", k), v);
     }
     println!();
 
+    if !result.clone_clusters.is_empty() {
+        println!("--- Clone Clusters (N-way Equivalence Classes) ---");
+        let mut cluster_table = Table::new();
+        cluster_table.set_header(vec![
+            Cell::new("Cluster"),
+            Cell::new("Type"),
+            Cell::new("Occurrences"),
+            Cell::new("Tokens"),
+            Cell::new("Similarity"),
+            Cell::new("Locations"),
+        ]);
+
+        for cluster in result.clone_clusters.iter().take(20) {
+            let locs_str = cluster
+                .occurrences
+                .iter()
+                .map(|loc| format!("{}:{}-{}", loc.file, loc.start_line, loc.end_line))
+                .collect::<Vec<_>>()
+                .join(", ");
+            let locs_truncated = if locs_str.len() > 55 {
+                format!("{}...", &locs_str[..52])
+            } else {
+                locs_str
+            };
+
+            cluster_table.add_row(vec![
+                Cell::new(format!("#{}", cluster.id)),
+                Cell::new(format!("{:?}", cluster.clone_type)),
+                Cell::new(cluster.occurrences.len()),
+                Cell::new(cluster.token_count),
+                Cell::new(format!("{:.1}%", cluster.similarity * 100.0)).fg(Color::Yellow),
+                Cell::new(locs_truncated),
+            ]);
+        }
+        println!("{}", cluster_table);
+        if result.clone_clusters.len() > 20 {
+            println!(
+                "... and {} more clone clusters.",
+                result.clone_clusters.len() - 20
+            );
+        }
+        println!();
+    }
+
     if !result.clone_pairs.is_empty() {
+        println!("--- Pairwise Clones ---");
         let mut table = Table::new();
         table.set_header(vec![
             Cell::new("File A"),
@@ -463,7 +550,32 @@ fn print_markdown_report(result: &ScanResult) {
     }
     println!();
 
+    if !result.clone_clusters.is_empty() {
+        println!("### N-way Clone Clusters\n");
+        println!("| Cluster | Type | Occurrences | Tokens | Similarity | Locations |");
+        println!("| :--- | :--- | :--- | :--- | :--- | :--- |");
+        for cluster in &result.clone_clusters {
+            let locs_str = cluster
+                .occurrences
+                .iter()
+                .map(|loc| format!("`{}`:{}-{}", loc.file, loc.start_line, loc.end_line))
+                .collect::<Vec<_>>()
+                .join("<br>");
+            println!(
+                "| `#{}` | `{:?}` | {} | {} | {:.1}% | {} |",
+                cluster.id,
+                cluster.clone_type,
+                cluster.occurrences.len(),
+                cluster.token_count,
+                cluster.similarity * 100.0,
+                locs_str
+            );
+        }
+        println!();
+    }
+
     if !result.clone_pairs.is_empty() {
+        println!("### Pairwise Clones\n");
         println!("| File A | Lines A | File B | Lines B | Tokens | Similarity |");
         println!("| :--- | :--- | :--- | :--- | :--- | :--- |");
         for pair in &result.clone_pairs {
@@ -612,12 +724,48 @@ fn print_refactor_recommendation(
     println!("{}", suggestion.unified_patch);
 }
 
+fn print_cluster_refactor_recommendation(
+    cluster: &CloneCluster,
+    suggestion: &ClusterRefactorSuggestion,
+) {
+    println!("\n=== CDDM — Multi-Site Cluster Refactoring Recommendation ===");
+    println!("{:<24} Cluster #{}", "Cluster Target:", cluster.id);
+    println!("{:<24} {:?}", "Clone Classification:", cluster.clone_type);
+    println!(
+        "{:<24} {} locations",
+        "Total Occurrences:",
+        cluster.occurrences.len()
+    );
+    println!("{:<24} {}", "Refactoring Strategy:", suggestion.strategy);
+    println!(
+        "{:<24} {}",
+        "Suggested Helper:", suggestion.suggested_function_name
+    );
+    println!("{:<24} {}", "Target Module:", suggestion.target_module_hint);
+    println!(
+        "{:<24} {}",
+        "Total Lines Saved:", suggestion.total_lines_saved
+    );
+    println!("\n--- Occurrence Sites ---");
+    for (i, site) in suggestion.sites.iter().enumerate() {
+        println!(
+            "  Site {}: {}:{}-{}",
+            i + 1,
+            site.file,
+            site.start_line,
+            site.end_line
+        );
+    }
+    println!("\n--- Generated Multi-File Unified Patch Preview ---\n");
+    println!("{}", suggestion.unified_patch);
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use cddm_core::{
-        ClonePair, CloneStatus, CloneType, DiffClonePair, DiffScanResult, DiffSummary,
-        LanguageStats, ScanResult,
+        CloneCluster, CloneLocation, ClonePair, CloneStatus, CloneType, DiffClonePair,
+        DiffScanResult, DiffSummary, LanguageStats, ScanResult,
     };
 
     fn make_test_result() -> ScanResult {
@@ -626,6 +774,7 @@ mod tests {
             total_files: 3,
             total_tokens: 500,
             total_clones: 1,
+            total_clusters: 1,
             duplication_percentage: 10.0,
             dry_health_score: 90.0,
             clone_pairs: vec![ClonePair {
@@ -641,6 +790,27 @@ mod tests {
                 clone_type: CloneType::Exact,
                 author_a: None,
                 author_b: None,
+            }],
+            clone_clusters: vec![CloneCluster {
+                id: 1,
+                clone_type: CloneType::Exact,
+                token_count: 50,
+                similarity: 1.0,
+                fragment_hash: "hash_cli".to_string(),
+                occurrences: vec![
+                    CloneLocation {
+                        file: "src/a.rs".to_string(),
+                        start_line: 1,
+                        end_line: 10,
+                        author: None,
+                    },
+                    CloneLocation {
+                        file: "src/b.rs".to_string(),
+                        start_line: 1,
+                        end_line: 10,
+                        author: None,
+                    },
+                ],
             }],
             duration_ms: 15,
             language_breakdown: vec![LanguageStats {

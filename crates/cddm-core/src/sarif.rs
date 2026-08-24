@@ -426,6 +426,7 @@ mod tests {
             total_files: 5,
             total_tokens: 1200,
             total_clones: 2,
+            total_clusters: 2,
             duplication_percentage: 8.5,
             dry_health_score: 91.5,
             clone_pairs: vec![
@@ -458,6 +459,7 @@ mod tests {
                     author_b: None,
                 },
             ],
+            clone_clusters: vec![],
             duration_ms: 42,
             language_breakdown: vec![LanguageStats {
                 language: "Rust".to_string(),

@@ -282,9 +282,42 @@ Maximizing token throughput on multi-gigabyte codebases to achieve > 20M tokens/
    - Compute 4 parallel window hash modulos simultaneously.
 3. Provide scalar fallback for architectures without vector extensions.
 
+---
+
+### EP-11: N-Way Clone Graph Clustering & Multi-Site Deduplication Synthesis
+
+- **Target Milestone**: `v1.1.0`
+- **Component**: `crates/cddm-core`, `crates/cddm-cli`, `crates/cddm-mcp`, `webui`
+- **Priority**: `High`
+- **Status**: `Completed (v1.1.0)`
+
+#### Problem Statement
+
+Pairwise clone detection scatters $N \ge 3$ duplicate locations across $O(N^2)$ independent pairs, creating redundant clutter and making it tedious to coordinate multi-file refactorings.
+
+#### Specification & Architecture
+
+1. **Connected-Components Graph Clustering (`cddm_core::cluster`)**:
+   - Disjoint-Set Union-Find (DSU) with path compression and rank optimization partitions pairwise clone graphs into transitive connected components ($A \sim B \land B \sim C \implies \{A, B, C\}$).
+   - Generates canonical `CloneCluster` equivalence classes with unified token metrics, similarity, and occurrence spans.
+2. **Multi-Site Consensus Refactoring Synthesizer (`cddm_core::refactor`)**:
+   - Computes multi-site consensus invariant lines across all $N$ occurrences.
+   - Extracts site-specific parameter diffs and generates unified multi-file `.patch` diffs (`--- a/... +++ b/...`).
+3. **Studio API & CLI Support**:
+   - Exposes Axum endpoint `POST /api/refactor-cluster`.
+   - Adds `--cluster <ID>` option to `cddm refactor` CLI subcommand with console and markdown cluster summaries.
+4. **MCP Agentic Integration**:
+   - Exposes `cddm_get_clone_cluster` and `cddm_suggest_cluster_refactor` MCP tools.
+   - Exposes `cddm://workspace/clusters` real-time queryable MCP resource.
+5. **Interactive WebUI Visualizer**:
+   - Adds "Pairwise" vs "N-Way Clusters" view mode toggle tabs in `ScanResults.tsx`.
+   - Interactive `CloneClusterCard.tsx` with expandable site lists and one-click cluster refactor modal.
+
 #### Acceptance Criteria
 
-- Benchmarks show 2.5x - 4.0x speedup in rolling hash computation on x86_64 (AVX2) and aarch64 (NEON).
+- Graph clustering groups transitive multi-way clone chains into single clusters.
+- Refactoring engine generates valid multi-file diff patches spanning all occurrences.
+- WebUI allows seamless switching between pairwise and clustered duplication views.
 
 ---
 
@@ -321,6 +354,14 @@ Maximizing token throughput on multi-gigabyte codebases to achieve > 20M tokens/
 - [x] Implement `memmap2` zero-copy memory mapping for large files [EP-10]
 - [x] Implement AVX2 / NEON SIMD vectorization for Mersenne 61 rolling hash [EP-10]
 - [x] Benchmark and validate 1M+ LOC enterprise monorepo scalability [EP-10]
+
+### Milestone v1.1.0 (N-Way Clustering & Multi-Site Deduplication)
+
+- [x] Implement Disjoint-Set Union-Find connected-components graph clustering [EP-11]
+- [x] Implement multi-site consensus invariant deduplication synthesizer & unified diff patch generation [EP-11]
+- [x] Expose Axum `POST /api/refactor-cluster` endpoint and CLI `--cluster <ID>` option [EP-11]
+- [x] Implement MCP tools (`cddm_get_clone_cluster`, `cddm_suggest_cluster_refactor`) & resource `cddm://workspace/clusters` [EP-11]
+- [x] Add WebUI Pairwise vs N-Way Clusters view tabs, `CloneClusterCard.tsx`, and multi-file `RefactorPatchModal.tsx` [EP-11]
 ```
 
 ---

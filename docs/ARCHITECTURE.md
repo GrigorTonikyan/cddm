@@ -22,6 +22,8 @@ graph TD
         Index["Fingerprint Index (HashMap)"]
         Detector["Parallel Detector (Rayon)"]
         Blame["Git Blame Annotator (gix)"]
+        Cluster["N-Way Graph Clustering (Disjoint-Set Union-Find)"]
+        Refactor["Multi-Site Consensus Refactoring Synthesizer"]
         Cache["SHA-256 Incremental Cache"]
         Watcher["FileSystem Watcher (notify)"]
     end
@@ -38,6 +40,8 @@ graph TD
     Index --> Detector
     AST --> Detector
     Detector --> Blame
+    Detector --> Cluster
+    Cluster --> Refactor
 ```
 
 ---

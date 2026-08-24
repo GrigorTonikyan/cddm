@@ -1,8 +1,7 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vite-plus/test";
 import { ClonePairDiffModal } from "../ClonePairDiffModal";
-import { createMockClonePair } from "./test-helpers";
-import { Win2xManagerProvider } from "../ui/win2x-manager/context/win2x-manager-context";
+import { createMockClonePair, mockFetchSnippets, renderWithWin2x } from "./test-helpers";
 
 describe("ClonePairDiffModal Component", () => {
   const mockPair = createMockClonePair();
@@ -12,36 +11,19 @@ describe("ClonePairDiffModal Component", () => {
   });
 
   it("should return null when not open", () => {
-    const { container } = render(
-      <Win2xManagerProvider>
-        <ClonePairDiffModal isOpen={false} onClose={() => {}} pair={mockPair} />
-      </Win2xManagerProvider>,
+    const { container } = renderWithWin2x(
+      <ClonePairDiffModal isOpen={false} onClose={() => {}} pair={mockPair} />,
     );
     expect(container.firstChild).toBeNull();
   });
 
   it("should render Diff Inspector window with metadata when open", async () => {
-    globalThis.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: () =>
-        Promise.resolve({
-          file: "src/a.ts",
-          start_line: 10,
-          end_line: 20,
-          context_start_line: 8,
-          context_end_line: 22,
-          lines: [{ line_number: 10, content: "const x = 1;", is_target: true }],
-          total_lines: 30,
-          language: "TypeScript",
-        }),
-    } as Response);
+    mockFetchSnippets();
 
     const onClose = vi.fn();
 
-    render(
-      <Win2xManagerProvider>
-        <ClonePairDiffModal isOpen={true} onClose={onClose} pair={mockPair} index={1} />
-      </Win2xManagerProvider>,
+    renderWithWin2x(
+      <ClonePairDiffModal isOpen={true} onClose={onClose} pair={mockPair} index={1} />,
     );
 
     expect(screen.getByText("Clone Pair #1 Diff Inspector")).toBeDefined();
@@ -61,21 +43,8 @@ describe("ClonePairDiffModal Component", () => {
     expect(onClose).toHaveBeenCalled();
   });
 
-  it("should support copying file references", () => {
-    globalThis.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: () =>
-        Promise.resolve({
-          file: "src/a.ts",
-          start_line: 10,
-          end_line: 20,
-          context_start_line: 8,
-          context_end_line: 22,
-          lines: [],
-          total_lines: 30,
-          language: "TypeScript",
-        }),
-    } as Response);
+  it("should support copying file references", async () => {
+    mockFetchSnippets();
 
     const writeTextMock = vi.fn().mockResolvedValue(undefined);
     Object.assign(navigator, {
@@ -84,11 +53,11 @@ describe("ClonePairDiffModal Component", () => {
       },
     });
 
-    render(
-      <Win2xManagerProvider>
-        <ClonePairDiffModal isOpen={true} onClose={() => {}} pair={mockPair} />
-      </Win2xManagerProvider>,
-    );
+    renderWithWin2x(<ClonePairDiffModal isOpen={true} onClose={() => {}} pair={mockPair} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Interactive Code Diff Visualizer")).toBeDefined();
+    });
 
     const copyBtn = screen.getByText("Copy File References");
     fireEvent.click(copyBtn);

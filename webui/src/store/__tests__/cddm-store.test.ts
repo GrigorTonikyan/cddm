@@ -36,10 +36,12 @@ describe("useCDDMStore Zustand Store", () => {
       total_files: 10,
       total_tokens: 5000,
       total_clones: 2,
+      total_clusters: 1,
       duplication_percentage: 3.5,
       dry_health_score: 95.0,
       duration_ms: 120,
       clone_pairs: [],
+      clone_clusters: [],
       language_breakdown: [],
     };
 
@@ -127,5 +129,27 @@ describe("useCDDMStore Zustand Store", () => {
     expect(reset.isExportReportOpen).toBe(false);
     expect(reset.isTreemapModalOpen).toBe(false);
     expect(reset.isLanguageModalOpen).toBe(false);
+    expect(reset.isClusterRefactorModalOpen).toBe(false);
+    expect(reset.selectedCluster).toBeNull();
+  });
+
+  it("should manage viewMode and selectedCluster state", () => {
+    const store = useCDDMStore.getState();
+    expect(store.viewMode).toBe("pairs");
+    expect(store.selectedCluster).toBeNull();
+
+    store.setViewMode("clusters");
+    expect(useCDDMStore.getState().viewMode).toBe("clusters");
+
+    const mockCluster = {
+      id: 1,
+      clone_type: "Exact" as const,
+      token_count: 50,
+      similarity: 1.0,
+      fragment_hash: "hash123",
+      occurrences: [],
+    };
+    store.setSelectedCluster(mockCluster);
+    expect(useCDDMStore.getState().selectedCluster).toEqual(mockCluster);
   });
 });

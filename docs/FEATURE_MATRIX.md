@@ -1,11 +1,11 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-24 | Rust: 92/92 PASS | WebUI: 108/108 PASS | Repository Scripts: 27/27 PASS | CI Workflows: PASS
+> Last verified: 2026-08-24 | Rust: 101/101 PASS | WebUI: 112/112 PASS | Repository Scripts: 27/27 PASS | Playwright E2E: 9/9 PASS | CI Workflows: PASS
 
 ---
 
-## 1. Rust Backend — `cddm-core`, `cddm-cli`, `cddm-mcp` (92 unit tests)
+## 1. Rust Backend — `cddm-core`, `cddm-cli`, `cddm-mcp` (101 unit tests)
 
 ### Tokenization Engine (`crates/cddm-core/src/tokenizer.rs`)
 
@@ -116,42 +116,56 @@
 | F-10.2 | SARIF JSON serde serialization and deserialization         | `sarif::tests::test_sarif_json_serde_roundtrip` | PASS   |
 | F-10.3 | Mapping all 4 clone types to rule catalog and rule indices | `sarif::tests::test_all_clone_types_mapped`     | PASS   |
 
-### Clone Refactoring Engine (`crates/cddm-core/src/refactor.rs`)
+### Connected-Components Graph Clustering (`crates/cddm-core/src/cluster.rs`)
 
-| ID     | Feature Variant                                        | Test Function                                         | Result |
-| :----- | :----------------------------------------------------- | :---------------------------------------------------- | :----- |
-| F-11.1 | Identical clone snippet refactoring & patch synthesis  | `refactor::tests::test_identical_snippet_refactoring` | PASS   |
-| F-11.2 | Parameter difference detection for renamed identifiers | `refactor::tests::test_renamed_parameter_refactoring` | PASS   |
-| F-11.3 | Real filesystem file clone refactoring & patch         | `refactor::tests::test_real_file_clone_refactoring`   | PASS   |
-| F-11.4 | Out-of-bounds line range error handling                | `refactor::tests::test_invalid_line_range`            | PASS   |
+| ID     | Feature Variant                                           | Test Function                                          | Result |
+| :----- | :-------------------------------------------------------- | :----------------------------------------------------- | :----- |
+| F-11.1 | Empty clone pairs list produces zero clusters             | `cluster::tests::test_empty_clone_pairs_clustering`    | PASS   |
+| F-11.2 | Single clone pair partitioned into 2-occurrence cluster   | `cluster::tests::test_single_clone_pair_clustering`    | PASS   |
+| F-11.3 | Transitive 3-way clone pairing grouped into 1 cluster     | `cluster::tests::test_three_way_transitive_clustering` | PASS   |
+| F-11.4 | Disjoint multi-component clone graphs clustered correctly | `cluster::tests::test_multi_cluster_partitioning`      | PASS   |
+
+### Multi-Site Deduplication & Refactoring Engine (`crates/cddm-core/src/refactor.rs`)
+
+| ID     | Feature Variant                                        | Test Function                                             | Result |
+| :----- | :----------------------------------------------------- | :-------------------------------------------------------- | :----- |
+| F-12.1 | Identical clone snippet refactoring & patch synthesis  | `refactor::tests::test_identical_snippet_refactoring`     | PASS   |
+| F-12.2 | Parameter difference detection for renamed identifiers | `refactor::tests::test_renamed_parameter_refactoring`     | PASS   |
+| F-12.3 | Real filesystem file clone refactoring & patch         | `refactor::tests::test_real_file_clone_refactoring`       | PASS   |
+| F-12.4 | Out-of-bounds line range error handling                | `refactor::tests::test_invalid_line_range`                | PASS   |
+| F-12.5 | Multi-site consensus invariant snippet extraction      | `refactor::tests::test_analyze_cluster_snippets_exact`    | PASS   |
+| F-12.6 | Multi-site file-based consensus refactoring & patch    | `refactor::tests::test_analyze_cluster_refactoring_files` | PASS   |
 
 ### Git Differential Scanning Engine (`crates/cddm-core/src/diff.rs`)
 
 | ID     | Feature Variant                                       | Test Function                             | Result |
 | :----- | :---------------------------------------------------- | :---------------------------------------- | :----- |
-| F-12.1 | Non-git directory differential scan error propagation | `diff::tests::test_diff_scan_non_git_dir` | PASS   |
-| F-12.2 | Cross-platform file path normalization for diff match | `diff::tests::test_normalize_path_str`    | PASS   |
+| F-13.1 | Non-git directory differential scan error propagation | `diff::tests::test_diff_scan_non_git_dir` | PASS   |
+| F-13.2 | Cross-platform file path normalization for diff match | `diff::tests::test_normalize_path_str`    | PASS   |
 
-### CLI Reporter & Flags (`crates/cddm-cli/src/main.rs`)
+### CLI Reporter & Studio Server (`crates/cddm-cli/src/main.rs`, `serve.rs`)
 
 | ID     | Feature Variant                                      | Test Function                                          | Result |
 | :----- | :--------------------------------------------------- | :----------------------------------------------------- | :----- |
-| F-13.1 | `OutputFormat` enum equality & variant parsing       | `main::tests::test_output_format_variants`             | PASS   |
-| F-13.2 | CLI SARIF output printing execution                  | `main::tests::test_print_sarif_report_succeeds`        | PASS   |
-| F-13.3 | CLI Console and Markdown formatting output execution | `main::tests::test_print_console_and_markdown_reports` | PASS   |
-| F-13.4 | CLI Differential scan console & markdown tables      | `main::tests::test_print_diff_reports`                 | PASS   |
+| F-14.1 | `OutputFormat` enum equality & variant parsing       | `main::tests::test_output_format_variants`             | PASS   |
+| F-14.2 | CLI SARIF output printing execution                  | `main::tests::test_print_sarif_report_succeeds`        | PASS   |
+| F-14.3 | CLI Console and Markdown formatting output execution | `main::tests::test_print_console_and_markdown_reports` | PASS   |
+| F-14.4 | CLI Differential scan console & markdown tables      | `main::tests::test_print_diff_reports`                 | PASS   |
+| F-14.5 | Axum `/api/refactor-cluster` handler synthesis       | `serve::tests::test_refactor_cluster_handler_success`  | PASS   |
 
 ### Advanced MCP Server Protocol (`crates/cddm-mcp/src/main.rs`)
 
-| ID     | Feature Variant                                                  | Test Function                                    | Result |
-| :----- | :--------------------------------------------------------------- | :----------------------------------------------- | :----- |
-| F-14.1 | MCP protocol initialize, version negotiation & serverInfo        | `main::tests::test_mcp_initialize`               | PASS   |
-| F-14.2 | MCP ping healthcheck method                                      | `main::tests::test_mcp_ping`                     | PASS   |
-| F-14.3 | Tools discovery (`scan_codebase`, `cddm_diff_scan`, refactor)    | `main::tests::test_mcp_tools_list`               | PASS   |
-| F-14.4 | Differential scan tool invocation parameter validation           | `main::tests::test_mcp_diff_scan_missing_params` | PASS   |
-| F-14.5 | Resources discovery (`cddm://workspace/health` & `clones`)       | `main::tests::test_mcp_resources_list`           | PASS   |
-| F-14.6 | Prompts discovery and retrieval (`audit_dry_health`, `refactor`) | `main::tests::test_mcp_prompts_list_and_get`     | PASS   |
-| F-14.7 | Standard JSON-RPC 2.0 error handling for invalid/unknown method  | `main::tests::test_mcp_unknown_method`           | PASS   |
+| ID     | Feature Variant                                                  | Test Function                                     | Result |
+| :----- | :--------------------------------------------------------------- | :------------------------------------------------ | :----- |
+| F-15.1 | MCP protocol initialize, version negotiation & serverInfo        | `main::tests::test_mcp_initialize`                | PASS   |
+| F-15.2 | MCP ping healthcheck method                                      | `main::tests::test_mcp_ping`                      | PASS   |
+| F-15.3 | Tools discovery (scan, diff, cluster refactor, SARIF)            | `main::tests::test_mcp_tools_list`                | PASS   |
+| F-15.4 | Differential scan tool invocation parameter validation           | `main::tests::test_mcp_diff_scan_missing_params`  | PASS   |
+| F-15.5 | Resources discovery (`health`, `clones`, `clusters`)             | `main::tests::test_mcp_resources_list`            | PASS   |
+| F-15.6 | Prompts discovery and retrieval (`audit_dry_health`, `refactor`) | `main::tests::test_mcp_prompts_list_and_get`      | PASS   |
+| F-15.7 | Standard JSON-RPC 2.0 error handling for invalid/unknown method  | `main::tests::test_mcp_unknown_method`            | PASS   |
+| F-15.8 | MCP `cddm_suggest_cluster_refactor` explicit occurrences         | `main::tests::test_mcp_cluster_refactor_explicit` | PASS   |
+| F-15.9 | MCP `cddm://workspace/clusters` resource contents read           | `main::tests::test_mcp_resources_read_clusters`   | PASS   |
 
 ### Zero-Copy Memory-Mapped File I/O (`crates/cddm-core/src/io/`)
 
@@ -175,39 +189,40 @@
 
 ---
 
-## 2. WebUI Frontend — React 19 + TypeScript + Vitest (108 unit tests across 29 suites)
+## 2. WebUI Frontend — React 19 + TypeScript + Vitest (112 unit tests across 30 suites)
 
-| Module            | Test Suite File                                                                  | Test Cases | Status |
-| :---------------- | :------------------------------------------------------------------------------- | :--------- | :----- |
-| Store             | `webui/src/store/__tests__/cddm-store.test.ts`                                   | 8 tests    | PASS   |
-| App Shell         | `webui/src/components/__tests__/App.test.tsx`                                    | 5 tests    | PASS   |
-| Config Panel      | `webui/src/components/__tests__/ScanConfigPanel.test.tsx`                        | 4 tests    | PASS   |
-| Progress Bar      | `webui/src/components/__tests__/ScanProgressBar.test.tsx`                        | 3 tests    | PASS   |
-| Results View      | `webui/src/components/__tests__/ScanResults.test.tsx`                            | 7 tests    | PASS   |
-| Clone Pair Card   | `webui/src/components/__tests__/ClonePairCard.test.tsx`                          | 2 tests    | PASS   |
-| Diff Viewer       | `webui/src/components/__tests__/DiffViewer.test.tsx`                             | 3 tests    | PASS   |
-| Refactor Modal    | `webui/src/components/__tests__/RefactorPatchModal.test.tsx`                     | 3 tests    | PASS   |
-| Duplication Map   | `webui/src/components/__tests__/DuplicationTreemap.test.tsx`                     | 3 tests    | PASS   |
-| Treemap Explorer  | `webui/src/components/__tests__/TreemapExplorerModal.test.tsx`                   | 3 tests    | PASS   |
-| Health Audit      | `webui/src/components/__tests__/HealthAuditModal.test.tsx`                       | 3 tests    | PASS   |
-| Export Report     | `webui/src/components/__tests__/ExportReportModal.test.tsx`                      | 3 tests    | PASS   |
-| Lang Analytics    | `webui/src/components/__tests__/LanguageAnalyticsModal.test.tsx`                 | 2 tests    | PASS   |
-| Config Modal      | `webui/src/components/__tests__/ScanConfigModal.test.tsx`                        | 2 tests    | PASS   |
-| Clone Diff Modal  | `webui/src/components/__tests__/ClonePairDiffModal.test.tsx`                     | 3 tests    | PASS   |
-| Type System       | `webui/src/types/__tests__/cddm-types.test.ts`                                   | 2 tests    | PASS   |
-| UI Badge          | `webui/src/components/ui/__tests__/badge.test.tsx`                               | 2 tests    | PASS   |
-| UI Icon Button    | `webui/src/components/ui/__tests__/icon-button.test.tsx`                         | 2 tests    | PASS   |
-| UI Card           | `webui/src/components/ui/__tests__/collapsible-card.test.tsx`                    | 2 tests    | PASS   |
-| UI Code Block     | `webui/src/components/ui/__tests__/code-block.test.tsx`                          | 3 tests    | PASS   |
-| Win2x Geometry    | `webui/src/components/ui/win2x-manager/__tests__/geometry-engine.test.ts`        | 7 tests    | PASS   |
-| Win2x Driver      | `webui/src/components/ui/win2x-manager/__tests__/pointer-driver.test.ts`         | 2 tests    | PASS   |
-| Win2x Storage     | `webui/src/components/ui/win2x-manager/__tests__/storage-adapter.test.ts`        | 5 tests    | PASS   |
-| Win2x ScrollLock  | `webui/src/components/ui/win2x-manager/__tests__/use-body-scroll-lock.test.ts`   | 3 tests    | PASS   |
-| Win2x Drag Hook   | `webui/src/components/ui/win2x-manager/__tests__/use-pointer-drag.test.ts`       | 2 tests    | PASS   |
-| Win2x Resize Hook | `webui/src/components/ui/win2x-manager/__tests__/use-pointer-resize.test.ts`     | 2 tests    | PASS   |
-| Win2x Context     | `webui/src/components/ui/win2x-manager/__tests__/win2x-manager-context.test.tsx` | 5 tests    | PASS   |
-| Win2x Window      | `webui/src/components/ui/win2x-manager/__tests__/win2x-window.test.tsx`          | 13 tests   | PASS   |
-| Win2x Tab Bar     | `webui/src/components/ui/win2x-manager/__tests__/tab-bar.test.tsx`               | 4 tests    | PASS   |
+| Module             | Test Suite File                                                                  | Test Cases | Status |
+| :----------------- | :------------------------------------------------------------------------------- | :--------- | :----- |
+| Store              | `webui/src/store/__tests__/cddm-store.test.ts`                                   | 9 tests    | PASS   |
+| App Shell          | `webui/src/components/__tests__/App.test.tsx`                                    | 5 tests    | PASS   |
+| Config Panel       | `webui/src/components/__tests__/ScanConfigPanel.test.tsx`                        | 4 tests    | PASS   |
+| Progress Bar       | `webui/src/components/__tests__/ScanProgressBar.test.tsx`                        | 3 tests    | PASS   |
+| Results View       | `webui/src/components/__tests__/ScanResults.test.tsx`                            | 8 tests    | PASS   |
+| Clone Pair Card    | `webui/src/components/__tests__/ClonePairCard.test.tsx`                          | 2 tests    | PASS   |
+| Clone Cluster Card | `webui/src/components/__tests__/CloneClusterCard.test.tsx`                       | 2 tests    | PASS   |
+| Diff Viewer        | `webui/src/components/__tests__/DiffViewer.test.tsx`                             | 3 tests    | PASS   |
+| Refactor Modal     | `webui/src/components/__tests__/RefactorPatchModal.test.tsx`                     | 3 tests    | PASS   |
+| Duplication Map    | `webui/src/components/__tests__/DuplicationTreemap.test.tsx`                     | 3 tests    | PASS   |
+| Treemap Explorer   | `webui/src/components/__tests__/TreemapExplorerModal.test.tsx`                   | 3 tests    | PASS   |
+| Health Audit       | `webui/src/components/__tests__/HealthAuditModal.test.tsx`                       | 3 tests    | PASS   |
+| Export Report      | `webui/src/components/__tests__/ExportReportModal.test.tsx`                      | 3 tests    | PASS   |
+| Lang Analytics     | `webui/src/components/__tests__/LanguageAnalyticsModal.test.tsx`                 | 2 tests    | PASS   |
+| Config Modal       | `webui/src/components/__tests__/ScanConfigModal.test.tsx`                        | 2 tests    | PASS   |
+| Clone Diff Modal   | `webui/src/components/__tests__/ClonePairDiffModal.test.tsx`                     | 3 tests    | PASS   |
+| Type System        | `webui/src/types/__tests__/cddm-types.test.ts`                                   | 2 tests    | PASS   |
+| UI Badge           | `webui/src/components/ui/__tests__/badge.test.tsx`                               | 2 tests    | PASS   |
+| UI Icon Button     | `webui/src/components/ui/__tests__/icon-button.test.tsx`                         | 2 tests    | PASS   |
+| UI Card            | `webui/src/components/ui/__tests__/collapsible-card.test.tsx`                    | 2 tests    | PASS   |
+| UI Code Block      | `webui/src/components/ui/__tests__/code-block.test.tsx`                          | 3 tests    | PASS   |
+| Win2x Geometry     | `webui/src/components/ui/win2x-manager/__tests__/geometry-engine.test.ts`        | 7 tests    | PASS   |
+| Win2x Driver       | `webui/src/components/ui/win2x-manager/__tests__/pointer-driver.test.ts`         | 2 tests    | PASS   |
+| Win2x Storage      | `webui/src/components/ui/win2x-manager/__tests__/storage-adapter.test.ts`        | 5 tests    | PASS   |
+| Win2x ScrollLock   | `webui/src/components/ui/win2x-manager/__tests__/use-body-scroll-lock.test.ts`   | 3 tests    | PASS   |
+| Win2x Drag Hook    | `webui/src/components/ui/win2x-manager/__tests__/use-pointer-drag.test.ts`       | 2 tests    | PASS   |
+| Win2x Resize Hook  | `webui/src/components/ui/win2x-manager/__tests__/use-pointer-resize.test.ts`     | 2 tests    | PASS   |
+| Win2x Context      | `webui/src/components/ui/win2x-manager/__tests__/win2x-manager-context.test.tsx` | 5 tests    | PASS   |
+| Win2x Window       | `webui/src/components/ui/win2x-manager/__tests__/win2x-window.test.tsx`          | 13 tests   | PASS   |
+| Win2x Tab Bar      | `webui/src/components/ui/win2x-manager/__tests__/tab-bar.test.tsx`               | 4 tests    | PASS   |
 
 ---
 

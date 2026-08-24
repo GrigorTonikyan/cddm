@@ -1,7 +1,7 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vite-plus/test";
 import { LanguageAnalyticsModal } from "../LanguageAnalyticsModal";
-import { Win2xManagerProvider } from "../ui/win2x-manager/context/win2x-manager-context";
+import { renderWithWin2x } from "./test-helpers";
 
 describe("LanguageAnalyticsModal Component", () => {
   const mockLanguages = [
@@ -10,16 +10,14 @@ describe("LanguageAnalyticsModal Component", () => {
   ];
 
   it("should return null when not open", () => {
-    const { container } = render(
-      <Win2xManagerProvider>
-        <LanguageAnalyticsModal
-          isOpen={false}
-          onClose={() => {}}
-          languages={mockLanguages}
-          totalTokens={7500}
-          totalFiles={15}
-        />
-      </Win2xManagerProvider>,
+    const { container } = renderWithWin2x(
+      <LanguageAnalyticsModal
+        isOpen={false}
+        onClose={() => {}}
+        languages={mockLanguages}
+        totalTokens={7500}
+        totalFiles={15}
+      />,
     );
     expect(container.firstChild).toBeNull();
   });
@@ -27,16 +25,14 @@ describe("LanguageAnalyticsModal Component", () => {
   it("should render multi-language stats and table when open", () => {
     const onClose = vi.fn();
 
-    render(
-      <Win2xManagerProvider>
-        <LanguageAnalyticsModal
-          isOpen={true}
-          onClose={onClose}
-          languages={mockLanguages}
-          totalTokens={7500}
-          totalFiles={15}
-        />
-      </Win2xManagerProvider>,
+    renderWithWin2x(
+      <LanguageAnalyticsModal
+        isOpen={true}
+        onClose={onClose}
+        languages={mockLanguages}
+        totalTokens={7500}
+        totalFiles={15}
+      />,
     );
 
     expect(screen.getByText("Language & Architectural Composition")).toBeDefined();

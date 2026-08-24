@@ -69,40 +69,11 @@ describe("ScanResults Component", () => {
     expect(screen.getByText("Duplication Treemap Explorer")).toBeDefined();
   });
 
-  it("should open ExportReportModal when clicking Export & Reports button", () => {
-    useCDDMStore.setState({
-      results: createMockScanResult(),
-    });
-    render(
-      <Win2xManagerProvider>
-        <ScanResults />
-      </Win2xManagerProvider>,
-    );
-
-    const exportBtn = screen.getByText("Export & Reports");
-    fireEvent.click(exportBtn);
-    expect(screen.getByText("Report Center & SARIF Exporter")).toBeDefined();
-  });
-
-  it("should open ScanConfigModal when clicking Scan Settings button", () => {
-    useCDDMStore.setState({
-      results: createMockScanResult(),
-    });
-    render(
-      <Win2xManagerProvider>
-        <ScanResults />
-      </Win2xManagerProvider>,
-    );
-
-    const settingsBtn = screen.getByText("Scan Settings");
-    fireEvent.click(settingsBtn);
-    expect(useCDDMStore.getState().isScanConfigOpen).toBe(true);
-  });
-
   it("should render clone pair count", () => {
     useCDDMStore.setState({
       results: createMockScanResult({
         total_clones: 5,
+        total_clusters: 2,
         duplication_percentage: 12.3,
       }),
     });
@@ -113,5 +84,39 @@ describe("ScanResults Component", () => {
     );
     expect(screen.getByText("5")).toBeDefined();
     expect(screen.getByText(/12\.30/i)).toBeDefined();
+    expect(screen.getByText("Clone Clusters")).toBeDefined();
+    expect(screen.getByText("2")).toBeDefined();
+  });
+
+  it("should allow toggling between pairwise and N-way clusters view", () => {
+    useCDDMStore.setState({
+      results: createMockScanResult({
+        total_clones: 1,
+        total_clusters: 1,
+        clone_clusters: [
+          {
+            id: 1,
+            clone_type: "Exact",
+            token_count: 50,
+            similarity: 1.0,
+            fragment_hash: "hash_test_123",
+            occurrences: [
+              { file: "src/a.ts", start_line: 1, end_line: 10 },
+              { file: "src/b.ts", start_line: 1, end_line: 10 },
+            ],
+          },
+        ],
+      }),
+    });
+    render(
+      <Win2xManagerProvider>
+        <ScanResults />
+      </Win2xManagerProvider>,
+    );
+
+    const clusterToggle = screen.getByText(/N-Way Clusters/i);
+    fireEvent.click(clusterToggle);
+    expect(useCDDMStore.getState().viewMode).toBe("clusters");
+    expect(screen.getByText("Cluster #1")).toBeDefined();
   });
 });

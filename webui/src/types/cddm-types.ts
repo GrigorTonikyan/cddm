@@ -27,6 +27,28 @@ export interface LineSpan {
 export type CloneType = "Exact" | "Renamed" | "NearMiss" | "Semantic";
 
 /**
+ * Clone location occurrence.
+ */
+export interface CloneLocation {
+  file: string;
+  start_line: number;
+  end_line: number;
+  author?: string;
+}
+
+/**
+ * N-way clone cluster (equivalence class).
+ */
+export interface CloneCluster {
+  id: number;
+  clone_type: CloneType;
+  token_count: number;
+  similarity: number;
+  fragment_hash: string;
+  occurrences: CloneLocation[];
+}
+
+/**
  * Clone pair result.
  */
 export interface ClonePair {
@@ -62,9 +84,11 @@ export interface ScanResult {
   total_files: number;
   total_tokens: number;
   total_clones: number;
+  total_clusters: number;
   duplication_percentage: number;
   dry_health_score: number;
   clone_pairs: ClonePair[];
+  clone_clusters: CloneCluster[];
   duration_ms: number;
   language_breakdown: LanguageStats[];
 }
@@ -144,6 +168,14 @@ export interface RefactorRequest {
 }
 
 /**
+ * Request payload for synthesizing multi-site cluster refactoring suggestions.
+ */
+export interface ClusterRefactorRequest {
+  cluster_id: string;
+  occurrences: CloneLocation[];
+}
+
+/**
  * Represents a variable difference between two clone fragments.
  */
 export interface ParameterDifference {
@@ -164,6 +196,31 @@ export interface RefactorSuggestion {
   target_module_hint: string;
   unified_patch: string;
   lines_saved: number;
+}
+
+/**
+ * Transformation details at an individual cluster site.
+ */
+export interface ClusterSiteRefactor {
+  file: string;
+  start_line: number;
+  end_line: number;
+  parameter_differences: ParameterDifference[];
+  call_site_replacement: string;
+}
+
+/**
+ * Multi-site refactoring recommendation for an N-way clone cluster.
+ */
+export interface ClusterRefactorSuggestion {
+  cluster_id: string;
+  suggested_function_name: string;
+  strategy: string;
+  common_body_lines: string[];
+  target_module_hint: string;
+  sites: ClusterSiteRefactor[];
+  unified_patch: string;
+  total_lines_saved: number;
 }
 
 /**

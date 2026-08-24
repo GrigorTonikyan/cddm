@@ -1,6 +1,12 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { API_ROUTES } from "../constants/cddm-constants";
-import { RefactorRequest, RefactorSuggestion } from "../types/cddm-types";
+import {
+  CloneCluster,
+  ClusterRefactorRequest,
+  ClusterRefactorSuggestion,
+  RefactorRequest,
+  RefactorSuggestion,
+} from "../types/cddm-types";
 import { parsePath } from "../utils/path-utils";
 import { CollapsibleCard, CodeBlock, BADGE_VARIANTS, CODE_BLOCK_VARIANTS } from "./ui";
 import { Win2xWindow } from "./ui/win2x-manager";
@@ -19,17 +25,19 @@ import {
 export interface RefactorPatchModalProps {
   isOpen: boolean;
   onClose: () => void;
-  fileA: string;
-  startLineA: number;
-  endLineA: number;
-  fileB: string;
-  startLineB: number;
-  endLineB: number;
+  cluster?: CloneCluster;
+  fileA?: string;
+  startLineA?: number;
+  endLineA?: number;
+  fileB?: string;
+  startLineB?: number;
+  endLineB?: number;
 }
 
 export const RefactorPatchModal: React.FC<RefactorPatchModalProps> = ({
   isOpen,
   onClose,
+  cluster,
   fileA,
   startLineA,
   endLineA,
@@ -37,46 +45,84 @@ export const RefactorPatchModal: React.FC<RefactorPatchModalProps> = ({
   startLineB,
   endLineB,
 }) => {
-  const [suggestion, setSuggestion] = useState<RefactorSuggestion | null>(null);
+  const [pairSuggestion, setPairSuggestion] = useState<RefactorSuggestion | null>(null);
+  const [clusterSuggestion, setClusterSuggestion] = useState<ClusterRefactorSuggestion | null>(
+    null,
+  );
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [copiedPatch, setCopiedPatch] = useState<boolean>(false);
   const [downloaded, setDownloaded] = useState<boolean>(false);
 
+  const isClusterMode = Boolean(cluster);
+
   const fetchSuggestion = useCallback(async () => {
     setLoading(true);
     setError(null);
-    const payload: RefactorRequest = {
-      file_a: fileA,
-      start_line_a: startLineA,
-      end_line_a: endLineA,
-      file_b: fileB,
-      start_line_b: startLineB,
-      end_line_b: endLineB,
-    };
 
     try {
-      const res = await fetch(API_ROUTES.REFACTOR, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      if (cluster) {
+        const payload: ClusterRefactorRequest = {
+          cluster_id: String(cluster.id),
+          occurrences: cluster.occurrences,
+        };
 
-      if (!res.ok) {
-        const errorText = await res.text().catch(() => res.statusText);
-        throw new Error(
-          `Refactoring analysis failed (${res.status}): ${errorText || res.statusText}`,
-        );
+        const res = await fetch(API_ROUTES.REFACTOR_CLUSTER, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        if (!res.ok) {
+          const errorText = await res.text().catch(() => res.statusText);
+          throw new Error(
+            `Cluster refactoring analysis failed (${res.status}): ${errorText || res.statusText}`,
+          );
+        }
+
+        const data = (await res.json()) as ClusterRefactorSuggestion;
+        setClusterSuggestion(data);
+        setPairSuggestion(null);
+      } else if (
+        fileA &&
+        fileB &&
+        startLineA !== undefined &&
+        endLineA !== undefined &&
+        startLineB !== undefined &&
+        endLineB !== undefined
+      ) {
+        const payload: RefactorRequest = {
+          file_a: fileA,
+          start_line_a: startLineA,
+          end_line_a: endLineA,
+          file_b: fileB,
+          start_line_b: startLineB,
+          end_line_b: endLineB,
+        };
+
+        const res = await fetch(API_ROUTES.REFACTOR, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        if (!res.ok) {
+          const errorText = await res.text().catch(() => res.statusText);
+          throw new Error(
+            `Refactoring analysis failed (${res.status}): ${errorText || res.statusText}`,
+          );
+        }
+
+        const data = (await res.json()) as RefactorSuggestion;
+        setPairSuggestion(data);
+        setClusterSuggestion(null);
       }
-
-      const data = (await res.json()) as RefactorSuggestion;
-      setSuggestion(data);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to synthesize refactoring patch");
     } finally {
       setLoading(false);
     }
-  }, [fileA, startLineA, endLineA, fileB, startLineB, endLineB]);
+  }, [cluster, fileA, startLineA, endLineA, fileB, startLineB, endLineB]);
 
   useEffect(() => {
     if (isOpen) {
@@ -86,22 +132,27 @@ export const RefactorPatchModal: React.FC<RefactorPatchModalProps> = ({
 
   if (!isOpen) return null;
 
+  const currentPatch = clusterSuggestion?.unified_patch || pairSuggestion?.unified_patch || "";
+
   const handleCopyPatch = () => {
-    if (!suggestion) return;
-    void navigator.clipboard.writeText(suggestion.unified_patch);
+    if (!currentPatch) return;
+    void navigator.clipboard.writeText(currentPatch);
     setCopiedPatch(true);
     setTimeout(() => setCopiedPatch(false), 2000);
   };
 
   const handleDownloadPatch = () => {
-    if (!suggestion) return;
-    const blob = new Blob([suggestion.unified_patch], {
+    if (!currentPatch) return;
+    const blob = new Blob([currentPatch], {
       type: "text/x-diff;charset=utf-8",
     });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `cddm-refactor-${parsePath(fileA).filename}.patch`;
+    const filename = cluster
+      ? `cddm-cluster-${cluster.id}-refactor.patch`
+      : `cddm-refactor-${parsePath(fileA || "code").filename}.patch`;
+    link.download = filename;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -110,8 +161,8 @@ export const RefactorPatchModal: React.FC<RefactorPatchModalProps> = ({
     setTimeout(() => setDownloaded(false), 2000);
   };
 
-  const parsedA = parsePath(fileA);
-  const parsedB = parsePath(fileB);
+  const parsedA = parsePath(fileA || "");
+  const parsedB = parsePath(fileB || "");
 
   const footerContent = (
     <>
@@ -131,15 +182,25 @@ export const RefactorPatchModal: React.FC<RefactorPatchModalProps> = ({
     </>
   );
 
+  const windowTitle = isClusterMode
+    ? "Multi-Site Cluster Refactoring Advisor"
+    : "Automated Refactoring Advisor";
+  const windowSubtitle = isClusterMode
+    ? `Cluster #${cluster?.id} (${cluster?.occurrences.length} Sites)`
+    : `${parsedA.filename}:${startLineA} <-> ${parsedB.filename}:${startLineB}`;
+  const windowBadge = isClusterMode
+    ? `${cluster?.occurrences.length} Occurrences`
+    : `L${startLineA}-${endLineA}`;
+
   return (
     <Win2xWindow
-      id={`refactor-patch-${fileA}:${startLineA}-${endLineA}_${fileB}:${startLineB}-${endLineB}`}
+      id={`refactor-patch-${cluster ? `cluster-${cluster.id}` : `${fileA}:${startLineA}-${endLineA}_${fileB}:${startLineB}-${endLineB}`}`}
       windowType="refactor-advisor"
       isOpen={isOpen}
       onClose={onClose}
-      title="Automated Refactoring Advisor"
-      subtitle={`${parsedA.filename}:${startLineA} <-> ${parsedB.filename}:${startLineB}`}
-      badge={`L${startLineA}-${endLineA}`}
+      title={windowTitle}
+      subtitle={windowSubtitle}
+      badge={windowBadge}
       icon={<Sparkles className="w-4 h-4 text-indigo-400" />}
       footer={footerContent}
       initialWidth={920}
@@ -165,13 +226,13 @@ export const RefactorPatchModal: React.FC<RefactorPatchModalProps> = ({
             Retry Analysis
           </button>
         </div>
-      ) : suggestion ? (
+      ) : clusterSuggestion || pairSuggestion ? (
         <div className="space-y-4">
           {/* Section 1: Refactoring Strategy & Metrics Overview */}
           <CollapsibleCard
             icon={<GitBranch className="w-4 h-4" />}
             title="Strategy & Overview"
-            badgeCount={`~${suggestion.lines_saved} lines saved`}
+            badgeCount={`~${clusterSuggestion?.total_lines_saved ?? pairSuggestion?.lines_saved ?? 0} lines saved`}
             badgeVariant={BADGE_VARIANTS.EMERALD}
             defaultOpen={true}
           >
@@ -182,9 +243,9 @@ export const RefactorPatchModal: React.FC<RefactorPatchModalProps> = ({
                   Strategy
                 </span>
                 <div className="font-mono text-xs font-bold text-indigo-300">
-                  {suggestion.strategy === "extract_function"
+                  {(clusterSuggestion?.strategy ?? pairSuggestion?.strategy) === "extract_function"
                     ? "Extract Function"
-                    : "Parameterize Variables"}
+                    : "Multi-Site Extraction"}
                 </div>
               </div>
 
@@ -194,7 +255,8 @@ export const RefactorPatchModal: React.FC<RefactorPatchModalProps> = ({
                   Estimated Savings
                 </span>
                 <div className="font-mono text-xs font-bold text-emerald-400">
-                  ~{suggestion.lines_saved} lines eliminated
+                  ~{clusterSuggestion?.total_lines_saved ?? pairSuggestion?.lines_saved ?? 0} lines
+                  eliminated
                 </div>
               </div>
 
@@ -204,7 +266,9 @@ export const RefactorPatchModal: React.FC<RefactorPatchModalProps> = ({
                   Helper Name
                 </span>
                 <div className="font-mono text-xs font-bold text-slate-200 truncate">
-                  {suggestion.suggested_function_name}()
+                  {clusterSuggestion?.suggested_function_name ??
+                    pairSuggestion?.suggested_function_name}
+                  ()
                 </div>
               </div>
             </div>
@@ -219,22 +283,65 @@ export const RefactorPatchModal: React.FC<RefactorPatchModalProps> = ({
             <div className="flex items-center gap-3 text-xs font-mono text-slate-300">
               <span className="text-slate-500 shrink-0">Destination:</span>
               <span className="font-semibold text-indigo-300 truncate">
-                {suggestion.target_module_hint}
+                {clusterSuggestion?.target_module_hint ?? pairSuggestion?.target_module_hint}
               </span>
             </div>
           </CollapsibleCard>
 
-          {/* Section 3: Parameter Differences Table */}
-          {suggestion.parameter_differences.length > 0 && (
+          {/* Section 3: Sites & Parameter Variances */}
+          {clusterSuggestion ? (
+            <CollapsibleCard
+              icon={<Layers className="w-4 h-4" />}
+              title="Cluster Occurrence Sites"
+              badgeCount={`${clusterSuggestion.sites.length} Sites`}
+              badgeVariant={BADGE_VARIANTS.INDIGO}
+              defaultOpen={true}
+            >
+              <div className="space-y-3">
+                {clusterSuggestion.sites.map((site, i) => {
+                  const siteParsed = parsePath(site.file);
+                  return (
+                    <div
+                      key={`cluster-site-${site.file}-${site.start_line}-${i}`}
+                      className="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 space-y-2"
+                    >
+                      <div className="flex items-center justify-between text-xs font-mono">
+                        <div className="flex items-center gap-2">
+                          <span className="w-5 h-5 rounded bg-purple-950 text-purple-300 text-[10px] flex items-center justify-center font-bold border border-purple-800/60">
+                            {i + 1}
+                          </span>
+                          <span className="text-slate-100 font-semibold">
+                            {siteParsed.filename}
+                          </span>
+                          <span className="text-slate-500">
+                            L{site.start_line}-{site.end_line}
+                          </span>
+                        </div>
+                        <span className="text-[11px] px-2 py-0.5 rounded bg-slate-900 text-slate-400 border border-slate-800">
+                          {site.parameter_differences.length} variances
+                        </span>
+                      </div>
+                      <div className="font-mono text-xs bg-slate-900/90 p-2.5 rounded-lg border border-slate-800/80 text-emerald-300">
+                        <span className="text-slate-500 text-[11px] select-none block mb-1">
+                          Call-site replacement:
+                        </span>
+                        <code>{site.call_site_replacement}</code>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CollapsibleCard>
+          ) : pairSuggestion && pairSuggestion.parameter_differences.length > 0 ? (
             <CollapsibleCard
               icon={<AlertCircle className="w-4 h-4" />}
               title="Parameter Variances"
-              badgeCount={suggestion.parameter_differences.length}
+              badgeCount={pairSuggestion.parameter_differences.length}
               badgeVariant={BADGE_VARIANTS.AMBER}
               defaultOpen={true}
             >
               <div className="space-y-3">
-                {suggestion.parameter_differences.map((diff, i) => (
+                {pairSuggestion.parameter_differences.map((diff, i) => (
                   <div
                     key={`param-diff-${diff.line_number_a}-${diff.line_number_b}-${i}`}
                     className="grid grid-cols-1 md:grid-cols-2 gap-3"
@@ -259,7 +366,7 @@ export const RefactorPatchModal: React.FC<RefactorPatchModalProps> = ({
                 ))}
               </div>
             </CollapsibleCard>
-          )}
+          ) : null}
 
           {/* Section 4: Synthesized Unified Patch Preview */}
           <CollapsibleCard
@@ -307,7 +414,7 @@ export const RefactorPatchModal: React.FC<RefactorPatchModalProps> = ({
             }
           >
             <div className="max-h-72 overflow-x-auto overflow-y-auto p-3.5 font-mono text-xs leading-relaxed bg-slate-950 rounded-xl border border-slate-800 select-text">
-              {suggestion.unified_patch.split("\n").map((line, idx) => {
+              {currentPatch.split("\n").map((line, idx) => {
                 const isAdd = line.startsWith("+");
                 const isDel = line.startsWith("-");
                 const isHeader =

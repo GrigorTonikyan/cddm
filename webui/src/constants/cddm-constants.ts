@@ -18,6 +18,7 @@ export const API_ROUTES = {
   SCAN: "/api/scan",
   SNIPPET: "/api/snippet",
   REFACTOR: "/api/refactor",
+  REFACTOR_CLUSTER: "/api/refactor-cluster",
 } as const;
 
 /**
@@ -44,6 +45,7 @@ export const ALL_CLONE_TYPES: CloneType[] = ["Exact", "Renamed", "NearMiss", "Se
 export const ALL_SCAN_PHASES: ScanPhase[] = [
   "Discovery",
   "Tokenization",
+  "AstAnalysis",
   "Indexing",
   "Merging",
   "Scoring",

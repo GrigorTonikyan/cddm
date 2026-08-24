@@ -1,8 +1,9 @@
 #![forbid(unsafe_code)]
 
 use cddm_core::{
-    DEFAULT_DIRECTORY, DEFAULT_MIN_TOKENS, ScanConfig, analyze_clone_refactoring,
-    generate_sarif_json, refactor::read_file_lines_range, run_scan,
+    CloneLocation, DEFAULT_DIRECTORY, DEFAULT_MIN_TOKENS, ScanConfig, ScanResult,
+    analyze_clone_refactoring, analyze_cluster_refactoring, generate_sarif_json,
+    refactor::read_file_lines_range, run_scan,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -50,6 +51,8 @@ pub mod mcp_tools {
     pub const SCAN_CODEBASE: &str = "scan_codebase";
     pub const GET_CLONE_PAIR: &str = "cddm_get_clone_pair";
     pub const SUGGEST_REFACTOR: &str = "cddm_suggest_refactor";
+    pub const GET_CLONE_CLUSTER: &str = "cddm_get_clone_cluster";
+    pub const SUGGEST_CLUSTER_REFACTOR: &str = "cddm_suggest_cluster_refactor";
     pub const EXPORT_SARIF: &str = "cddm_export_sarif";
     pub const DIFF_SCAN: &str = "cddm_diff_scan";
 
@@ -64,12 +67,15 @@ pub mod mcp_tools {
     pub const PARAM_FILE_B: &str = "file_b";
     pub const PARAM_START_LINE_B: &str = "start_line_b";
     pub const PARAM_END_LINE_B: &str = "end_line_b";
+    pub const PARAM_CLUSTER_ID: &str = "cluster_id";
+    pub const PARAM_OCCURRENCES: &str = "occurrences";
 }
 
 /// Exposed resource identifiers and MIME types.
 pub mod mcp_resources {
     pub const URI_WORKSPACE_HEALTH: &str = "cddm://workspace/health";
     pub const URI_WORKSPACE_CLONES: &str = "cddm://workspace/clones";
+    pub const URI_WORKSPACE_CLUSTERS: &str = "cddm://workspace/clusters";
     pub const MIME_APPLICATION_JSON: &str = "application/json";
 }
 
@@ -207,6 +213,37 @@ fn parse_clone_pair_args(
     ))
 }
 
+async fn run_scan_from_mcp_args(
+    args: Option<&serde_json::Value>,
+    enable_git_blame: bool,
+) -> Result<ScanResult, String> {
+    let dir = args
+        .and_then(|a| a.get(mcp_tools::PARAM_DIRECTORY))
+        .and_then(|d| d.as_str())
+        .unwrap_or(DEFAULT_DIRECTORY);
+    let min_tokens = args
+        .and_then(|a| a.get(mcp_tools::PARAM_MIN_TOKENS))
+        .and_then(|t| t.as_u64())
+        .unwrap_or(DEFAULT_MIN_TOKENS as u64) as usize;
+
+    let config = ScanConfig {
+        directory: dir.to_string(),
+        min_tokens,
+        languages: vec![],
+        ignore_patterns: ScanConfig::default().ignore_patterns,
+        detect_type2: true,
+        scan_self: true,
+        enable_git_blame,
+        cache_dir: None,
+        enable_cache: true,
+    };
+
+    let (tx, _rx) = mpsc::channel(100);
+    let cancel_flag = Arc::new(AtomicBool::new(false));
+
+    run_scan(config, tx, cancel_flag).await
+}
+
 /// Dispatches an incoming MCP JSON-RPC request and returns the response if not a notification.
 async fn handle_mcp_request(req: JsonRpcRequest) -> Option<JsonRpcResponse> {
     match req.method.as_str() {
@@ -275,6 +312,62 @@ async fn handle_mcp_request(req: JsonRpcRequest) -> Option<JsonRpcResponse> {
                         "inputSchema": clone_pair_input_schema()
                     },
                     {
+                        "name": mcp_tools::GET_CLONE_CLUSTER,
+                        "description": "Fetch localized source lines, token counts, and occurrences context for an N-way clone cluster.",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                mcp_tools::PARAM_CLUSTER_ID: {
+                                    "type": "number",
+                                    "description": "1-based cluster index"
+                                },
+                                mcp_tools::PARAM_DIRECTORY: {
+                                    "type": "string",
+                                    "description": "Target directory path (default: current directory)"
+                                },
+                                mcp_tools::PARAM_MIN_TOKENS: {
+                                    "type": "number",
+                                    "description": format!("Minimum token threshold (default: {})", DEFAULT_MIN_TOKENS)
+                                }
+                            },
+                            "required": [mcp_tools::PARAM_CLUSTER_ID]
+                        }
+                    },
+                    {
+                        "name": mcp_tools::SUGGEST_CLUSTER_REFACTOR,
+                        "description": "Generate an automated multi-site refactoring patch synthesizing a single shared abstraction and updating all N occurrence call-sites.",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                mcp_tools::PARAM_CLUSTER_ID: {
+                                    "type": "number",
+                                    "description": "1-based cluster index"
+                                },
+                                mcp_tools::PARAM_DIRECTORY: {
+                                    "type": "string",
+                                    "description": "Target directory path (default: current directory)"
+                                },
+                                mcp_tools::PARAM_MIN_TOKENS: {
+                                    "type": "number",
+                                    "description": format!("Minimum token threshold (default: {})", DEFAULT_MIN_TOKENS)
+                                },
+                                mcp_tools::PARAM_OCCURRENCES: {
+                                    "type": "array",
+                                    "description": "Explicit list of cluster occurrence locations",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "file": { "type": "string" },
+                                            "start_line": { "type": "number" },
+                                            "end_line": { "type": "number" }
+                                        },
+                                        "required": ["file", "start_line", "end_line"]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
                         "name": mcp_tools::EXPORT_SARIF,
                         "description": "Run codebase duplication analysis and emit an OASIS SARIF v2.1.0 report for GitHub Code Scanning / IDE diagnostics.",
                         "inputSchema": {
@@ -333,35 +426,12 @@ async fn handle_mcp_request(req: JsonRpcRequest) -> Option<JsonRpcResponse> {
             match tool_name {
                 mcp_tools::SCAN_CODEBASE => {
                     let args = req.params.as_ref().and_then(|p| p.get("arguments"));
-                    let dir = args
-                        .and_then(|a| a.get(mcp_tools::PARAM_DIRECTORY))
-                        .and_then(|d| d.as_str())
-                        .unwrap_or(DEFAULT_DIRECTORY);
-                    let min_tokens =
-                        args.and_then(|a| a.get(mcp_tools::PARAM_MIN_TOKENS))
-                            .and_then(|t| t.as_u64())
-                            .unwrap_or(DEFAULT_MIN_TOKENS as u64) as usize;
                     let git_blame = args
                         .and_then(|a| a.get(mcp_tools::PARAM_ENABLE_GIT_BLAME))
                         .and_then(|b| b.as_bool())
                         .unwrap_or(false);
 
-                    let config = ScanConfig {
-                        directory: dir.to_string(),
-                        min_tokens,
-                        languages: vec![],
-                        ignore_patterns: ScanConfig::default().ignore_patterns,
-                        detect_type2: true,
-                        scan_self: true,
-                        enable_git_blame: git_blame,
-                        cache_dir: None,
-                        enable_cache: true,
-                    };
-
-                    let (tx, _rx) = mpsc::channel(100);
-                    let cancel_flag = Arc::new(AtomicBool::new(false));
-
-                    match run_scan(config, tx, cancel_flag).await {
+                    match run_scan_from_mcp_args(args, git_blame).await {
                         Ok(scan_res) => Some(make_text_response(
                             req.id,
                             serde_json::to_string_pretty(&scan_res).unwrap_or_default(),
@@ -489,33 +559,164 @@ async fn handle_mcp_request(req: JsonRpcRequest) -> Option<JsonRpcResponse> {
                     }
                 }
 
+                mcp_tools::GET_CLONE_CLUSTER => {
+                    let args = req.params.as_ref().and_then(|p| p.get("arguments"));
+                    let cluster_id = args
+                        .and_then(|a| a.get(mcp_tools::PARAM_CLUSTER_ID))
+                        .and_then(|id| id.as_u64())
+                        .map(|id| id as usize);
+
+                    if let Some(target_id) = cluster_id {
+                        match run_scan_from_mcp_args(args, true).await {
+                            Ok(scan_res) => {
+                                let found =
+                                    scan_res.clone_clusters.iter().find(|c| c.id == target_id);
+
+                                if let Some(cluster) = found {
+                                    let mut occurrences_with_code = Vec::new();
+                                    for occ in &cluster.occurrences {
+                                        let code_lines = read_file_lines_range(
+                                            Path::new(&occ.file),
+                                            occ.start_line,
+                                            occ.end_line,
+                                        )
+                                        .unwrap_or_default();
+                                        occurrences_with_code.push(json!({
+                                            "file": occ.file,
+                                            "start_line": occ.start_line,
+                                            "end_line": occ.end_line,
+                                            "author": occ.author,
+                                            "code": code_lines.join("\n")
+                                        }));
+                                    }
+
+                                    let payload = json!({
+                                        "cluster_id": cluster.id,
+                                        "clone_type": format!("{:?}", cluster.clone_type),
+                                        "token_count": cluster.token_count,
+                                        "similarity": cluster.similarity,
+                                        "fragment_hash": cluster.fragment_hash,
+                                        "total_occurrences": cluster.occurrences.len(),
+                                        "occurrences": occurrences_with_code
+                                    });
+
+                                    Some(make_text_response(
+                                        req.id,
+                                        serde_json::to_string_pretty(&payload).unwrap_or_default(),
+                                    ))
+                                } else {
+                                    Some(make_error_response(
+                                        req.id,
+                                        rpc_errors::INVALID_PARAMS,
+                                        format!("Cluster #{} not found in scan results", target_id),
+                                    ))
+                                }
+                            }
+                            Err(e) => {
+                                Some(make_error_response(req.id, rpc_errors::INTERNAL_ERROR, e))
+                            }
+                        }
+                    } else {
+                        Some(make_error_response(
+                            req.id,
+                            rpc_errors::INVALID_PARAMS,
+                            "Missing required 'cluster_id' parameter",
+                        ))
+                    }
+                }
+
+                mcp_tools::SUGGEST_CLUSTER_REFACTOR => {
+                    let args = req.params.as_ref().and_then(|p| p.get("arguments"));
+                    let cluster_id_opt = args
+                        .and_then(|a| a.get(mcp_tools::PARAM_CLUSTER_ID))
+                        .and_then(|id| id.as_u64())
+                        .map(|id| id as usize);
+
+                    let explicit_occs = args
+                        .and_then(|a| a.get(mcp_tools::PARAM_OCCURRENCES))
+                        .and_then(|o| o.as_array());
+
+                    if let Some(occs_arr) = explicit_occs {
+                        let mut parsed_occs = Vec::new();
+                        for item in occs_arr {
+                            if let (Some(file), Some(start), Some(end)) = (
+                                item.get("file").and_then(|f| f.as_str()),
+                                item.get("start_line").and_then(|s| s.as_u64()),
+                                item.get("end_line").and_then(|e| e.as_u64()),
+                            ) {
+                                parsed_occs.push(CloneLocation {
+                                    file: file.to_string(),
+                                    start_line: start as usize,
+                                    end_line: end as usize,
+                                    author: None,
+                                });
+                            }
+                        }
+
+                        if parsed_occs.len() < 2 {
+                            return Some(make_error_response(
+                                req.id,
+                                rpc_errors::INVALID_PARAMS,
+                                "At least 2 occurrence locations required for cluster refactoring",
+                            ));
+                        }
+
+                        match analyze_cluster_refactoring("cluster-custom", &parsed_occs) {
+                            Ok(suggestion) => Some(make_text_response(
+                                req.id,
+                                serde_json::to_string_pretty(&suggestion).unwrap_or_default(),
+                            )),
+                            Err(e) => {
+                                Some(make_error_response(req.id, rpc_errors::INVALID_PARAMS, e))
+                            }
+                        }
+                    } else if let Some(target_id) = cluster_id_opt {
+                        match run_scan_from_mcp_args(args, false).await {
+                            Ok(scan_res) => {
+                                let found =
+                                    scan_res.clone_clusters.iter().find(|c| c.id == target_id);
+
+                                if let Some(cluster) = found {
+                                    match analyze_cluster_refactoring(
+                                        &cluster.id.to_string(),
+                                        &cluster.occurrences,
+                                    ) {
+                                        Ok(suggestion) => Some(make_text_response(
+                                            req.id,
+                                            serde_json::to_string_pretty(&suggestion)
+                                                .unwrap_or_default(),
+                                        )),
+                                        Err(e) => Some(make_error_response(
+                                            req.id,
+                                            rpc_errors::INVALID_PARAMS,
+                                            e,
+                                        )),
+                                    }
+                                } else {
+                                    Some(make_error_response(
+                                        req.id,
+                                        rpc_errors::INVALID_PARAMS,
+                                        format!("Cluster #{} not found in scan results", target_id),
+                                    ))
+                                }
+                            }
+                            Err(e) => {
+                                Some(make_error_response(req.id, rpc_errors::INTERNAL_ERROR, e))
+                            }
+                        }
+                    } else {
+                        Some(make_error_response(
+                            req.id,
+                            rpc_errors::INVALID_PARAMS,
+                            "Must specify either 'cluster_id' or 'occurrences' parameter",
+                        ))
+                    }
+                }
+
                 mcp_tools::EXPORT_SARIF => {
                     let args = req.params.as_ref().and_then(|p| p.get("arguments"));
-                    let dir = args
-                        .and_then(|a| a.get(mcp_tools::PARAM_DIRECTORY))
-                        .and_then(|d| d.as_str())
-                        .unwrap_or(DEFAULT_DIRECTORY);
-                    let min_tokens =
-                        args.and_then(|a| a.get(mcp_tools::PARAM_MIN_TOKENS))
-                            .and_then(|t| t.as_u64())
-                            .unwrap_or(DEFAULT_MIN_TOKENS as u64) as usize;
 
-                    let config = ScanConfig {
-                        directory: dir.to_string(),
-                        min_tokens,
-                        languages: vec![],
-                        ignore_patterns: ScanConfig::default().ignore_patterns,
-                        detect_type2: true,
-                        scan_self: true,
-                        enable_git_blame: false,
-                        cache_dir: None,
-                        enable_cache: true,
-                    };
-
-                    let (tx, _rx) = mpsc::channel(100);
-                    let cancel_flag = Arc::new(AtomicBool::new(false));
-
-                    match run_scan(config, tx, cancel_flag).await {
+                    match run_scan_from_mcp_args(args, false).await {
                         Ok(scan_res) => {
                             let sarif = generate_sarif_json(&scan_res);
                             Some(make_text_response(
@@ -550,6 +751,12 @@ async fn handle_mcp_request(req: JsonRpcRequest) -> Option<JsonRpcResponse> {
                         "uri": mcp_resources::URI_WORKSPACE_CLONES,
                         "name": "Workspace Code Clones",
                         "description": "Registry of active duplicate code clones across repository files.",
+                        "mimeType": mcp_resources::MIME_APPLICATION_JSON
+                    },
+                    {
+                        "uri": mcp_resources::URI_WORKSPACE_CLUSTERS,
+                        "name": "Workspace Code Clone Clusters",
+                        "description": "N-way equivalence classes of duplicated logic across repository files.",
                         "mimeType": mcp_resources::MIME_APPLICATION_JSON
                     }
                 ]
@@ -588,6 +795,7 @@ async fn handle_mcp_request(req: JsonRpcRequest) -> Option<JsonRpcResponse> {
                                 "total_files": res.total_files,
                                 "total_tokens": res.total_tokens,
                                 "total_clones": res.total_clones,
+                                "total_clusters": res.total_clusters,
                                 "language_breakdown": res.language_breakdown
                             });
                             Some(JsonRpcResponse {
@@ -625,6 +833,32 @@ async fn handle_mcp_request(req: JsonRpcRequest) -> Option<JsonRpcResponse> {
                             })),
                             error: None,
                         }),
+                        Err(e) => Some(make_error_response(req.id, rpc_errors::INTERNAL_ERROR, e)),
+                    }
+                }
+
+                mcp_resources::URI_WORKSPACE_CLUSTERS => {
+                    match run_scan(config, tx, cancel_flag).await {
+                        Ok(res) => {
+                            let payload = json!({
+                                "total_clusters": res.total_clusters,
+                                "clone_clusters": res.clone_clusters
+                            });
+                            Some(JsonRpcResponse {
+                                jsonrpc: JSONRPC_VERSION.to_string(),
+                                id: req.id,
+                                result: Some(json!({
+                                    "contents": [
+                                        {
+                                            "uri": mcp_resources::URI_WORKSPACE_CLUSTERS,
+                                            "mimeType": mcp_resources::MIME_APPLICATION_JSON,
+                                            "text": serde_json::to_string_pretty(&payload).unwrap_or_default()
+                                        }
+                                    ]
+                                })),
+                                error: None,
+                            })
+                        }
                         Err(e) => Some(make_error_response(req.id, rpc_errors::INTERNAL_ERROR, e)),
                     }
                 }
@@ -848,11 +1082,13 @@ mod tests {
     #[tokio::test]
     async fn test_mcp_tools_list() {
         let tools = list_mcp_items(mcp_methods::TOOLS_LIST, "tools").await;
-        assert_eq!(tools.len(), 5);
+        assert_eq!(tools.len(), 7);
         let tool_names: Vec<&str> = tools.iter().map(|t| t["name"].as_str().unwrap()).collect();
         assert!(tool_names.contains(&mcp_tools::SCAN_CODEBASE));
         assert!(tool_names.contains(&mcp_tools::GET_CLONE_PAIR));
         assert!(tool_names.contains(&mcp_tools::SUGGEST_REFACTOR));
+        assert!(tool_names.contains(&mcp_tools::GET_CLONE_CLUSTER));
+        assert!(tool_names.contains(&mcp_tools::SUGGEST_CLUSTER_REFACTOR));
         assert!(tool_names.contains(&mcp_tools::EXPORT_SARIF));
         assert!(tool_names.contains(&mcp_tools::DIFF_SCAN));
     }
@@ -879,9 +1115,74 @@ mod tests {
     #[tokio::test]
     async fn test_mcp_resources_list() {
         let resources = list_mcp_items(mcp_methods::RESOURCES_LIST, "resources").await;
-        assert_eq!(resources.len(), 2);
+        assert_eq!(resources.len(), 3);
         assert_eq!(resources[0]["uri"], mcp_resources::URI_WORKSPACE_HEALTH);
         assert_eq!(resources[1]["uri"], mcp_resources::URI_WORKSPACE_CLONES);
+        assert_eq!(resources[2]["uri"], mcp_resources::URI_WORKSPACE_CLUSTERS);
+    }
+
+    #[tokio::test]
+    async fn test_mcp_resources_read_clusters() {
+        let resp = handle_mcp_request(make_test_req(
+            22,
+            mcp_methods::RESOURCES_READ,
+            Some(json!({ "uri": mcp_resources::URI_WORKSPACE_CLUSTERS })),
+        ))
+        .await
+        .expect("Expected response");
+        assert!(resp.result.is_some());
+        let contents = resp.result.unwrap()["contents"].as_array().unwrap().clone();
+        assert_eq!(contents.len(), 1);
+        assert_eq!(contents[0]["uri"], mcp_resources::URI_WORKSPACE_CLUSTERS);
+    }
+
+    #[tokio::test]
+    async fn test_mcp_cluster_refactor_explicit_occurrences() {
+        let mut file_a = tempfile::NamedTempFile::new().unwrap();
+        let mut file_b = tempfile::NamedTempFile::new().unwrap();
+        let mut file_c = tempfile::NamedTempFile::new().unwrap();
+
+        use std::io::Write;
+        writeln!(file_a, "fn a() {{\n    let x = 1;\n    let y = 2;\n}}").unwrap();
+        writeln!(file_b, "fn b() {{\n    let x = 1;\n    let y = 2;\n}}").unwrap();
+        writeln!(file_c, "fn c() {{\n    let x = 1;\n    let y = 2;\n}}").unwrap();
+
+        let resp = handle_mcp_request(make_test_req(
+            30,
+            mcp_methods::TOOLS_CALL,
+            Some(json!({
+                "name": mcp_tools::SUGGEST_CLUSTER_REFACTOR,
+                "arguments": {
+                    "occurrences": [
+                        {
+                            "file": file_a.path().to_str().unwrap(),
+                            "start_line": 2,
+                            "end_line": 3
+                        },
+                        {
+                            "file": file_b.path().to_str().unwrap(),
+                            "start_line": 2,
+                            "end_line": 3
+                        },
+                        {
+                            "file": file_c.path().to_str().unwrap(),
+                            "start_line": 2,
+                            "end_line": 3
+                        }
+                    ]
+                }
+            })),
+        ))
+        .await
+        .expect("Expected response");
+
+        assert!(resp.error.is_none());
+        let text = resp.result.unwrap()["content"][0]["text"]
+            .as_str()
+            .unwrap()
+            .to_string();
+        assert!(text.contains("extracted_shared_helper"));
+        assert!(text.contains("--- a/"));
     }
 
     #[tokio::test]
