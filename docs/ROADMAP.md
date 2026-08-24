@@ -353,6 +353,73 @@ Developers need inline, real-time code clone feedback inside their code editors 
 
 ---
 
+### EP-13: In-Process Git History Revision Walking & Timeline Duplication Trends
+
+- **Target Milestone**: `v1.3.0`
+- **Component**: `crates/cddm-core`, `crates/cddm-cli`, `crates/cddm-mcp`, `webui`
+- **Priority**: `High`
+- **Status**: `Completed (v1.3.0)`
+
+#### Problem Statement
+
+Engineering teams and tech leads need to track whether code duplication is improving or regressing over time across repository commits, identifying high-churn duplicate hotspots.
+
+#### Specification & Architecture
+
+1. **In-Process Git History Traversal (`cddm_core::timeline`)**:
+   - Uses `gix` revision walking (`gix::rev_walk`) to sample commits across repository history without external git CLI spawns.
+   - Extracts file trees per historical commit and runs in-memory winnowing tokenization with directory ignore filtering.
+   - Computes `TimelineSnapshot` records and `TimelineTrend` with score delta and file churn metrics.
+2. **CLI Subcommand**:
+   - `cddm trend [DIR] [--max-samples <N>] [--format console|json|markdown]` with formatted tables and net score delta.
+3. **Axum REST API & MCP Integration**:
+   - `GET /api/timeline` endpoint.
+   - `cddm_get_timeline` MCP tool and `cddm://workspace/timeline` MCP resource.
+4. **WebUI Timeline Visualizer**:
+   - Interactive `TimelineExplorerModal.tsx` rendering dual SVG trajectory curves for DRY Health Score and Duplication %, interactive data points, and commit snapshot tables.
+
+#### Acceptance Criteria
+
+- `cddm trend` samples Git history and outputs accurate historical duplication metrics.
+- WebUI Studio provides interactive time-series trajectory visualizer.
+- MCP tool and resource allow AI assistants to query historical trends.
+
+---
+
+### EP-14: Turnkey CI/CD Workflow & Git Hook Generator
+
+- **Target Milestone**: `v1.3.0`
+- **Component**: `crates/cddm-core`, `crates/cddm-cli`, `webui`
+- **Priority**: `High`
+- **Status**: `Completed (v1.3.0)`
+
+#### Problem Statement
+
+Setting up CI/CD duplication quality gates and local pre-commit hooks manually requires writing custom scripts and workflow files, creating friction for new repositories.
+
+#### Specification & Architecture
+
+1. **Turnkey Workflow Generator (`cddm_core::workflow`)**:
+   - Generates GitHub Actions workflow (`.github/workflows/cddm.yml`) with automated OASIS SARIF v2.1.0 upload and PR Markdown summary comments.
+   - Generates GitLab CI (`.gitlab-ci.yml`) and Azure DevOps Pipelines (`azure-pipelines.yml`).
+2. **Git Hook Lifecycle Manager**:
+   - `cddm hook install --type pre-commit|pre-push --fail-threshold 15.0`.
+   - `cddm hook uninstall --type pre-commit|pre-push`.
+   - `cddm hook status` inspecting `.git/hooks`.
+3. **CLI Subcommands**:
+   - `cddm init <github|gitlab|azure> [--write]`.
+   - `cddm hook <install|uninstall|status>`.
+4. **Axum REST API & WebUI**:
+   - `GET /api/workflow/hooks` and `POST /api/workflow/hooks/install` endpoints with one-click hook activation in Studio.
+
+#### Acceptance Criteria
+
+- `cddm init github` generates valid GitHub Actions workflow YAML.
+- `cddm hook install` creates executable `.git/hooks/pre-commit` script.
+- Pre-commit hook enforces `--fail-threshold` before commits.
+
+---
+
 ## 3. Prioritized Action Checklist
 
 ```markdown
@@ -404,6 +471,16 @@ Developers need inline, real-time code clone feedback inside their code editors 
 - [x] Add `cddm lsp` CLI subcommand in `cddm-cli` [EP-12]
 - [x] Publish official CDDM VS Code and Cursor extension in `editors/vscode` [EP-12]
 - [x] Publish multi-editor setup guides for Neovim, Zed, Helix, Sublime Text, and Emacs in `docs/LSP_SETUP.md` [EP-12]
+
+### Milestone v1.3.0 (Historical Duplication Trends & Turnkey CI/CD Workflow Generator)
+
+- [x] Implement in-process Git history revision walking & DRY health trajectory in `cddm-core::timeline` [EP-13]
+- [x] Implement `cddm trend` CLI command with ANSI sparklines and markdown report formatting [EP-13]
+- [x] Implement turnkey CI/CD workflow generator (`cddm init github|gitlab|azure`) in `cddm-core::workflow` [EP-14]
+- [x] Implement cross-platform Git pre-commit & pre-push hook manager (`cddm hook install|uninstall|status`) [EP-14]
+- [x] Expose Axum REST endpoints `GET /api/timeline`, `GET /api/workflow/hooks`, `POST /api/workflow/hooks/install` [EP-13, EP-14]
+- [x] Implement MCP tool `cddm_get_timeline` and resource `cddm://workspace/timeline` [EP-13]
+- [x] Implement interactive `TimelineExplorerModal.tsx` in CDDM Studio WebUI with SVG trajectory chart and commit snapshots [EP-13]
 ```
 
 ---

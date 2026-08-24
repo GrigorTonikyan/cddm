@@ -10,9 +10,11 @@ pub mod io;
 pub mod refactor;
 pub mod sarif;
 pub mod simd;
+pub mod timeline;
 pub mod tokenizer;
 pub mod types;
 pub mod watcher;
+pub mod workflow;
 
 pub use cache::{CachedFileEntry, DiskFingerprintCache};
 pub use cluster::cluster_clone_pairs;
@@ -27,10 +29,16 @@ pub use refactor::{
 };
 pub use sarif::{SarifReport, generate_sarif_json, generate_sarif_report};
 pub use simd::compute_kgram_rolling_hashes;
+pub use timeline::collect_git_timeline;
 pub use types::{
     CloneCluster, CloneLocation, ClonePair, CloneStatus, CloneType, DEFAULT_CACHE_FILE,
     DEFAULT_DIRECTORY, DEFAULT_IGNORE_PATTERNS, DEFAULT_MIN_TOKENS, DiffClonePair, DiffScanResult,
-    DiffSummary, LanguageStats, LineSpan, MAX_HEALTH_SCORE, MIN_HEALTH_SCORE, NormalizedToken,
-    ScanConfig, ScanPhase, ScanProgress, ScanResult,
+    DiffSummary, FileChurnMetric, HookStatus, LanguageStats, LineSpan, MAX_HEALTH_SCORE,
+    MIN_HEALTH_SCORE, NormalizedToken, ScanConfig, ScanPhase, ScanProgress, ScanResult,
+    TimelineSnapshot, TimelineTrend, WorkflowPlatform,
 };
 pub use watcher::CddmWatcher;
+pub use workflow::{
+    generate_azure_pipelines, generate_github_workflow, generate_gitlab_ci, get_hook_status,
+    install_git_hook, uninstall_git_hook,
+};

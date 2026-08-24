@@ -177,6 +177,45 @@ Continuously watches workspace for source modifications and automatically runs i
 cddm watch ./src --min-tokens 50 --debounce-ms 250
 ```
 
+### `cddm trend [DIRECTORY]`
+
+Analyzes historical duplication trajectories and DRY Health Score evolution across Git repository commits using in-process `gix` revision walking.
+
+```bash
+cddm trend . --max-samples 10
+cddm trend ./src --format markdown > history-trend.md
+```
+
+### `cddm hook <ACTION>`
+
+Manages automated Git pre-commit and pre-push quality enforcement hooks to prevent duplication regressions.
+
+```bash
+# Check current hook installation status
+cddm hook status
+
+# Install pre-commit hook enforcing max 15.0% duplication threshold
+cddm hook install --type pre-commit --fail-threshold 15.0
+
+# Uninstall hook
+cddm hook uninstall --type pre-commit
+```
+
+### `cddm init <PLATFORM>`
+
+Generates turnkey CI/CD workflow definitions with automatic OASIS SARIF v2.1.0 upload and PR Markdown comment summaries.
+
+```bash
+# Generate GitHub Actions workflow to .github/workflows/cddm.yml
+cddm init github --write
+
+# Generate GitLab CI (.gitlab-ci.yml)
+cddm init gitlab --write
+
+# Generate Azure DevOps Pipelines (azure-pipelines.yml)
+cddm init azure --write
+```
+
 ### `cddm lsp [DIRECTORY]`
 
 Starts the standard Language Server Protocol (LSP 3.17) daemon over Stdio for real-time IDE diagnostics and code action quick fixes. See [docs/LSP_SETUP.md](docs/LSP_SETUP.md) for editor setup (VS Code, Cursor, Neovim, Zed, Helix, Sublime).
@@ -203,7 +242,7 @@ For step-by-step IDE setup guides, see **[docs/LSP_SETUP.md](docs/LSP_SETUP.md)*
 
 ## Embedded Studio WebUI
 
-Launches the Axum HTTP server delivering the embedded React 19 Studio WebUI.
+Launches the Axum HTTP server delivering the embedded React 19 Studio WebUI with interactive duplication heatmaps, N-way cluster visualizers, and time-series Git history charts.
 
 ```bash
 cddm serve --port 3000 --host 127.0.0.1 --open
@@ -234,6 +273,9 @@ CDDM includes a native stdio Model Context Protocol (MCP) server `cddm-mcp` for 
 - `cddm_diff_scan`: Runs differential code clone detection comparing working changes against a Git base revision.
 - `cddm_get_clone_pair`: Retrieves localized source snippet lines, token counts, and git blame context.
 - `cddm_suggest_refactor`: Performs invariant token analysis and produces structural refactoring recommendations with unified patches.
+- `cddm_get_clone_cluster`: Retrieves all occurrences and statistics for an N-way equivalence cluster.
+- `cddm_suggest_cluster_refactor`: Performs multi-site consensus refactoring across an N-way cluster.
+- `cddm_get_timeline`: Samples Git commit history and evaluates time-series DRY Health and duplication trajectory.
 - `cddm_export_sarif`: Generates OASIS SARIF v2.1.0 reports on demand.
 
 ---

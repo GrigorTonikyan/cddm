@@ -272,3 +272,52 @@ export type ServerEvent =
   | { type: "scan_progress"; payload: ScanProgress }
   | { type: "scan_complete"; payload: ScanResult }
   | { type: "patch_applied"; payload: ApplyPatchResult };
+
+/**
+ * A point-in-time duplication metrics snapshot for a Git commit.
+ */
+export interface TimelineSnapshot {
+  commit_hash: string;
+  short_hash: string;
+  author: string;
+  commit_time: number;
+  formatted_date: string;
+  message: string;
+  tag?: string;
+  total_files: number;
+  total_tokens: number;
+  total_clones: number;
+  total_clusters: number;
+  duplication_percentage: number;
+  dry_health_score: number;
+}
+
+/**
+ * Metric tracking file modification frequency and duplicate clone association.
+ */
+export interface FileChurnMetric {
+  file_path: string;
+  commit_count: number;
+  clone_count: number;
+}
+
+/**
+ * Aggregated historical duplication trend across Git history.
+ */
+export interface TimelineTrend {
+  snapshots: TimelineSnapshot[];
+  initial_score: number;
+  current_score: number;
+  score_delta: number;
+  duplication_delta: number;
+  churn_hotspots: FileChurnMetric[];
+}
+
+/**
+ * Status of local Git pre-commit and pre-push hooks.
+ */
+export interface HookStatus {
+  pre_commit_installed: boolean;
+  pre_push_installed: boolean;
+  hooks_dir: string;
+}

@@ -25,6 +25,8 @@ graph TD
         Blame["Git Blame Annotator (gix)"]
         Cluster["N-Way Graph Clustering (Disjoint-Set Union-Find)"]
         Refactor["Multi-Site Consensus Refactoring Synthesizer"]
+        Timeline["Git History Timeline & Trend Analyzer (gix)"]
+        Workflow["Turnkey CI/CD & Hook Generator (workflow.rs)"]
         Cache["SHA-256 Incremental Cache"]
         Watcher["FileSystem Watcher (notify)"]
     end
@@ -43,6 +45,8 @@ graph TD
     Detector --> Blame
     Detector --> Cluster
     Cluster --> Refactor
+    Timeline --> Detector
+    Workflow --> Detector
 ```
 
 ---

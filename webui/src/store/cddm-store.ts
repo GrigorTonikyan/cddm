@@ -50,6 +50,13 @@ export interface CDDMStoreState {
   isTreemapModalOpen: boolean;
   isLanguageModalOpen: boolean;
   isClusterRefactorModalOpen: boolean;
+  isTimelineModalOpen: boolean;
+
+  /** Historical timeline data and loading state */
+  timelineData: import("../types/cddm-types").TimelineTrend | null;
+  isTimelineLoading: boolean;
+  timelineError: string | null;
+  hookStatus: import("../types/cddm-types").HookStatus | null;
 
   /** Updates the scan configuration */
   setConfig: (config: Partial<ScanConfig>) => void;
@@ -71,6 +78,13 @@ export interface CDDMStoreState {
   /** Applies synthesized refactoring patch directly to workspace */
   applyPatch: (patch: string, dryRun?: boolean) => Promise<ApplyPatchResult>;
 
+  /** Fetches Git timeline historical duplication data */
+  fetchTimeline: (directory?: string, maxSamples?: number, minTokens?: number) => Promise<void>;
+  /** Fetches Git hook installation status */
+  fetchHookStatus: (directory?: string) => Promise<void>;
+  /** Installs a Git hook for automated quality enforcement */
+  installHook: (hookType: string, failThreshold?: number, minTokens?: number) => Promise<string>;
+
   /** Modal visibility setters */
   setIsScanConfigOpen: (open: boolean) => void;
   setIsHealthAuditOpen: (open: boolean) => void;
@@ -78,6 +92,7 @@ export interface CDDMStoreState {
   setIsTreemapModalOpen: (open: boolean) => void;
   setIsLanguageModalOpen: (open: boolean) => void;
   setIsClusterRefactorModalOpen: (open: boolean) => void;
+  setIsTimelineModalOpen: (open: boolean) => void;
 }
 
 /**
@@ -106,6 +121,12 @@ export const useCDDMStore = create<CDDMStoreState>((set, get) => ({
   isTreemapModalOpen: false,
   isLanguageModalOpen: false,
   isClusterRefactorModalOpen: false,
+  isTimelineModalOpen: false,
+
+  timelineData: null,
+  isTimelineLoading: false,
+  timelineError: null,
+  hookStatus: null,
 
   setViewMode: (viewMode) => set({ viewMode }),
   setSelectedCluster: (selectedCluster) => set({ selectedCluster }),
@@ -121,6 +142,77 @@ export const useCDDMStore = create<CDDMStoreState>((set, get) => ({
   setIsLanguageModalOpen: (isLanguageModalOpen) => set({ isLanguageModalOpen }),
   setIsClusterRefactorModalOpen: (isClusterRefactorModalOpen) =>
     set({ isClusterRefactorModalOpen }),
+  setIsTimelineModalOpen: (isTimelineModalOpen) => {
+    set({ isTimelineModalOpen });
+    if (isTimelineModalOpen && !get().timelineData && !get().isTimelineLoading) {
+      void get().fetchTimeline();
+      void get().fetchHookStatus();
+    }
+  },
+
+  fetchTimeline: async (directory?: string, maxSamples: number = 10, minTokens?: number) => {
+    set({ isTimelineLoading: true, timelineError: null });
+    const { config } = get();
+    const dir = directory ?? config.directory;
+    const tokens = minTokens ?? config.min_tokens;
+
+    try {
+      const params = new URLSearchParams({
+        directory: dir,
+        max_samples: maxSamples.toString(),
+        min_tokens: tokens.toString(),
+      });
+      const res = await fetch(`${API_ROUTES.TIMELINE}?${params.toString()}`);
+      if (!res.ok) {
+        const errorText = await res.text().catch(() => res.statusText);
+        throw new Error(`Failed to fetch timeline (${res.status}): ${errorText}`);
+      }
+      const data = await res.json();
+      set({ timelineData: data, isTimelineLoading: false, timelineError: null });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to load timeline trend";
+      set({ timelineError: message, isTimelineLoading: false });
+    }
+  },
+
+  fetchHookStatus: async (directory?: string) => {
+    const { config } = get();
+    const dir = directory ?? config.directory;
+    try {
+      const params = new URLSearchParams({ directory: dir });
+      const res = await fetch(`${API_ROUTES.HOOKS}?${params.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
+        set({ hookStatus: data });
+      }
+    } catch {
+      // ignore
+    }
+  },
+
+  installHook: async (hookType: string, failThreshold: number = 15.0, minTokens?: number) => {
+    const { config } = get();
+    const tokens = minTokens ?? config.min_tokens;
+    const res = await fetch(API_ROUTES.HOOKS_INSTALL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        directory: config.directory,
+        hook_type: hookType,
+        fail_threshold: failThreshold,
+        min_tokens: tokens,
+      }),
+    });
+
+    if (!res.ok) {
+      const errorText = await res.text().catch(() => res.statusText);
+      throw new Error(`Hook installation failed (${res.status}): ${errorText}`);
+    }
+
+    const data = await res.json();
+    await get().fetchHookStatus();
+    return data.message || "Hook installed successfully";
+  },
 
   setConfig: (newConfig) => {
     set((state) => ({
@@ -200,6 +292,9 @@ export const useCDDMStore = create<CDDMStoreState>((set, get) => ({
       isTreemapModalOpen: false,
       isLanguageModalOpen: false,
       isClusterRefactorModalOpen: false,
+      isTimelineModalOpen: false,
+      timelineData: null,
+      timelineError: null,
     });
   },
 }));

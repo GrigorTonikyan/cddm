@@ -422,13 +422,24 @@ Executes duplication scan and returns OASIS SARIF v2.1.0 report for GitHub Code 
 | `directory`  | `string` | Yes      | `"."`   | Target directory path to analyze |
 | `min_tokens` | `number` | No       | `50`    | Minimum token threshold          |
 
+#### `cddm_get_timeline`
+
+Samples Git repository commit history and returns historical duplication trajectory, DRY health score delta, and file churn hotspots.
+
+| Parameter     | Type     | Required | Default | Description                                  |
+| :------------ | :------- | :------- | :------ | :------------------------------------------- |
+| `directory`   | `string` | No       | `"."`   | Target repository directory path             |
+| `max_samples` | `number` | No       | `10`    | Maximum number of historical commits to walk |
+| `min_tokens`  | `number` | No       | `50`    | Minimum token clone threshold                |
+
 ### Resources
 
-| URI                         | MIME Type          | Description                                                   |
-| :-------------------------- | :----------------- | :------------------------------------------------------------ |
-| `cddm://workspace/health`   | `application/json` | Real-time DRY Health Index, file metrics, and language stats. |
-| `cddm://workspace/clones`   | `application/json` | Registry of active duplicate code clones across files.        |
-| `cddm://workspace/clusters` | `application/json` | Disjoint-set partitioned N-way clone equivalence clusters.    |
+| URI                         | MIME Type          | Description                                                     |
+| :-------------------------- | :----------------- | :-------------------------------------------------------------- |
+| `cddm://workspace/health`   | `application/json` | Real-time DRY Health Index, file metrics, and language stats.   |
+| `cddm://workspace/clones`   | `application/json` | Registry of active duplicate code clones across files.          |
+| `cddm://workspace/clusters` | `application/json` | Disjoint-set partitioned N-way clone equivalence clusters.      |
+| `cddm://workspace/timeline` | `application/json` | Historical commit snapshots, DRY trajectory, and churn metrics. |
 
 ### Prompts
 

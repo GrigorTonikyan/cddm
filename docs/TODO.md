@@ -130,6 +130,25 @@
 
 ---
 
+### Milestone v1.3.0: Historical Duplication Trends & Turnkey CI/CD Workflow Generator
+
+- [x] **[EP-13] In-Process Git History Revision Walking & Timeline Duplication Trends**
+  - [x] Implement `cddm_core::timeline::collect_git_timeline` sampling historical commits via `gix::rev_walk`
+  - [x] In-memory winnowing tokenization per historical commit tree with directory ignore filtering
+  - [x] Compute `TimelineSnapshot` history and `TimelineTrend` with score delta and file churn hotspots
+  - [x] Implement `cddm trend [DIR] [--max-samples <N>] [--format console|json|markdown]` CLI subcommand
+  - [x] Expose Axum REST endpoint `GET /api/timeline` in `cddm-cli::serve`
+  - [x] Expose MCP tool `cddm_get_timeline` and resource `cddm://workspace/timeline` in `cddm-mcp`
+  - [x] Implement `TimelineExplorerModal.tsx` in WebUI with interactive SVG trajectory chart and commit snapshots table
+- [x] **[EP-14] Turnkey CI/CD Workflow & Git Hook Generator**
+  - [x] Implement `cddm_core::workflow::generate_github_workflow`, `generate_gitlab_ci`, `generate_azure_pipelines`
+  - [x] Implement `cddm_core::workflow::install_git_hook`, `uninstall_git_hook`, `get_hook_status`
+  - [x] Implement `cddm init <github|gitlab|azure> [--write]` CLI subcommand
+  - [x] Implement `cddm hook <install|uninstall|status>` CLI subcommand
+  - [x] Expose Axum REST endpoints `GET /api/workflow/hooks` and `POST /api/workflow/hooks/install`
+
+---
+
 ## Completed Milestones (Verified)
 
 - [x] **v0.1.0**: Initial Rust core engine, Winnowing rolling hash, CLI scanner.
@@ -142,3 +161,4 @@
 - [x] **v1.0.0**: Enterprise High-Throughput Engine with `memmap2` zero-copy I/O for large files, AVX2 and ARM NEON SIMD Mersenne-61 rolling hash vectorization, and Criterion throughput benchmarking suite.
 - [x] **v1.1.0**: N-Way Clone Graph Clustering & Multi-Site Deduplication Synthesis Engine with Disjoint-Set Union-Find transitive partitioning, consensus multi-file diff patches, Axum cluster API, CLI `--cluster`, MCP cluster tools & resources, and WebUI N-way cluster cards.
 - [x] **v1.2.0**: Real-Time Language Server Protocol (LSP 3.17) Engine (`crates/cddm-lsp`), `cddm lsp` CLI daemon, official VS Code / Cursor Extension (`editors/vscode`), and multi-editor configuration guide (`docs/LSP_SETUP.md`).
+- [x] **v1.3.0**: Historical Duplication Trends & Turnkey CI/CD Workflow Generator with `cddm trend`, `cddm hook`, `cddm init`, `cddm_get_timeline` MCP tool, `cddm://workspace/timeline` resource, and WebUI Studio `TimelineExplorerModal`.

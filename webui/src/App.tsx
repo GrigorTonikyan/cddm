@@ -14,9 +14,11 @@ import {
   Radio,
   CheckCheck,
   X,
+  History,
 } from "lucide-react";
 import { APP_VERSION } from "./constants/cddm-constants";
 import { useCDDMStore } from "./store/cddm-store";
+import { TimelineExplorerModal } from "./components/TimelineExplorerModal";
 
 export const App: React.FC = () => {
   const {
@@ -30,6 +32,8 @@ export const App: React.FC = () => {
     setIsScanConfigOpen,
     setIsHealthAuditOpen,
     setIsExportReportOpen,
+    isTimelineModalOpen,
+    setIsTimelineModalOpen,
   } = useCDDMStore();
 
   return (
@@ -87,6 +91,15 @@ export const App: React.FC = () => {
           >
             <Sliders className="w-3.5 h-3.5 text-indigo-400" />
             <span>Config Window</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsTimelineModalOpen(true)}
+            className="px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 hover:bg-slate-800 text-slate-300 flex items-center gap-1.5 transition-colors shadow-sm"
+          >
+            <History className="w-3.5 h-3.5 text-indigo-400" />
+            <span>Timeline Trends</span>
           </button>
 
           {results && (
@@ -153,6 +166,12 @@ export const App: React.FC = () => {
 
       {/* Global Config Modal */}
       <ScanConfigModal isOpen={isScanConfigOpen} onClose={() => setIsScanConfigOpen(false)} />
+
+      {/* Timeline Trends Explorer Modal */}
+      <TimelineExplorerModal
+        isOpen={isTimelineModalOpen}
+        onClose={() => setIsTimelineModalOpen(false)}
+      />
 
       {/* Footer */}
       <footer className="border-t border-slate-900 py-6 text-center text-xs text-slate-500 font-mono bg-slate-950/80">

@@ -334,6 +334,94 @@ pub struct ScanProgress {
     pub message: String,
 }
 
+/// A point-in-time duplication metrics snapshot for a Git commit.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct TimelineSnapshot {
+    /// Full commit hash (40-character hex string)
+    pub commit_hash: String,
+    /// Short commit hash (7-character hex string)
+    pub short_hash: String,
+    /// Commit author name
+    pub author: String,
+    /// Commit timestamp (Unix epoch seconds)
+    pub commit_time: i64,
+    /// Formatted commit date string (YYYY-MM-DD HH:MM:SS)
+    pub formatted_date: String,
+    /// Commit message (first line summary)
+    pub message: String,
+    /// Optional Git tag pointing to this commit
+    pub tag: Option<String>,
+    /// Total number of files analyzed
+    pub total_files: usize,
+    /// Total number of tokens analyzed
+    pub total_tokens: usize,
+    /// Total number of pairwise code clones
+    pub total_clones: usize,
+    /// Total number of clone clusters
+    pub total_clusters: usize,
+    /// Duplication percentage (0.0 to 100.0)
+    pub duplication_percentage: f64,
+    /// DRY Health Score (0.0 to 100.0)
+    pub dry_health_score: f64,
+}
+
+/// Metric tracking file modification frequency and duplicate clone association.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct FileChurnMetric {
+    /// Relative file path
+    pub file_path: String,
+    /// Number of times modified across timeline
+    pub commit_count: usize,
+    /// Active clone count in current snapshot
+    pub clone_count: usize,
+}
+
+/// Aggregated historical duplication trend across Git history.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct TimelineTrend {
+    /// Chronological list of sampled commit snapshots (oldest to newest)
+    pub snapshots: Vec<TimelineSnapshot>,
+    /// Initial DRY health score (from oldest sampled commit)
+    pub initial_score: f64,
+    /// Current DRY health score (from newest sampled commit)
+    pub current_score: f64,
+    /// Net DRY health score delta (current_score - initial_score)
+    pub score_delta: f64,
+    /// Net duplication percentage delta (current_dup - initial_dup)
+    pub duplication_delta: f64,
+    /// Top file churn hotspots
+    pub churn_hotspots: Vec<FileChurnMetric>,
+}
+
+/// Target CI/CD workflow platform for automated script generation.
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
+pub enum WorkflowPlatform {
+    GitHub,
+    GitLab,
+    Azure,
+}
+
+impl std::fmt::Display for WorkflowPlatform {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::GitHub => write!(f, "GitHub Actions"),
+            Self::GitLab => write!(f, "GitLab CI"),
+            Self::Azure => write!(f, "Azure Pipelines"),
+        }
+    }
+}
+
+/// Status of local Git pre-commit and pre-push hooks.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct HookStatus {
+    /// Whether a pre-commit hook is active
+    pub pre_commit_installed: bool,
+    /// Whether a pre-push hook is active
+    pub pre_push_installed: bool,
+    /// Path to the Git hooks directory
+    pub hooks_dir: String,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -518,5 +606,64 @@ mod tests {
             duration_ms: 45,
         };
         assert_serde_roundtrip(&diff_result);
+    }
+
+    #[test]
+    fn test_timeline_serde_roundtrip() {
+        let snapshot = TimelineSnapshot {
+            commit_hash: "0123456789abcdef0123456789abcdef01234567".to_string(),
+            short_hash: "0123456".to_string(),
+            author: "Grigor Tonikyan".to_string(),
+            commit_time: 1700000000,
+            formatted_date: "2026-08-24 12:00:00".to_string(),
+            message: "feat: add timeline".to_string(),
+            tag: Some("v1.3.0".to_string()),
+            total_files: 100,
+            total_tokens: 50000,
+            total_clones: 12,
+            total_clusters: 4,
+            duplication_percentage: 5.2,
+            dry_health_score: 92.4,
+        };
+        assert_serde_roundtrip(&snapshot);
+
+        let trend = TimelineTrend {
+            snapshots: vec![snapshot],
+            initial_score: 88.0,
+            current_score: 92.4,
+            score_delta: 4.4,
+            duplication_delta: -2.1,
+            churn_hotspots: vec![FileChurnMetric {
+                file_path: "src/main.rs".to_string(),
+                commit_count: 5,
+                clone_count: 2,
+            }],
+        };
+        assert_serde_roundtrip(&trend);
+    }
+
+    #[test]
+    fn test_workflow_platform_display_and_serde() {
+        let platforms = [
+            WorkflowPlatform::GitHub,
+            WorkflowPlatform::GitLab,
+            WorkflowPlatform::Azure,
+        ];
+        for platform in platforms {
+            assert_serde_roundtrip(&platform);
+        }
+        assert_eq!(WorkflowPlatform::GitHub.to_string(), "GitHub Actions");
+        assert_eq!(WorkflowPlatform::GitLab.to_string(), "GitLab CI");
+        assert_eq!(WorkflowPlatform::Azure.to_string(), "Azure Pipelines");
+    }
+
+    #[test]
+    fn test_hook_status_serde() {
+        let hook_status = HookStatus {
+            pre_commit_installed: true,
+            pre_push_installed: false,
+            hooks_dir: ".git/hooks".to_string(),
+        };
+        assert_serde_roundtrip(&hook_status);
     }
 }

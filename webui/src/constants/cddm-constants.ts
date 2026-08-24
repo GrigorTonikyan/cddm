@@ -21,6 +21,9 @@ export const API_ROUTES = {
   REFACTOR_CLUSTER: "/api/refactor-cluster",
   APPLY_PATCH: "/api/apply-patch",
   EVENTS: "/api/events",
+  TIMELINE: "/api/timeline",
+  HOOKS: "/api/workflow/hooks",
+  HOOKS_INSTALL: "/api/workflow/hooks/install",
 } as const;
 
 /**

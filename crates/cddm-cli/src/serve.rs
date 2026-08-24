@@ -47,6 +47,15 @@ pub const ROUTE_API_APPLY_PATCH: &str = "/api/apply-patch";
 /// API endpoint path for Server-Sent Events (SSE) live updates.
 pub const ROUTE_API_EVENTS: &str = "/api/events";
 
+/// API endpoint path for Git timeline historical trends.
+pub const ROUTE_API_TIMELINE: &str = "/api/timeline";
+
+/// API endpoint path for Git hook status inspection.
+pub const ROUTE_API_HOOKS: &str = "/api/workflow/hooks";
+
+/// API endpoint path for Git hook installation.
+pub const ROUTE_API_HOOKS_INSTALL: &str = "/api/workflow/hooks/install";
+
 /// Default localhost IPv4 binding.
 pub const DEFAULT_HOST_IP: [u8; 4] = [127, 0, 0, 1];
 
@@ -157,6 +166,23 @@ pub struct ClusterRefactorRequest {
     pub occurrences: Vec<CloneLocation>,
 }
 
+/// Request query parameters for fetching Git timeline historical metrics.
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Default)]
+pub struct TimelineQuery {
+    pub directory: Option<String>,
+    pub max_samples: Option<usize>,
+    pub min_tokens: Option<usize>,
+}
+
+/// Request payload for installing a Git hook.
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
+pub struct InstallHookRequest {
+    pub directory: Option<String>,
+    pub hook_type: String,
+    pub fail_threshold: Option<f64>,
+    pub min_tokens: Option<usize>,
+}
+
 /// Request payload for applying a refactoring patch to the workspace.
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ApplyPatchRequest {
@@ -187,6 +213,9 @@ pub fn build_app_with_state(state: AppState) -> Router {
         .route(ROUTE_API_REFACTOR_CLUSTER, post(refactor_cluster_handler))
         .route(ROUTE_API_APPLY_PATCH, post(apply_patch_handler))
         .route(ROUTE_API_EVENTS, get(events_handler))
+        .route(ROUTE_API_TIMELINE, get(timeline_handler))
+        .route(ROUTE_API_HOOKS, get(hooks_status_handler))
+        .route(ROUTE_API_HOOKS_INSTALL, post(install_hook_handler))
         .fallback(static_asset_handler)
         .layer(CorsLayer::permissive())
         .with_state(state)
@@ -464,6 +493,44 @@ async fn refactor_cluster_handler(
     }
 }
 
+async fn timeline_handler(
+    Query(query): Query<TimelineQuery>,
+) -> Result<Json<cddm_core::TimelineTrend>, (StatusCode, String)> {
+    let dir_str = query.directory.unwrap_or_else(|| ".".to_string());
+    let max_samples = query.max_samples.unwrap_or(10);
+    let min_tokens = query.min_tokens.unwrap_or(cddm_core::DEFAULT_MIN_TOKENS);
+    let cancel_flag = Arc::new(AtomicBool::new(false));
+
+    match cddm_core::collect_git_timeline(Path::new(&dir_str), max_samples, min_tokens, cancel_flag)
+    {
+        Ok(trend) => Ok(Json(trend)),
+        Err(err) => Err((StatusCode::BAD_REQUEST, err)),
+    }
+}
+
+async fn hooks_status_handler(Query(query): Query<TimelineQuery>) -> Json<cddm_core::HookStatus> {
+    let dir_str = query.directory.unwrap_or_else(|| ".".to_string());
+    Json(cddm_core::get_hook_status(Path::new(&dir_str)))
+}
+
+async fn install_hook_handler(
+    Json(req): Json<InstallHookRequest>,
+) -> Result<Json<serde_json::Value>, (StatusCode, String)> {
+    let dir_str = req.directory.unwrap_or_else(|| ".".to_string());
+    let fail_threshold = req.fail_threshold.unwrap_or(15.0);
+    let min_tokens = req.min_tokens.unwrap_or(cddm_core::DEFAULT_MIN_TOKENS);
+
+    match cddm_core::install_git_hook(
+        Path::new(&dir_str),
+        &req.hook_type,
+        fail_threshold,
+        min_tokens,
+    ) {
+        Ok(msg) => Ok(Json(serde_json::json!({ "status": "ok", "message": msg }))),
+        Err(err) => Err((StatusCode::BAD_REQUEST, err)),
+    }
+}
+
 async fn static_asset_handler(uri: Uri) -> impl IntoResponse {
     let path = uri.path().trim_start_matches('/');
     let asset_path = if path.is_empty() { INDEX_HTML } else { path };
@@ -679,5 +746,50 @@ mod tests {
     async fn test_build_app_router() {
         let app = build_app();
         let _ = app;
+    }
+
+    #[tokio::test]
+    async fn test_timeline_handler_success() {
+        let query = TimelineQuery {
+            directory: Some(".".to_string()),
+            max_samples: Some(3),
+            min_tokens: Some(50),
+        };
+        let res = timeline_handler(Query(query)).await;
+        assert!(res.is_ok());
+        let Json(trend) = res.unwrap();
+        assert!(!trend.snapshots.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_hooks_handlers() {
+        let temp = tempfile::tempdir().expect("tempdir");
+        let git_dir = temp.path().join(".git");
+        std::fs::create_dir_all(&git_dir).expect("create .git");
+
+        let status_res = hooks_status_handler(Query(TimelineQuery {
+            directory: Some(temp.path().to_string_lossy().to_string()),
+            max_samples: None,
+            min_tokens: None,
+        }))
+        .await;
+        assert!(!status_res.pre_commit_installed);
+
+        let install_res = install_hook_handler(Json(InstallHookRequest {
+            directory: Some(temp.path().to_string_lossy().to_string()),
+            hook_type: "pre-commit".to_string(),
+            fail_threshold: Some(15.0),
+            min_tokens: Some(50),
+        }))
+        .await;
+        assert!(install_res.is_ok());
+
+        let status_after = hooks_status_handler(Query(TimelineQuery {
+            directory: Some(temp.path().to_string_lossy().to_string()),
+            max_samples: None,
+            min_tokens: None,
+        }))
+        .await;
+        assert!(status_after.pre_commit_installed);
     }
 }

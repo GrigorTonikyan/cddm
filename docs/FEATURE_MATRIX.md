@@ -1,11 +1,11 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-24 | Rust: 120/120 PASS | WebUI: 118/118 PASS across 31 suites | Repository Scripts: 27/27 PASS | Playwright E2E: 11/11 PASS | CI Workflows: PASS
+> Last verified: 2026-08-24 | Rust: 137/137 PASS | WebUI: 123/123 PASS across 32 suites | Repository Scripts: 27/27 PASS | Playwright E2E: 11/11 PASS | CI Workflows: PASS
 
 ---
 
-## 1. Rust Backend — `cddm-core`, `cddm-cli`, `cddm-lsp`, `cddm-mcp` (120 unit tests)
+## 1. Rust Backend — `cddm-core`, `cddm-cli`, `cddm-lsp`, `cddm-mcp` (137 unit tests)
 
 ### Tokenization Engine (`crates/cddm-core/src/tokenizer.rs`)
 
@@ -211,12 +211,32 @@
 | F-18.9  | Server state buffer tracking and lifecycle management        | `state::tests::test_server_state_lifecycle`          | PASS   |
 | F-18.10 | Tower LSP service instantiation and capability configuration | `tests::test_lsp_service_creation`                   | PASS   |
 
+### Git History Timeline & Trend Analysis (`crates/cddm-core/src/timeline.rs`)
+
+| ID     | Feature Variant                                            | Test Function                                                          | Result |
+| :----- | :--------------------------------------------------------- | :--------------------------------------------------------------------- | :----- |
+| F-19.1 | In-memory duplication evaluation on empty files            | `timeline::tests::test_evaluate_in_memory_duplication_empty`           | PASS   |
+| F-19.2 | In-memory duplication evaluation on duplicate files        | `timeline::tests::test_evaluate_in_memory_duplication_duplicate_files` | PASS   |
+| F-19.3 | In-process Git history revision walking and timeline trend | `timeline::tests::test_collect_git_timeline_real_workspace`            | PASS   |
+| F-19.4 | Non-Git directory error propagation in timeline analysis   | `timeline::tests::test_collect_git_timeline_non_git_dir`               | PASS   |
+
+### Turnkey CI/CD & Git Hook Manager (`crates/cddm-core/src/workflow.rs`)
+
+| ID     | Feature Variant                                            | Test Function                                     | Result |
+| :----- | :--------------------------------------------------------- | :------------------------------------------------ | :----- |
+| F-20.1 | GitHub Actions workflow YAML generation with SARIF upload  | `workflow::tests::test_generate_github_workflow`  | PASS   |
+| F-20.2 | GitLab CI configuration YAML generation                    | `workflow::tests::test_generate_gitlab_ci`        | PASS   |
+| F-20.3 | Azure DevOps pipelines YAML generation                     | `workflow::tests::test_generate_azure_pipelines`  | PASS   |
+| F-20.4 | Git hook lifecycle management (install, verify, uninstall) | `workflow::tests::test_git_hook_lifecycle`        | PASS   |
+| F-20.5 | Invalid hook type rejection with clear validation error    | `workflow::tests::test_install_invalid_hook_type` | PASS   |
+
 ---
 
-## 2. WebUI Frontend — React 19 + TypeScript + Vitest (118 unit tests across 31 suites)
+## 2. WebUI Frontend — React 19 + TypeScript + Vitest (123 unit tests across 32 suites)
 
 | Module             | Test Suite File                                                                  | Test Cases | Status |
 | :----------------- | :------------------------------------------------------------------------------- | :--------- | :----- |
+| Timeline Explorer  | `webui/src/components/__tests__/TimelineExplorerModal.test.tsx`                  | 3 tests    | PASS   |
 | IDE Deeplinks      | `webui/src/utils/__tests__/ide-links.test.ts`                                    | 8 tests    | PASS   |
 | Store              | `webui/src/store/__tests__/cddm-store.test.ts`                                   | 11 tests   | PASS   |
 | App Shell          | `webui/src/components/__tests__/App.test.tsx`                                    | 5 tests    | PASS   |

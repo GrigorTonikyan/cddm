@@ -55,6 +55,7 @@ pub mod mcp_tools {
     pub const SUGGEST_CLUSTER_REFACTOR: &str = "cddm_suggest_cluster_refactor";
     pub const EXPORT_SARIF: &str = "cddm_export_sarif";
     pub const DIFF_SCAN: &str = "cddm_diff_scan";
+    pub const GET_TIMELINE: &str = "cddm_get_timeline";
 
     pub const PARAM_DIRECTORY: &str = "directory";
     pub const PARAM_MIN_TOKENS: &str = "min_tokens";
@@ -69,6 +70,7 @@ pub mod mcp_tools {
     pub const PARAM_END_LINE_B: &str = "end_line_b";
     pub const PARAM_CLUSTER_ID: &str = "cluster_id";
     pub const PARAM_OCCURRENCES: &str = "occurrences";
+    pub const PARAM_MAX_SAMPLES: &str = "max_samples";
 }
 
 /// Exposed resource identifiers and MIME types.
@@ -76,6 +78,7 @@ pub mod mcp_resources {
     pub const URI_WORKSPACE_HEALTH: &str = "cddm://workspace/health";
     pub const URI_WORKSPACE_CLONES: &str = "cddm://workspace/clones";
     pub const URI_WORKSPACE_CLUSTERS: &str = "cddm://workspace/clusters";
+    pub const URI_WORKSPACE_TIMELINE: &str = "cddm://workspace/timeline";
     pub const MIME_APPLICATION_JSON: &str = "application/json";
 }
 
@@ -409,6 +412,27 @@ async fn handle_mcp_request(req: JsonRpcRequest) -> Option<JsonRpcResponse> {
                             },
                             "required": [mcp_tools::PARAM_BASE_REF]
                         }
+                    },
+                    {
+                        "name": mcp_tools::GET_TIMELINE,
+                        "description": "Collect historical code duplication metrics, score delta, and DRY Health trajectory across Git repository history.",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                mcp_tools::PARAM_DIRECTORY: {
+                                    "type": "string",
+                                    "description": "Target Git repository directory path (default: current directory)"
+                                },
+                                mcp_tools::PARAM_MAX_SAMPLES: {
+                                    "type": "number",
+                                    "description": "Maximum number of historical commits to sample (default: 10)"
+                                },
+                                mcp_tools::PARAM_MIN_TOKENS: {
+                                    "type": "number",
+                                    "description": format!("Minimum token threshold (default: {})", DEFAULT_MIN_TOKENS)
+                                }
+                            }
+                        }
                     }
                 ]
             })),
@@ -728,6 +752,36 @@ async fn handle_mcp_request(req: JsonRpcRequest) -> Option<JsonRpcResponse> {
                     }
                 }
 
+                mcp_tools::GET_TIMELINE => {
+                    let args = req.params.as_ref().and_then(|p| p.get("arguments"));
+                    let dir = args
+                        .and_then(|a| a.get(mcp_tools::PARAM_DIRECTORY))
+                        .and_then(|d| d.as_str())
+                        .unwrap_or(DEFAULT_DIRECTORY);
+                    let max_samples = args
+                        .and_then(|a| a.get(mcp_tools::PARAM_MAX_SAMPLES))
+                        .and_then(|s| s.as_u64())
+                        .unwrap_or(10) as usize;
+                    let min_tokens =
+                        args.and_then(|a| a.get(mcp_tools::PARAM_MIN_TOKENS))
+                            .and_then(|t| t.as_u64())
+                            .unwrap_or(DEFAULT_MIN_TOKENS as u64) as usize;
+
+                    let cancel_flag = Arc::new(AtomicBool::new(false));
+                    match cddm_core::collect_git_timeline(
+                        Path::new(dir),
+                        max_samples,
+                        min_tokens,
+                        cancel_flag,
+                    ) {
+                        Ok(trend) => Some(make_text_response(
+                            req.id,
+                            serde_json::to_string_pretty(&trend).unwrap_or_default(),
+                        )),
+                        Err(e) => Some(make_error_response(req.id, rpc_errors::INTERNAL_ERROR, e)),
+                    }
+                }
+
                 _ => Some(make_error_response(
                     req.id,
                     rpc_errors::METHOD_NOT_FOUND,
@@ -757,6 +811,12 @@ async fn handle_mcp_request(req: JsonRpcRequest) -> Option<JsonRpcResponse> {
                         "uri": mcp_resources::URI_WORKSPACE_CLUSTERS,
                         "name": "Workspace Code Clone Clusters",
                         "description": "N-way equivalence classes of duplicated logic across repository files.",
+                        "mimeType": mcp_resources::MIME_APPLICATION_JSON
+                    },
+                    {
+                        "uri": mcp_resources::URI_WORKSPACE_TIMELINE,
+                        "name": "Workspace Historical Duplication Trend",
+                        "description": "Historical DRY Health trajectories and commit snapshots across Git history.",
                         "mimeType": mcp_resources::MIME_APPLICATION_JSON
                     }
                 ]
@@ -859,6 +919,32 @@ async fn handle_mcp_request(req: JsonRpcRequest) -> Option<JsonRpcResponse> {
                                 error: None,
                             })
                         }
+                        Err(e) => Some(make_error_response(req.id, rpc_errors::INTERNAL_ERROR, e)),
+                    }
+                }
+
+                mcp_resources::URI_WORKSPACE_TIMELINE => {
+                    let cancel_flag = Arc::new(AtomicBool::new(false));
+                    match cddm_core::collect_git_timeline(
+                        Path::new(DEFAULT_DIRECTORY),
+                        10,
+                        DEFAULT_MIN_TOKENS,
+                        cancel_flag,
+                    ) {
+                        Ok(trend) => Some(JsonRpcResponse {
+                            jsonrpc: JSONRPC_VERSION.to_string(),
+                            id: req.id,
+                            result: Some(json!({
+                                "contents": [
+                                    {
+                                        "uri": mcp_resources::URI_WORKSPACE_TIMELINE,
+                                        "mimeType": mcp_resources::MIME_APPLICATION_JSON,
+                                        "text": serde_json::to_string_pretty(&trend).unwrap_or_default()
+                                    }
+                                ]
+                            })),
+                            error: None,
+                        }),
                         Err(e) => Some(make_error_response(req.id, rpc_errors::INTERNAL_ERROR, e)),
                     }
                 }
@@ -1082,7 +1168,7 @@ mod tests {
     #[tokio::test]
     async fn test_mcp_tools_list() {
         let tools = list_mcp_items(mcp_methods::TOOLS_LIST, "tools").await;
-        assert_eq!(tools.len(), 7);
+        assert_eq!(tools.len(), 8);
         let tool_names: Vec<&str> = tools.iter().map(|t| t["name"].as_str().unwrap()).collect();
         assert!(tool_names.contains(&mcp_tools::SCAN_CODEBASE));
         assert!(tool_names.contains(&mcp_tools::GET_CLONE_PAIR));
@@ -1091,6 +1177,7 @@ mod tests {
         assert!(tool_names.contains(&mcp_tools::SUGGEST_CLUSTER_REFACTOR));
         assert!(tool_names.contains(&mcp_tools::EXPORT_SARIF));
         assert!(tool_names.contains(&mcp_tools::DIFF_SCAN));
+        assert!(tool_names.contains(&mcp_tools::GET_TIMELINE));
     }
 
     #[tokio::test]
@@ -1115,10 +1202,49 @@ mod tests {
     #[tokio::test]
     async fn test_mcp_resources_list() {
         let resources = list_mcp_items(mcp_methods::RESOURCES_LIST, "resources").await;
-        assert_eq!(resources.len(), 3);
+        assert_eq!(resources.len(), 4);
         assert_eq!(resources[0]["uri"], mcp_resources::URI_WORKSPACE_HEALTH);
         assert_eq!(resources[1]["uri"], mcp_resources::URI_WORKSPACE_CLONES);
         assert_eq!(resources[2]["uri"], mcp_resources::URI_WORKSPACE_CLUSTERS);
+        assert_eq!(resources[3]["uri"], mcp_resources::URI_WORKSPACE_TIMELINE);
+    }
+
+    #[tokio::test]
+    async fn test_mcp_resources_read_timeline() {
+        let resp = handle_mcp_request(make_test_req(
+            23,
+            mcp_methods::RESOURCES_READ,
+            Some(json!({ "uri": mcp_resources::URI_WORKSPACE_TIMELINE })),
+        ))
+        .await
+        .expect("Expected response");
+        assert!(resp.result.is_some());
+        let contents = resp.result.unwrap()["contents"].as_array().unwrap().clone();
+        assert_eq!(contents.len(), 1);
+        assert_eq!(contents[0]["uri"], mcp_resources::URI_WORKSPACE_TIMELINE);
+    }
+
+    #[tokio::test]
+    async fn test_mcp_get_timeline_tool() {
+        let resp = handle_mcp_request(make_test_req(
+            24,
+            mcp_methods::TOOLS_CALL,
+            Some(json!({
+                "name": mcp_tools::GET_TIMELINE,
+                "arguments": {
+                    "max_samples": 3,
+                    "min_tokens": 50
+                }
+            })),
+        ))
+        .await
+        .expect("Expected response");
+        assert!(resp.error.is_none());
+        let text = resp.result.unwrap()["content"][0]["text"]
+            .as_str()
+            .unwrap()
+            .to_string();
+        assert!(text.contains("snapshots"));
     }
 
     #[tokio::test]
