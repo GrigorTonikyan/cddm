@@ -5,12 +5,14 @@
 node_modules/
 /webui/node_modules/
 /tests/e2e/node_modules/
+/editors/vscode/node_modules/
 
 # WebUI & Frontend build/coverage outputs
 /webui/dist/
 /webui/coverage/
 /coverage/
 /dist/
+/editors/vscode/out/
 
 # End-to-End test reports & results
 test-results/

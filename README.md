@@ -21,6 +21,7 @@
 - [Installation](#installation)
 - [Quick Start](#quick-start)
 - [CLI Command Reference](#cli-command-reference)
+- [Language Server Protocol (LSP)](#language-server-protocol-lsp)
 - [Embedded Studio WebUI](#embedded-studio-webui)
 - [Model Context Protocol (MCP) Server](#model-context-protocol-mcp-server)
 - [DRY Health Score Formula](#dry-health-score-formula)
@@ -51,6 +52,7 @@ Whether integrated into **CI/CD pipelines**, used via the **Terminal CLI**, expl
 | **In-Process Git Blame**         | Powered by `gix` (`gitoxide`) to annotate duplicate fragments with author names and commit timestamps without spawning subprocesses.   |
 | **N-Way Graph Clustering**       | Disjoint-Set Union-Find algorithm partitioning pairwise clone graphs into transitive $N$-way equivalence classes.                      |
 | **Multi-Site Patch Synthesizer** | Computes multi-site consensus invariant lines and synthesizes unified multi-file `.patch` diffs across all clone occurrences.          |
+| **Language Server (LSP)**        | Real-time in-editor duplicate code diagnostics, one-click refactoring code actions, and hover tooltips for IDEs (`cddm-lsp`).          |
 | **Embedded Studio WebUI**        | High-performance interactive React 19 dashboard served directly from the single compiled binary via `axum` & `rust-embed`.             |
 | **AI Agent MCP Server**          | Stdio JSON-RPC 2.0 protocol (`cddm-mcp`) allowing AI assistants (Claude, Antigravity, Cursor) to inspect duplication programmatically. |
 | **Rayon Parallel Pipeline**      | Multi-threaded file discovery, AST parsing, and fingerprint indexing across all available CPU cores.                                   |
@@ -174,6 +176,28 @@ Continuously watches workspace for source modifications and automatically runs i
 ```bash
 cddm watch ./src --min-tokens 50 --debounce-ms 250
 ```
+
+### `cddm lsp [DIRECTORY]`
+
+Starts the standard Language Server Protocol (LSP 3.17) daemon over Stdio for real-time IDE diagnostics and code action quick fixes. See [docs/LSP_SETUP.md](docs/LSP_SETUP.md) for editor setup (VS Code, Cursor, Neovim, Zed, Helix, Sublime).
+
+```bash
+cddm lsp
+cddm lsp ./src --min-tokens 40
+```
+
+---
+
+## Language Server Protocol (LSP)
+
+CDDM provides a native LSP 3.17 implementation (`crates/cddm-lsp`) and official **VS Code / Cursor Extension** (`editors/vscode`):
+
+- **Real-Time Diagnostics**: Inline warnings detailing duplication line spans, token volumes, similarity percentages, and counterpart links.
+- **Quick-Fix Code Actions**: One-click extraction of duplicate code blocks into shared helper functions.
+- **Hover Information**: Rich Markdown cards explaining clone classifications and similarity metrics.
+- **Turnkey Multi-IDE Support**: Native configurations for VS Code, Cursor, Neovim, Zed, Helix, and Sublime Text.
+
+For step-by-step IDE setup guides, see **[docs/LSP_SETUP.md](docs/LSP_SETUP.md)**.
 
 ---
 

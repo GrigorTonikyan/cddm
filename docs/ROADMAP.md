@@ -321,6 +321,38 @@ Pairwise clone detection scatters $N \ge 3$ duplicate locations across $O(N^2)$ 
 
 ---
 
+### EP-12: Real-Time Language Server Protocol (LSP) Engine & VS Code Extension
+
+- **Target Milestone**: `v1.2.0`
+- **Component**: `crates/cddm-lsp`, `crates/cddm-cli`, `editors/vscode`
+- **Priority**: `High`
+- **Status**: `Completed (v1.2.0)`
+
+#### Problem Statement
+
+Developers need inline, real-time code clone feedback inside their code editors without running external CLI commands or opening a separate browser window.
+
+#### Specification & Architecture
+
+1. **Tower-LSP Server Engine (`crates/cddm-lsp`)**:
+   - Implements LSP 3.17 protocol standard over JSON-RPC 2.0 Stdio transport.
+   - Publishes real-time diagnostics (`textDocument/publishDiagnostics`) with clone severity and counterpart `relatedLocations`.
+   - Surfaces quick-fix Code Actions (`textDocument/codeAction`) to extract duplicate code into helper functions.
+   - Returns rich Markdown hover cards (`textDocument/hover`) with similarity and token metrics.
+   - Supports jump navigation (`textDocument/definition`, `references`) between clone sites.
+2. **CLI Subcommand**:
+   - Adds `cddm lsp [DIRECTORY]` to launch the LSP daemon directly from terminal.
+3. **Official VS Code / Cursor Extension (`editors/vscode`)**:
+   - Pure TypeScript extension using `vscode-languageclient` (v10.1.0) with status bar indicators and command bindings.
+
+#### Acceptance Criteria
+
+- LSP daemon starts cleanly over Stdio and responds to standard JSON-RPC 2.0 lifecycle requests.
+- Emits accurate diagnostics with counterpart line ranges across all supported languages.
+- VS Code extension compiles cleanly and provides commands and status bar health indicators.
+
+---
+
 ## 3. Prioritized Action Checklist
 
 ```markdown
@@ -362,6 +394,16 @@ Pairwise clone detection scatters $N \ge 3$ duplicate locations across $O(N^2)$ 
 - [x] Expose Axum `POST /api/refactor-cluster` endpoint and CLI `--cluster <ID>` option [EP-11]
 - [x] Implement MCP tools (`cddm_get_clone_cluster`, `cddm_suggest_cluster_refactor`) & resource `cddm://workspace/clusters` [EP-11]
 - [x] Add WebUI Pairwise vs N-Way Clusters view tabs, `CloneClusterCard.tsx`, and multi-file `RefactorPatchModal.tsx` [EP-11]
+
+### Milestone v1.2.0 (Language Server Protocol & IDE Extensions)
+
+- [x] Implement standard Language Server Protocol (LSP 3.17) daemon in `crates/cddm-lsp` [EP-12]
+- [x] Implement real-time clone diagnostics (`textDocument/publishDiagnostics`) with counterpart relatedLocations [EP-12]
+- [x] Implement quick-fix refactoring and function extraction code actions (`textDocument/codeAction`) [EP-12]
+- [x] Implement rich Markdown hover tooltip information (`textDocument/hover`) [EP-12]
+- [x] Add `cddm lsp` CLI subcommand in `cddm-cli` [EP-12]
+- [x] Publish official CDDM VS Code and Cursor extension in `editors/vscode` [EP-12]
+- [x] Publish multi-editor setup guides for Neovim, Zed, Helix, Sublime Text, and Emacs in `docs/LSP_SETUP.md` [EP-12]
 ```
 
 ---

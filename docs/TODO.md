@@ -116,6 +116,20 @@
 
 ---
 
+### Milestone v1.2.0: Language Server Protocol & IDE Extensions
+
+- [x] **[EP-12] Real-Time Language Server Protocol (LSP) Engine & VS Code Extension**
+  - [x] Implement `crates/cddm-lsp` powered by `tower-lsp` (v0.20.0) over Stdio
+  - [x] Implement real-time clone diagnostics (`textDocument/publishDiagnostics`) with counterpart `relatedLocations`
+  - [x] Implement quick-fix Code Actions (`textDocument/codeAction`) for instant function extraction
+  - [x] Implement rich Markdown hover tooltip cards (`textDocument/hover`)
+  - [x] Implement jump navigation between counterpart clone sites (`textDocument/definition`, `references`)
+  - [x] Add `cddm lsp` subcommand in `crates/cddm-cli`
+  - [x] Implement official VS Code / Cursor extension client in `editors/vscode` using `vscode-languageclient` (v10.1.0)
+  - [x] Provide multi-editor drop-in configuration guides in `docs/LSP_SETUP.md` (VS Code, Neovim, Zed, Helix, Sublime)
+
+---
+
 ## Completed Milestones (Verified)
 
 - [x] **v0.1.0**: Initial Rust core engine, Winnowing rolling hash, CLI scanner.
@@ -127,3 +141,4 @@
 - [x] **v0.5.0**: AST Merkle Pipeline Integration (`ScanPhase::AstAnalysis`), dynamic clone classification (Type-1 Exact, Type-2 Renamed, Type-3 Near-Miss, Type-4 Semantic), dynamic similarity calculation, and polyglot Tree-sitter expansion with native parsers for Go, C, C++, Java, and C#.
 - [x] **v1.0.0**: Enterprise High-Throughput Engine with `memmap2` zero-copy I/O for large files, AVX2 and ARM NEON SIMD Mersenne-61 rolling hash vectorization, and Criterion throughput benchmarking suite.
 - [x] **v1.1.0**: N-Way Clone Graph Clustering & Multi-Site Deduplication Synthesis Engine with Disjoint-Set Union-Find transitive partitioning, consensus multi-file diff patches, Axum cluster API, CLI `--cluster`, MCP cluster tools & resources, and WebUI N-way cluster cards.
+- [x] **v1.2.0**: Real-Time Language Server Protocol (LSP 3.17) Engine (`crates/cddm-lsp`), `cddm lsp` CLI daemon, official VS Code / Cursor Extension (`editors/vscode`), and multi-editor configuration guide (`docs/LSP_SETUP.md`).

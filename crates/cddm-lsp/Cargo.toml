@@ -1,8 +1,8 @@
 [package]
-name = "cddm-cli"
+name = "cddm-lsp"
 version.workspace = true
 edition.workspace = true
-description = "CDDM CLI Binary — Code De-Duplication Meister"
+description = "CDDM Language Server Protocol (LSP) Engine — In-editor duplicate code diagnostics & refactoring"
 documentation.workspace = true
 readme = "../../README.md"
 homepage.workspace = true
@@ -14,30 +14,24 @@ categories.workspace = true
 [lints]
 workspace = true
 
+[lib]
+name = "cddm_lsp"
+path = "src/lib.rs"
+
 [[bin]]
-name = "cddm"
+name = "cddm-lsp"
 path = "src/main.rs"
 
 [dependencies]
 anyhow.workspace = true
 async-trait.workspace = true
-axum.workspace = true
 cddm-core = { path = "../cddm-core" }
-cddm-lsp = { path = "../cddm-lsp" }
-chrono.workspace = true
-clap.workspace = true
-comfy-table.workspace = true
-mime_guess.workspace = true
-opener.workspace = true
-rust-embed.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 tokio.workspace = true
-tokio-stream.workspace = true
-tower-http.workspace = true
+tower-lsp.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true
-uuid.workspace = true
 
 [dev-dependencies]
 tempfile = "^3"

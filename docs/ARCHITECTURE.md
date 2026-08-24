@@ -9,6 +9,7 @@ graph TD
     subgraph UI ["User Interfaces & APIs"]
         CLI["cddm CLI (clap)"]
         Serve["cddm serve (Axum + React 19)"]
+        LSP["cddm-lsp (Stdio LSP 3.17)"]
         MCP["cddm-mcp (stdio JSON-RPC 2.0)"]
     end
 
@@ -101,12 +102,17 @@ cddm-core (library crate)
   ├── serde, serde_json    (serialization)
   └── tokio                (async runtime)
 
-cddm-cli (binary crate) ──depends──→ cddm-core
+cddm-cli (binary crate) ──depends──→ cddm-core, cddm-lsp
   ├── clap                 (CLI flag parsing)
   ├── axum, tower-http     (HTTP server & static asset serving)
   ├── rust-embed           (static asset embedding)
   ├── comfy-table          (ANSI console tables)
   └── opener               (launching browser)
+
+cddm-lsp (binary & library crate) ──depends──→ cddm-core
+  ├── tower-lsp            (Language Server Protocol 3.17 implementation)
+  ├── serde_json           (JSON-RPC 2.0 serialization)
+  └── tokio                (async stdio transport)
 
 cddm-mcp (binary crate) ──depends──→ cddm-core
   ├── serde_json           (JSON-RPC 2.0 serialization)

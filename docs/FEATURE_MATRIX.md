@@ -1,11 +1,11 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-24 | Rust: 109/109 PASS | WebUI: 118/118 PASS across 31 suites | Repository Scripts: 27/27 PASS | Playwright E2E: 11/11 PASS | CI Workflows: PASS
+> Last verified: 2026-08-24 | Rust: 120/120 PASS | WebUI: 118/118 PASS across 31 suites | Repository Scripts: 27/27 PASS | Playwright E2E: 11/11 PASS | CI Workflows: PASS
 
 ---
 
-## 1. Rust Backend — `cddm-core`, `cddm-cli`, `cddm-mcp` (109 unit tests)
+## 1. Rust Backend — `cddm-core`, `cddm-cli`, `cddm-lsp`, `cddm-mcp` (120 unit tests)
 
 ### Tokenization Engine (`crates/cddm-core/src/tokenizer.rs`)
 
@@ -160,6 +160,7 @@
 | F-14.6 | Axum `/api/apply-patch` handler execution            | `serve::tests::test_apply_patch_handler_success`       | PASS   |
 | F-14.7 | Axum `/api/apply-patch` invalid hunk rejection       | `serve::tests::test_apply_patch_handler_bad_request`   | PASS   |
 | F-14.8 | Axum router construction & route registration        | `serve::tests::test_build_app_router`                  | PASS   |
+| F-14.9 | CLI `cddm lsp` argument parsing & option validation  | `main::tests::test_lsp_subcommand_parsing`             | PASS   |
 
 ### Advanced MCP Server Protocol (`crates/cddm-mcp/src/main.rs`)
 
@@ -194,6 +195,21 @@
 | F-17.2 | AVX2 hardware acceleration output parity with scalar baseline | `simd::avx2::tests::test_avx2_matches_scalar`             | PASS   |
 | F-17.3 | ARM NEON vector lanes output parity with scalar baseline      | `simd::neon::tests::test_neon_matches_scalar`             | PASS   |
 | F-17.4 | Automatic runtime hardware vectorization dispatcher           | `simd::tests::test_compute_kgram_rolling_hashes_dispatch` | PASS   |
+
+### Language Server Protocol Engine (`crates/cddm-lsp/src/`)
+
+| ID      | Feature Variant                                              | Test Function                                        | Result |
+| :------ | :----------------------------------------------------------- | :--------------------------------------------------- | :----- |
+| F-18.1  | 1-based line span translation to 0-based LSP range           | `utils::tests::test_line_range_to_lsp_range`         | PASS   |
+| F-18.2  | Cross-platform path normalization for URI comparison         | `utils::tests::test_normalize_path_for_compare`      | PASS   |
+| F-18.3  | Path matching against standard and custom document URLs      | `utils::tests::test_path_matches_url`                | PASS   |
+| F-18.4  | Clone type mapping to diagnostic codes (Exact/Renamed/etc.)  | `diagnostics::tests::test_format_diagnostic_code`    | PASS   |
+| F-18.5  | Clone pair translation to diagnostic with relatedLocations   | `diagnostics::tests::test_clone_pair_to_diagnostics` | PASS   |
+| F-18.6  | LSP range overlap calculation for code actions               | `code_actions::tests::test_range_overlaps_lines`     | PASS   |
+| F-18.7  | QuickFix refactoring and rescan code actions generation      | `code_actions::tests::test_generate_code_actions`    | PASS   |
+| F-18.8  | Rich Markdown hover information card formatting              | `hover::tests::test_generate_hover`                  | PASS   |
+| F-18.9  | Server state buffer tracking and lifecycle management        | `state::tests::test_server_state_lifecycle`          | PASS   |
+| F-18.10 | Tower LSP service instantiation and capability configuration | `tests::test_lsp_service_creation`                   | PASS   |
 
 ---
 

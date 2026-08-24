@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["crates/cddm-cli", "crates/cddm-core", "crates/cddm-mcp"]
+members = ["crates/cddm-cli", "crates/cddm-core", "crates/cddm-lsp", "crates/cddm-mcp"]
 
 [workspace.package]
 version = "0.6.0"
@@ -38,6 +38,7 @@ thiserror = "^2"
 tokio = { version = "^1", features = ["full"] }
 tokio-stream = { version = "^0.1", features = ["sync"] }
 tower-http = { version = "^0.7", features = ["cors", "fs"] }
+tower-lsp = "^0.20"
 tracing = "^0.1"
 tracing-subscriber = { version = "^0.3", features = ["env-filter"] }
 tree-sitter = "^0.26"

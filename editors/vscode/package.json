@@ -1,0 +1,108 @@
+{
+  "name": "cddm",
+  "displayName": "CDDM — Code De-Duplication Meister",
+  "version": "0.6.0",
+  "description": "Real-time polyglot code clone detection, DRY health scoring, and automated deduplication refactoring for VS Code, Cursor, and Antigravity.",
+  "categories": [
+    "Linters",
+    "Other",
+    "Programming Languages"
+  ],
+  "keywords": [
+    "ast",
+    "cddm",
+    "clone-detection",
+    "code-quality",
+    "dry",
+    "duplication",
+    "refactoring"
+  ],
+  "homepage": "https://github.com/GrigorTonikyan/cddm",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/GrigorTonikyan/cddm.git"
+  },
+  "publisher": "grigortonikyan",
+  "main": "./out/extension.js",
+  "scripts": {
+    "build": "tsc -p .",
+    "watch": "tsc -w -p ."
+  },
+  "dependencies": {
+    "vscode-languageclient": "^10.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.2.0",
+    "@types/vscode": "^1.96.0",
+    "typescript": "^7.0.2"
+  },
+  "contributes": {
+    "configuration": {
+      "type": "object",
+      "title": "CDDM Configuration",
+      "properties": {
+        "cddm.executablePath": {
+          "type": "string",
+          "default": "cddm",
+          "description": "Path to the cddm or cddm-lsp executable."
+        },
+        "cddm.minTokens": {
+          "type": "number",
+          "default": 50,
+          "description": "Minimum token count threshold required to classify duplicate fragments."
+        },
+        "cddm.enableHover": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable rich Markdown hover tooltips over duplicate code blocks."
+        },
+        "cddm.enableCodeActions": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable quick-fix refactoring and function extraction code actions."
+        },
+        "cddm.studioUrl": {
+          "type": "string",
+          "default": "http://127.0.0.1:3000",
+          "description": "URL of the local CDDM WebUI Studio daemon."
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "cddm.rescanWorkspace",
+        "title": "CDDM: Rescan Workspace Duplication",
+        "category": "CDDM"
+      },
+      {
+        "command": "cddm.openStudio",
+        "title": "CDDM: Open WebUI Studio",
+        "category": "CDDM"
+      },
+      {
+        "command": "cddm.openLocation",
+        "title": "CDDM: Jump to Counterpart Location",
+        "category": "CDDM"
+      }
+    ]
+  },
+  "activationEvents": [
+    "onCommand:cddm.openStudio",
+    "onCommand:cddm.rescanWorkspace",
+    "onLanguage:c",
+    "onLanguage:cpp",
+    "onLanguage:csharp",
+    "onLanguage:go",
+    "onLanguage:java",
+    "onLanguage:javascript",
+    "onLanguage:javascriptreact",
+    "onLanguage:python",
+    "onLanguage:rust",
+    "onLanguage:typescript",
+    "onLanguage:typescriptreact"
+  ],
+  "engines": {
+    "vscode": "^1.96.0"
+  }
+}

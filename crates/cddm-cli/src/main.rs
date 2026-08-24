@@ -198,6 +198,17 @@ enum Commands {
         #[arg(long)]
         fail_threshold: Option<f64>,
     },
+
+    /// Start the CDDM Language Server Protocol (LSP) daemon over Stdio
+    Lsp {
+        /// Workspace root directory path (default: current directory)
+        #[arg(default_value = cddm_core::DEFAULT_DIRECTORY)]
+        directory: PathBuf,
+
+        /// Minimum token count to consider as duplicate clone
+        #[arg(short, long, default_value_t = cddm_core::DEFAULT_MIN_TOKENS)]
+        min_tokens: usize,
+    },
 }
 
 #[derive(ValueEnum, Clone, Copy, Debug, PartialEq, Eq)]
@@ -581,6 +592,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     }
                 }
             }
+        }
+
+        Commands::Lsp {
+            directory,
+            min_tokens,
+        } => {
+            cddm_lsp::run_server_stdio(directory, min_tokens).await?;
         }
     }
 
@@ -1023,5 +1041,16 @@ mod tests {
 
         print_diff_console_report(&diff_result);
         print_diff_markdown_report(&diff_result);
+    }
+
+    #[test]
+    fn test_lsp_subcommand_parsing() {
+        let cli = Cli::try_parse_from(["cddm", "lsp", "--min-tokens", "40"]).expect("parse");
+        match cli.command {
+            Commands::Lsp { min_tokens, .. } => {
+                assert_eq!(min_tokens, 40);
+            }
+            _ => panic!("expected Lsp command"),
+        }
     }
 }

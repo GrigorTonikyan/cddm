@@ -477,3 +477,23 @@ let cluster_suggestion = analyze_cluster_refactoring(&[
 ]).unwrap();
 println!("Multi-Site Unified Patch:\n{}", cluster_suggestion.unified_patch);
 ```
+
+---
+
+## 5. Language Server Protocol (`cddm-lsp`)
+
+The `cddm-lsp` engine implements the standard Language Server Protocol (LSP 3.17) over JSON-RPC 2.0 Stdio:
+
+### Methods
+
+| LSP Method                        | Direction        | Description                                                                                        |
+| :-------------------------------- | :--------------- | :------------------------------------------------------------------------------------------------- |
+| `initialize`                      | Client -> Server | Initializes LSP session and advertises server capabilities                                         |
+| `textDocument/didOpen`            | Client -> Server | Notifies server of newly opened document and updates diagnostics                                   |
+| `textDocument/didChange`          | Client -> Server | Ingests document buffer modifications and triggers debounced scan                                  |
+| `textDocument/didSave`            | Client -> Server | Triggers immediate workspace scan and updates diagnostics                                          |
+| `textDocument/publishDiagnostics` | Server -> Client | Publishes clone warnings with `CDDM-Exact`, `CDDM-Renamed`, `CDDM-NearMiss`, `CDDM-Semantic` codes |
+| `textDocument/codeAction`         | Client -> Server | Synthesizes `WorkspaceEdit` with `TextEdit`s to extract duplicate functions                        |
+| `textDocument/hover`              | Client -> Server | Returns rich Markdown card with clone metrics, similarity, and counterpart links                   |
+| `textDocument/definition`         | Client -> Server | Navigates from clone site A to counterpart clone site B                                            |
+| `workspace/executeCommand`        | Client -> Server | Executes custom commands (`cddm.rescanWorkspace`)                                                  |
