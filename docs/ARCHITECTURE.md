@@ -145,3 +145,20 @@ CDDM supports dual distribution channels:
 3. **GitHub Actions CI/CD Workflows**:
    - `.github/workflows/ci.yml`: Matrix build testing (Ubuntu, Windows, macOS), `clippy`, `rustfmt`, and WebUI tests.
    - `.github/workflows/release.yml`: Cross-compiling standalone release binaries on GitHub tag pushes (`v*`).
+
+---
+
+## 8. WebUI Component Architecture (`Atomic UI` & `win2x-manager`)
+
+The WebUI frontend is split into two clean architectural layers:
+
+1. **Shared Atomic UI Library (`webui/src/components/ui/`)**:
+   - **Atoms**: `Portal`, `Backdrop`, `Badge`, `IconButton`.
+   - **Molecules**: `CollapsibleCard`, `CodeBlock`.
+   - **Design Tokens**: Parameterized `--cddm-ui-*` CSS custom properties with zero magic literals.
+
+2. **Universal Window Manager (`webui/src/components/ui/win2x-manager/`)**:
+   - **Pure Engine**: Zero application-specific UI, framework-agnostic mathematical geometry engine (`geometry-engine.ts`), and W3C hardware pointer driver (`pointer-driver.ts`).
+   - **Components**: `TitleBar`, `WindowControls`, `ResizeHandle`, `ResizeHandleGroup`, `Win2xWindow`.
+   - **Design Tokens**: Parameterized `--win2x-*` custom properties with modern nested CSS scoping.
+   - **Compositor Pipeline**: 120fps hardware-accelerated movement via `transform: translate3d(x, y, 0)`, dynamic blur decoupling on `[data-moving="true"]`, and CSS containment (`contain: layout paint`).

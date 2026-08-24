@@ -144,7 +144,7 @@ The WebUI Studio currently displays static line ranges and author annotations fo
 - **Target Milestone**: `v0.5.0`
 - **Component**: `crates/cddm-core`
 - **Priority**: `High`
-- **Status**: `Proposed`
+- **Status**: `Completed (v0.5.0)`
 
 #### Problem Statement
 
@@ -245,20 +245,18 @@ In CI pipelines, developers want to ensure that a pull request does not introduc
 - **Target Milestone**: `v0.5.0`
 - **Component**: `crates/cddm-core`
 - **Priority**: `Medium`
-- **Status**: `Proposed`
+- **Status**: `Completed (v0.5.0)`
 
 #### Problem Statement
 
 Extend full Tree-sitter AST parsing support beyond Rust, TypeScript, JavaScript, and Python.
 
-#### Languages to Add
+#### Languages Added
 
 - **Go**: `tree-sitter-go`
 - **C / C++**: `tree-sitter-c`, `tree-sitter-cpp`
 - **Java**: `tree-sitter-java`
 - **C#**: `tree-sitter-c-sharp`
-- **Kotlin**: `tree-sitter-kotlin`
-- **SQL / GraphQL / Proto**: Domain-specific grammars
 
 #### Acceptance Criteria
 
@@ -314,9 +312,9 @@ Maximizing token throughput on multi-gigabyte codebases to achieve > 20M tokens/
 
 ### Milestone v0.5.0 (AST Pipeline & Polyglot Expansion)
 
-- [ ] Integrate AST Merkle subtree hasher into main `run_scan` pipeline [EP-05]
-- [ ] Implement Tree-sitter parsers for Go, C/C++, Java, and C# [EP-09]
-- [ ] Support Type-3 near-miss clone detection with tree edit distance [EP-05]
+- [x] Integrate AST Merkle subtree hasher into main `run_scan` pipeline [EP-05]
+- [x] Implement Tree-sitter parsers for Go, C/C++, Java, and C# [EP-09]
+- [x] Support Type-3 near-miss clone detection with tree edit distance and dynamic similarity [EP-05]
 
 ### Milestone v1.0.0 (High-Throughput Enterprise Engine)
 

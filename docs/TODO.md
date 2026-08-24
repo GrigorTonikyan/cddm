@@ -71,21 +71,27 @@
   - [x] Implement `RefactorPatchModal.tsx` displaying invariant suggestions and `.patch` diffs
   - [x] Support one-click patch copy and `.patch` file download
 
+- [x] **Universal Atomic UI & Pure `win2x-manager` Windowing System**
+  - [x] Modular Atomic UI primitives (`Portal`, `Backdrop`, `Badge`, `IconButton`, `CollapsibleCard`, `CodeBlock`)
+  - [x] Pure `win2x-manager` subsystem with 120fps hardware `translate3d` compositor pipeline
+  - [x] Hardware pointer capture (`setPointerCapture`) and dynamic blur decoupling
+  - [x] Zero hardcoded values, typed constants/enums, and modern nested CSS Modules scoping
+
 ---
 
 ### Milestone v0.5.0: AST Pipeline & Polyglot Expansion
 
-- [ ] **[EP-05] Tree-sitter AST Merkle Pipeline Integration**
-  - [ ] Elevate `cddm-core::ast::hasher` to a primary scan phase (`ScanPhase::AstAnalysis`)
-  - [ ] Implement Zhang-Shasha AST tree edit distance calculation
-  - [ ] Classify `CloneType::NearMiss` and `CloneType::Semantic` clones
-  - [ ] Add test cases for modified statement near-miss detection
+- [x] **[EP-05] Tree-sitter AST Merkle Pipeline Integration**
+  - [x] Elevate `cddm-core::ast::hasher` to a primary scan phase (`ScanPhase::AstAnalysis`)
+  - [x] Implement Zhang-Shasha AST tree edit distance and LCS sequence similarity calculation
+  - [x] Classify `CloneType::Exact`, `CloneType::Renamed`, `CloneType::NearMiss`, and `CloneType::Semantic` clones
+  - [x] Add test cases for modified statement near-miss detection and dynamic similarity scoring
 
-- [ ] **[EP-09] Polyglot Tree-sitter Grammar Expansion**
-  - [ ] Add `tree-sitter-go` support in `cddm-core`
-  - [ ] Add `tree-sitter-c` and `tree-sitter-cpp` support
-  - [ ] Add `tree-sitter-java` and `tree-sitter-c-sharp` support
-  - [ ] Add unit tests verifying parsing and tokenization for each language
+- [x] **[EP-09] Polyglot Tree-sitter Grammar Expansion**
+  - [x] Add `tree-sitter-go` support in `cddm-core`
+  - [x] Add `tree-sitter-c` and `tree-sitter-cpp` support
+  - [x] Add `tree-sitter-java` and `tree-sitter-c-sharp` support
+  - [x] Add unit tests verifying parsing and tokenization across all 9 supported AST languages
 
 ---
 
@@ -106,3 +112,4 @@
 - [x] **v0.2.0**: Zero-emoji strict enforcement policy across codebase, dependency upgrade to latest versions with precision retention, missing_debug_implementations workspace denial, automated multi-manifest semver synchronization with README badge & lockfile updates.
 - [x] **v0.3.0**: Persistent ACID disk cache powered by `redb` v4 (`.cddm/cache.db`), Git differential scan engine (`cddm diff`), automated patch refactoring CLI (`cddm refactor`), MCP `cddm_diff_scan` tool, with 63 passing unit tests and sub-30ms repeat scans.
 - [x] **v0.4.0**: Interactive WebUI Studio with side-by-side synchronized diff visualizer (`DiffViewer.tsx`), secure Axum snippet API (`GET /api/snippet`), on-demand refactoring patch synthesis (`POST /api/refactor`), and hierarchical Squarified Duplication Treemap (`DuplicationTreemap.tsx`).
+- [x] **v0.5.0**: AST Merkle Pipeline Integration (`ScanPhase::AstAnalysis`), dynamic clone classification (Type-1 Exact, Type-2 Renamed, Type-3 Near-Miss, Type-4 Semantic), dynamic similarity calculation, and polyglot Tree-sitter expansion with native parsers for Go, C, C++, Java, and C#.
