@@ -1,11 +1,11 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-24 | Rust: 137/137 PASS | WebUI: 123/123 PASS across 32 suites | Repository Scripts: 27/27 PASS | Playwright E2E: 11/11 PASS | CI Workflows: PASS
+> Last verified: 2026-08-24 | Rust: 149/149 PASS | WebUI: 129/129 PASS across 34 suites | Repository Scripts: 27/27 PASS | Playwright E2E: 11/11 PASS | CI Workflows: PASS
 
 ---
 
-## 1. Rust Backend — `cddm-core`, `cddm-cli`, `cddm-lsp`, `cddm-mcp` (137 unit tests)
+## 1. Rust Backend — `cddm-core`, `cddm-cli`, `cddm-lsp`, `cddm-mcp` (149 unit tests)
 
 ### Tokenization Engine (`crates/cddm-core/src/tokenizer.rs`)
 
@@ -141,40 +141,55 @@
 | F-12.9  | Dry-run patch validation preserves disk files          | `refactor::tests::test_apply_patch_dry_run_preserves_file`        | PASS   |
 | F-12.10 | Mismatched hunk content fails safely with clean error  | `refactor::tests::test_apply_patch_mismatch_fails`                | PASS   |
 
+### AST-Aware Suppression & .cddmignore Engine (`crates/cddm-core/src/suppression.rs`)
+
+| ID     | Feature Variant                                           | Test Function                                                  | Result |
+| :----- | :-------------------------------------------------------- | :------------------------------------------------------------- | :----- |
+| F-13.1 | Standard .cddmignore glob pattern parsing                 | `suppression::tests::test_parse_cddmignore_rules`              | PASS   |
+| F-13.2 | Per-path `[threshold]` and `[type-filter]` overrides      | `suppression::tests::test_threshold_and_type_filter_overrides` | PASS   |
+| F-13.3 | Inline single-line and multi-line suppression directives  | `suppression::tests::test_inline_suppression_directives`       | PASS   |
+| F-13.4 | Auto-generated file header detection (`@generated`, etc.) | `suppression::tests::test_is_generated_header`                 | PASS   |
+| F-13.5 | Glob-based path suppression matching                      | `suppression::tests::test_is_path_ignored_glob`                | PASS   |
+| F-13.6 | Suppression engine file lifecycle from disk               | `suppression::tests::test_from_file_lifecycle`                 | PASS   |
+
 ### Git Differential Scanning Engine (`crates/cddm-core/src/diff.rs`)
 
 | ID     | Feature Variant                                       | Test Function                             | Result |
 | :----- | :---------------------------------------------------- | :---------------------------------------- | :----- |
-| F-13.1 | Non-git directory differential scan error propagation | `diff::tests::test_diff_scan_non_git_dir` | PASS   |
-| F-13.2 | Cross-platform file path normalization for diff match | `diff::tests::test_normalize_path_str`    | PASS   |
+| F-14.1 | Non-git directory differential scan error propagation | `diff::tests::test_diff_scan_non_git_dir` | PASS   |
+| F-14.2 | Cross-platform file path normalization for diff match | `diff::tests::test_normalize_path_str`    | PASS   |
 
 ### CLI Reporter & Studio Server (`crates/cddm-cli/src/main.rs`, `serve.rs`)
 
-| ID     | Feature Variant                                      | Test Function                                          | Result |
-| :----- | :--------------------------------------------------- | :----------------------------------------------------- | :----- |
-| F-14.1 | `OutputFormat` enum equality & variant parsing       | `main::tests::test_output_format_variants`             | PASS   |
-| F-14.2 | CLI SARIF output printing execution                  | `main::tests::test_print_sarif_report_succeeds`        | PASS   |
-| F-14.3 | CLI Console and Markdown formatting output execution | `main::tests::test_print_console_and_markdown_reports` | PASS   |
-| F-14.4 | CLI Differential scan console & markdown tables      | `main::tests::test_print_diff_reports`                 | PASS   |
-| F-14.5 | Axum `/api/refactor-cluster` handler synthesis       | `serve::tests::test_refactor_cluster_handler_success`  | PASS   |
-| F-14.6 | Axum `/api/apply-patch` handler execution            | `serve::tests::test_apply_patch_handler_success`       | PASS   |
-| F-14.7 | Axum `/api/apply-patch` invalid hunk rejection       | `serve::tests::test_apply_patch_handler_bad_request`   | PASS   |
-| F-14.8 | Axum router construction & route registration        | `serve::tests::test_build_app_router`                  | PASS   |
-| F-14.9 | CLI `cddm lsp` argument parsing & option validation  | `main::tests::test_lsp_subcommand_parsing`             | PASS   |
+| ID      | Feature Variant                                      | Test Function                                          | Result |
+| :------ | :--------------------------------------------------- | :----------------------------------------------------- | :----- |
+| F-15.1  | `OutputFormat` enum equality & variant parsing       | `main::tests::test_output_format_variants`             | PASS   |
+| F-15.2  | CLI SARIF output printing execution                  | `main::tests::test_print_sarif_report_succeeds`        | PASS   |
+| F-15.3  | CLI Console and Markdown formatting output execution | `main::tests::test_print_console_and_markdown_reports` | PASS   |
+| F-15.4  | CLI Differential scan console & markdown tables      | `main::tests::test_print_diff_reports`                 | PASS   |
+| F-15.5  | Axum `/api/refactor-cluster` handler synthesis       | `serve::tests::test_refactor_cluster_handler_success`  | PASS   |
+| F-15.6  | Axum `/api/apply-patch` handler execution            | `serve::tests::test_apply_patch_handler_success`       | PASS   |
+| F-15.7  | Axum `/api/apply-patch` invalid hunk rejection       | `serve::tests::test_apply_patch_handler_bad_request`   | PASS   |
+| F-15.8  | Axum `/api/suppression/rules` GET & POST handlers    | `serve::tests::test_suppression_rules_handlers`        | PASS   |
+| F-15.9  | Axum `/api/refactor/sandbox` simulation handlers     | `serve::tests::test_refactor_sandbox_handlers`         | PASS   |
+| F-15.10 | Axum router construction & route registration        | `serve::tests::test_build_app_router`                  | PASS   |
+| F-15.11 | CLI `cddm ignore` & `cddm lsp` argument parsing      | `main::tests::test_cli_subcommands_parsing`            | PASS   |
 
 ### Advanced MCP Server Protocol (`crates/cddm-mcp/src/main.rs`)
 
-| ID     | Feature Variant                                                  | Test Function                                                 | Result |
-| :----- | :--------------------------------------------------------------- | :------------------------------------------------------------ | :----- |
-| F-15.1 | MCP protocol initialize, version negotiation & serverInfo        | `main::tests::test_mcp_initialize`                            | PASS   |
-| F-15.2 | MCP ping healthcheck method                                      | `main::tests::test_mcp_ping`                                  | PASS   |
-| F-15.3 | Tools discovery (scan, diff, cluster refactor, SARIF)            | `main::tests::test_mcp_tools_list`                            | PASS   |
-| F-15.4 | Differential scan tool invocation parameter validation           | `main::tests::test_mcp_diff_scan_missing_params`              | PASS   |
-| F-15.5 | Resources discovery (`health`, `clones`, `clusters`)             | `main::tests::test_mcp_resources_list`                        | PASS   |
-| F-15.6 | Prompts discovery and retrieval (`audit_dry_health`, `refactor`) | `main::tests::test_mcp_prompts_list_and_get`                  | PASS   |
-| F-15.7 | Standard JSON-RPC 2.0 error handling for invalid/unknown method  | `main::tests::test_mcp_unknown_method`                        | PASS   |
-| F-15.8 | MCP `cddm_suggest_cluster_refactor` explicit occurrences         | `main::tests::test_mcp_cluster_refactor_explicit_occurrences` | PASS   |
-| F-15.9 | MCP `cddm://workspace/clusters` resource contents read           | `main::tests::test_mcp_resources_read_clusters`               | PASS   |
+| ID      | Feature Variant                                                  | Test Function                                                 | Result |
+| :------ | :--------------------------------------------------------------- | :------------------------------------------------------------ | :----- |
+| F-16.1  | MCP protocol initialize, version negotiation & serverInfo        | `main::tests::test_mcp_initialize`                            | PASS   |
+| F-16.2  | MCP ping healthcheck method                                      | `main::tests::test_mcp_ping`                                  | PASS   |
+| F-16.3  | Tools discovery (scan, diff, cluster refactor, SARIF, ignore)    | `main::tests::test_mcp_tools_list`                            | PASS   |
+| F-16.4  | Differential scan tool invocation parameter validation           | `main::tests::test_mcp_diff_scan_missing_params`              | PASS   |
+| F-16.5  | Resources discovery (`health`, `clones`, `clusters`, `suppress`) | `main::tests::test_mcp_resources_list`                        | PASS   |
+| F-16.6  | Prompts discovery and retrieval (`audit_dry_health`, `refactor`) | `main::tests::test_mcp_prompts_list_and_get`                  | PASS   |
+| F-16.7  | Standard JSON-RPC 2.0 error handling for invalid/unknown method  | `main::tests::test_mcp_unknown_method`                        | PASS   |
+| F-16.8  | MCP `cddm_check_suppression` tool execution                      | `main::tests::test_mcp_check_suppression_tool`                | PASS   |
+| F-16.9  | MCP `cddm://workspace/suppressions` resource read                | `main::tests::test_mcp_resources_read_suppressions`           | PASS   |
+| F-16.10 | MCP `cddm_suggest_cluster_refactor` explicit occurrences         | `main::tests::test_mcp_cluster_refactor_explicit_occurrences` | PASS   |
+| F-16.11 | MCP `cddm://workspace/clusters` resource contents read           | `main::tests::test_mcp_resources_read_clusters`               | PASS   |
 
 ### Zero-Copy Memory-Mapped File I/O (`crates/cddm-core/src/io/`)
 

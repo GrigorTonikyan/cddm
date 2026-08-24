@@ -51,12 +51,25 @@ export interface CDDMStoreState {
   isLanguageModalOpen: boolean;
   isClusterRefactorModalOpen: boolean;
   isTimelineModalOpen: boolean;
+  isSuppressionModalOpen: boolean;
+  isRefactorSandboxOpen: boolean;
 
   /** Historical timeline data and loading state */
   timelineData: import("../types/cddm-types").TimelineTrend | null;
   isTimelineLoading: boolean;
   timelineError: string | null;
   hookStatus: import("../types/cddm-types").HookStatus | null;
+
+  /** Suppression rules state */
+  suppressionConfig: import("../types/cddm-types").SuppressionConfig | null;
+  isSuppressionLoading: boolean;
+  suppressionError: string | null;
+
+  /** Refactor sandbox state */
+  sandboxRequest: import("../types/cddm-types").RefactorSandboxRequest | null;
+  sandboxResult: import("../types/cddm-types").RefactorSandboxResult | null;
+  isSandboxLoading: boolean;
+  sandboxError: string | null;
 
   /** Updates the scan configuration */
   setConfig: (config: Partial<ScanConfig>) => void;
@@ -85,6 +98,23 @@ export interface CDDMStoreState {
   /** Installs a Git hook for automated quality enforcement */
   installHook: (hookType: string, failThreshold?: number, minTokens?: number) => Promise<string>;
 
+  /** Fetches active suppression configuration */
+  fetchSuppressionRules: () => Promise<void>;
+  /** Saves updated suppression rules and .cddmignore */
+  saveSuppressionRules: (config: import("../types/cddm-types").SuppressionConfig) => Promise<void>;
+  /** Opens the interactive refactor sandbox modal and loads preview */
+  openRefactorSandbox: (req: import("../types/cddm-types").RefactorSandboxRequest) => Promise<void>;
+  /** Runs sandbox preview with updated parameters */
+  previewRefactorSandbox: (
+    req: import("../types/cddm-types").RefactorSandboxRequest,
+  ) => Promise<import("../types/cddm-types").RefactorSandboxResult>;
+  /** Applies refactoring patch to workspace or dedicated Git branch */
+  applyRefactorBranch: (
+    patch: string,
+    branchName?: string,
+    createBranch?: boolean,
+  ) => Promise<import("../types/cddm-types").ApplyRefactorBranchResult>;
+
   /** Modal visibility setters */
   setIsScanConfigOpen: (open: boolean) => void;
   setIsHealthAuditOpen: (open: boolean) => void;
@@ -93,6 +123,8 @@ export interface CDDMStoreState {
   setIsLanguageModalOpen: (open: boolean) => void;
   setIsClusterRefactorModalOpen: (open: boolean) => void;
   setIsTimelineModalOpen: (open: boolean) => void;
+  setIsSuppressionModalOpen: (open: boolean) => void;
+  setIsRefactorSandboxOpen: (open: boolean) => void;
 }
 
 /**
@@ -122,11 +154,22 @@ export const useCDDMStore = create<CDDMStoreState>((set, get) => ({
   isLanguageModalOpen: false,
   isClusterRefactorModalOpen: false,
   isTimelineModalOpen: false,
+  isSuppressionModalOpen: false,
+  isRefactorSandboxOpen: false,
 
   timelineData: null,
   isTimelineLoading: false,
   timelineError: null,
   hookStatus: null,
+
+  suppressionConfig: null,
+  isSuppressionLoading: false,
+  suppressionError: null,
+
+  sandboxRequest: null,
+  sandboxResult: null,
+  isSandboxLoading: false,
+  sandboxError: null,
 
   setViewMode: (viewMode) => set({ viewMode }),
   setSelectedCluster: (selectedCluster) => set({ selectedCluster }),
@@ -147,6 +190,125 @@ export const useCDDMStore = create<CDDMStoreState>((set, get) => ({
     if (isTimelineModalOpen && !get().timelineData && !get().isTimelineLoading) {
       void get().fetchTimeline();
       void get().fetchHookStatus();
+    }
+  },
+  setIsSuppressionModalOpen: (isSuppressionModalOpen) => {
+    set({ isSuppressionModalOpen });
+    if (isSuppressionModalOpen && !get().suppressionConfig && !get().isSuppressionLoading) {
+      void get().fetchSuppressionRules();
+    }
+  },
+  setIsRefactorSandboxOpen: (isRefactorSandboxOpen) => set({ isRefactorSandboxOpen }),
+
+  fetchSuppressionRules: async () => {
+    set({ isSuppressionLoading: true, suppressionError: null });
+    try {
+      const res = await fetch(API_ROUTES.SUPPRESSION_RULES);
+      if (!res.ok) {
+        throw new Error(`Failed to fetch suppression rules (${res.status})`);
+      }
+      const data = await res.json();
+      set({ suppressionConfig: data, isSuppressionLoading: false, suppressionError: null });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to load suppression rules";
+      set({ suppressionError: msg, isSuppressionLoading: false });
+    }
+  },
+
+  saveSuppressionRules: async (config) => {
+    set({ isSuppressionLoading: true, suppressionError: null });
+    try {
+      const res = await fetch(API_ROUTES.SUPPRESSION_RULES, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(config),
+      });
+      if (!res.ok) {
+        throw new Error(`Failed to save suppression rules (${res.status})`);
+      }
+      set({ suppressionConfig: config, isSuppressionLoading: false, suppressionError: null });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to save suppression rules";
+      set({ suppressionError: msg, isSuppressionLoading: false });
+      throw err;
+    }
+  },
+
+  openRefactorSandbox: async (req) => {
+    set({
+      isRefactorSandboxOpen: true,
+      sandboxRequest: req,
+      sandboxResult: null,
+      isSandboxLoading: true,
+      sandboxError: null,
+    });
+    try {
+      const res = await fetch(API_ROUTES.REFACTOR_SANDBOX, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(req),
+      });
+      if (!res.ok) {
+        const errorText = await res.text().catch(() => res.statusText);
+        throw new Error(`Sandbox simulation failed (${res.status}): ${errorText}`);
+      }
+      const result = await res.json();
+      set({ sandboxResult: result, isSandboxLoading: false, sandboxError: null });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to run sandbox simulation";
+      set({ sandboxError: msg, isSandboxLoading: false });
+    }
+  },
+
+  previewRefactorSandbox: async (req) => {
+    set({ isSandboxLoading: true, sandboxError: null });
+    try {
+      const res = await fetch(API_ROUTES.REFACTOR_SANDBOX, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(req),
+      });
+      if (!res.ok) {
+        const errorText = await res.text().catch(() => res.statusText);
+        throw new Error(`Sandbox simulation failed (${res.status}): ${errorText}`);
+      }
+      const result = await res.json();
+      set({
+        sandboxRequest: req,
+        sandboxResult: result,
+        isSandboxLoading: false,
+        sandboxError: null,
+      });
+      return result;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to run sandbox simulation";
+      set({ sandboxError: msg, isSandboxLoading: false });
+      throw err;
+    }
+  },
+
+  applyRefactorBranch: async (patch, branchName, createBranch = true) => {
+    try {
+      const res = await fetch(API_ROUTES.REFACTOR_APPLY_BRANCH, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          patch,
+          branch_name: branchName,
+          create_branch: createBranch,
+        }),
+      });
+      if (!res.ok) {
+        const errorText = await res.text().catch(() => res.statusText);
+        throw new Error(`Branch application failed (${res.status}): ${errorText}`);
+      }
+      const result = await res.json();
+      set({ patchStatusMessage: result.message });
+      return result;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to apply refactor branch";
+      set({ patchStatusMessage: msg });
+      throw err;
     }
   },
 
@@ -293,8 +455,15 @@ export const useCDDMStore = create<CDDMStoreState>((set, get) => ({
       isLanguageModalOpen: false,
       isClusterRefactorModalOpen: false,
       isTimelineModalOpen: false,
+      isSuppressionModalOpen: false,
+      isRefactorSandboxOpen: false,
       timelineData: null,
       timelineError: null,
+      suppressionConfig: null,
+      suppressionError: null,
+      sandboxRequest: null,
+      sandboxResult: null,
+      sandboxError: null,
     });
   },
 }));

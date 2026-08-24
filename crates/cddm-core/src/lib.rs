@@ -10,6 +10,7 @@ pub mod io;
 pub mod refactor;
 pub mod sarif;
 pub mod simd;
+pub mod suppression;
 pub mod timeline;
 pub mod tokenizer;
 pub mod types;
@@ -24,18 +25,22 @@ pub use io::{FileSource, MMAP_THRESHOLD_BYTES, read_file_source};
 pub use refactor::{
     ApplyPatchResult, ClusterRefactorSuggestion, ClusterSiteRefactor, ParameterDifference,
     RefactorSuggestion, analyze_clone_refactoring, analyze_cluster_refactoring,
-    analyze_cluster_snippets_refactoring, analyze_snippets_refactoring, apply_patch_to_workspace,
-    parse_unified_patch,
+    analyze_cluster_snippets_refactoring, analyze_snippets_refactoring,
+    apply_cluster_refactor_branch, apply_patch_to_workspace, parse_unified_patch,
+    preview_cluster_refactor,
 };
 pub use sarif::{SarifReport, generate_sarif_json, generate_sarif_report};
 pub use simd::compute_kgram_rolling_hashes;
+pub use suppression::SuppressionEngine;
 pub use timeline::collect_git_timeline;
 pub use types::{
-    CloneCluster, CloneLocation, ClonePair, CloneStatus, CloneType, DEFAULT_CACHE_FILE,
-    DEFAULT_DIRECTORY, DEFAULT_IGNORE_PATTERNS, DEFAULT_MIN_TOKENS, DiffClonePair, DiffScanResult,
-    DiffSummary, FileChurnMetric, HookStatus, LanguageStats, LineSpan, MAX_HEALTH_SCORE,
-    MIN_HEALTH_SCORE, NormalizedToken, ScanConfig, ScanPhase, ScanProgress, ScanResult,
-    TimelineSnapshot, TimelineTrend, WorkflowPlatform,
+    ApplyRefactorBranchRequest, ApplyRefactorBranchResult, CloneCluster, CloneLocation, ClonePair,
+    CloneStatus, CloneType, DEFAULT_CACHE_FILE, DEFAULT_DIRECTORY, DEFAULT_IGNORE_PATTERNS,
+    DEFAULT_MIN_TOKENS, DiffClonePair, DiffScanResult, DiffSummary, FileChurnMetric, HookStatus,
+    LanguageStats, LineSpan, MAX_HEALTH_SCORE, MIN_HEALTH_SCORE, NormalizedToken,
+    RefactorSandboxRequest, RefactorSandboxResult, ScanConfig, ScanPhase, ScanProgress, ScanResult,
+    SuppressionConfig, SuppressionDirective, SuppressionRule, TimelineSnapshot, TimelineTrend,
+    WorkflowPlatform,
 };
 pub use watcher::CddmWatcher;
 pub use workflow::{

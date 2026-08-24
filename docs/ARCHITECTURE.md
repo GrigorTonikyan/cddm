@@ -22,9 +22,11 @@ graph TD
         AST["Tree-sitter AST Hasher (Blake3 Merkle)"]
         Index["Fingerprint Index (HashMap)"]
         Detector["Parallel Detector (Rayon)"]
+        Suppression["AST Suppression Engine (.cddmignore + Directives)"]
         Blame["Git Blame Annotator (gix)"]
         Cluster["N-Way Graph Clustering (Disjoint-Set Union-Find)"]
         Refactor["Multi-Site Consensus Refactoring Synthesizer"]
+        Sandbox["Refactor Sandbox & Transactional Git Brancher (gix)"]
         Timeline["Git History Timeline & Trend Analyzer (gix)"]
         Workflow["Turnkey CI/CD & Hook Generator (workflow.rs)"]
         Cache["SHA-256 Incremental Cache"]
@@ -42,9 +44,11 @@ graph TD
     Winnow --> Index
     Index --> Detector
     AST --> Detector
+    Suppression --> Detector
     Detector --> Blame
     Detector --> Cluster
     Cluster --> Refactor
+    Refactor --> Sandbox
     Timeline --> Detector
     Workflow --> Detector
 ```

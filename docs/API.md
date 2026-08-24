@@ -254,6 +254,112 @@ Applies a synthesized unified diff refactoring patch directly and atomically to 
 
 ---
 
+### `GET /api/suppression/rules`
+
+Retrieves active `.cddmignore` suppression rules and global category filters.
+
+**Response** (`200 OK`):
+
+```json
+{
+  "rules": [
+    {
+      "pattern": "**/tests/**",
+      "rule_type": "ignore",
+      "min_tokens": null,
+      "ignored_clone_types": [],
+      "line_number": 3
+    }
+  ],
+  "ignore_tests": false,
+  "ignore_mocks": false,
+  "ignore_generated": true,
+  "raw_cddmignore": "**/tests/**\n"
+}
+```
+
+---
+
+### `POST /api/suppression/rules`
+
+Updates active suppression rules, category toggles, and persists `.cddmignore` to disk.
+
+**Request Body** (`application/json`):
+
+```json
+{
+  "rules": [],
+  "ignore_tests": true,
+  "ignore_mocks": false,
+  "ignore_generated": true,
+  "raw_cddmignore": "**/tests/**\n[threshold] legacy/** min_tokens=100\n"
+}
+```
+
+---
+
+### `POST /api/refactor/sandbox`
+
+Simulates customized invariant extraction and parameterization with live diff preview across occurrence sites.
+
+**Request Body** (`application/json`):
+
+```json
+{
+  "cluster_id": 1,
+  "occurrences": [
+    { "file": "src/auth/login.rs", "start_line": 10, "end_line": 25 },
+    { "file": "src/auth/register.rs", "start_line": 15, "end_line": 30 }
+  ],
+  "custom_function_name": "validate_credentials",
+  "target_module_path": "src/auth/common.rs"
+}
+```
+
+**Response** (`200 OK`):
+
+```json
+{
+  "cluster_id": 1,
+  "function_name": "validate_credentials",
+  "target_module_path": "src/auth/common.rs",
+  "unified_patch": "--- a/src/auth/login.rs\n+++ b/src/auth/login.rs\n...",
+  "total_lines_saved": 24,
+  "sites_count": 2,
+  "affected_files": ["src/auth/login.rs", "src/auth/register.rs"]
+}
+```
+
+---
+
+### `POST /api/refactor/apply-branch`
+
+Applies a synthesized refactoring patch directly to the workspace with optional transactional Git branch creation.
+
+**Request Body** (`application/json`):
+
+```json
+{
+  "patch": "--- a/src/auth/login.rs\n+++ b/src/auth/login.rs\n...",
+  "branch_name": "cddm/refactor-cluster-1",
+  "create_branch": true
+}
+```
+
+**Response** (`200 OK`):
+
+```json
+{
+  "success": true,
+  "branch_created": "cddm/refactor-cluster-1",
+  "modified_files": ["src/auth/login.rs", "src/auth/register.rs"],
+  "hunks_applied": 2,
+  "message": "Refactoring patch successfully applied to branch 'cddm/refactor-cluster-1'."
+}
+```
+
+---
+
 ### `GET /api/events`
 
 Subscribes to live Server-Sent Events (SSE) stream for real-time background file change notifications, progress tracking, and re-scan results.
@@ -273,33 +379,48 @@ Subscribes to live Server-Sent Events (SSE) stream for real-time background file
 
 Executes terminal clone detection with configurable reporters.
 
-| Flag               | Short | Type                             | Default   | Description                                    |
-| :----------------- | :---- | :------------------------------- | :-------- | :--------------------------------------------- |
-| `--min-tokens`     | `-m`  | `usize`                          | `50`      | Minimum token clone threshold                  |
-| `--format`         | `-f`  | `console\|json\|markdown\|sarif` | `console` | Output reporter format                         |
-| `--fail-threshold` |       | `f64`                            | None      | Exit code 1 if duplication % exceeds threshold |
-| `--languages`      | `-l`  | `String[]`                       | `[]`      | Filter scan by language names                  |
-| `--ignore`         | `-i`  | `String[]`                       | `[]`      | Additional ignore glob patterns                |
-| `--git-blame`      |       | `bool`                           | `false`   | Enable `gix` git author annotations            |
-| `--cache-dir`      |       | `PathBuf`                        | None      | Custom path for persistent redb cache database |
-| `--no-cache`       |       | `bool`                           | `false`   | Bypass persistent disk cache                   |
-| `--clear-cache`    |       | `bool`                           | `false`   | Clear existing cache database before scanning  |
+| Flag                 | Short | Type                             | Default   | Description                                    |
+| :------------------- | :---- | :------------------------------- | :-------- | :--------------------------------------------- |
+| `--min-tokens`       | `-m`  | `usize`                          | `50`      | Minimum token clone threshold                  |
+| `--format`           | `-f`  | `console\|json\|markdown\|sarif` | `console` | Output reporter format                         |
+| `--fail-threshold`   |       | `f64`                            | None      | Exit code 1 if duplication % exceeds threshold |
+| `--languages`        | `-l`  | `String[]`                       | `[]`      | Filter scan by language names                  |
+| `--ignore`           | `-i`  | `String[]`                       | `[]`      | Additional ignore glob patterns                |
+| `--cddmignore`       |       | `PathBuf`                        | None      | Custom path to `.cddmignore` file              |
+| `--ignore-tests`     |       | `bool`                           | `false`   | Suppress test directories and files            |
+| `--ignore-mocks`     |       | `bool`                           | `false`   | Suppress mock and fixture files                |
+| `--ignore-generated` |       | `bool`                           | `true`    | Suppress `@generated` and `DO NOT EDIT` files  |
+| `--git-blame`        |       | `bool`                           | `false`   | Enable `gix` git author annotations            |
+| `--cache-dir`        |       | `PathBuf`                        | None      | Custom path for persistent redb cache database |
+| `--no-cache`         |       | `bool`                           | `false`   | Bypass persistent disk cache                   |
+| `--clear-cache`      |       | `bool`                           | `false`   | Clear existing cache database before scanning  |
 
 ### Command: `cddm diff <BASE_REF> [TARGET_REF]`
 
 Executes differential duplication scanning comparing current changes against a Git base revision.
 
-| Flag               | Short | Type                             | Default   | Description                                    |
-| :----------------- | :---- | :------------------------------- | :-------- | :--------------------------------------------- |
-| `--directory`      | `-d`  | `PathBuf`                        | `"."`     | Target Git repository directory path           |
-| `--min-tokens`     | `-m`  | `usize`                          | `50`      | Minimum token clone threshold                  |
-| `--format`         | `-f`  | `console\|json\|markdown\|sarif` | `console` | Output report format                           |
-| `--fail-threshold` |       | `f64`                            | None      | Exit code 1 if new clones exceed threshold     |
-| `--languages`      | `-l`  | `String[]`                       | `[]`      | Filter scan by language names                  |
-| `--ignore`         | `-i`  | `String[]`                       | `[]`      | Additional ignore glob patterns                |
-| `--git-blame`      |       | `bool`                           | `false`   | Enable `gix` git author annotations            |
-| `--cache-dir`      |       | `PathBuf`                        | None      | Custom path for persistent redb cache database |
-| `--no-cache`       |       | `bool`                           | `false`   | Bypass persistent disk cache                   |
+| Flag                 | Short | Type                             | Default   | Description                                    |
+| :------------------- | :---- | :------------------------------- | :-------- | :--------------------------------------------- |
+| `--directory`        | `-d`  | `PathBuf`                        | `"."`     | Target Git repository directory path           |
+| `--min-tokens`       | `-m`  | `usize`                          | `50`      | Minimum token clone threshold                  |
+| `--format`           | `-f`  | `console\|json\|markdown\|sarif` | `console` | Output report format                           |
+| `--fail-threshold`   |       | `f64`                            | None      | Exit code 1 if new clones exceed threshold     |
+| `--languages`        | `-l`  | `String[]`                       | `[]`      | Filter scan by language names                  |
+| `--ignore`           | `-i`  | `String[]`                       | `[]`      | Additional ignore glob patterns                |
+| `--cddmignore`       |       | `PathBuf`                        | None      | Custom path to `.cddmignore` file              |
+| `--ignore-tests`     |       | `bool`                           | `false`   | Suppress test directories and files            |
+| `--ignore-mocks`     |       | `bool`                           | `false`   | Suppress mock and fixture files                |
+| `--ignore-generated` |       | `bool`                           | `true`    | Suppress `@generated` and `DO NOT EDIT` files  |
+| `--git-blame`        |       | `bool`                           | `false`   | Enable `gix` git author annotations            |
+| `--cache-dir`        |       | `PathBuf`                        | None      | Custom path for persistent redb cache database |
+| `--no-cache`         |       | `bool`                           | `false`   | Bypass persistent disk cache                   |
+
+### Command: `cddm ignore <SUBCOMMAND>`
+
+Manages `.cddmignore` rules and inspects file path suppression status.
+
+- `cddm ignore init [--force]`: Initializes a default `.cddmignore` template in the workspace root.
+- `cddm ignore check <PATH> [--line <N>] [--cddmignore <FILE>] [--ignore-tests] [--ignore-mocks] [--ignore-generated]`: Checks whether a file path or specific source line is suppressed by rules or inline directives.
 
 ### Command: `cddm watch [DIRECTORY]`
 
@@ -413,6 +534,29 @@ Performs multi-site consensus invariant analysis across an equivalence cluster a
 | `directory`   | `string`   | No       | `"."`   | Target directory path to analyze                   |
 | `min_tokens`  | `number`   | No       | `50`    | Minimum token clone threshold                      |
 
+#### `cddm_check_suppression`
+
+Checks whether a specified file path or line number is suppressed by `.cddmignore` glob rules, category filters, or inline directives.
+
+| Parameter          | Type      | Required | Default | Description                                             |
+| :----------------- | :-------- | :------- | :------ | :------------------------------------------------------ |
+| `path`             | `string`  | Yes      | None    | File path to check                                      |
+| `line`             | `number`  | No       | None    | Optional 1-based line number to check inline directives |
+| `cddmignore_path`  | `string`  | No       | None    | Path to custom `.cddmignore` file                       |
+| `ignore_tests`     | `boolean` | No       | `false` | Suppress test files                                     |
+| `ignore_mocks`     | `boolean` | No       | `false` | Suppress mock files                                     |
+| `ignore_generated` | `boolean` | No       | `true`  | Suppress auto-generated files                           |
+
+#### `cddm_apply_cluster_refactor`
+
+Applies a synthesized refactoring patch directly to the workspace filesystem with optional automated Git branch creation.
+
+| Parameter       | Type      | Required | Default | Description                                          |
+| :-------------- | :-------- | :------- | :------ | :--------------------------------------------------- |
+| `patch`         | `string`  | Yes      | None    | Unified diff patch to apply                          |
+| `branch_name`   | `string`  | No       | None    | Git branch name to create and check out              |
+| `create_branch` | `boolean` | No       | `false` | Whether to create a dedicated branch before applying |
+
 #### `cddm_export_sarif`
 
 Executes duplication scan and returns OASIS SARIF v2.1.0 report for GitHub Code Scanning integration.
@@ -434,12 +578,13 @@ Samples Git repository commit history and returns historical duplication traject
 
 ### Resources
 
-| URI                         | MIME Type          | Description                                                     |
-| :-------------------------- | :----------------- | :-------------------------------------------------------------- |
-| `cddm://workspace/health`   | `application/json` | Real-time DRY Health Index, file metrics, and language stats.   |
-| `cddm://workspace/clones`   | `application/json` | Registry of active duplicate code clones across files.          |
-| `cddm://workspace/clusters` | `application/json` | Disjoint-set partitioned N-way clone equivalence clusters.      |
-| `cddm://workspace/timeline` | `application/json` | Historical commit snapshots, DRY trajectory, and churn metrics. |
+| URI                             | MIME Type          | Description                                                     |
+| :------------------------------ | :----------------- | :-------------------------------------------------------------- |
+| `cddm://workspace/health`       | `application/json` | Real-time DRY Health Index, file metrics, and language stats.   |
+| `cddm://workspace/clones`       | `application/json` | Registry of active duplicate code clones across files.          |
+| `cddm://workspace/clusters`     | `application/json` | Disjoint-set partitioned N-way clone equivalence clusters.      |
+| `cddm://workspace/timeline`     | `application/json` | Historical commit snapshots, DRY trajectory, and churn metrics. |
+| `cddm://workspace/suppressions` | `application/json` | Active `.cddmignore` glob patterns and category filters.        |
 
 ### Prompts
 
@@ -456,13 +601,17 @@ Samples Git repository commit history and returns historical duplication traject
 use cddm_core::{
     run_scan, ScanConfig, ScanResult, generate_sarif_report,
     analyze_clone_refactoring, analyze_cluster_refactoring,
-    cluster::cluster_clone_pairs, CloneLocation,
+    preview_cluster_refactor, apply_cluster_refactor_branch,
+    suppression::SuppressionEngine, cluster::cluster_clone_pairs,
+    CloneLocation,
 };
 
 let config = ScanConfig {
     directory: "./src".to_string(),
     min_tokens: 50,
     enable_git_blame: true,
+    ignore_tests: true,
+    ignore_generated: true,
     ..Default::default()
 };
 
@@ -473,20 +622,31 @@ let result: ScanResult = run_scan(config, tx, cancel_flag).await.unwrap();
 println!("DRY Health Score: {:.1}", result.dry_health_score);
 println!("Equivalence Clusters: {}", result.total_clusters);
 
-// Generate OASIS SARIF 2.1.0 Report
-let sarif_report = generate_sarif_report(&result);
+// AST Suppression Engine Usage
+let engine = SuppressionEngine::with_options(true, true, true);
+let is_ignored = engine.is_path_ignored(std::path::Path::new("tests/mock.rs"), None);
+println!("Is path ignored: {}", is_ignored);
 
-// Analyze Pairwise Clone Refactoring
-let suggestion = analyze_clone_refactoring("src/a.rs", (10, 25), "src/b.rs", (15, 30)).unwrap();
-println!("Pairwise Patch:\n{}", suggestion.unified_patch);
+// Interactive Refactor Sandbox Simulation
+let sandbox_res = preview_cluster_refactor(
+    &[
+        CloneLocation { file: "src/a.rs".to_string(), start_line: 10, end_line: 25, author: None },
+        CloneLocation { file: "src/b.rs".to_string(), start_line: 15, end_line: 30, author: None },
+    ],
+    Some("custom_helper"),
+    Some("src/common.rs"),
+    None,
+).unwrap();
+println!("Lines saved: {}", sandbox_res.total_lines_saved);
 
-// Multi-Site Cluster Refactoring
-let cluster_suggestion = analyze_cluster_refactoring(&[
-    CloneLocation { file: "src/a.rs".to_string(), start_line: 10, end_line: 25, author: None },
-    CloneLocation { file: "src/b.rs".to_string(), start_line: 15, end_line: 30, author: None },
-    CloneLocation { file: "src/c.rs".to_string(), start_line: 5, end_line: 20, author: None },
-]).unwrap();
-println!("Multi-Site Unified Patch:\n{}", cluster_suggestion.unified_patch);
+// Transactional Git Branch Patch Application
+let branch_apply = apply_cluster_refactor_branch(
+    std::path::Path::new("."),
+    &sandbox_res.unified_patch,
+    Some("cddm/refactor-custom"),
+    true,
+).unwrap();
+println!("Branch created: {:?}", branch_apply.branch_created);
 ```
 
 ---

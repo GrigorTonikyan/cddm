@@ -56,6 +56,15 @@ pub const ROUTE_API_HOOKS: &str = "/api/workflow/hooks";
 /// API endpoint path for Git hook installation.
 pub const ROUTE_API_HOOKS_INSTALL: &str = "/api/workflow/hooks/install";
 
+/// API endpoint path for suppression rules retrieval and inspection.
+pub const ROUTE_API_SUPPRESSION_RULES: &str = "/api/suppression/rules";
+
+/// API endpoint path for interactive refactoring preview sandbox.
+pub const ROUTE_API_REFACTOR_SANDBOX: &str = "/api/refactor/sandbox";
+
+/// API endpoint path for applying refactoring patch directly to a dedicated Git branch.
+pub const ROUTE_API_REFACTOR_APPLY_BRANCH: &str = "/api/refactor/apply-branch";
+
 /// Default localhost IPv4 binding.
 pub const DEFAULT_HOST_IP: [u8; 4] = [127, 0, 0, 1];
 
@@ -216,6 +225,15 @@ pub fn build_app_with_state(state: AppState) -> Router {
         .route(ROUTE_API_TIMELINE, get(timeline_handler))
         .route(ROUTE_API_HOOKS, get(hooks_status_handler))
         .route(ROUTE_API_HOOKS_INSTALL, post(install_hook_handler))
+        .route(
+            ROUTE_API_SUPPRESSION_RULES,
+            get(suppression_rules_get_handler).post(suppression_rules_post_handler),
+        )
+        .route(ROUTE_API_REFACTOR_SANDBOX, post(refactor_sandbox_handler))
+        .route(
+            ROUTE_API_REFACTOR_APPLY_BRANCH,
+            post(refactor_apply_branch_handler),
+        )
         .fallback(static_asset_handler)
         .layer(CorsLayer::permissive())
         .with_state(state)
@@ -531,6 +549,64 @@ async fn install_hook_handler(
     }
 }
 
+async fn suppression_rules_get_handler() -> Json<cddm_core::SuppressionConfig> {
+    let root_path = Path::new(".cddmignore");
+    let engine = if root_path.exists() {
+        cddm_core::SuppressionEngine::from_file(root_path, false, false, true)
+            .unwrap_or_else(|_| cddm_core::SuppressionEngine::default_engine())
+    } else {
+        cddm_core::SuppressionEngine::default_engine()
+    };
+    Json(engine.config().clone())
+}
+
+async fn suppression_rules_post_handler(
+    Json(config): Json<cddm_core::SuppressionConfig>,
+) -> Result<Json<serde_json::Value>, (StatusCode, String)> {
+    let raw = config
+        .raw_cddmignore
+        .clone()
+        .unwrap_or_else(cddm_core::SuppressionEngine::generate_default_cddmignore);
+    fs::write(".cddmignore", &raw).map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("Failed to save .cddmignore: {e}"),
+        )
+    })?;
+    Ok(Json(serde_json::json!({
+        "status": "ok",
+        "message": "Successfully saved .cddmignore suppression rules"
+    })))
+}
+
+async fn refactor_sandbox_handler(
+    Json(req): Json<cddm_core::RefactorSandboxRequest>,
+) -> Result<Json<cddm_core::RefactorSandboxResult>, (StatusCode, String)> {
+    match cddm_core::preview_cluster_refactor(
+        &req.occurrences,
+        req.custom_function_name.as_deref(),
+        req.target_module_path.as_deref(),
+        req.custom_parameter_names.as_deref(),
+    ) {
+        Ok(res) => Ok(Json(res)),
+        Err(err) => Err((StatusCode::BAD_REQUEST, err)),
+    }
+}
+
+async fn refactor_apply_branch_handler(
+    Json(req): Json<cddm_core::ApplyRefactorBranchRequest>,
+) -> Result<Json<cddm_core::ApplyRefactorBranchResult>, (StatusCode, String)> {
+    match cddm_core::apply_cluster_refactor_branch(
+        Path::new("."),
+        &req.patch,
+        req.branch_name.as_deref(),
+        req.create_branch,
+    ) {
+        Ok(res) => Ok(Json(res)),
+        Err(err) => Err((StatusCode::BAD_REQUEST, err)),
+    }
+}
+
 async fn static_asset_handler(uri: Uri) -> impl IntoResponse {
     let path = uri.path().trim_start_matches('/');
     let asset_path = if path.is_empty() { INDEX_HTML } else { path };
@@ -791,5 +867,56 @@ mod tests {
         }))
         .await;
         assert!(status_after.pre_commit_installed);
+    }
+
+    #[tokio::test]
+    async fn test_suppression_rules_handlers() {
+        let get_res = suppression_rules_get_handler().await;
+        assert!(get_res.ignore_generated);
+
+        let config = cddm_core::SuppressionConfig {
+            rules: vec![],
+            ignore_tests: true,
+            ignore_mocks: true,
+            ignore_generated: true,
+            raw_cddmignore: Some("# custom ignore\ntarget/**\n".to_string()),
+        };
+        let post_res = suppression_rules_post_handler(Json(config)).await;
+        assert!(post_res.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_refactor_sandbox_handlers() {
+        let mut file_a = NamedTempFile::new().unwrap();
+        let mut file_b = NamedTempFile::new().unwrap();
+        writeln!(file_a, "fn foo() {{\n    let a = 1;\n    let b = 2;\n}}").unwrap();
+        writeln!(file_b, "fn bar() {{\n    let a = 1;\n    let b = 2;\n}}").unwrap();
+
+        let req = cddm_core::RefactorSandboxRequest {
+            cluster_id: Some(1),
+            occurrences: vec![
+                CloneLocation {
+                    file: file_a.path().to_str().unwrap().to_string(),
+                    start_line: 2,
+                    end_line: 3,
+                    author: None,
+                },
+                CloneLocation {
+                    file: file_b.path().to_str().unwrap().to_string(),
+                    start_line: 2,
+                    end_line: 3,
+                    author: None,
+                },
+            ],
+            custom_function_name: Some("custom_compute".to_string()),
+            target_module_path: None,
+            custom_parameter_names: None,
+        };
+
+        let res = refactor_sandbox_handler(Json(req)).await;
+        assert!(res.is_ok());
+        let Json(sandbox_res) = res.unwrap();
+        assert_eq!(sandbox_res.function_name, "custom_compute");
+        assert!(sandbox_res.unified_patch.contains("custom_compute"));
     }
 }

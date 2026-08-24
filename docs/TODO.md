@@ -147,6 +147,24 @@
   - [x] Implement `cddm hook <install|uninstall|status>` CLI subcommand
   - [x] Expose Axum REST endpoints `GET /api/workflow/hooks` and `POST /api/workflow/hooks/install`
 
+### Milestone v1.4.0: Intelligent AST Suppression Engine & Interactive Auto-Refactor Sandbox
+
+- [x] **[EP-15] Intelligent AST Suppression & `.cddmignore` Engine**
+  - [x] Implement `.cddmignore` glob rule parsing with per-path `[threshold]` and `[type-filter]` overrides in `crates/cddm-core/src/suppression.rs`
+  - [x] Implement inline AST comment directives (`// cddm:ignore`, `/* cddm:ignore-start */ ... /* cddm:ignore-end */`, `#[cddm(allow_duplication)]`, `@cddm_ignore`)
+  - [x] Implement automatic test, mock, and auto-generated content header detection (`@generated`, `DO NOT EDIT`)
+  - [x] Add CLI flags `--cddmignore`, `--ignore-tests`, `--ignore-mocks`, `--ignore-generated` to `scan` and `diff`
+  - [x] Add `cddm ignore init` and `cddm ignore check` CLI subcommands
+  - [x] Expose Axum REST endpoints `GET /api/suppression/rules` and `POST /api/suppression/rules`
+  - [x] Expose MCP tool `cddm_check_suppression` and resource `cddm://workspace/suppressions`
+  - [x] Implement WebUI `SuppressionRulesModal.tsx` with category filters, raw editor, and inline directives guide
+- [x] **[EP-16] Interactive Auto-Refactor Sandbox & Transactional Git Branching Studio**
+  - [x] Implement `cddm_core::refactor::preview_cluster_refactor` with custom function names, target module paths, and parameter variance extraction
+  - [x] Implement `cddm_core::refactor::apply_cluster_refactor_branch` with transactional `gix` Git branch creation
+  - [x] Expose Axum REST endpoints `POST /api/refactor/sandbox` and `POST /api/refactor/apply-branch`
+  - [x] Expose MCP tool `cddm_apply_cluster_refactor`
+  - [x] Implement WebUI `RefactorSandboxModal.tsx` with live syntax-colored diff preview, lines saved badges, and "Apply to Git Branch" button
+
 ---
 
 ## Completed Milestones (Verified)
@@ -162,3 +180,4 @@
 - [x] **v1.1.0**: N-Way Clone Graph Clustering & Multi-Site Deduplication Synthesis Engine with Disjoint-Set Union-Find transitive partitioning, consensus multi-file diff patches, Axum cluster API, CLI `--cluster`, MCP cluster tools & resources, and WebUI N-way cluster cards.
 - [x] **v1.2.0**: Real-Time Language Server Protocol (LSP 3.17) Engine (`crates/cddm-lsp`), `cddm lsp` CLI daemon, official VS Code / Cursor Extension (`editors/vscode`), and multi-editor configuration guide (`docs/LSP_SETUP.md`).
 - [x] **v1.3.0**: Historical Duplication Trends & Turnkey CI/CD Workflow Generator with `cddm trend`, `cddm hook`, `cddm init`, `cddm_get_timeline` MCP tool, `cddm://workspace/timeline` resource, and WebUI Studio `TimelineExplorerModal`.
+- [x] **v1.4.0**: Intelligent AST Suppression Engine & Interactive Auto-Refactor Sandbox Studio with `.cddmignore` glob rules, per-path threshold overrides, inline comment directives (`// cddm:ignore`, `/* cddm:ignore-start */`), test/mock/generated auto-filtering, `cddm ignore` CLI, parameterized refactor sandbox, transactional Git branch application (`gix`), MCP suppression tools/resources, and WebUI `SuppressionRulesModal` & `RefactorSandboxModal`.

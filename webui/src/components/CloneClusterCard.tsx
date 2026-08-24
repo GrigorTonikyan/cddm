@@ -155,6 +155,22 @@ export const CloneClusterCard: React.FC<CloneClusterCardProps> = ({ cluster, ind
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
+                void useCDDMStore.getState().openRefactorSandbox({
+                  cluster_id: cluster.id,
+                  occurrences: cluster.occurrences,
+                });
+              }}
+              title="Open in Interactive Refactoring Studio Sandbox"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 hover:border-indigo-500/50 shadow-sm transition-all"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Sandbox</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
                 setIsExpanded(!isExpanded);
               }}
               aria-label={isExpanded ? "Collapse cluster details" : "Expand cluster details"}

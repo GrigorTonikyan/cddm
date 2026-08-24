@@ -1,4 +1,4 @@
-use crate::types::CloneLocation;
+use crate::types::{ApplyRefactorBranchResult, CloneLocation, RefactorSandboxResult};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -660,6 +660,106 @@ pub fn apply_patch_to_workspace(
             file_modifications.len(),
             mode_str
         ),
+    })
+}
+
+/// Generates an interactive refactoring preview for the sandbox with customized function naming.
+pub fn preview_cluster_refactor(
+    occurrences: &[CloneLocation],
+    custom_function_name: Option<&str>,
+    target_module_path: Option<&str>,
+    _custom_parameter_names: Option<&[String]>,
+) -> Result<RefactorSandboxResult, String> {
+    if occurrences.is_empty() {
+        return Err("No occurrences provided for refactoring preview".to_string());
+    }
+
+    let mut site_snippets = Vec::new();
+    for occ in occurrences {
+        let path = Path::new(&occ.file);
+        if !path.exists() {
+            return Err(format!("Occurrence file '{}' does not exist", occ.file));
+        }
+
+        let content = fs::read_to_string(path)
+            .map_err(|e| format!("Failed to read occurrence file '{}': {}", occ.file, e))?;
+        let all_lines: Vec<String> = content.lines().map(|l| l.to_string()).collect();
+        let start_idx = occ.start_line.saturating_sub(1);
+        let end_idx = occ.end_line.min(all_lines.len());
+        if start_idx < end_idx {
+            let snippet = all_lines[start_idx..end_idx].to_vec();
+            site_snippets.push((occ, snippet));
+        }
+    }
+
+    if site_snippets.is_empty() {
+        return Err("Failed to extract code snippets from occurrences".to_string());
+    }
+
+    let fn_name = custom_function_name.unwrap_or(DEFAULT_HELPER_PREFIX);
+    let target_path = target_module_path.unwrap_or(&occurrences[0].file);
+
+    let occ_pairs: Vec<(&CloneLocation, &[String])> = site_snippets
+        .iter()
+        .map(|(occ, snip)| (*occ, snip.as_slice()))
+        .collect();
+
+    let mut cluster_refactor = analyze_cluster_snippets_refactoring("custom", &occ_pairs);
+    if let Some(name) = custom_function_name {
+        cluster_refactor.suggested_function_name = name.to_string();
+        cluster_refactor.unified_patch = cluster_refactor
+            .unified_patch
+            .replace(DEFAULT_HELPER_PREFIX, name);
+    }
+
+    let mut affected_files: Vec<String> = occurrences.iter().map(|o| o.file.clone()).collect();
+    affected_files.sort();
+    affected_files.dedup();
+
+    Ok(RefactorSandboxResult {
+        cluster_id: None,
+        function_name: fn_name.to_string(),
+        target_module_path: target_path.to_string(),
+        unified_patch: cluster_refactor.unified_patch,
+        total_lines_saved: cluster_refactor.total_lines_saved,
+        sites_count: cluster_refactor.sites.len(),
+        affected_files,
+    })
+}
+
+/// Applies a refactoring patch with optional automated Git branch creation.
+pub fn apply_cluster_refactor_branch(
+    repo_root: &Path,
+    patch: &str,
+    branch_name: Option<&str>,
+    create_branch: bool,
+) -> Result<ApplyRefactorBranchResult, String> {
+    let mut branch_created = None;
+
+    if create_branch {
+        let bname = branch_name.unwrap_or("cddm/refactor-auto");
+        if let Ok(repo) = gix::discover_with_environment_overrides(repo_root)
+            && let Ok(head_id) = repo.head_id()
+        {
+            let ref_name = format!("refs/heads/{bname}");
+            let _ = repo.reference(
+                ref_name,
+                head_id,
+                gix::refs::transaction::PreviousValue::Any,
+                "cddm automated refactoring branch creation",
+            );
+            branch_created = Some(bname.to_string());
+        }
+    }
+
+    let patch_res = apply_patch_to_workspace(patch, false)?;
+
+    Ok(ApplyRefactorBranchResult {
+        success: patch_res.success,
+        branch_created,
+        modified_files: patch_res.modified_files,
+        hunks_applied: patch_res.hunks_applied,
+        message: patch_res.message,
     })
 }
 

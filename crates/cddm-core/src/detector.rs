@@ -1,6 +1,7 @@
 use crate::cache::{CACHE_SCHEMA_VERSION, CachedFileEntry, DiskFingerprintCache};
 use crate::fingerprint::{Fingerprint, MIN_K_GRAM, WINDOW_OFFSET, winnow};
 use crate::grammar::get_grammar_for_path;
+use crate::suppression::SuppressionEngine;
 use crate::tokenizer::tokenize;
 use crate::types::{
     ClonePair, CloneType, DEFAULT_CACHE_FILE, LanguageStats, MAX_HEALTH_SCORE, MIN_HEALTH_SCORE,
@@ -63,6 +64,36 @@ pub async fn run_scan(
         })
         .await;
 
+    let suppression_engine = if let Some(path_str) = &config.cddmignore_path {
+        SuppressionEngine::from_file(
+            Path::new(path_str),
+            config.ignore_tests,
+            config.ignore_mocks,
+            config.ignore_generated,
+        )
+        .unwrap_or_else(|_| SuppressionEngine::default_engine())
+    } else {
+        let root_cddmignore = Path::new(&config.directory).join(".cddmignore");
+        if root_cddmignore.exists() {
+            SuppressionEngine::from_file(
+                &root_cddmignore,
+                config.ignore_tests,
+                config.ignore_mocks,
+                config.ignore_generated,
+            )
+            .unwrap_or_else(|_| SuppressionEngine::default_engine())
+        } else {
+            SuppressionEngine::new(crate::types::SuppressionConfig {
+                rules: Vec::new(),
+                ignore_tests: config.ignore_tests,
+                ignore_mocks: config.ignore_mocks,
+                ignore_generated: config.ignore_generated,
+                raw_cddmignore: None,
+            })
+            .unwrap_or_else(|_| SuppressionEngine::default_engine())
+        }
+    };
+
     let walker = WalkBuilder::new(&config.directory);
 
     let mut files_to_process = Vec::new();
@@ -83,7 +114,7 @@ pub async fn run_scan(
                     break;
                 }
             }
-            if !ignored {
+            if !ignored && !suppression_engine.is_path_ignored(entry.path(), None) {
                 files_to_process.push(entry.path().to_path_buf());
             }
         }
@@ -270,6 +301,7 @@ pub async fn run_scan(
     let (merged_pairs, total_tokens) = {
         let config_clone = config.clone();
         let parsed_files_clone = Arc::clone(&parsed_files);
+        let suppression_engine_clone = suppression_engine.clone();
 
         tokio::task::spawn_blocking(move || {
             let mut index: HashMap<(u64, u64), Vec<Location>> = HashMap::new();
@@ -475,6 +507,23 @@ pub async fn run_scan(
                 }
             }
 
+            // Filter out clone pairs matching suppression type exclusions or custom thresholds
+            merged_pairs.retain(|pair| {
+                !suppression_engine_clone
+                    .is_clone_type_ignored(Path::new(&pair.file_a), &pair.clone_type)
+                    && !suppression_engine_clone
+                        .is_clone_type_ignored(Path::new(&pair.file_b), &pair.clone_type)
+            });
+
+            merged_pairs.retain(|pair| {
+                let eff_a = suppression_engine_clone
+                    .get_effective_min_tokens(Path::new(&pair.file_a), config_clone.min_tokens);
+                let eff_b = suppression_engine_clone
+                    .get_effective_min_tokens(Path::new(&pair.file_b), config_clone.min_tokens);
+                let req_min = eff_a.max(eff_b);
+                pair.token_count >= req_min
+            });
+
             (merged_pairs, total_tokens)
         })
         .await
@@ -568,6 +617,10 @@ mod tests {
             enable_git_blame: false,
             cache_dir: None,
             enable_cache: false,
+            cddmignore_path: None,
+            ignore_tests: false,
+            ignore_mocks: false,
+            ignore_generated: true,
         }
     }
 

@@ -194,6 +194,34 @@ export const ClonePairCard: React.FC<ClonePairCardProps> = ({ pair, index }) => 
                 <Wand2 className="w-3.5 h-3.5" />
                 Refactor Advisor
               </button>
+
+              {/* Refactor Sandbox Button */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  void useCDDMStore.getState().openRefactorSandbox({
+                    occurrences: [
+                      {
+                        file: pair.file_a,
+                        start_line: pair.start_line_a,
+                        end_line: pair.end_line_a,
+                        author: pair.author_a,
+                      },
+                      {
+                        file: pair.file_b,
+                        start_line: pair.start_line_b,
+                        end_line: pair.end_line_b,
+                        author: pair.author_b,
+                      },
+                    ],
+                  });
+                }}
+                className="px-3 py-1 rounded-lg bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 border border-purple-500/40 font-semibold text-xs flex items-center gap-1.5 transition-colors shadow-sm"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-purple-300" />
+                Sandbox
+              </button>
             </div>
           </div>
 

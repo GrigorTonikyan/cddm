@@ -104,6 +104,87 @@ export interface ScanConfig {
   detect_type2: boolean;
   scan_self: boolean;
   enable_git_blame?: boolean;
+  cddmignore_path?: string;
+  ignore_tests?: boolean;
+  ignore_mocks?: boolean;
+  ignore_generated?: boolean;
+}
+
+/**
+ * A suppression rule parsed from .cddmignore or configured via WebUI.
+ */
+export interface SuppressionRule {
+  pattern: string;
+  comment?: string;
+  min_tokens_override?: number;
+  ignored_clone_types?: CloneType[];
+}
+
+/**
+ * Inline suppression directive parsed from source comments.
+ */
+export interface SuppressionDirective {
+  file_path: string;
+  line_start: number;
+  line_end: number;
+  directive_type: string;
+  reason?: string;
+}
+
+/**
+ * Complete suppression configuration.
+ */
+export interface SuppressionConfig {
+  rules: SuppressionRule[];
+  ignore_tests: boolean;
+  ignore_mocks: boolean;
+  ignore_generated: boolean;
+  raw_cddmignore?: string;
+}
+
+/**
+ * Interactive refactor sandbox simulation request.
+ */
+export interface RefactorSandboxRequest {
+  cluster_id?: number;
+  occurrences: CloneLocation[];
+  custom_function_name?: string;
+  target_module_path?: string;
+  custom_parameter_names?: string[];
+}
+
+/**
+ * Interactive refactor sandbox simulation result.
+ */
+export interface RefactorSandboxResult {
+  function_name: string;
+  target_module_path: string;
+  parameter_names?: string[];
+  unified_patch: string;
+  total_lines_saved: number;
+  sites_count?: number;
+  affected_files?: string[];
+  preview_diff_hunks?: string[];
+}
+
+/**
+ * Request payload for applying refactor patch to a dedicated Git branch.
+ */
+export interface ApplyRefactorBranchRequest {
+  patch: string;
+  branch_name?: string;
+  create_branch?: boolean;
+}
+
+/**
+ * Response payload for refactor patch branch application.
+ */
+export interface ApplyRefactorBranchResult {
+  success: boolean;
+  branch_created?: string;
+  modified_files: string[];
+  hunks_applied: number;
+  message: string;
 }
 
 /**

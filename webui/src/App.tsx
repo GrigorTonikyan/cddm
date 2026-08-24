@@ -3,11 +3,17 @@ import { ScanConfigPanel } from "./components/ScanConfigPanel";
 import { ScanProgressBar } from "./components/ScanProgressBar";
 import { ScanResults } from "./components/ScanResults";
 import { ScanConfigModal } from "./components/ScanConfigModal";
+import { APP_VERSION } from "./constants/cddm-constants";
+import { useCDDMStore } from "./store/cddm-store";
+import { TimelineExplorerModal } from "./components/TimelineExplorerModal";
+import { SuppressionRulesModal } from "./components/SuppressionRulesModal";
+import { RefactorSandboxModal } from "./components/RefactorSandboxModal";
 import {
   Scissors,
   Terminal,
   Sparkles,
   ShieldCheck,
+  ShieldAlert,
   Sliders,
   Award,
   FileDown,
@@ -16,9 +22,6 @@ import {
   X,
   History,
 } from "lucide-react";
-import { APP_VERSION } from "./constants/cddm-constants";
-import { useCDDMStore } from "./store/cddm-store";
-import { TimelineExplorerModal } from "./components/TimelineExplorerModal";
 
 export const App: React.FC = () => {
   const {
@@ -34,6 +37,10 @@ export const App: React.FC = () => {
     setIsExportReportOpen,
     isTimelineModalOpen,
     setIsTimelineModalOpen,
+    isSuppressionModalOpen,
+    setIsSuppressionModalOpen,
+    isRefactorSandboxOpen,
+    setIsRefactorSandboxOpen,
   } = useCDDMStore();
 
   return (
@@ -100,6 +107,15 @@ export const App: React.FC = () => {
           >
             <History className="w-3.5 h-3.5 text-indigo-400" />
             <span>Timeline Trends</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsSuppressionModalOpen(true)}
+            className="px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 hover:bg-slate-800 text-slate-300 flex items-center gap-1.5 transition-colors shadow-sm"
+          >
+            <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
+            <span>Suppression Rules</span>
           </button>
 
           {results && (
@@ -171,6 +187,18 @@ export const App: React.FC = () => {
       <TimelineExplorerModal
         isOpen={isTimelineModalOpen}
         onClose={() => setIsTimelineModalOpen(false)}
+      />
+
+      {/* Suppression Rules Modal */}
+      <SuppressionRulesModal
+        isOpen={isSuppressionModalOpen}
+        onClose={() => setIsSuppressionModalOpen(false)}
+      />
+
+      {/* Refactor Sandbox Studio Modal */}
+      <RefactorSandboxModal
+        isOpen={isRefactorSandboxOpen}
+        onClose={() => setIsRefactorSandboxOpen(false)}
       />
 
       {/* Footer */}

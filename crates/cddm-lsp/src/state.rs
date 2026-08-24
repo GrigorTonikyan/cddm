@@ -50,6 +50,10 @@ impl ServerStateInner {
             enable_git_blame: false,
             cache_dir: None,
             enable_cache: true,
+            cddmignore_path: None,
+            ignore_tests: false,
+            ignore_mocks: false,
+            ignore_generated: true,
         }
     }
 }

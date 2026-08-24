@@ -24,6 +24,9 @@ export const API_ROUTES = {
   TIMELINE: "/api/timeline",
   HOOKS: "/api/workflow/hooks",
   HOOKS_INSTALL: "/api/workflow/hooks/install",
+  SUPPRESSION_RULES: "/api/suppression/rules",
+  REFACTOR_SANDBOX: "/api/refactor/sandbox",
+  REFACTOR_APPLY_BRANCH: "/api/refactor/apply-branch",
 } as const;
 
 /**
@@ -37,6 +40,9 @@ export const DEFAULT_SCAN_CONFIG: ScanConfig = {
   detect_type2: true,
   scan_self: true,
   enable_git_blame: true,
+  ignore_tests: false,
+  ignore_mocks: false,
+  ignore_generated: true,
 };
 
 /**

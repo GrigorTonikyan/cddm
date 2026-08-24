@@ -5,6 +5,21 @@ All notable changes to **CDDM** (_Code De-Duplication Meister_) will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-08-24
+
+### Features
+
+- **suppression**: implement intelligent AST-aware suppression engine with `.cddmignore` glob rules, per-path threshold overrides, inline comment directives (`// cddm:ignore`, `/* cddm:ignore-start */`), and test/mock/generated file auto-detection
+- **refactor**: implement interactive auto-refactor sandbox studio with customized function signatures, destination module placement, and transactional Git branch application (`gix`)
+- **cli**: add `cddm ignore init` and `cddm ignore check` subcommands, plus `--cddmignore`, `--ignore-tests`, `--ignore-mocks`, and `--ignore-generated` flags
+- **mcp**: add `cddm_check_suppression` and `cddm_apply_cluster_refactor` tools, and `cddm://workspace/suppressions` resource
+- **webui**: add `SuppressionRulesModal` and `RefactorSandboxModal` with live parameter customization, colorized diff preview, and one-click Git branch deployment
+- **timeline**: implement git duplication trends and turnkey ci generator (`da3ed61`)
+- **lsp**: implement real-time language server engine and vscode extension (`14f7bdb`)
+- **core**: implement live watch SSE sync, workspace patch application, and IDE deeplinks (`b917475`)
+- **core**: add N-way clone graph clustering and multi-site deduplication synthesis (`b0735f9`)
+- **core**: implement high-throughput zero-copy mmap and simd rolling hash vectorization (`d582f32`)
+
 ## [0.6.0] - 2026-08-24
 
 ### Features

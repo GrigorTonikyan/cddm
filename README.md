@@ -8,8 +8,8 @@
 [![Vite Plus](https://img.shields.io/badge/vite%2B-0.2.9-purple.svg)](https://viteplus.dev)
 [![TypeScript](https://img.shields.io/badge/typescript-7.0-blue.svg)](https://www.typescriptlang.org)
 [![React](https://img.shields.io/badge/react-19.2-61dafb.svg)](https://react.dev)
-[![npm version](https://img.shields.io/badge/npm-0.6.0-red.svg)](https://www.npmjs.com/package/cddm)
-[![crates.io](https://img.shields.io/badge/crates.io-0.6.0-brightgreen.svg)](https://crates.io/crates/cddm)
+[![npm version](https://img.shields.io/badge/npm-1.4.0-red.svg)](https://www.npmjs.com/package/cddm)
+[![crates.io](https://img.shields.io/badge/crates.io-1.4.0-brightgreen.svg)](https://crates.io/crates/cddm)
 
 ---
 
@@ -177,6 +177,19 @@ Continuously watches workspace for source modifications and automatically runs i
 cddm watch ./src --min-tokens 50 --debounce-ms 250
 ```
 
+### `cddm ignore <ACTION>`
+
+Manages `.cddmignore` rules and inspects suppression status for specific file paths and line numbers:
+
+```bash
+# Initialize a default .cddmignore template in the workspace root
+cddm ignore init
+
+# Check whether a file or specific line is suppressed by rules or inline directives
+cddm ignore check src/auth/login.rs --line 15
+cddm ignore check crates/cddm-core/tests/test_file.rs --ignore-tests
+```
+
 ### `cddm trend [DIRECTORY]`
 
 Analyzes historical duplication trajectories and DRY Health Score evolution across Git repository commits using in-process `gix` revision walking.
@@ -242,7 +255,7 @@ For step-by-step IDE setup guides, see **[docs/LSP_SETUP.md](docs/LSP_SETUP.md)*
 
 ## Embedded Studio WebUI
 
-Launches the Axum HTTP server delivering the embedded React 19 Studio WebUI with interactive duplication heatmaps, N-way cluster visualizers, and time-series Git history charts.
+Launches the Axum HTTP server delivering the embedded React 19 Studio WebUI with interactive duplication heatmaps, N-way cluster visualizers, suppression rule managers, interactive refactor sandboxes, and time-series Git history charts.
 
 ```bash
 cddm serve --port 3000 --host 127.0.0.1 --open
@@ -275,8 +288,18 @@ CDDM includes a native stdio Model Context Protocol (MCP) server `cddm-mcp` for 
 - `cddm_suggest_refactor`: Performs invariant token analysis and produces structural refactoring recommendations with unified patches.
 - `cddm_get_clone_cluster`: Retrieves all occurrences and statistics for an N-way equivalence cluster.
 - `cddm_suggest_cluster_refactor`: Performs multi-site consensus refactoring across an N-way cluster.
+- `cddm_check_suppression`: Checks if file paths or lines are suppressed by `.cddmignore` rules or inline comments.
+- `cddm_apply_cluster_refactor`: Applies a synthesized refactoring patch to the filesystem with optional Git branch creation.
 - `cddm_get_timeline`: Samples Git commit history and evaluates time-series DRY Health and duplication trajectory.
 - `cddm_export_sarif`: Generates OASIS SARIF v2.1.0 reports on demand.
+
+### Exposed MCP Resources
+
+- `cddm://workspace/health`: Live DRY health index, file metrics, and language breakdowns.
+- `cddm://workspace/clones`: Registry of active clone pairs and source line spans.
+- `cddm://workspace/clusters`: Disjoint-set partitioned N-way clone equivalence clusters.
+- `cddm://workspace/timeline`: Historical commit snapshots, DRY trajectory, and churn metrics.
+- `cddm://workspace/suppressions`: Active `.cddmignore` glob patterns and category filters.
 
 ---
 

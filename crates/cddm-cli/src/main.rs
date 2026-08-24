@@ -7,7 +7,7 @@ use cddm_core::{
 use clap::{Parser, Subcommand, ValueEnum};
 use comfy_table::{Cell, Color, Table};
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, atomic::AtomicBool};
 use tokio::sync::mpsc;
 
@@ -71,6 +71,22 @@ enum Commands {
         /// Clear existing persistent cache database before scanning
         #[arg(long, default_value_t = false)]
         clear_cache: bool,
+
+        /// Custom path to .cddmignore configuration file
+        #[arg(long)]
+        cddmignore: Option<PathBuf>,
+
+        /// Automatically filter test files and test directories
+        #[arg(long, default_value_t = false)]
+        ignore_tests: bool,
+
+        /// Automatically filter mock and fixture files
+        #[arg(long, default_value_t = false)]
+        ignore_mocks: bool,
+
+        /// Automatically filter auto-generated files with generator headers
+        #[arg(long, default_value_t = true)]
+        ignore_generated: bool,
     },
 
     /// Differential duplication scan comparing current changes against a Git base revision
@@ -116,6 +132,28 @@ enum Commands {
         /// Bypass persistent disk cache
         #[arg(long, default_value_t = false)]
         no_cache: bool,
+
+        /// Custom path to .cddmignore configuration file
+        #[arg(long)]
+        cddmignore: Option<PathBuf>,
+
+        /// Automatically filter test files and test directories
+        #[arg(long, default_value_t = false)]
+        ignore_tests: bool,
+
+        /// Automatically filter mock and fixture files
+        #[arg(long, default_value_t = false)]
+        ignore_mocks: bool,
+
+        /// Automatically filter auto-generated files with generator headers
+        #[arg(long, default_value_t = true)]
+        ignore_generated: bool,
+    },
+
+    /// Manage .cddmignore suppression rules and test ignored files or code lines
+    Ignore {
+        #[command(subcommand)]
+        action: IgnoreAction,
     },
 
     /// Generate automated refactoring patch recommendations for duplicate code
@@ -261,6 +299,46 @@ enum Commands {
 }
 
 #[derive(Subcommand, Debug, Clone, PartialEq)]
+enum IgnoreAction {
+    /// Initialize a standard, well-documented .cddmignore configuration template
+    Init {
+        /// Target directory path to create .cddmignore in (default: current directory)
+        #[arg(default_value = cddm_core::DEFAULT_DIRECTORY)]
+        directory: PathBuf,
+
+        /// Overwrite existing .cddmignore file if present
+        #[arg(short, long, default_value_t = false)]
+        force: bool,
+    },
+
+    /// Test whether a specific file path or line number is ignored by suppression rules
+    Check {
+        /// Target file path to check
+        path: PathBuf,
+
+        /// Optional 1-based line number to check for inline suppression directives
+        #[arg(short, long)]
+        line: Option<usize>,
+
+        /// Path to custom .cddmignore file
+        #[arg(long)]
+        cddmignore: Option<PathBuf>,
+
+        /// Check with test file suppression enabled
+        #[arg(long, default_value_t = false)]
+        ignore_tests: bool,
+
+        /// Check with mock file suppression enabled
+        #[arg(long, default_value_t = false)]
+        ignore_mocks: bool,
+
+        /// Check with generated file suppression enabled
+        #[arg(long, default_value_t = true)]
+        ignore_generated: bool,
+    },
+}
+
+#[derive(Subcommand, Debug, Clone, PartialEq)]
 enum HookAction {
     /// Install a Git hook enforcing code duplication thresholds
     Install {
@@ -341,6 +419,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             cache_dir,
             no_cache,
             clear_cache,
+            cddmignore,
+            ignore_tests,
+            ignore_mocks,
+            ignore_generated,
         } => {
             let cache_path = cache_dir.as_ref().map(|p| p.to_string_lossy().to_string());
 
@@ -368,6 +450,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 enable_git_blame: git_blame,
                 cache_dir: cache_path,
                 enable_cache: !no_cache,
+                cddmignore_path: cddmignore.map(|p| p.to_string_lossy().to_string()),
+                ignore_tests,
+                ignore_mocks,
+                ignore_generated,
             };
 
             let (tx, mut rx) = mpsc::channel::<cddm_core::ScanProgress>(100);
@@ -420,6 +506,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             git_blame,
             cache_dir,
             no_cache,
+            cddmignore,
+            ignore_tests,
+            ignore_mocks,
+            ignore_generated,
         } => {
             let cache_path = cache_dir.as_ref().map(|p| p.to_string_lossy().to_string());
 
@@ -437,6 +527,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 enable_git_blame: git_blame,
                 cache_dir: cache_path,
                 enable_cache: !no_cache,
+                cddmignore_path: cddmignore.map(|p| p.to_string_lossy().to_string()),
+                ignore_tests,
+                ignore_mocks,
+                ignore_generated,
             };
 
             let (tx, mut rx) = mpsc::channel::<cddm_core::ScanProgress>(100);
@@ -509,6 +603,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 enable_git_blame: false,
                 cache_dir: None,
                 enable_cache: true,
+                cddmignore_path: None,
+                ignore_tests: false,
+                ignore_mocks: false,
+                ignore_generated: true,
             };
 
             let (tx, _rx) = mpsc::channel(100);
@@ -616,6 +714,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 enable_git_blame: git_blame,
                 cache_dir: cache_path,
                 enable_cache: !no_cache,
+                cddmignore_path: None,
+                ignore_tests: false,
+                ignore_mocks: false,
+                ignore_generated: true,
             };
 
             println!(
@@ -783,6 +885,83 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         "[NOT INSTALLED]"
                     }
                 );
+            }
+        },
+
+        Commands::Ignore { action } => match action {
+            IgnoreAction::Init { directory, force } => {
+                let out_file = directory.join(".cddmignore");
+                if out_file.exists() && !force {
+                    eprintln!(
+                        "[ERROR] '{}' already exists. Use --force to overwrite.",
+                        out_file.display()
+                    );
+                    std::process::exit(1);
+                }
+                let template = cddm_core::SuppressionEngine::generate_default_cddmignore();
+                fs::write(&out_file, template)?;
+                println!(
+                    "[PASS] Generated .cddmignore suppression template at '{}'",
+                    out_file.display()
+                );
+            }
+            IgnoreAction::Check {
+                path,
+                line,
+                cddmignore,
+                ignore_tests,
+                ignore_mocks,
+                ignore_generated,
+            } => {
+                let engine = if let Some(p) = cddmignore {
+                    cddm_core::SuppressionEngine::from_file(
+                        &p,
+                        ignore_tests,
+                        ignore_mocks,
+                        ignore_generated,
+                    )?
+                } else if Path::new(".cddmignore").exists() {
+                    cddm_core::SuppressionEngine::from_file(
+                        Path::new(".cddmignore"),
+                        ignore_tests,
+                        ignore_mocks,
+                        ignore_generated,
+                    )?
+                } else {
+                    cddm_core::SuppressionEngine::with_options(
+                        ignore_tests,
+                        ignore_mocks,
+                        ignore_generated,
+                    )
+                };
+
+                let file_content = fs::read_to_string(&path).ok();
+                let path_ignored = engine.is_path_ignored(&path, file_content.as_deref());
+
+                println!("=== CDDM Suppression Check ===");
+                println!("File Path:    {}", path.display());
+                println!(
+                    "Path Ignored: {}",
+                    if path_ignored { "[YES]" } else { "[NO]" }
+                );
+
+                if let Some(target_line) = line
+                    && let Some(ref text) = file_content
+                {
+                    let mut eng = engine.clone();
+                    eng.register_file_directives(&path.to_string_lossy(), text);
+                    let span_ignored =
+                        eng.is_span_suppressed(&path.to_string_lossy(), target_line, target_line);
+                    println!(
+                        "Line {}:       {}",
+                        target_line,
+                        if span_ignored {
+                            "[SUPPRESSED BY INLINE DIRECTIVE]"
+                        } else {
+                            "[NOT SUPPRESSED]"
+                        }
+                    );
+                }
             }
         },
 

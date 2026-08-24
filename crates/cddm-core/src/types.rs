@@ -296,6 +296,14 @@ pub struct ScanConfig {
     pub cache_dir: Option<String>,
     /// Whether to use the persistent disk cache (default: true)
     pub enable_cache: bool,
+    /// Custom path to .cddmignore file (default: None, loads from root directory if present)
+    pub cddmignore_path: Option<String>,
+    /// Automatically filter test files and test directories (default: false)
+    pub ignore_tests: bool,
+    /// Automatically filter mock and fixture files (default: false)
+    pub ignore_mocks: bool,
+    /// Automatically filter auto-generated files with generator headers (default: true)
+    pub ignore_generated: bool,
 }
 
 impl Default for ScanConfig {
@@ -313,6 +321,10 @@ impl Default for ScanConfig {
             enable_git_blame: false,
             cache_dir: None,
             enable_cache: true,
+            cddmignore_path: None,
+            ignore_tests: false,
+            ignore_mocks: false,
+            ignore_generated: true,
         }
     }
 }
@@ -420,6 +432,113 @@ pub struct HookStatus {
     pub pre_push_installed: bool,
     /// Path to the Git hooks directory
     pub hooks_dir: String,
+}
+
+/// A parsed suppression rule from .cddmignore or programmatic configuration.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct SuppressionRule {
+    /// Glob path pattern (e.g. "tests/**", "*.generated.ts")
+    pub pattern: String,
+    /// Type of suppression: "ignore", "threshold", or "type_filter"
+    pub rule_type: String,
+    /// Custom minimum token threshold if rule_type == "threshold"
+    pub min_tokens: Option<usize>,
+    /// List of excluded clone types if rule_type == "type_filter"
+    pub ignored_clone_types: Vec<CloneType>,
+    /// Line number in .cddmignore where rule was defined (0 if programmatic)
+    pub line_number: usize,
+}
+
+/// An inline suppression directive parsed from source code comments or attributes.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct SuppressionDirective {
+    /// File path containing the directive
+    pub file_path: String,
+    /// 1-based start line of the suppressed span
+    pub start_line: usize,
+    /// 1-based end line of the suppressed span
+    pub end_line: usize,
+    /// Directive classification: "ignore_line", "ignore_block", "attribute"
+    pub directive_type: String,
+    /// Optional reason/comment
+    pub reason: Option<String>,
+}
+
+/// Complete active suppression configuration and rules.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct SuppressionConfig {
+    /// List of active .cddmignore rules
+    pub rules: Vec<SuppressionRule>,
+    /// Whether test files are automatically filtered
+    pub ignore_tests: bool,
+    /// Whether mock/fixture files are automatically filtered
+    pub ignore_mocks: bool,
+    /// Whether generated files are automatically filtered
+    pub ignore_generated: bool,
+    /// Raw .cddmignore file contents if loaded from disk
+    pub raw_cddmignore: Option<String>,
+}
+
+/// Request payload for synthesizing customized cluster refactoring preview in the sandbox.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct RefactorSandboxRequest {
+    /// Target 1-based cluster ID
+    pub cluster_id: Option<usize>,
+    /// Explicit list of occurrences to refactor
+    pub occurrences: Vec<CloneLocation>,
+    /// Custom function name to extract (e.g. "validate_user_credentials")
+    pub custom_function_name: Option<String>,
+    /// Target destination module/file path for extracted helper
+    pub target_module_path: Option<String>,
+    /// Custom parameter names to use in extracted function signature
+    pub custom_parameter_names: Option<Vec<String>>,
+}
+
+/// Structured result of customized refactoring synthesis in the sandbox.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct RefactorSandboxResult {
+    /// Cluster ID if applicable
+    pub cluster_id: Option<usize>,
+    /// Name of the extracted helper function
+    pub function_name: String,
+    /// Target file path where extracted function resides
+    pub target_module_path: String,
+    /// Unified diff patch
+    pub unified_patch: String,
+    /// Total lines saved across all sites
+    pub total_lines_saved: usize,
+    /// Number of call sites refactored
+    pub sites_count: usize,
+    /// List of affected distinct file paths
+    pub affected_files: Vec<String>,
+}
+
+/// Request payload for applying refactoring patch directly with Git branch creation.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct ApplyRefactorBranchRequest {
+    /// Unified patch content to apply
+    pub patch: String,
+    /// Name of the git branch to create (e.g. "cddm/refactor-cluster-1")
+    pub branch_name: Option<String>,
+    /// Commit message if committing
+    pub commit_message: Option<String>,
+    /// Whether to create a dedicated Git branch before applying
+    pub create_branch: bool,
+}
+
+/// Result of applying refactoring patch with Git branch creation.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct ApplyRefactorBranchResult {
+    /// Whether patch applied successfully
+    pub success: bool,
+    /// Name of the branch created, if applicable
+    pub branch_created: Option<String>,
+    /// List of modified file paths
+    pub modified_files: Vec<String>,
+    /// Total hunks applied
+    pub hunks_applied: usize,
+    /// Informational message
+    pub message: String,
 }
 
 #[cfg(test)]
@@ -665,5 +784,72 @@ mod tests {
             hooks_dir: ".git/hooks".to_string(),
         };
         assert_serde_roundtrip(&hook_status);
+    }
+
+    #[test]
+    fn test_suppression_types_serde() {
+        let rule = SuppressionRule {
+            pattern: "tests/**".to_string(),
+            rule_type: "threshold".to_string(),
+            min_tokens: Some(100),
+            ignored_clone_types: vec![CloneType::Exact],
+            line_number: 12,
+        };
+        assert_serde_roundtrip(&rule);
+
+        let directive = SuppressionDirective {
+            file_path: "src/auth.rs".to_string(),
+            start_line: 10,
+            end_line: 25,
+            directive_type: "ignore_block".to_string(),
+            reason: Some("Intentional duplicate API mock".to_string()),
+        };
+        assert_serde_roundtrip(&directive);
+
+        let config = SuppressionConfig {
+            rules: vec![rule],
+            ignore_tests: true,
+            ignore_mocks: true,
+            ignore_generated: true,
+            raw_cddmignore: Some("# .cddmignore\ntests/**\n".to_string()),
+        };
+        assert_serde_roundtrip(&config);
+    }
+
+    #[test]
+    fn test_refactor_sandbox_types_serde() {
+        let req = RefactorSandboxRequest {
+            cluster_id: Some(1),
+            occurrences: vec![CloneLocation {
+                file: "src/a.rs".to_string(),
+                start_line: 10,
+                end_line: 20,
+                author: None,
+            }],
+            custom_function_name: Some("custom_validate".to_string()),
+            target_module_path: Some("src/utils.rs".to_string()),
+            custom_parameter_names: Some(vec!["arg1".to_string(), "arg2".to_string()]),
+        };
+        assert_serde_roundtrip(&req);
+
+        let res = RefactorSandboxResult {
+            cluster_id: Some(1),
+            function_name: "custom_validate".to_string(),
+            target_module_path: "src/utils.rs".to_string(),
+            unified_patch: "--- a/src/a.rs\n+++ b/src/a.rs\n...".to_string(),
+            total_lines_saved: 25,
+            sites_count: 2,
+            affected_files: vec!["src/a.rs".to_string(), "src/b.rs".to_string()],
+        };
+        assert_serde_roundtrip(&res);
+
+        let branch_res = ApplyRefactorBranchResult {
+            success: true,
+            branch_created: Some("cddm/refactor-cluster-1".to_string()),
+            modified_files: vec!["src/a.rs".to_string(), "src/utils.rs".to_string()],
+            hunks_applied: 2,
+            message: "Refactor applied to branch cddm/refactor-cluster-1".to_string(),
+        };
+        assert_serde_roundtrip(&branch_res);
     }
 }

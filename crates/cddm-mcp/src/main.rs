@@ -56,6 +56,8 @@ pub mod mcp_tools {
     pub const EXPORT_SARIF: &str = "cddm_export_sarif";
     pub const DIFF_SCAN: &str = "cddm_diff_scan";
     pub const GET_TIMELINE: &str = "cddm_get_timeline";
+    pub const CHECK_SUPPRESSION: &str = "cddm_check_suppression";
+    pub const APPLY_CLUSTER_REFACTOR: &str = "cddm_apply_cluster_refactor";
 
     pub const PARAM_DIRECTORY: &str = "directory";
     pub const PARAM_MIN_TOKENS: &str = "min_tokens";
@@ -71,6 +73,15 @@ pub mod mcp_tools {
     pub const PARAM_CLUSTER_ID: &str = "cluster_id";
     pub const PARAM_OCCURRENCES: &str = "occurrences";
     pub const PARAM_MAX_SAMPLES: &str = "max_samples";
+    pub const PARAM_PATH: &str = "path";
+    pub const PARAM_LINE: &str = "line";
+    pub const PARAM_CDDMIGNORE: &str = "cddmignore";
+    pub const PARAM_IGNORE_TESTS: &str = "ignore_tests";
+    pub const PARAM_IGNORE_MOCKS: &str = "ignore_mocks";
+    pub const PARAM_IGNORE_GENERATED: &str = "ignore_generated";
+    pub const PARAM_PATCH: &str = "patch";
+    pub const PARAM_BRANCH_NAME: &str = "branch_name";
+    pub const PARAM_CREATE_BRANCH: &str = "create_branch";
 }
 
 /// Exposed resource identifiers and MIME types.
@@ -79,6 +90,7 @@ pub mod mcp_resources {
     pub const URI_WORKSPACE_CLONES: &str = "cddm://workspace/clones";
     pub const URI_WORKSPACE_CLUSTERS: &str = "cddm://workspace/clusters";
     pub const URI_WORKSPACE_TIMELINE: &str = "cddm://workspace/timeline";
+    pub const URI_WORKSPACE_SUPPRESSIONS: &str = "cddm://workspace/suppressions";
     pub const MIME_APPLICATION_JSON: &str = "application/json";
 }
 
@@ -239,6 +251,10 @@ async fn run_scan_from_mcp_args(
         enable_git_blame,
         cache_dir: None,
         enable_cache: true,
+        cddmignore_path: None,
+        ignore_tests: false,
+        ignore_mocks: false,
+        ignore_generated: true,
     };
 
     let (tx, _rx) = mpsc::channel(100);
@@ -433,6 +449,62 @@ async fn handle_mcp_request(req: JsonRpcRequest) -> Option<JsonRpcResponse> {
                                 }
                             }
                         }
+                    },
+                    {
+                        "name": mcp_tools::CHECK_SUPPRESSION,
+                        "description": "Check whether a specific file path or source line number is ignored by .cddmignore rules or inline suppression directives.",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                mcp_tools::PARAM_PATH: {
+                                    "type": "string",
+                                    "description": "Target file path to check"
+                                },
+                                mcp_tools::PARAM_LINE: {
+                                    "type": "number",
+                                    "description": "Optional 1-based line number to check for inline suppression directives"
+                                },
+                                mcp_tools::PARAM_CDDMIGNORE: {
+                                    "type": "string",
+                                    "description": "Optional path to custom .cddmignore file"
+                                },
+                                mcp_tools::PARAM_IGNORE_TESTS: {
+                                    "type": "boolean",
+                                    "description": "Check with test file suppression enabled"
+                                },
+                                mcp_tools::PARAM_IGNORE_MOCKS: {
+                                    "type": "boolean",
+                                    "description": "Check with mock file suppression enabled"
+                                },
+                                mcp_tools::PARAM_IGNORE_GENERATED: {
+                                    "type": "boolean",
+                                    "description": "Check with generated file suppression enabled"
+                                }
+                            },
+                            "required": [mcp_tools::PARAM_PATH]
+                        }
+                    },
+                    {
+                        "name": mcp_tools::APPLY_CLUSTER_REFACTOR,
+                        "description": "Apply a synthesized multi-site refactoring unified patch to workspace files, with optional Git branch creation.",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                mcp_tools::PARAM_PATCH: {
+                                    "type": "string",
+                                    "description": "Unified diff patch content to apply"
+                                },
+                                mcp_tools::PARAM_BRANCH_NAME: {
+                                    "type": "string",
+                                    "description": "Name of the Git branch to create (e.g. cddm/refactor-cluster-1)"
+                                },
+                                mcp_tools::PARAM_CREATE_BRANCH: {
+                                    "type": "boolean",
+                                    "description": "Whether to create a dedicated Git branch before applying patch"
+                                }
+                            },
+                            "required": [mcp_tools::PARAM_PATCH]
+                        }
                     }
                 ]
             })),
@@ -494,6 +566,10 @@ async fn handle_mcp_request(req: JsonRpcRequest) -> Option<JsonRpcResponse> {
                             enable_git_blame: false,
                             cache_dir: None,
                             enable_cache: true,
+                            cddmignore_path: None,
+                            ignore_tests: false,
+                            ignore_mocks: false,
+                            ignore_generated: true,
                         };
 
                         let (tx, _rx) = mpsc::channel(100);
@@ -782,6 +858,145 @@ async fn handle_mcp_request(req: JsonRpcRequest) -> Option<JsonRpcResponse> {
                     }
                 }
 
+                mcp_tools::CHECK_SUPPRESSION => {
+                    let args = req.params.as_ref().and_then(|p| p.get("arguments"));
+                    let path_str = args
+                        .and_then(|a| a.get(mcp_tools::PARAM_PATH))
+                        .and_then(|p| p.as_str());
+
+                    if let Some(path) = path_str {
+                        let line_opt = args
+                            .and_then(|a| a.get(mcp_tools::PARAM_LINE))
+                            .and_then(|l| l.as_u64())
+                            .map(|l| l as usize);
+                        let custom_ignore = args
+                            .and_then(|a| a.get(mcp_tools::PARAM_CDDMIGNORE))
+                            .and_then(|i| i.as_str());
+                        let ignore_tests = args
+                            .and_then(|a| a.get(mcp_tools::PARAM_IGNORE_TESTS))
+                            .and_then(|b| b.as_bool())
+                            .unwrap_or(false);
+                        let ignore_mocks = args
+                            .and_then(|a| a.get(mcp_tools::PARAM_IGNORE_MOCKS))
+                            .and_then(|b| b.as_bool())
+                            .unwrap_or(false);
+                        let ignore_generated = args
+                            .and_then(|a| a.get(mcp_tools::PARAM_IGNORE_GENERATED))
+                            .and_then(|b| b.as_bool())
+                            .unwrap_or(true);
+
+                        let engine = if let Some(custom_p) = custom_ignore {
+                            match cddm_core::SuppressionEngine::from_file(
+                                Path::new(custom_p),
+                                ignore_tests,
+                                ignore_mocks,
+                                ignore_generated,
+                            ) {
+                                Ok(eng) => eng,
+                                Err(err) => {
+                                    return Some(make_error_response(
+                                        req.id,
+                                        rpc_errors::INTERNAL_ERROR,
+                                        err,
+                                    ));
+                                }
+                            }
+                        } else if Path::new(".cddmignore").exists() {
+                            match cddm_core::SuppressionEngine::from_file(
+                                Path::new(".cddmignore"),
+                                ignore_tests,
+                                ignore_mocks,
+                                ignore_generated,
+                            ) {
+                                Ok(eng) => eng,
+                                Err(err) => {
+                                    return Some(make_error_response(
+                                        req.id,
+                                        rpc_errors::INTERNAL_ERROR,
+                                        err,
+                                    ));
+                                }
+                            }
+                        } else {
+                            cddm_core::SuppressionEngine::with_options(
+                                ignore_tests,
+                                ignore_mocks,
+                                ignore_generated,
+                            )
+                        };
+
+                        let file_content = std::fs::read_to_string(path).ok();
+                        let path_ignored =
+                            engine.is_path_ignored(Path::new(path), file_content.as_deref());
+                        let mut line_ignored = false;
+
+                        if let Some(target_line) = line_opt
+                            && let Some(ref text) = file_content
+                        {
+                            let mut eng = engine.clone();
+                            eng.register_file_directives(path, text);
+                            line_ignored = eng.is_span_suppressed(path, target_line, target_line);
+                        }
+
+                        let res = json!({
+                            "path": path,
+                            "path_ignored": path_ignored,
+                            "line": line_opt,
+                            "line_ignored": line_ignored,
+                            "is_ignored": path_ignored || line_ignored,
+                        });
+
+                        Some(make_text_response(
+                            req.id,
+                            serde_json::to_string_pretty(&res).unwrap_or_default(),
+                        ))
+                    } else {
+                        Some(make_error_response(
+                            req.id,
+                            rpc_errors::INVALID_PARAMS,
+                            "Missing required 'path' parameter",
+                        ))
+                    }
+                }
+
+                mcp_tools::APPLY_CLUSTER_REFACTOR => {
+                    let args = req.params.as_ref().and_then(|p| p.get("arguments"));
+                    let patch_str = args
+                        .and_then(|a| a.get(mcp_tools::PARAM_PATCH))
+                        .and_then(|p| p.as_str());
+
+                    if let Some(patch) = patch_str {
+                        let branch_name = args
+                            .and_then(|a| a.get(mcp_tools::PARAM_BRANCH_NAME))
+                            .and_then(|b| b.as_str());
+                        let create_branch = args
+                            .and_then(|a| a.get(mcp_tools::PARAM_CREATE_BRANCH))
+                            .and_then(|b| b.as_bool())
+                            .unwrap_or(false);
+
+                        match cddm_core::apply_cluster_refactor_branch(
+                            Path::new("."),
+                            patch,
+                            branch_name,
+                            create_branch,
+                        ) {
+                            Ok(res) => Some(make_text_response(
+                                req.id,
+                                serde_json::to_string_pretty(&res).unwrap_or_default(),
+                            )),
+                            Err(e) => {
+                                Some(make_error_response(req.id, rpc_errors::INTERNAL_ERROR, e))
+                            }
+                        }
+                    } else {
+                        Some(make_error_response(
+                            req.id,
+                            rpc_errors::INVALID_PARAMS,
+                            "Missing required 'patch' parameter",
+                        ))
+                    }
+                }
+
                 _ => Some(make_error_response(
                     req.id,
                     rpc_errors::METHOD_NOT_FOUND,
@@ -817,6 +1032,12 @@ async fn handle_mcp_request(req: JsonRpcRequest) -> Option<JsonRpcResponse> {
                         "uri": mcp_resources::URI_WORKSPACE_TIMELINE,
                         "name": "Workspace Historical Duplication Trend",
                         "description": "Historical DRY Health trajectories and commit snapshots across Git history.",
+                        "mimeType": mcp_resources::MIME_APPLICATION_JSON
+                    },
+                    {
+                        "uri": mcp_resources::URI_WORKSPACE_SUPPRESSIONS,
+                        "name": "Workspace Suppression Rules",
+                        "description": "Active .cddmignore suppression rules, threshold overrides, and filter directives.",
                         "mimeType": mcp_resources::MIME_APPLICATION_JSON
                     }
                 ]
@@ -947,6 +1168,30 @@ async fn handle_mcp_request(req: JsonRpcRequest) -> Option<JsonRpcResponse> {
                         }),
                         Err(e) => Some(make_error_response(req.id, rpc_errors::INTERNAL_ERROR, e)),
                     }
+                }
+
+                mcp_resources::URI_WORKSPACE_SUPPRESSIONS => {
+                    let root_path = Path::new(".cddmignore");
+                    let engine = if root_path.exists() {
+                        cddm_core::SuppressionEngine::from_file(root_path, false, false, true)
+                            .unwrap_or_else(|_| cddm_core::SuppressionEngine::default_engine())
+                    } else {
+                        cddm_core::SuppressionEngine::default_engine()
+                    };
+                    Some(JsonRpcResponse {
+                        jsonrpc: JSONRPC_VERSION.to_string(),
+                        id: req.id,
+                        result: Some(json!({
+                            "contents": [
+                                {
+                                    "uri": mcp_resources::URI_WORKSPACE_SUPPRESSIONS,
+                                    "mimeType": mcp_resources::MIME_APPLICATION_JSON,
+                                    "text": serde_json::to_string_pretty(engine.config()).unwrap_or_default()
+                                }
+                            ]
+                        })),
+                        error: None,
+                    })
                 }
 
                 _ => Some(make_error_response(
@@ -1168,7 +1413,7 @@ mod tests {
     #[tokio::test]
     async fn test_mcp_tools_list() {
         let tools = list_mcp_items(mcp_methods::TOOLS_LIST, "tools").await;
-        assert_eq!(tools.len(), 8);
+        assert_eq!(tools.len(), 10);
         let tool_names: Vec<&str> = tools.iter().map(|t| t["name"].as_str().unwrap()).collect();
         assert!(tool_names.contains(&mcp_tools::SCAN_CODEBASE));
         assert!(tool_names.contains(&mcp_tools::GET_CLONE_PAIR));
@@ -1178,6 +1423,8 @@ mod tests {
         assert!(tool_names.contains(&mcp_tools::EXPORT_SARIF));
         assert!(tool_names.contains(&mcp_tools::DIFF_SCAN));
         assert!(tool_names.contains(&mcp_tools::GET_TIMELINE));
+        assert!(tool_names.contains(&mcp_tools::CHECK_SUPPRESSION));
+        assert!(tool_names.contains(&mcp_tools::APPLY_CLUSTER_REFACTOR));
     }
 
     #[tokio::test]
@@ -1200,13 +1447,57 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn test_mcp_check_suppression_tool() {
+        let resp = handle_mcp_request(make_test_req(
+            35,
+            mcp_methods::TOOLS_CALL,
+            Some(json!({
+                "name": mcp_tools::CHECK_SUPPRESSION,
+                "arguments": {
+                    "path": "test_file.rs"
+                }
+            })),
+        ))
+        .await
+        .expect("Expected response");
+        assert!(resp.error.is_none());
+        let text = resp.result.unwrap()["content"][0]["text"]
+            .as_str()
+            .unwrap()
+            .to_string();
+        assert!(text.contains("path_ignored"));
+    }
+
+    #[tokio::test]
     async fn test_mcp_resources_list() {
         let resources = list_mcp_items(mcp_methods::RESOURCES_LIST, "resources").await;
-        assert_eq!(resources.len(), 4);
+        assert_eq!(resources.len(), 5);
         assert_eq!(resources[0]["uri"], mcp_resources::URI_WORKSPACE_HEALTH);
         assert_eq!(resources[1]["uri"], mcp_resources::URI_WORKSPACE_CLONES);
         assert_eq!(resources[2]["uri"], mcp_resources::URI_WORKSPACE_CLUSTERS);
         assert_eq!(resources[3]["uri"], mcp_resources::URI_WORKSPACE_TIMELINE);
+        assert_eq!(
+            resources[4]["uri"],
+            mcp_resources::URI_WORKSPACE_SUPPRESSIONS
+        );
+    }
+
+    #[tokio::test]
+    async fn test_mcp_resources_read_suppressions() {
+        let resp = handle_mcp_request(make_test_req(
+            36,
+            mcp_methods::RESOURCES_READ,
+            Some(json!({ "uri": mcp_resources::URI_WORKSPACE_SUPPRESSIONS })),
+        ))
+        .await
+        .expect("Expected response");
+        assert!(resp.result.is_some());
+        let contents = resp.result.unwrap()["contents"].as_array().unwrap().clone();
+        assert_eq!(contents.len(), 1);
+        assert_eq!(
+            contents[0]["uri"],
+            mcp_resources::URI_WORKSPACE_SUPPRESSIONS
+        );
     }
 
     #[tokio::test]

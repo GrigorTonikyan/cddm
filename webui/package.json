@@ -1,6 +1,6 @@
 {
   "name": "cddm-webui",
-  "version": "0.6.0",
+  "version": "1.4.0",
   "private": true,
   "type": "module",
   "scripts": {

@@ -420,6 +420,62 @@ Setting up CI/CD duplication quality gates and local pre-commit hooks manually r
 
 ---
 
+### EP-15: Intelligent AST Suppression & `.cddmignore` Engine
+
+- **Target Milestone**: `v1.4.0`
+- **Component**: `crates/cddm-core`, `crates/cddm-cli`, `crates/cddm-mcp`, `webui`
+- **Priority**: `High`
+- **Status**: `Completed (v1.4.0)`
+
+#### Problem Statement
+
+Real-world codebases contain intentional duplication (e.g. test fixtures, mocks, generated protobufs/stubs) that should not inflate duplication percentages or trigger CI gate failures. Fine-grained glob rules and inline AST comment suppression are required.
+
+#### Specification & Architecture
+
+1. **Suppression Engine (`suppression.rs`)**:
+   - Parse `.cddmignore` file supporting standard glob exclusions.
+   - Per-path threshold overrides (`[threshold] <pattern> min_tokens=N`).
+   - Per-path clone type filtering (`[type-filter] <pattern> ignore=Exact,Renamed`).
+   - Inline comment directives (`// cddm:ignore`, `/* cddm:ignore-start */ ... /* cddm:ignore-end */`).
+   - Rust and Python attributes (`#[cddm(allow_duplication)]`, `# @cddm_ignore`).
+   - Auto-generated content header detection (`@generated`, `DO NOT EDIT`).
+2. **CLI & REST API**:
+   - `cddm ignore init [--force]` and `cddm ignore check <PATH> [--line <N>]`.
+   - `GET /api/suppression/rules` and `POST /api/suppression/rules`.
+3. **MCP Tool & Resource**:
+   - `cddm_check_suppression` tool and `cddm://workspace/suppressions` resource.
+4. **WebUI**:
+   - `SuppressionRulesModal.tsx` with category filters, raw editor, and inline directives guide.
+
+---
+
+### EP-16: Interactive Auto-Refactor Sandbox & Transactional Git Branching Studio
+
+- **Target Milestone**: `v1.4.0`
+- **Component**: `crates/cddm-core`, `crates/cddm-cli`, `crates/cddm-mcp`, `webui`
+- **Priority**: `High`
+- **Status**: `Completed (v1.4.0)`
+
+#### Problem Statement
+
+Consensus refactoring recommendations need a playground where developers can customize extracted function names, choose destination module paths, verify parameter variance across occurrence sites, and apply patches directly to dedicated Git branches.
+
+#### Specification & Architecture
+
+1. **Customized Refactoring Engine (`refactor.rs`)**:
+   - `preview_cluster_refactor` accepts custom function names and destination module paths.
+   - Live diff hunk calculation and lines saved estimations.
+2. **Transactional Git Branch Application**:
+   - `apply_cluster_refactor_branch` creates and checks out a new branch (`cddm/refactor-...`) using `gix` before applying hunks.
+3. **Axum Endpoints & MCP Tools**:
+   - `POST /api/refactor/sandbox` and `POST /api/refactor/apply-branch`.
+   - `cddm_apply_cluster_refactor` MCP tool.
+4. **WebUI Studio**:
+   - `RefactorSandboxModal.tsx` with live parameter inputs, lines saved metrics, colorized diff preview, and one-click "Apply to Git Branch" action.
+
+---
+
 ## 3. Prioritized Action Checklist
 
 ```markdown
@@ -481,6 +537,17 @@ Setting up CI/CD duplication quality gates and local pre-commit hooks manually r
 - [x] Expose Axum REST endpoints `GET /api/timeline`, `GET /api/workflow/hooks`, `POST /api/workflow/hooks/install` [EP-13, EP-14]
 - [x] Implement MCP tool `cddm_get_timeline` and resource `cddm://workspace/timeline` [EP-13]
 - [x] Implement interactive `TimelineExplorerModal.tsx` in CDDM Studio WebUI with SVG trajectory chart and commit snapshots [EP-13]
+
+### Milestone v1.4.0 (Intelligent AST Suppression Engine & Interactive Auto-Refactor Sandbox)
+
+- [x] Implement `.cddmignore` glob rule parsing with per-path threshold overrides in `cddm-core::suppression` [EP-15]
+- [x] Implement inline AST comment directives and test/mock/generated file auto-detection [EP-15]
+- [x] Add `cddm ignore init` and `cddm ignore check` CLI subcommands [EP-15]
+- [x] Implement interactive refactor sandbox studio with customized function names and destination modules in `cddm-core::refactor` [EP-16]
+- [x] Implement transactional Git branch refactor patch application using in-process `gix` [EP-16]
+- [x] Expose Axum endpoints for suppression rules and refactor sandbox simulation [EP-15, EP-16]
+- [x] Expose MCP tools `cddm_check_suppression`, `cddm_apply_cluster_refactor`, and resource `cddm://workspace/suppressions` [EP-15, EP-16]
+- [x] Implement WebUI `SuppressionRulesModal.tsx` and `RefactorSandboxModal.tsx` in CDDM Studio [EP-15, EP-16]
 ```
 
 ---
