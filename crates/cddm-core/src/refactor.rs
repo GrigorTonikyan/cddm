@@ -1,7 +1,7 @@
 use crate::types::CloneLocation;
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 /// Refactoring strategies supported by the CDDM refactoring engine.
 pub mod refactor_strategies {
@@ -11,6 +11,33 @@ pub mod refactor_strategies {
 
 /// Default function name prefix for synthesized helper abstractions.
 pub const DEFAULT_HELPER_PREFIX: &str = "extracted_shared_helper";
+
+/// Result of applying a synthesized refactoring patch to workspace files.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ApplyPatchResult {
+    pub success: bool,
+    pub modified_files: Vec<String>,
+    pub hunks_applied: usize,
+    pub message: String,
+}
+
+/// A parsed hunk within a unified diff patch.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ParsedHunk {
+    pub old_start: usize,
+    pub old_count: usize,
+    pub new_start: usize,
+    pub new_count: usize,
+    pub deleted_lines: Vec<String>,
+    pub added_lines: Vec<String>,
+}
+
+/// A parsed file patch containing target path and list of hunks.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ParsedFilePatch {
+    pub file_path: String,
+    pub hunks: Vec<ParsedHunk>,
+}
 
 /// Represents a variable difference between two clone fragments.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -416,6 +443,226 @@ pub fn analyze_cluster_refactoring(
     ))
 }
 
+/// Parses a standard unified diff string into structured file patches and hunks.
+pub fn parse_unified_patch(patch_content: &str) -> Result<Vec<ParsedFilePatch>, String> {
+    let mut file_patches = Vec::new();
+    let lines: Vec<&str> = patch_content.lines().collect();
+    let mut i = 0;
+
+    while i < lines.len() {
+        let line = lines[i];
+        if line.starts_with("--- ") {
+            let raw_old = line.trim_start_matches("--- ").trim();
+            let mut file_path = raw_old;
+            if let Some(stripped) = file_path.strip_prefix("a/") {
+                file_path = stripped;
+            } else if let Some(stripped) = file_path.strip_prefix("a\\") {
+                file_path = stripped;
+            }
+
+            i += 1;
+            if i < lines.len() && lines[i].starts_with("+++ ") {
+                let raw_new = lines[i].trim_start_matches("+++ ").trim();
+                let mut target_path = raw_new;
+                if let Some(stripped) = target_path.strip_prefix("b/") {
+                    target_path = stripped;
+                } else if let Some(stripped) = target_path.strip_prefix("b\\") {
+                    target_path = stripped;
+                }
+                if !target_path.is_empty() && target_path != "/dev/null" {
+                    file_path = target_path;
+                }
+                i += 1;
+            }
+
+            let mut hunks = Vec::new();
+            while i < lines.len() && !lines[i].starts_with("--- ") {
+                let hunk_line = lines[i];
+                if hunk_line.starts_with("@@ ") {
+                    let parts: Vec<&str> = hunk_line.split("@@").collect();
+                    if parts.len() >= 3 {
+                        let header = parts[1].trim();
+                        let ranges: Vec<&str> = header.split_whitespace().collect();
+                        let mut old_start = 1;
+                        let mut old_count = 1;
+                        let mut new_start = 1;
+                        let mut new_count = 1;
+
+                        for r in ranges {
+                            if let Some(old_r) = r.strip_prefix('-') {
+                                let nums: Vec<&str> = old_r.split(',').collect();
+                                old_start = nums[0].parse().unwrap_or(1);
+                                if nums.len() > 1 {
+                                    old_count = nums[1].parse().unwrap_or(1);
+                                }
+                            } else if let Some(new_r) = r.strip_prefix('+') {
+                                let nums: Vec<&str> = new_r.split(',').collect();
+                                new_start = nums[0].parse().unwrap_or(1);
+                                if nums.len() > 1 {
+                                    new_count = nums[1].parse().unwrap_or(1);
+                                }
+                            }
+                        }
+
+                        i += 1;
+                        let mut deleted_lines = Vec::new();
+                        let mut added_lines = Vec::new();
+
+                        while i < lines.len()
+                            && !lines[i].starts_with("@@ ")
+                            && !lines[i].starts_with("--- ")
+                        {
+                            let l = lines[i];
+                            if let Some(del) = l.strip_prefix('-') {
+                                deleted_lines.push(del.to_string());
+                            } else if let Some(add) = l.strip_prefix('+') {
+                                added_lines.push(add.to_string());
+                            } else if let Some(ctx) = l.strip_prefix(' ') {
+                                deleted_lines.push(ctx.to_string());
+                                added_lines.push(ctx.to_string());
+                            }
+                            i += 1;
+                        }
+
+                        hunks.push(ParsedHunk {
+                            old_start,
+                            old_count,
+                            new_start,
+                            new_count,
+                            deleted_lines,
+                            added_lines,
+                        });
+                        continue;
+                    }
+                }
+                i += 1;
+            }
+
+            if !file_path.is_empty() && !hunks.is_empty() {
+                file_patches.push(ParsedFilePatch {
+                    file_path: file_path.to_string(),
+                    hunks,
+                });
+            }
+        } else {
+            i += 1;
+        }
+    }
+
+    if file_patches.is_empty() {
+        return Err("No valid unified diff hunks found in patch content".to_string());
+    }
+
+    Ok(file_patches)
+}
+
+/// Applies a synthesized unified refactoring patch directly to workspace files on disk.
+pub fn apply_patch_to_workspace(
+    patch_content: &str,
+    dry_run: bool,
+) -> Result<ApplyPatchResult, String> {
+    let file_patches = parse_unified_patch(patch_content)?;
+    let mut modified_files = Vec::new();
+    let mut total_hunks = 0;
+
+    let mut file_modifications: Vec<(PathBuf, String)> = Vec::new();
+
+    for file_patch in &file_patches {
+        let file_path = Path::new(&file_patch.file_path);
+        if !file_path.exists() {
+            return Err(format!(
+                "Target file '{}' specified in patch does not exist",
+                file_patch.file_path
+            ));
+        }
+
+        let raw_content = fs::read_to_string(file_path).map_err(|e| {
+            format!(
+                "Failed to read target file '{}': {}",
+                file_patch.file_path, e
+            )
+        })?;
+
+        let has_crlf = raw_content.contains("\r\n");
+        let original_lines: Vec<String> = raw_content
+            .lines()
+            .map(|l| l.trim_end_matches('\r').to_string())
+            .collect();
+
+        let mut current_lines = original_lines.clone();
+
+        let mut sorted_hunks = file_patch.hunks.clone();
+        sorted_hunks.sort_by_key(|b| std::cmp::Reverse(b.old_start));
+
+        for hunk in &sorted_hunks {
+            if hunk.old_start == 0 {
+                return Err(format!(
+                    "Invalid hunk old_start line 0 in patch for '{}'",
+                    file_patch.file_path
+                ));
+            }
+
+            let start_idx = hunk.old_start.saturating_sub(1);
+            let del_count = hunk.deleted_lines.len();
+
+            if start_idx + del_count > current_lines.len() {
+                return Err(format!(
+                    "Hunk range [{}, {}] exceeds file line count ({}) for '{}'",
+                    hunk.old_start,
+                    hunk.old_start + del_count,
+                    current_lines.len(),
+                    file_patch.file_path
+                ));
+            }
+
+            for (idx, expected_del) in hunk.deleted_lines.iter().enumerate() {
+                let actual = &current_lines[start_idx + idx];
+                if actual != expected_del {
+                    return Err(format!(
+                        "Hunk mismatch in '{}' at line {}: expected '{}', found '{}'",
+                        file_patch.file_path,
+                        start_idx + idx + 1,
+                        expected_del,
+                        actual
+                    ));
+                }
+            }
+
+            current_lines.splice(start_idx..start_idx + del_count, hunk.added_lines.clone());
+            total_hunks += 1;
+        }
+
+        let line_ending = if has_crlf { "\r\n" } else { "\n" };
+        let mut new_content = current_lines.join(line_ending);
+        if raw_content.ends_with('\n') || raw_content.ends_with("\r\n") {
+            new_content.push_str(line_ending);
+        }
+
+        file_modifications.push((file_path.to_path_buf(), new_content));
+        modified_files.push(file_patch.file_path.clone());
+    }
+
+    if !dry_run {
+        for (path, content) in &file_modifications {
+            fs::write(path, content)
+                .map_err(|e| format!("Failed to write patched file '{}': {}", path.display(), e))?;
+        }
+    }
+
+    let mode_str = if dry_run { " (dry run)" } else { "" };
+    Ok(ApplyPatchResult {
+        success: true,
+        modified_files,
+        hunks_applied: total_hunks,
+        message: format!(
+            "Successfully applied {} hunk(s) across {} file(s){}",
+            total_hunks,
+            file_modifications.len(),
+            mode_str
+        ),
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -608,5 +855,109 @@ mod tests {
         assert_eq!(suggestion.common_body_lines.len(), 2);
         assert_eq!(suggestion.sites.len(), 3);
         assert_eq!(suggestion.strategy, refactor_strategies::EXTRACT_FUNCTION);
+    }
+
+    #[test]
+    fn test_apply_patch_single_file_success() {
+        let mut file_a = NamedTempFile::new().unwrap();
+        let path_str = file_a.path().to_str().unwrap().to_string();
+
+        writeln!(
+            file_a,
+            "fn compute() {{\n    let a = 10;\n    let b = 20;\n    println!(\"{{}}\", a + b);\n}}"
+        )
+        .unwrap();
+        file_a.flush().unwrap();
+
+        let patch = format!(
+            "--- a/{}\n+++ b/{}\n@@ -2,3 +2,1 @@\n-    let a = 10;\n-    let b = 20;\n-    \
+             println!(\"{{}}\", a + b);\n+    extracted_shared_helper();\n",
+            path_str, path_str
+        );
+
+        let res = apply_patch_to_workspace(&patch, false);
+        assert!(res.is_ok());
+        let result = res.unwrap();
+        assert!(result.success);
+        assert_eq!(result.hunks_applied, 1);
+        assert_eq!(result.modified_files.len(), 1);
+
+        let modified_content = fs::read_to_string(file_a.path()).unwrap();
+        assert!(modified_content.contains("extracted_shared_helper();"));
+        assert!(!modified_content.contains("let a = 10;"));
+    }
+
+    #[test]
+    fn test_apply_patch_dry_run_preserves_file() {
+        let mut file_a = NamedTempFile::new().unwrap();
+        let path_str = file_a.path().to_str().unwrap().to_string();
+
+        let original_code =
+            "fn compute() {\n    let a = 10;\n    let b = 20;\n    println!(\"{}\", a + b);\n}\n";
+        file_a.write_all(original_code.as_bytes()).unwrap();
+        file_a.flush().unwrap();
+
+        let patch = format!(
+            "--- a/{}\n+++ b/{}\n@@ -2,3 +2,1 @@\n-    let a = 10;\n-    let b = 20;\n-    \
+             println!(\"{{}}\", a + b);\n+    extracted_shared_helper();\n",
+            path_str, path_str
+        );
+
+        let res = apply_patch_to_workspace(&patch, true);
+        assert!(res.is_ok());
+        let result = res.unwrap();
+        assert!(result.success);
+        assert!(result.message.contains("dry run"));
+
+        let current_content = fs::read_to_string(file_a.path()).unwrap();
+        assert_eq!(current_content, original_code);
+    }
+
+    #[test]
+    fn test_apply_patch_multi_file_cluster() {
+        let mut file_a = NamedTempFile::new().unwrap();
+        let mut file_b = NamedTempFile::new().unwrap();
+        let path_a = file_a.path().to_str().unwrap().to_string();
+        let path_b = file_b.path().to_str().unwrap().to_string();
+
+        writeln!(file_a, "fn one() {{\n    let v = 42;\n}}").unwrap();
+        writeln!(file_b, "fn two() {{\n    let v = 42;\n}}").unwrap();
+        file_a.flush().unwrap();
+        file_b.flush().unwrap();
+
+        let patch = format!(
+            "--- a/{}\n+++ b/{}\n@@ -2,1 +2,1 @@\n-    let v = 42;\n+    helper();\n--- a/{}\n+++ \
+             b/{}\n@@ -2,1 +2,1 @@\n-    let v = 42;\n+    helper();\n",
+            path_a, path_a, path_b, path_b
+        );
+
+        let res = apply_patch_to_workspace(&patch, false);
+        assert!(res.is_ok());
+        let result = res.unwrap();
+        assert_eq!(result.hunks_applied, 2);
+        assert_eq!(result.modified_files.len(), 2);
+
+        let content_a = fs::read_to_string(file_a.path()).unwrap();
+        let content_b = fs::read_to_string(file_b.path()).unwrap();
+        assert!(content_a.contains("helper();"));
+        assert!(content_b.contains("helper();"));
+    }
+
+    #[test]
+    fn test_apply_patch_mismatch_fails() {
+        let mut file_a = NamedTempFile::new().unwrap();
+        let path_str = file_a.path().to_str().unwrap().to_string();
+
+        writeln!(file_a, "fn compute() {{\n    let x = 999;\n}}").unwrap();
+        file_a.flush().unwrap();
+
+        let patch = format!(
+            "--- a/{}\n+++ b/{}\n@@ -2,1 +2,1 @@\n-    let a = 10;\n+    helper();\n",
+            path_str, path_str
+        );
+
+        let res = apply_patch_to_workspace(&patch, false);
+        assert!(res.is_err());
+        assert!(res.unwrap_err().contains("Hunk mismatch"));
     }
 }

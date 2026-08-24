@@ -19,6 +19,8 @@ export const API_ROUTES = {
   SNIPPET: "/api/snippet",
   REFACTOR: "/api/refactor",
   REFACTOR_CLUSTER: "/api/refactor-cluster",
+  APPLY_PATCH: "/api/apply-patch",
+  EVENTS: "/api/events",
 } as const;
 
 /**

@@ -245,3 +245,30 @@ export interface TreemapRect {
   height: number;
   node: TreemapNode;
 }
+
+/**
+ * Request payload for applying a refactoring patch to the workspace.
+ */
+export interface ApplyPatchRequest {
+  patch: string;
+  dry_run?: boolean;
+}
+
+/**
+ * Structured response for a completed patch application.
+ */
+export interface ApplyPatchResult {
+  success: boolean;
+  modified_files: string[];
+  hunks_applied: number;
+  message: string;
+}
+
+/**
+ * Server-Sent Event payload from backend /api/events.
+ */
+export type ServerEvent =
+  | { type: "scan_started"; payload: { scan_id: string } }
+  | { type: "scan_progress"; payload: ScanProgress }
+  | { type: "scan_complete"; payload: ScanResult }
+  | { type: "patch_applied"; payload: ApplyPatchResult };

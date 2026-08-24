@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { CloneCluster, CloneLocation } from "../types/cddm-types";
 import { parsePath } from "../utils/path-utils";
 import { RefactorPatchModal } from "./RefactorPatchModal";
+import { getIdeDeeplink, getEditorDisplayName } from "../utils/ide-links";
+import { useCDDMStore } from "../store/cddm-store";
 import {
   ChevronDown,
   ChevronRight,
@@ -11,6 +13,7 @@ import {
   Sparkles,
   Wand2,
   Layers,
+  ExternalLink,
 } from "lucide-react";
 
 export interface CloneClusterCardProps {
@@ -25,6 +28,8 @@ interface LocationItemProps {
 
 const LocationItem: React.FC<LocationItemProps> = ({ location, idx }) => {
   const parsed = parsePath(location.file);
+  const { preferredEditor } = useCDDMStore();
+  const ideLink = getIdeDeeplink(parsed.fullNormalized, location.start_line, preferredEditor);
 
   return (
     <div className="flex items-center justify-between gap-3 bg-slate-950/80 px-3.5 py-2 rounded-lg border border-slate-800/80 min-w-0">
@@ -41,6 +46,14 @@ const LocationItem: React.FC<LocationItemProps> = ({ location, idx }) => {
       </div>
 
       <div className="flex items-center gap-2 shrink-0">
+        <a
+          href={ideLink}
+          onClick={(e) => e.stopPropagation()}
+          title={`Open in ${getEditorDisplayName(preferredEditor)} at line ${location.start_line}`}
+          className="p-1 text-slate-500 hover:text-indigo-300 hover:bg-slate-800 rounded transition-colors"
+        >
+          <ExternalLink className="w-3 h-3" />
+        </a>
         <span className="text-[11px] font-mono px-2 py-0.5 bg-slate-800/90 text-slate-300 rounded border border-slate-700/50">
           L{location.start_line}-{location.end_line}
         </span>

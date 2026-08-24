@@ -1,23 +1,29 @@
 use axum::{
     Router,
     body::Body,
-    extract::{Json, Query},
+    extract::{Json, Query, State},
     http::{HeaderValue, StatusCode, Uri, header},
-    response::{IntoResponse, Response},
+    response::{
+        IntoResponse, Response,
+        sse::{Event, KeepAlive, Sse},
+    },
     routing::{get, post},
 };
 use cddm_core::{
-    CloneLocation, ClusterRefactorSuggestion, RefactorSuggestion, ScanConfig, ScanResult,
-    analyze_clone_refactoring, analyze_cluster_refactoring, grammar::get_grammar_for_path,
-    run_scan,
+    ApplyPatchResult, CddmWatcher, CloneLocation, ClusterRefactorSuggestion, RefactorSuggestion,
+    ScanConfig, ScanProgress, ScanResult, analyze_clone_refactoring, analyze_cluster_refactoring,
+    apply_patch_to_workspace, grammar::get_grammar_for_path, run_scan,
 };
 use rust_embed::RustEmbed;
 use serde::{Deserialize, Serialize};
+use std::convert::Infallible;
 use std::fs;
 use std::net::SocketAddr;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, atomic::AtomicBool};
-use tokio::sync::mpsc;
+use tokio::sync::{RwLock, broadcast, mpsc};
+use tokio_stream::StreamExt as _;
+use tokio_stream::wrappers::BroadcastStream;
 use tower_http::cors::CorsLayer;
 
 /// API endpoint path for health checks.
@@ -34,6 +40,12 @@ pub const ROUTE_API_REFACTOR: &str = "/api/refactor";
 
 /// API endpoint path for on-demand multi-site cluster refactoring patch synthesis.
 pub const ROUTE_API_REFACTOR_CLUSTER: &str = "/api/refactor-cluster";
+
+/// API endpoint path for applying synthesized refactoring patches directly to workspace files.
+pub const ROUTE_API_APPLY_PATCH: &str = "/api/apply-patch";
+
+/// API endpoint path for Server-Sent Events (SSE) live updates.
+pub const ROUTE_API_EVENTS: &str = "/api/events";
 
 /// Default localhost IPv4 binding.
 pub const DEFAULT_HOST_IP: [u8; 4] = [127, 0, 0, 1];
@@ -62,9 +74,40 @@ pub const DEFAULT_CONTEXT_LINES: usize = 3;
 /// Maximum allowed surrounding context line count.
 pub const MAX_CONTEXT_LINES: usize = 20;
 
+/// Default watch polling interval in milliseconds.
+pub const DEFAULT_WATCH_INTERVAL_MS: u64 = 300;
+
 #[derive(RustEmbed)]
 #[folder = "../../webui/dist"]
 struct WebUIAssets;
+
+/// Server-Sent Event payload broadcasted to connected clients.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "type", content = "payload")]
+pub enum ServerEvent {
+    #[serde(rename = "scan_started")]
+    ScanStarted { scan_id: String },
+    #[serde(rename = "scan_progress")]
+    ScanProgress(ScanProgress),
+    #[serde(rename = "scan_complete")]
+    ScanComplete(ScanResult),
+    #[serde(rename = "patch_applied")]
+    PatchApplied(ApplyPatchResult),
+}
+
+/// Shared application state for Axum router.
+#[derive(Clone)]
+pub struct AppState {
+    pub broadcast_tx: broadcast::Sender<ServerEvent>,
+    pub current_config: Arc<RwLock<ScanConfig>>,
+    pub latest_result: Arc<RwLock<Option<ScanResult>>>,
+}
+
+impl std::fmt::Debug for AppState {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("AppState").finish_non_exhaustive()
+    }
+}
 
 /// Query parameters for snippet extraction.
 #[derive(Debug, Deserialize, PartialEq, Eq)]
@@ -114,26 +157,87 @@ pub struct ClusterRefactorRequest {
     pub occurrences: Vec<CloneLocation>,
 }
 
-/// Builds the Axum application router with all routes and middleware configured.
-pub fn build_app() -> Router {
+/// Request payload for applying a refactoring patch to the workspace.
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ApplyPatchRequest {
+    pub patch: String,
+    #[serde(default)]
+    pub dry_run: bool,
+}
+
+/// Builds the Axum application router and default shared state.
+pub fn build_app() -> (AppState, Router) {
+    let (broadcast_tx, _) = broadcast::channel(200);
+    let state = AppState {
+        broadcast_tx,
+        current_config: Arc::new(RwLock::new(ScanConfig::default())),
+        latest_result: Arc::new(RwLock::new(None)),
+    };
+    let router = build_app_with_state(state.clone());
+    (state, router)
+}
+
+/// Builds the Axum application router with explicitly provided shared state.
+pub fn build_app_with_state(state: AppState) -> Router {
     Router::new()
         .route(ROUTE_API_HEALTH, get(health_handler))
         .route(ROUTE_API_SCAN, post(scan_handler))
         .route(ROUTE_API_SNIPPET, get(snippet_handler))
         .route(ROUTE_API_REFACTOR, post(refactor_handler))
         .route(ROUTE_API_REFACTOR_CLUSTER, post(refactor_cluster_handler))
+        .route(ROUTE_API_APPLY_PATCH, post(apply_patch_handler))
+        .route(ROUTE_API_EVENTS, get(events_handler))
         .fallback(static_asset_handler)
         .layer(CorsLayer::permissive())
+        .with_state(state)
 }
 
-/// Starts the Axum web server embedding the React WebUI and API endpoints.
+/// Starts the Axum web server embedding the React WebUI and API endpoints with background watching.
 pub async fn start_server(port: u16, open_browser: bool) -> Result<(), Box<dyn std::error::Error>> {
-    let app = build_app();
+    let (state, app) = build_app();
+
     let addr = SocketAddr::from((DEFAULT_HOST_IP, port));
     let listener = tokio::net::TcpListener::bind(addr).await?;
     let server_url = format!("http://localhost:{}", port);
 
     println!("\nCDDM Studio WebUI server listening at {}", server_url);
+
+    // Initialize background directory watcher for real-time live push updates
+    let watcher_state = state.clone();
+    tokio::spawn(async move {
+        let watch_dir = PathBuf::from(".");
+        if let Ok(watcher) = CddmWatcher::watch_directory(&watch_dir) {
+            let mut interval =
+                tokio::time::interval(std::time::Duration::from_millis(DEFAULT_WATCH_INTERVAL_MS));
+            loop {
+                interval.tick().await;
+                let ignores = {
+                    let cfg = watcher_state.current_config.read().await;
+                    cfg.ignore_patterns.clone()
+                };
+                let changed_files = watcher.collect_changed_paths(&ignores);
+                if !changed_files.is_empty() {
+                    let config = watcher_state.current_config.read().await.clone();
+                    let (tx, mut rx) = mpsc::channel(100);
+                    let cancel_flag = Arc::new(AtomicBool::new(false));
+
+                    let b_tx = watcher_state.broadcast_tx.clone();
+                    tokio::spawn(async move {
+                        while let Some(p) = rx.recv().await {
+                            let _ = b_tx.send(ServerEvent::ScanProgress(p));
+                        }
+                    });
+
+                    if let Ok(res) = run_scan(config, tx, cancel_flag).await {
+                        *watcher_state.latest_result.write().await = Some(res.clone());
+                        let _ = watcher_state
+                            .broadcast_tx
+                            .send(ServerEvent::ScanComplete(res));
+                    }
+                }
+            }
+        }
+    });
 
     if open_browser {
         let _ = opener::open(&server_url);
@@ -152,14 +256,90 @@ async fn health_handler() -> impl IntoResponse {
 }
 
 async fn scan_handler(
+    State(state): State<AppState>,
     Json(config): Json<ScanConfig>,
 ) -> Result<Json<ScanResult>, (StatusCode, String)> {
-    let (tx, _rx) = mpsc::channel(100);
+    *state.current_config.write().await = config.clone();
+
+    let (tx, mut rx) = mpsc::channel(100);
     let cancel_flag = Arc::new(AtomicBool::new(false));
 
+    let scan_id = uuid::Uuid::new_v4().to_string();
+    let _ = state
+        .broadcast_tx
+        .send(ServerEvent::ScanStarted { scan_id });
+
+    let b_tx = state.broadcast_tx.clone();
+    tokio::spawn(async move {
+        while let Some(progress) = rx.recv().await {
+            let _ = b_tx.send(ServerEvent::ScanProgress(progress));
+        }
+    });
+
     match run_scan(config, tx, cancel_flag).await {
-        Ok(result) => Ok(Json(result)),
+        Ok(result) => {
+            *state.latest_result.write().await = Some(result.clone());
+            let _ = state
+                .broadcast_tx
+                .send(ServerEvent::ScanComplete(result.clone()));
+            Ok(Json(result))
+        }
         Err(err) => Err((StatusCode::INTERNAL_SERVER_ERROR, err)),
+    }
+}
+
+async fn events_handler(
+    State(state): State<AppState>,
+) -> Sse<impl tokio_stream::Stream<Item = Result<Event, Infallible>>> {
+    let rx = state.broadcast_tx.subscribe();
+    let stream = BroadcastStream::new(rx).filter_map(|msg| match msg {
+        Ok(event) => {
+            let json_data = serde_json::to_string(&event).unwrap_or_default();
+            Some(Ok(Event::default().data(json_data)))
+        }
+        Err(_) => None,
+    });
+
+    Sse::new(stream).keep_alive(KeepAlive::default())
+}
+
+async fn apply_patch_handler(
+    State(state): State<AppState>,
+    Json(req): Json<ApplyPatchRequest>,
+) -> Result<Json<ApplyPatchResult>, (StatusCode, String)> {
+    match apply_patch_to_workspace(&req.patch, req.dry_run) {
+        Ok(result) => {
+            if !req.dry_run {
+                let _ = state
+                    .broadcast_tx
+                    .send(ServerEvent::PatchApplied(result.clone()));
+
+                // Trigger background re-scan to refresh workspace state
+                let state_clone = state.clone();
+                tokio::spawn(async move {
+                    let config = state_clone.current_config.read().await.clone();
+                    let (tx, mut rx) = mpsc::channel(100);
+                    let cancel_flag = Arc::new(AtomicBool::new(false));
+
+                    let b_tx = state_clone.broadcast_tx.clone();
+                    tokio::spawn(async move {
+                        while let Some(progress) = rx.recv().await {
+                            let _ = b_tx.send(ServerEvent::ScanProgress(progress));
+                        }
+                    });
+
+                    if let Ok(scan_res) = run_scan(config, tx, cancel_flag).await {
+                        *state_clone.latest_result.write().await = Some(scan_res.clone());
+                        let _ = state_clone
+                            .broadcast_tx
+                            .send(ServerEvent::ScanComplete(scan_res));
+                    }
+                });
+            }
+
+            Ok(Json(result))
+        }
+        Err(err) => Err((StatusCode::BAD_REQUEST, err)),
     }
 }
 
@@ -441,5 +621,63 @@ mod tests {
         );
         assert_eq!(suggestion.sites.len(), 3);
         assert!(suggestion.unified_patch.contains("--- a/"));
+    }
+
+    #[tokio::test]
+    async fn test_apply_patch_handler_success() {
+        let (broadcast_tx, _) = broadcast::channel(100);
+        let state = AppState {
+            broadcast_tx,
+            current_config: Arc::new(RwLock::new(ScanConfig::default())),
+            latest_result: Arc::new(RwLock::new(None)),
+        };
+
+        let mut file_a = NamedTempFile::new().unwrap();
+        let path_str = file_a.path().to_str().unwrap().to_string();
+
+        writeln!(file_a, "fn test() {{\n    let x = 1;\n}}").unwrap();
+        file_a.flush().unwrap();
+
+        let patch = format!(
+            "--- a/{}\n+++ b/{}\n@@ -2,1 +2,1 @@\n-    let x = 1;\n+    helper();\n",
+            path_str, path_str
+        );
+
+        let req = ApplyPatchRequest {
+            patch,
+            dry_run: false,
+        };
+
+        let result = apply_patch_handler(State(state), Json(req)).await;
+        assert!(result.is_ok());
+        let Json(res) = result.unwrap();
+        assert!(res.success);
+        assert_eq!(res.hunks_applied, 1);
+    }
+
+    #[tokio::test]
+    async fn test_apply_patch_handler_bad_request() {
+        let (broadcast_tx, _) = broadcast::channel(100);
+        let state = AppState {
+            broadcast_tx,
+            current_config: Arc::new(RwLock::new(ScanConfig::default())),
+            latest_result: Arc::new(RwLock::new(None)),
+        };
+
+        let req = ApplyPatchRequest {
+            patch: "invalid patch without hunks".to_string(),
+            dry_run: false,
+        };
+
+        let result = apply_patch_handler(State(state), Json(req)).await;
+        assert!(result.is_err());
+        let (status, _) = result.unwrap_err();
+        assert_eq!(status, StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
+    async fn test_build_app_router() {
+        let app = build_app();
+        let _ = app;
     }
 }

@@ -10,6 +10,7 @@ import {
 import { parsePath } from "../utils/path-utils";
 import { CollapsibleCard, CodeBlock, BADGE_VARIANTS, CODE_BLOCK_VARIANTS } from "./ui";
 import { Win2xWindow } from "./ui/win2x-manager";
+import { useCDDMStore } from "../store/cddm-store";
 import {
   Sparkles,
   Download,
@@ -20,6 +21,7 @@ import {
   FileCode2,
   GitBranch,
   Layers,
+  Wrench,
 } from "lucide-react";
 
 export interface RefactorPatchModalProps {
@@ -45,6 +47,7 @@ export const RefactorPatchModal: React.FC<RefactorPatchModalProps> = ({
   startLineB,
   endLineB,
 }) => {
+  const { applyPatch, isPatching } = useCDDMStore();
   const [pairSuggestion, setPairSuggestion] = useState<RefactorSuggestion | null>(null);
   const [clusterSuggestion, setClusterSuggestion] = useState<ClusterRefactorSuggestion | null>(
     null,
@@ -53,6 +56,7 @@ export const RefactorPatchModal: React.FC<RefactorPatchModalProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [copiedPatch, setCopiedPatch] = useState<boolean>(false);
   const [downloaded, setDownloaded] = useState<boolean>(false);
+  const [applied, setApplied] = useState<boolean>(false);
 
   const isClusterMode = Boolean(cluster);
 
@@ -159,6 +163,20 @@ export const RefactorPatchModal: React.FC<RefactorPatchModalProps> = ({
     URL.revokeObjectURL(url);
     setDownloaded(true);
     setTimeout(() => setDownloaded(false), 2000);
+  };
+
+  const handleApplyPatch = async () => {
+    if (!currentPatch) return;
+    try {
+      await applyPatch(currentPatch, false);
+      setApplied(true);
+      setTimeout(() => {
+        onClose();
+        setApplied(false);
+      }, 1000);
+    } catch {
+      // Error handled by store
+    }
   };
 
   const parsedA = parsePath(fileA || "");
@@ -407,6 +425,29 @@ export const RefactorPatchModal: React.FC<RefactorPatchModalProps> = ({
                     <>
                       <Download className="w-3 h-3" />
                       <span>Download .patch</span>
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleApplyPatch}
+                  disabled={isPatching || applied}
+                  className="px-2.5 py-1 rounded-md bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-[11px] font-semibold flex items-center gap-1.5 transition-colors shadow-sm font-mono"
+                >
+                  {isPatching ? (
+                    <>
+                      <RefreshCw className="w-3 h-3 animate-spin" />
+                      <span>Applying...</span>
+                    </>
+                  ) : applied ? (
+                    <>
+                      <Check className="w-3 h-3 text-white" />
+                      <span>Applied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Wrench className="w-3 h-3" />
+                      <span>Apply to Workspace</span>
                     </>
                   )}
                 </button>

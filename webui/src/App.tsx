@@ -3,7 +3,18 @@ import { ScanConfigPanel } from "./components/ScanConfigPanel";
 import { ScanProgressBar } from "./components/ScanProgressBar";
 import { ScanResults } from "./components/ScanResults";
 import { ScanConfigModal } from "./components/ScanConfigModal";
-import { Scissors, Terminal, Sparkles, ShieldCheck, Sliders, Award, FileDown } from "lucide-react";
+import {
+  Scissors,
+  Terminal,
+  Sparkles,
+  ShieldCheck,
+  Sliders,
+  Award,
+  FileDown,
+  Radio,
+  CheckCheck,
+  X,
+} from "lucide-react";
 import { APP_VERSION } from "./constants/cddm-constants";
 import { useCDDMStore } from "./store/cddm-store";
 
@@ -11,6 +22,10 @@ export const App: React.FC = () => {
   const {
     error,
     results,
+    isLiveWatchActive,
+    patchStatusMessage,
+    setIsLiveWatchActive,
+    setPatchStatusMessage,
     isScanConfigOpen,
     setIsScanConfigOpen,
     setIsHealthAuditOpen,
@@ -42,6 +57,29 @@ export const App: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5 text-xs font-mono text-slate-400">
+          {/* Live Watch Status Toggle */}
+          <button
+            type="button"
+            onClick={() => setIsLiveWatchActive(!isLiveWatchActive)}
+            title={
+              isLiveWatchActive
+                ? "Live Workspace Sync Active: Click to pause"
+                : "Live Workspace Sync Paused: Click to resume"
+            }
+            className={`px-3 py-1.5 rounded-lg border flex items-center gap-1.5 transition-colors shadow-sm ${
+              isLiveWatchActive
+                ? "bg-emerald-950/60 border-emerald-800/60 text-emerald-300 hover:bg-emerald-900/40"
+                : "bg-slate-950 border-slate-800 text-slate-400 hover:bg-slate-800"
+            }`}
+          >
+            <Radio
+              className={`w-3.5 h-3.5 ${
+                isLiveWatchActive ? "text-emerald-400 animate-pulse" : "text-slate-500"
+              }`}
+            />
+            <span>{isLiveWatchActive ? "Live Watch: ON" : "Live Watch: OFF"}</span>
+          </button>
+
           <button
             type="button"
             onClick={() => setIsScanConfigOpen(true)}
@@ -85,6 +123,23 @@ export const App: React.FC = () => {
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6">
+        {patchStatusMessage && (
+          <div className="bg-emerald-950/70 border border-emerald-800 text-emerald-200 px-4 py-3 rounded-xl flex items-center justify-between gap-2 shadow-lg animate-fade-in">
+            <div className="flex items-center gap-2">
+              <CheckCheck className="w-5 h-5 text-emerald-400 shrink-0" />
+              <span className="text-xs font-mono">{patchStatusMessage}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setPatchStatusMessage(null)}
+              className="p-1 rounded-lg hover:bg-emerald-900/50 text-emerald-400"
+              title="Dismiss notification"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
         {error && (
           <div className="bg-rose-950/60 border border-rose-900/80 text-rose-300 px-4 py-3 rounded-xl flex items-center gap-2 shadow-lg">
             <ShieldCheck className="w-5 h-5 text-rose-400 shrink-0" />

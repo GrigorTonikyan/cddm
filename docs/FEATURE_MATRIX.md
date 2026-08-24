@@ -1,11 +1,11 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-24 | Rust: 101/101 PASS | WebUI: 112/112 PASS | Repository Scripts: 27/27 PASS | Playwright E2E: 9/9 PASS | CI Workflows: PASS
+> Last verified: 2026-08-24 | Rust: 109/109 PASS | WebUI: 118/118 PASS across 31 suites | Repository Scripts: 27/27 PASS | Playwright E2E: 11/11 PASS | CI Workflows: PASS
 
 ---
 
-## 1. Rust Backend — `cddm-core`, `cddm-cli`, `cddm-mcp` (101 unit tests)
+## 1. Rust Backend — `cddm-core`, `cddm-cli`, `cddm-mcp` (109 unit tests)
 
 ### Tokenization Engine (`crates/cddm-core/src/tokenizer.rs`)
 
@@ -91,9 +91,10 @@
 
 ### File System Watcher (`crates/cddm-core/src/watcher.rs`)
 
-| ID     | Feature Variant                    | Test Function                           | Result |
-| :----- | :--------------------------------- | :-------------------------------------- | :----- |
-| F-08.1 | Watcher creation on temp directory | `watcher::tests::test_watcher_creation` | PASS   |
+| ID     | Feature Variant                                             | Test Function                                     | Result |
+| :----- | :---------------------------------------------------------- | :------------------------------------------------ | :----- |
+| F-08.1 | Watcher creation on temp directory                          | `watcher::tests::test_watcher_creation`           | PASS   |
+| F-08.2 | Path filtering ignores build artifacts and matches grammars | `watcher::tests::test_is_relevant_path_filtering` | PASS   |
 
 ### Type System & Serialization (`crates/cddm-core/src/types.rs`)
 
@@ -127,14 +128,18 @@
 
 ### Multi-Site Deduplication & Refactoring Engine (`crates/cddm-core/src/refactor.rs`)
 
-| ID     | Feature Variant                                        | Test Function                                             | Result |
-| :----- | :----------------------------------------------------- | :-------------------------------------------------------- | :----- |
-| F-12.1 | Identical clone snippet refactoring & patch synthesis  | `refactor::tests::test_identical_snippet_refactoring`     | PASS   |
-| F-12.2 | Parameter difference detection for renamed identifiers | `refactor::tests::test_renamed_parameter_refactoring`     | PASS   |
-| F-12.3 | Real filesystem file clone refactoring & patch         | `refactor::tests::test_real_file_clone_refactoring`       | PASS   |
-| F-12.4 | Out-of-bounds line range error handling                | `refactor::tests::test_invalid_line_range`                | PASS   |
-| F-12.5 | Multi-site consensus invariant snippet extraction      | `refactor::tests::test_analyze_cluster_snippets_exact`    | PASS   |
-| F-12.6 | Multi-site file-based consensus refactoring & patch    | `refactor::tests::test_analyze_cluster_refactoring_files` | PASS   |
+| ID      | Feature Variant                                        | Test Function                                                     | Result |
+| :------ | :----------------------------------------------------- | :---------------------------------------------------------------- | :----- |
+| F-12.1  | Identical clone snippet refactoring & patch synthesis  | `refactor::tests::test_identical_snippet_refactoring`             | PASS   |
+| F-12.2  | Parameter difference detection for renamed identifiers | `refactor::tests::test_renamed_parameter_refactoring`             | PASS   |
+| F-12.3  | Real filesystem file clone refactoring & patch         | `refactor::tests::test_real_file_clone_refactoring`               | PASS   |
+| F-12.4  | Out-of-bounds line range error handling                | `refactor::tests::test_invalid_line_range`                        | PASS   |
+| F-12.5  | Multi-site consensus invariant snippet extraction      | `refactor::tests::test_identical_cluster_refactoring_three_sites` | PASS   |
+| F-12.6  | Multi-site file-based consensus refactoring & patch    | `refactor::tests::test_real_file_cluster_refactoring`             | PASS   |
+| F-12.7  | Atomic single-file unified patch application           | `refactor::tests::test_apply_patch_single_file_success`           | PASS   |
+| F-12.8  | Multi-file cluster unified patch application           | `refactor::tests::test_apply_patch_multi_file_cluster`            | PASS   |
+| F-12.9  | Dry-run patch validation preserves disk files          | `refactor::tests::test_apply_patch_dry_run_preserves_file`        | PASS   |
+| F-12.10 | Mismatched hunk content fails safely with clean error  | `refactor::tests::test_apply_patch_mismatch_fails`                | PASS   |
 
 ### Git Differential Scanning Engine (`crates/cddm-core/src/diff.rs`)
 
@@ -152,52 +157,56 @@
 | F-14.3 | CLI Console and Markdown formatting output execution | `main::tests::test_print_console_and_markdown_reports` | PASS   |
 | F-14.4 | CLI Differential scan console & markdown tables      | `main::tests::test_print_diff_reports`                 | PASS   |
 | F-14.5 | Axum `/api/refactor-cluster` handler synthesis       | `serve::tests::test_refactor_cluster_handler_success`  | PASS   |
+| F-14.6 | Axum `/api/apply-patch` handler execution            | `serve::tests::test_apply_patch_handler_success`       | PASS   |
+| F-14.7 | Axum `/api/apply-patch` invalid hunk rejection       | `serve::tests::test_apply_patch_handler_bad_request`   | PASS   |
+| F-14.8 | Axum router construction & route registration        | `serve::tests::test_build_app_router`                  | PASS   |
 
 ### Advanced MCP Server Protocol (`crates/cddm-mcp/src/main.rs`)
 
-| ID     | Feature Variant                                                  | Test Function                                     | Result |
-| :----- | :--------------------------------------------------------------- | :------------------------------------------------ | :----- |
-| F-15.1 | MCP protocol initialize, version negotiation & serverInfo        | `main::tests::test_mcp_initialize`                | PASS   |
-| F-15.2 | MCP ping healthcheck method                                      | `main::tests::test_mcp_ping`                      | PASS   |
-| F-15.3 | Tools discovery (scan, diff, cluster refactor, SARIF)            | `main::tests::test_mcp_tools_list`                | PASS   |
-| F-15.4 | Differential scan tool invocation parameter validation           | `main::tests::test_mcp_diff_scan_missing_params`  | PASS   |
-| F-15.5 | Resources discovery (`health`, `clones`, `clusters`)             | `main::tests::test_mcp_resources_list`            | PASS   |
-| F-15.6 | Prompts discovery and retrieval (`audit_dry_health`, `refactor`) | `main::tests::test_mcp_prompts_list_and_get`      | PASS   |
-| F-15.7 | Standard JSON-RPC 2.0 error handling for invalid/unknown method  | `main::tests::test_mcp_unknown_method`            | PASS   |
-| F-15.8 | MCP `cddm_suggest_cluster_refactor` explicit occurrences         | `main::tests::test_mcp_cluster_refactor_explicit` | PASS   |
-| F-15.9 | MCP `cddm://workspace/clusters` resource contents read           | `main::tests::test_mcp_resources_read_clusters`   | PASS   |
+| ID     | Feature Variant                                                  | Test Function                                                 | Result |
+| :----- | :--------------------------------------------------------------- | :------------------------------------------------------------ | :----- |
+| F-15.1 | MCP protocol initialize, version negotiation & serverInfo        | `main::tests::test_mcp_initialize`                            | PASS   |
+| F-15.2 | MCP ping healthcheck method                                      | `main::tests::test_mcp_ping`                                  | PASS   |
+| F-15.3 | Tools discovery (scan, diff, cluster refactor, SARIF)            | `main::tests::test_mcp_tools_list`                            | PASS   |
+| F-15.4 | Differential scan tool invocation parameter validation           | `main::tests::test_mcp_diff_scan_missing_params`              | PASS   |
+| F-15.5 | Resources discovery (`health`, `clones`, `clusters`)             | `main::tests::test_mcp_resources_list`                        | PASS   |
+| F-15.6 | Prompts discovery and retrieval (`audit_dry_health`, `refactor`) | `main::tests::test_mcp_prompts_list_and_get`                  | PASS   |
+| F-15.7 | Standard JSON-RPC 2.0 error handling for invalid/unknown method  | `main::tests::test_mcp_unknown_method`                        | PASS   |
+| F-15.8 | MCP `cddm_suggest_cluster_refactor` explicit occurrences         | `main::tests::test_mcp_cluster_refactor_explicit_occurrences` | PASS   |
+| F-15.9 | MCP `cddm://workspace/clusters` resource contents read           | `main::tests::test_mcp_resources_read_clusters`               | PASS   |
 
 ### Zero-Copy Memory-Mapped File I/O (`crates/cddm-core/src/io/`)
 
 | ID     | Feature Variant                                             | Test Function                                     | Result |
 | :----- | :---------------------------------------------------------- | :------------------------------------------------ | :----- |
-| F-15.1 | Small file reads (<= 64KB) utilize heap buffer              | `io::mmap::tests::test_read_small_file_uses_heap` | PASS   |
-| F-15.2 | Large file reads (> 64KB) utilize zero-copy `memmap2::Mmap` | `io::mmap::tests::test_read_large_file_uses_mmap` | PASS   |
-| F-15.3 | Empty file reads return empty heap buffer                   | `io::mmap::tests::test_read_empty_file`           | PASS   |
-| F-15.4 | Nonexistent file error propagation                          | `io::mmap::tests::test_read_nonexistent_file`     | PASS   |
-| F-15.5 | Non-UTF-8 invalid byte error handling                       | `io::mmap::tests::test_read_non_utf8_large_file`  | PASS   |
-| F-15.6 | `FileSource` debug representation formatting                | `io::mmap::tests::test_debug_formatting`          | PASS   |
+| F-16.1 | Small file reads (<= 64KB) utilize heap buffer              | `io::mmap::tests::test_read_small_file_uses_heap` | PASS   |
+| F-16.2 | Large file reads (> 64KB) utilize zero-copy `memmap2::Mmap` | `io::mmap::tests::test_read_large_file_uses_mmap` | PASS   |
+| F-16.3 | Empty file reads return empty heap buffer                   | `io::mmap::tests::test_read_empty_file`           | PASS   |
+| F-16.4 | Nonexistent file error propagation                          | `io::mmap::tests::test_read_nonexistent_file`     | PASS   |
+| F-16.5 | Non-UTF-8 invalid byte error handling                       | `io::mmap::tests::test_read_non_utf8_large_file`  | PASS   |
+| F-16.6 | `FileSource` debug representation formatting                | `io::mmap::tests::test_debug_formatting`          | PASS   |
 
 ### SIMD Mersenne-61 Rolling Hash Engine (`crates/cddm-core/src/simd/`)
 
 | ID     | Feature Variant                                               | Test Function                                             | Result |
 | :----- | :------------------------------------------------------------ | :-------------------------------------------------------- | :----- |
-| F-16.1 | Scalar dual-base k-gram rolling hashes calculation            | `simd::scalar::tests::test_scalar_kgram_hashes`           | PASS   |
-| F-16.2 | AVX2 hardware acceleration output parity with scalar baseline | `simd::avx2::tests::test_avx2_matches_scalar`             | PASS   |
-| F-16.3 | ARM NEON vector lanes output parity with scalar baseline      | `simd::neon::tests::test_neon_matches_scalar`             | PASS   |
-| F-16.4 | Automatic runtime hardware vectorization dispatcher           | `simd::tests::test_compute_kgram_rolling_hashes_dispatch` | PASS   |
+| F-17.1 | Scalar dual-base k-gram rolling hashes calculation            | `simd::scalar::tests::test_scalar_kgram_hashes`           | PASS   |
+| F-17.2 | AVX2 hardware acceleration output parity with scalar baseline | `simd::avx2::tests::test_avx2_matches_scalar`             | PASS   |
+| F-17.3 | ARM NEON vector lanes output parity with scalar baseline      | `simd::neon::tests::test_neon_matches_scalar`             | PASS   |
+| F-17.4 | Automatic runtime hardware vectorization dispatcher           | `simd::tests::test_compute_kgram_rolling_hashes_dispatch` | PASS   |
 
 ---
 
-## 2. WebUI Frontend — React 19 + TypeScript + Vitest (112 unit tests across 30 suites)
+## 2. WebUI Frontend — React 19 + TypeScript + Vitest (118 unit tests across 31 suites)
 
 | Module             | Test Suite File                                                                  | Test Cases | Status |
 | :----------------- | :------------------------------------------------------------------------------- | :--------- | :----- |
-| Store              | `webui/src/store/__tests__/cddm-store.test.ts`                                   | 9 tests    | PASS   |
+| IDE Deeplinks      | `webui/src/utils/__tests__/ide-links.test.ts`                                    | 8 tests    | PASS   |
+| Store              | `webui/src/store/__tests__/cddm-store.test.ts`                                   | 11 tests   | PASS   |
 | App Shell          | `webui/src/components/__tests__/App.test.tsx`                                    | 5 tests    | PASS   |
 | Config Panel       | `webui/src/components/__tests__/ScanConfigPanel.test.tsx`                        | 4 tests    | PASS   |
 | Progress Bar       | `webui/src/components/__tests__/ScanProgressBar.test.tsx`                        | 3 tests    | PASS   |
-| Results View       | `webui/src/components/__tests__/ScanResults.test.tsx`                            | 8 tests    | PASS   |
+| Results View       | `webui/src/components/__tests__/ScanResults.test.tsx`                            | 6 tests    | PASS   |
 | Clone Pair Card    | `webui/src/components/__tests__/ClonePairCard.test.tsx`                          | 2 tests    | PASS   |
 | Clone Cluster Card | `webui/src/components/__tests__/CloneClusterCard.test.tsx`                       | 2 tests    | PASS   |
 | Diff Viewer        | `webui/src/components/__tests__/DiffViewer.test.tsx`                             | 3 tests    | PASS   |

@@ -1,13 +1,31 @@
 import React from "react";
 import { useCDDMStore } from "../store/cddm-store";
-import { Play, RotateCcw, SlidersHorizontal, Folder, Shield, Code, GitBranch } from "lucide-react";
+import { SUPPORTED_EDITORS, SupportedEditor } from "../utils/ide-links";
+import {
+  Play,
+  RotateCcw,
+  SlidersHorizontal,
+  Folder,
+  Shield,
+  Code,
+  GitBranch,
+  AppWindow,
+} from "lucide-react";
 
 export interface ScanConfigPanelProps {
   className?: string;
 }
 
 export const ScanConfigPanel: React.FC<ScanConfigPanelProps> = ({ className = "" }) => {
-  const { config, setConfig, startScan, isScanning, resetScan } = useCDDMStore();
+  const {
+    config,
+    setConfig,
+    preferredEditor,
+    setPreferredEditor,
+    startScan,
+    isScanning,
+    resetScan,
+  } = useCDDMStore();
 
   return (
     <div
@@ -86,8 +104,27 @@ export const ScanConfigPanel: React.FC<ScanConfigPanelProps> = ({ className = ""
           />
         </div>
 
+        {/* Preferred IDE Editor Deeplinks */}
+        <div>
+          <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2 flex items-center gap-2">
+            <AppWindow className="w-4 h-4 text-indigo-400" />
+            Preferred IDE Deeplink Target
+          </label>
+          <select
+            value={preferredEditor}
+            onChange={(e) => setPreferredEditor(e.target.value as SupportedEditor)}
+            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm font-mono text-slate-100 focus:outline-none focus:border-indigo-500 transition-colors shadow-inner cursor-pointer"
+          >
+            {SUPPORTED_EDITORS.map((editor) => (
+              <option key={editor.id} value={editor.id}>
+                {editor.name} ({editor.scheme}://)
+              </option>
+            ))}
+          </select>
+        </div>
+
         {/* Checkbox Toggles */}
-        <div className="flex flex-wrap items-center gap-6 pt-2">
+        <div className="flex flex-wrap items-center gap-6 pt-2 md:col-span-2">
           <label className="flex items-center gap-2 text-xs font-medium text-slate-300 cursor-pointer select-none">
             <input
               type="checkbox"

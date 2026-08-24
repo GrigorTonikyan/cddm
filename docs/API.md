@@ -223,6 +223,50 @@ Synthesizes a multi-site consensus deduplication patch across $N \ge 2$ duplicat
 
 ---
 
+### `POST /api/apply-patch`
+
+Applies a synthesized unified diff refactoring patch directly and atomically to the workspace filesystem.
+
+**Request Body** (`application/json`):
+
+```json
+{
+  "patch": "--- a/src/auth/login.rs\n+++ b/src/auth/login.rs\n@@ -10,15 +10,1 @@\n...",
+  "dry_run": false
+}
+```
+
+| Field     | Type      | Required | Default | Description                                              |
+| :-------- | :-------- | :------- | :------ | :------------------------------------------------------- |
+| `patch`   | `string`  | Yes      | N/A     | Standard unified diff patch string                       |
+| `dry_run` | `boolean` | No       | `false` | When true, validates patch application without modifying |
+
+**Response** (`200 OK`):
+
+```json
+{
+  "success": true,
+  "modified_files": ["src/auth/login.rs", "src/auth/register.rs"],
+  "hunks_applied": 2,
+  "message": "Successfully applied 2 patch hunks across 2 file(s)."
+}
+```
+
+---
+
+### `GET /api/events`
+
+Subscribes to live Server-Sent Events (SSE) stream for real-time background file change notifications, progress tracking, and re-scan results.
+
+**Event Types**:
+
+- `scan_started`: Emitted when an incremental or manual scan begins (`{ "type": "scan_started", "payload": { "scan_id": "..." } }`).
+- `scan_progress`: Emitted with real-time phase and file progress.
+- `scan_complete`: Emitted when duplication analysis finishes, carrying updated `ScanResult`.
+- `patch_applied`: Emitted when a refactoring patch is applied to the workspace.
+
+---
+
 ## 2. CLI Reference (`cddm`)
 
 ### Command: `cddm scan [DIRECTORY]`
@@ -256,6 +300,21 @@ Executes differential duplication scanning comparing current changes against a G
 | `--git-blame`      |       | `bool`                           | `false`   | Enable `gix` git author annotations            |
 | `--cache-dir`      |       | `PathBuf`                        | None      | Custom path for persistent redb cache database |
 | `--no-cache`       |       | `bool`                           | `false`   | Bypass persistent disk cache                   |
+
+### Command: `cddm watch [DIRECTORY]`
+
+Continuously watches workspace for source modifications and automatically executes real-time incremental duplication analysis with live terminal status updates.
+
+| Flag               | Short | Type       | Default | Description                                    |
+| :----------------- | :---- | :--------- | :------ | :--------------------------------------------- |
+| `--min-tokens`     | `-m`  | `usize`    | `50`    | Minimum token clone threshold                  |
+| `--languages`      | `-l`  | `String[]` | `[]`    | Filter scan by language names                  |
+| `--ignore`         | `-i`  | `String[]` | `[]`    | Additional ignore glob patterns                |
+| `--debounce-ms`    |       | `u64`      | `250`   | Debounce interval in milliseconds              |
+| `--fail-threshold` |       | `f64`      | None    | Log warning if duplication % exceeds threshold |
+| `--git-blame`      |       | `bool`     | `false` | Enable `gix` git author annotations            |
+| `--cache-dir`      |       | `PathBuf`  | None    | Custom path for persistent redb cache database |
+| `--no-cache`       |       | `bool`     | `false` | Bypass persistent disk cache                   |
 
 ### Command: `cddm refactor [OPTIONS]`
 

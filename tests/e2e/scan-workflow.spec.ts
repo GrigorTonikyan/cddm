@@ -35,4 +35,20 @@ test.describe("CDDM WebUI E2E Workflows", () => {
     // Verify cluster cards or empty state
     await expect(page.locator("body")).toBeVisible();
   });
+
+  test("should toggle live watch state from header", async ({ page }) => {
+    await page.goto("/");
+    const liveWatchBtn = page.getByRole("button", { name: /Live Watch: ON/i });
+    await expect(liveWatchBtn).toBeVisible();
+    await liveWatchBtn.click();
+    await expect(page.getByRole("button", { name: /Live Watch: OFF/i })).toBeVisible();
+  });
+
+  test("should select preferred IDE editor in scan configuration panel", async ({ page }) => {
+    await page.goto("/");
+    const ideSelect = page.locator("select");
+    await expect(ideSelect).toBeVisible();
+    await ideSelect.selectOption("cursor");
+    await expect(ideSelect).toHaveValue("cursor");
+  });
 });

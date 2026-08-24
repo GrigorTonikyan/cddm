@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Features
 
 - **core**: expand polyglot tree-sitter grammars and integrate ast merkle clone classifier (`964aeb7`)
+- **core**: implement unified diff parser and atomic workspace patch applier
+- **cli**: implement real-time live watch subcommand `cddm watch` with delta reporting
+- **cli**: implement Server-Sent Events `/api/events` and patch application endpoint `/api/apply-patch`
+- **webui**: implement live watch push sync, IDE protocol deeplinks, and direct refactor application
 
 ### Refactoring
 

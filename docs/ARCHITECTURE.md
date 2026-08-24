@@ -129,9 +129,11 @@ Build Time:                          Runtime:
 └────────────────┘                  │ │ └── assets/*.js    │ │
                                     │ └────────┬───────────┘ │
                                     │          │ Axum routes  │
-                                    │ GET /*  → static_asset  │
-                                    │ GET /   → index.html    │
+                                    │ GET /*   → static_asset │
+                                    │ GET /    → index.html   │
                                     │ POST /api/scan → run()  │
+                                    │ GET /api/events → SSE   │
+                                    │ POST /api/apply-patch   │
                                     │ GET /api/health → ok    │
                                     └────────────────────────┘
 ```

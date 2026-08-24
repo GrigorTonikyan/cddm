@@ -152,4 +152,41 @@ describe("useCDDMStore Zustand Store", () => {
     store.setSelectedCluster(mockCluster);
     expect(useCDDMStore.getState().selectedCluster).toEqual(mockCluster);
   });
+
+  it("should handle applyPatch successfully", async () => {
+    const mockPatchResult = {
+      success: true,
+      modified_files: ["src/lib.rs"],
+      hunks_applied: 1,
+      message: "Successfully applied 1 patch hunks across 1 file(s).",
+    };
+
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(mockPatchResult),
+    } as Response);
+
+    const result = await useCDDMStore
+      .getState()
+      .applyPatch("--- a/src/lib.rs\n+++ b/src/lib.rs\n@@ -1,1 +1,1 @@\n-a\n+b\n");
+    expect(result.success).toBe(true);
+    expect(result.hunks_applied).toBe(1);
+    expect(useCDDMStore.getState().patchStatusMessage).toBe(mockPatchResult.message);
+    expect(useCDDMStore.getState().isPatching).toBe(false);
+  });
+
+  it("should update live watch and preferred editor preferences", () => {
+    const store = useCDDMStore.getState();
+    expect(store.isLiveWatchActive).toBe(true);
+    expect(store.preferredEditor).toBe("vscode");
+
+    store.setIsLiveWatchActive(false);
+    expect(useCDDMStore.getState().isLiveWatchActive).toBe(false);
+
+    store.setPreferredEditor("cursor");
+    expect(useCDDMStore.getState().preferredEditor).toBe("cursor");
+
+    store.setPatchStatusMessage("Test message");
+    expect(useCDDMStore.getState().patchStatusMessage).toBe("Test message");
+  });
 });

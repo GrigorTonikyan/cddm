@@ -167,6 +167,14 @@ cddm refactor --pair 1
 cddm refactor --pair 2 --output patch.diff
 ```
 
+### `cddm watch [DIRECTORY]`
+
+Continuously watches workspace for source modifications and automatically runs incremental duplication analysis with live terminal status updates.
+
+```bash
+cddm watch ./src --min-tokens 50 --debounce-ms 250
+```
+
 ---
 
 ## Embedded Studio WebUI

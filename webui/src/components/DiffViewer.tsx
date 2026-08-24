@@ -2,7 +2,18 @@ import React, { useEffect, useState, useRef, useCallback } from "react";
 import { API_ROUTES } from "../constants/cddm-constants";
 import { SnippetResponse } from "../types/cddm-types";
 import { parsePath } from "../utils/path-utils";
-import { Columns2, FileCode, Copy, Check, RefreshCw, AlertCircle, Code2 } from "lucide-react";
+import { getIdeDeeplink, getEditorDisplayName } from "../utils/ide-links";
+import { useCDDMStore } from "../store/cddm-store";
+import {
+  Columns2,
+  FileCode,
+  Copy,
+  Check,
+  RefreshCw,
+  AlertCircle,
+  Code2,
+  ExternalLink,
+} from "lucide-react";
 
 export interface DiffViewerProps {
   fileA: string;
@@ -87,6 +98,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
   startLineB,
   endLineB,
 }) => {
+  const { preferredEditor } = useCDDMStore();
   const [snippetA, setSnippetA] = useState<SnippetResponse | null>(null);
   const [snippetB, setSnippetB] = useState<SnippetResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -94,6 +106,9 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
   const [viewMode, setViewMode] = useState<"split" | "unified">("split");
   const [copiedA, setCopiedA] = useState(false);
   const [copiedB, setCopiedB] = useState(false);
+
+  const ideLinkA = getIdeDeeplink(fileA, startLineA, preferredEditor);
+  const ideLinkB = getIdeDeeplink(fileB, startLineB, preferredEditor);
 
   const scrollRefA = useRef<HTMLDivElement>(null);
   const scrollRefB = useRef<HTMLDivElement>(null);
@@ -268,18 +283,27 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
                   (L{startLineA}–{endLineA})
                 </span>
               </span>
-              <button
-                type="button"
-                onClick={() => handleCopyCode(snippetA, true)}
-                className="p-1 hover:bg-slate-800 text-slate-400 hover:text-slate-200 rounded transition-colors"
-                title="Copy duplicate code"
-              >
-                {copiedA ? (
-                  <Check className="w-3.5 h-3.5 text-emerald-400" />
-                ) : (
-                  <Copy className="w-3.5 h-3.5" />
-                )}
-              </button>
+              <div className="flex items-center gap-1">
+                <a
+                  href={ideLinkA}
+                  title={`Open in ${getEditorDisplayName(preferredEditor)} at line ${startLineA}`}
+                  className="p-1 hover:bg-slate-800 text-slate-400 hover:text-indigo-300 rounded transition-colors"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+                <button
+                  type="button"
+                  onClick={() => handleCopyCode(snippetA, true)}
+                  className="p-1 hover:bg-slate-800 text-slate-400 hover:text-slate-200 rounded transition-colors"
+                  title="Copy duplicate code"
+                >
+                  {copiedA ? (
+                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                  ) : (
+                    <Copy className="w-3.5 h-3.5" />
+                  )}
+                </button>
+              </div>
             </div>
             <div
               ref={scrollRefA}
@@ -316,18 +340,27 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
                   (L{startLineB}–{endLineB})
                 </span>
               </span>
-              <button
-                type="button"
-                onClick={() => handleCopyCode(snippetB, false)}
-                className="p-1 hover:bg-slate-800 text-slate-400 hover:text-slate-200 rounded transition-colors"
-                title="Copy duplicate code"
-              >
-                {copiedB ? (
-                  <Check className="w-3.5 h-3.5 text-emerald-400" />
-                ) : (
-                  <Copy className="w-3.5 h-3.5" />
-                )}
-              </button>
+              <div className="flex items-center gap-1">
+                <a
+                  href={ideLinkB}
+                  title={`Open in ${getEditorDisplayName(preferredEditor)} at line ${startLineB}`}
+                  className="p-1 hover:bg-slate-800 text-slate-400 hover:text-indigo-300 rounded transition-colors"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+                <button
+                  type="button"
+                  onClick={() => handleCopyCode(snippetB, false)}
+                  className="p-1 hover:bg-slate-800 text-slate-400 hover:text-slate-200 rounded transition-colors"
+                  title="Copy duplicate code"
+                >
+                  {copiedB ? (
+                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                  ) : (
+                    <Copy className="w-3.5 h-3.5" />
+                  )}
+                </button>
+              </div>
             </div>
             <div
               ref={scrollRefB}

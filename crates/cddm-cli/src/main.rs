@@ -159,6 +159,45 @@ enum Commands {
         #[arg(short, long, default_value_t = false)]
         open: bool,
     },
+
+    /// Continuously watch directory for changes and run real-time incremental duplication scans
+    Watch {
+        /// Directory path to watch (default: current directory)
+        #[arg(default_value = cddm_core::DEFAULT_DIRECTORY)]
+        directory: PathBuf,
+
+        /// Minimum token count to consider as duplicate clone
+        #[arg(short, long, default_value_t = cddm_core::DEFAULT_MIN_TOKENS)]
+        min_tokens: usize,
+
+        /// Specific language(s) to scan
+        #[arg(short, long)]
+        languages: Vec<String>,
+
+        /// Glob patterns to ignore
+        #[arg(short, long)]
+        ignore: Vec<String>,
+
+        /// Enable in-process git blame annotation
+        #[arg(long, default_value_t = false)]
+        git_blame: bool,
+
+        /// Custom path for persistent redb cache database
+        #[arg(long)]
+        cache_dir: Option<PathBuf>,
+
+        /// Bypass persistent disk cache
+        #[arg(long, default_value_t = false)]
+        no_cache: bool,
+
+        /// Debounce interval in milliseconds (default: 250)
+        #[arg(long, default_value_t = 250)]
+        debounce_ms: u64,
+
+        /// Exit with non-zero status code if duplication percentage exceeds threshold
+        #[arg(long)]
+        fail_threshold: Option<f64>,
+    },
 }
 
 #[derive(ValueEnum, Clone, Copy, Debug, PartialEq, Eq)]
@@ -432,6 +471,116 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         Commands::Serve { port, open } => {
             serve::start_server(port, open).await?;
+        }
+
+        Commands::Watch {
+            directory,
+            min_tokens,
+            languages,
+            ignore,
+            git_blame,
+            cache_dir,
+            no_cache,
+            debounce_ms,
+            fail_threshold,
+        } => {
+            let cache_path = cache_dir.as_ref().map(|p| p.to_string_lossy().to_string());
+            let ignore_patterns = if ignore.is_empty() {
+                ScanConfig::default().ignore_patterns
+            } else {
+                ignore
+            };
+
+            let config = ScanConfig {
+                directory: directory.to_string_lossy().to_string(),
+                min_tokens,
+                languages,
+                ignore_patterns: ignore_patterns.clone(),
+                detect_type2: true,
+                scan_self: true,
+                enable_git_blame: git_blame,
+                cache_dir: cache_path,
+                enable_cache: !no_cache,
+            };
+
+            println!(
+                "CDDM Watcher active on '{}' (debounce: {}ms)",
+                directory.display(),
+                debounce_ms
+            );
+            println!("Performing initial baseline scan...\n");
+
+            let (tx, _rx) = mpsc::channel(100);
+            let cancel_flag = Arc::new(AtomicBool::new(false));
+            let mut previous_result = match run_scan(config.clone(), tx, cancel_flag).await {
+                Ok(res) => {
+                    print_console_report(&res);
+                    Some(res)
+                }
+                Err(err) => {
+                    eprintln!("Initial scan failed: {}", err);
+                    None
+                }
+            };
+
+            let watcher = cddm_core::CddmWatcher::watch_directory(&directory)?;
+            println!("\nWatching for workspace changes... Press Ctrl+C to exit.\n");
+
+            let mut interval = tokio::time::interval(std::time::Duration::from_millis(debounce_ms));
+
+            loop {
+                interval.tick().await;
+                let changed = watcher.collect_changed_paths(&ignore_patterns);
+                if !changed.is_empty() {
+                    let (tx_inc, _rx_inc) = mpsc::channel(100);
+                    let cancel = Arc::new(AtomicBool::new(false));
+                    let start = std::time::Instant::now();
+
+                    match run_scan(config.clone(), tx_inc, cancel).await {
+                        Ok(new_res) => {
+                            let duration = start.elapsed().as_millis();
+                            let score_delta = if let Some(ref prev) = previous_result {
+                                new_res.dry_health_score - prev.dry_health_score
+                            } else {
+                                0.0
+                            };
+
+                            let delta_str = if score_delta > 0.0 {
+                                format!("(+{:.1}%)", score_delta)
+                            } else if score_delta < 0.0 {
+                                format!("({:.1}%)", score_delta)
+                            } else {
+                                "(+0.0%)".to_string()
+                            };
+
+                            println!(
+                                "[WATCH] {} file(s) modified | Scanned in {}ms | DRY Health: \
+                                 {:.1}% {} | Clones: {} | Clusters: {}",
+                                changed.len(),
+                                duration,
+                                new_res.dry_health_score,
+                                delta_str,
+                                new_res.total_clones,
+                                new_res.total_clusters
+                            );
+
+                            if let Some(threshold) = fail_threshold
+                                && new_res.duplication_percentage > threshold
+                            {
+                                eprintln!(
+                                    "[WARN] Duplication {:.1}% exceeds failure threshold {:.1}%",
+                                    new_res.duplication_percentage, threshold
+                                );
+                            }
+
+                            previous_result = Some(new_res);
+                        }
+                        Err(err) => {
+                            eprintln!("[WATCH ERROR] Incremental scan failed: {}", err);
+                        }
+                    }
+                }
+            }
         }
     }
 

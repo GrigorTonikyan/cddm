@@ -4,6 +4,8 @@ import { parsePath, FormattedPath } from "../utils/path-utils";
 import { DiffViewer } from "./DiffViewer";
 import { RefactorPatchModal } from "./RefactorPatchModal";
 import { ClonePairDiffModal } from "./ClonePairDiffModal";
+import { getIdeDeeplink, getEditorDisplayName } from "../utils/ide-links";
+import { useCDDMStore } from "../store/cddm-store";
 import {
   ChevronDown,
   ChevronRight,
@@ -14,6 +16,7 @@ import {
   Wand2,
   Tag,
   Columns2,
+  ExternalLink,
 } from "lucide-react";
 
 export interface ClonePairCardProps {
@@ -27,19 +30,32 @@ interface FilePathSummaryProps {
   endLine: number;
 }
 
-const FilePathSummary: React.FC<FilePathSummaryProps> = ({ parsed, startLine, endLine }) => (
-  <div className="flex items-center gap-2 bg-slate-950/90 px-3 py-1.5 rounded-lg border border-slate-800/80 min-w-0 group/item">
-    <FileCode2 className="w-4 h-4 shrink-0 text-indigo-400" />
-    <div className="min-w-0 flex-1 text-xs font-mono truncate" title={parsed.fullNormalized}>
-      <span className="sr-only">{parsed.fullNormalized}</span>
-      <span className="text-slate-500 select-none">{parsed.directory}</span>
-      <span className="text-slate-100 font-semibold">{parsed.filename}</span>
+const FilePathSummary: React.FC<FilePathSummaryProps> = ({ parsed, startLine, endLine }) => {
+  const { preferredEditor } = useCDDMStore();
+  const ideLink = getIdeDeeplink(parsed.fullNormalized, startLine, preferredEditor);
+
+  return (
+    <div className="flex items-center gap-2 bg-slate-950/90 px-3 py-1.5 rounded-lg border border-slate-800/80 min-w-0 group/item">
+      <FileCode2 className="w-4 h-4 shrink-0 text-indigo-400" />
+      <div className="min-w-0 flex-1 text-xs font-mono truncate" title={parsed.fullNormalized}>
+        <span className="sr-only">{parsed.fullNormalized}</span>
+        <span className="text-slate-500 select-none">{parsed.directory}</span>
+        <span className="text-slate-100 font-semibold">{parsed.filename}</span>
+      </div>
+      <a
+        href={ideLink}
+        onClick={(e) => e.stopPropagation()}
+        title={`Open in ${getEditorDisplayName(preferredEditor)} at line ${startLine}`}
+        className="shrink-0 p-1 text-slate-500 hover:text-indigo-300 hover:bg-slate-800 rounded transition-colors"
+      >
+        <ExternalLink className="w-3 h-3" />
+      </a>
+      <span className="shrink-0 text-[11px] font-mono px-2 py-0.5 bg-slate-800/80 text-slate-300 rounded">
+        L{startLine}-{endLine}
+      </span>
     </div>
-    <span className="shrink-0 text-[11px] font-mono px-2 py-0.5 bg-slate-800/80 text-slate-300 rounded">
-      L{startLine}-{endLine}
-    </span>
-  </div>
-);
+  );
+};
 
 export const ClonePairCard: React.FC<ClonePairCardProps> = ({ pair, index }) => {
   const [isExpanded, setIsExpanded] = useState(false);
