@@ -409,3 +409,31 @@ async fn test_policy_rules_get_and_post_handlers() {
     assert!(!eval_body.violations.is_empty());
     assert_eq!(eval_body.violations[0].rule_name, "test-boundary");
 }
+
+#[tokio::test]
+async fn test_semantic_graph_handler() {
+    let req = SemanticGraphRequest {
+        file: Some("src/calc.rs".to_string()),
+        code: Some(
+            "pub fn compute(a: i32) -> i32 { if a > 0 { return a * 2; } else { return 0; } }"
+                .to_string(),
+        ),
+        language: Some("Rust".to_string()),
+        file_b: Some("src/calc_alt.rs".to_string()),
+        code_b: Some(
+            "pub fn calculate(b: i32) -> i32 { if b > 0 { return b * 2; } else { return 0; } }"
+                .to_string(),
+        ),
+        language_b: Some("Rust".to_string()),
+    };
+
+    let res = semantic_graph_handler(axum::Json(req)).await;
+    assert!(res.is_ok());
+    let axum::Json(body) = res.unwrap();
+    assert_eq!(body.cfgs.len(), 2);
+    assert_eq!(body.pdgs.len(), 2);
+    assert!(body.comparison.is_some());
+    let comp = body.comparison.unwrap();
+    assert!(comp.similarity >= 0.8);
+    assert!(comp.is_semantic_clone);
+}

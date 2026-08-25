@@ -351,5 +351,30 @@ pub fn get_tool_definitions() -> Vec<serde_json::Value> {
                 }
             }
         }),
+        json!({
+            "name": mcp_tools::GET_SEMANTIC_GRAPH,
+            "description": "Extract Control Flow Graph (CFG) and Program Dependence Graph (PDG) structures and Weisfeiler-Lehman hash from source code or file.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "code": { "type": "string", "description": "Raw source code snippet" },
+                    "file": { "type": "string", "description": "File path to read source from" },
+                    "language": { "type": "string", "description": "Target programming language (default: Rust)" }
+                }
+            }
+        }),
+        json!({
+            "name": mcp_tools::COMPARE_SEMANTIC_GRAPHS,
+            "description": "Compare two code snippets for Type-4 semantic clone similarity via Weisfeiler-Lehman graph kernels.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "code_a": { "type": "string", "description": "First code snippet to compare" },
+                    "code_b": { "type": "string", "description": "Second code snippet to compare" },
+                    "language": { "type": "string", "description": "Programming language (default: Rust)" }
+                },
+                "required": ["code_a", "code_b"]
+            }
+        }),
     ]
 }

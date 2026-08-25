@@ -371,4 +371,109 @@ mod tests {
         );
         assert_eq!(res.rewritten_files.len(), 2);
     }
+
+    #[test]
+    fn test_generate_ast_cluster_refactor_go() {
+        let mut file_a = NamedTempFile::with_suffix(".go").unwrap();
+        let mut file_b = NamedTempFile::with_suffix(".go").unwrap();
+        let path_a = file_a.path().to_str().unwrap().to_string();
+        let path_b = file_b.path().to_str().unwrap().to_string();
+
+        writeln!(
+            file_a,
+            "package main\n\nfunc RunA() {{\n\tval := 100\n\t_ = val * 2\n}}"
+        )
+        .unwrap();
+        writeln!(
+            file_b,
+            "package main\n\nfunc RunB() {{\n\tval := 100\n\t_ = val * 2\n}}"
+        )
+        .unwrap();
+        file_a.flush().unwrap();
+        file_b.flush().unwrap();
+
+        let occurrences = vec![
+            CloneLocation {
+                file: path_a.clone(),
+                start_line: 4,
+                end_line: 5,
+                author: None,
+            },
+            CloneLocation {
+                file: path_b.clone(),
+                start_line: 4,
+                end_line: 5,
+                author: None,
+            },
+        ];
+
+        let result = generate_ast_cluster_refactor(
+            &occurrences,
+            Some("process_values"),
+            Some(&path_a),
+            None,
+        );
+
+        assert!(result.is_ok());
+        let res = result.unwrap();
+        assert!(res.helper_function_code.contains("func ProcessValues() {"));
+        assert_eq!(res.rewritten_files.len(), 2);
+        assert!(
+            res.rewritten_files[0]
+                .rewritten_source
+                .contains("ProcessValues()")
+        );
+    }
+
+    #[test]
+    fn test_generate_ast_cluster_refactor_python() {
+        let mut file_a = NamedTempFile::with_suffix(".py").unwrap();
+        let mut file_b = NamedTempFile::with_suffix(".py").unwrap();
+        let path_a = file_a.path().to_str().unwrap().to_string();
+        let path_b = file_b.path().to_str().unwrap().to_string();
+
+        writeln!(
+            file_a,
+            "def handle_a():\n    score = 10\n    print(score)\n"
+        )
+        .unwrap();
+        writeln!(
+            file_b,
+            "def handle_b():\n    score = 10\n    print(score)\n"
+        )
+        .unwrap();
+        file_a.flush().unwrap();
+        file_b.flush().unwrap();
+
+        let occurrences = vec![
+            CloneLocation {
+                file: path_a.clone(),
+                start_line: 2,
+                end_line: 3,
+                author: None,
+            },
+            CloneLocation {
+                file: path_b.clone(),
+                start_line: 2,
+                end_line: 3,
+                author: None,
+            },
+        ];
+
+        let result =
+            generate_ast_cluster_refactor(&occurrences, Some("log_score"), Some(&path_a), None);
+
+        assert!(result.is_ok());
+        let res = result.unwrap();
+        assert!(
+            res.helper_function_code
+                .contains("def log_score() -> None:")
+        );
+        assert_eq!(res.rewritten_files.len(), 2);
+        assert!(
+            res.rewritten_files[0]
+                .rewritten_source
+                .contains("log_score()")
+        );
+    }
 }

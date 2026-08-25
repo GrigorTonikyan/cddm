@@ -71,6 +71,9 @@ pub const ROUTE_API_CACHE_IMPORT: &str = "/api/cache/import";
 /// API endpoint path for monorepo workspace discovery and scan.
 pub const ROUTE_API_MONOREPO: &str = "/api/monorepo";
 
+/// API endpoint path for semantic graph extraction and comparison.
+pub const ROUTE_API_SEMANTIC_GRAPH: &str = "/api/semantic-graph";
+
 /// Default localhost IPv4 binding.
 pub const DEFAULT_HOST_IP: [u8; 4] = [127, 0, 0, 1];
 
@@ -229,4 +232,32 @@ pub struct CacheImportRequest {
 pub struct MonorepoScanRequest {
     pub directory: Option<std::path::PathBuf>,
     pub min_tokens: Option<usize>,
+}
+
+/// Request payload for semantic graph extraction and comparison.
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Default, Clone)]
+pub struct SemanticGraphRequest {
+    pub file: Option<String>,
+    pub code: Option<String>,
+    pub language: Option<String>,
+    pub file_b: Option<String>,
+    pub code_b: Option<String>,
+    pub language_b: Option<String>,
+}
+
+/// Comparison metrics between two semantic graphs.
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+pub struct SemanticComparisonResponse {
+    pub similarity: f64,
+    pub is_semantic_clone: bool,
+    pub wl_hash_a: u64,
+    pub wl_hash_b: u64,
+}
+
+/// Response payload containing extracted CFGs, PDGs, and optional comparison metrics.
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+pub struct SemanticGraphResponse {
+    pub cfgs: Vec<cddm_core::semantic_graph::ControlFlowGraph>,
+    pub pdgs: Vec<cddm_core::semantic_graph::ProgramDependenceGraph>,
+    pub comparison: Option<SemanticComparisonResponse>,
 }

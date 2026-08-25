@@ -17,6 +17,7 @@ import {
   Tag,
   Columns2,
   ExternalLink,
+  Network,
 } from "lucide-react";
 
 export interface ClonePairCardProps {
@@ -221,6 +222,22 @@ export const ClonePairCard: React.FC<ClonePairCardProps> = ({ pair, index }) => 
               >
                 <Sparkles className="w-3.5 h-3.5 text-purple-300" />
                 Sandbox
+              </button>
+
+              {/* Semantic Graph Button */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  void useCDDMStore.getState().openSemanticGraphModal({
+                    file: pair.file_a,
+                    file_b: pair.file_b,
+                  });
+                }}
+                className="px-3 py-1 rounded-lg bg-cyan-950/80 hover:bg-cyan-900/60 text-cyan-300 border border-cyan-800/60 font-semibold text-xs flex items-center gap-1.5 transition-colors shadow-sm"
+              >
+                <Network className="w-3.5 h-3.5 text-cyan-400" />
+                Semantic Graph
               </button>
             </div>
           </div>

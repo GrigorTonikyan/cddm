@@ -58,6 +58,8 @@ pub mod mcp_tools {
     pub const EXPORT_CACHE_PACK: &str = "cddm_export_cache_pack";
     pub const IMPORT_CACHE_PACK: &str = "cddm_import_cache_pack";
     pub const SCAN_MONOREPO: &str = "cddm_scan_monorepo";
+    pub const GET_SEMANTIC_GRAPH: &str = "cddm_get_semantic_graph";
+    pub const COMPARE_SEMANTIC_GRAPHS: &str = "cddm_compare_semantic_graphs";
 
     pub const PARAM_DIRECTORY: &str = "directory";
     pub const PARAM_MIN_TOKENS: &str = "min_tokens";

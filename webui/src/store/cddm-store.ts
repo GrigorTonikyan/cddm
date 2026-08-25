@@ -5,6 +5,7 @@ import { DEFAULT_EDITOR } from "../utils/ide-links";
 import { createPolicySlice } from "./slices/policy-slice";
 import { createRefactorSlice } from "./slices/refactor-slice";
 import { createScanSlice } from "./slices/scan-slice";
+import { createSemanticSlice } from "./slices/semantic-slice";
 import { createTimelineSlice } from "./slices/timeline-slice";
 import type { CDDMStoreState } from "./types";
 
@@ -27,6 +28,7 @@ export const useCDDMStore = create<CDDMStoreState>((set, get) => ({
   isLiveWatchActive: true,
   preferredEditor: DEFAULT_EDITOR,
   lastLiveSyncTimestamp: null,
+  liveSyncCount: 0,
   isPatching: false,
   patchStatusMessage: null,
 
@@ -40,6 +42,12 @@ export const useCDDMStore = create<CDDMStoreState>((set, get) => ({
   isSuppressionModalOpen: false,
   isRefactorSandboxOpen: false,
   isPolicyRulesModalOpen: false,
+  isSemanticGraphModalOpen: false,
+
+  semanticGraphRequest: null,
+  semanticGraphResponse: null,
+  isSemanticGraphLoading: false,
+  semanticGraphError: null,
 
   timelineData: null,
   isTimelineLoading: false,
@@ -101,11 +109,13 @@ export const useCDDMStore = create<CDDMStoreState>((set, get) => ({
       void get().fetchPolicyRules();
     }
   },
+  setIsSemanticGraphModalOpen: (isSemanticGraphModalOpen) => set({ isSemanticGraphModalOpen }),
 
   ...createScanSlice(set, get),
   ...createTimelineSlice(set, get),
   ...createPolicySlice(set, get),
   ...createRefactorSlice(set, get),
+  ...createSemanticSlice(set, get),
 }));
 
 let eventSourceInstance: EventSource | null = null;
@@ -138,11 +148,13 @@ export function connectLiveWatchSSE(): void {
         } else if (event.type === "scan_progress") {
           useCDDMStore.setState({ progress: event.payload });
         } else if (event.type === "scan_complete") {
+          const prevCount = useCDDMStore.getState().liveSyncCount;
           useCDDMStore.setState({
             results: event.payload,
             isScanning: false,
             activeScanId: event.payload.scan_id,
             lastLiveSyncTimestamp: Date.now(),
+            liveSyncCount: prevCount + 1,
             error: null,
           });
         } else if (event.type === "patch_applied") {

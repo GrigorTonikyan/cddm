@@ -481,6 +481,64 @@ Runs closed-loop test suite verification against the workspace or a dedicated re
 
 ---
 
+### `POST /api/semantic-graph`
+
+Extracts Control Flow Graphs (CFG), builds Program Dependence Graphs (PDG) with def-use variable dependency chains, and computes Weisfeiler-Lehman structural graph similarity metrics.
+
+**Request Body** (`application/json`):
+
+```json
+{
+  "file": "src/calc.rs",
+  "code": "pub fn compute(a: i32) -> i32 { if a > 0 { return a * 2; } else { return 0; } }",
+  "language": "Rust",
+  "file_b": "src/calc_alt.rs",
+  "code_b": "pub fn calculate(b: i32) -> i32 { if b > 0 { return b * 2; } else { return 0; } }",
+  "language_b": "Rust"
+}
+```
+
+**Response** (`200 OK`):
+
+```json
+{
+  "cfgs": [
+    {
+      "file_path": "src/calc.rs",
+      "function_name": "compute",
+      "line_start": 1,
+      "line_end": 1,
+      "nodes": [
+        {
+          "id": 0,
+          "node_type": "Entry",
+          "label": "entry",
+          "statement_count": 1,
+          "line_start": 1,
+          "line_end": 1
+        }
+      ],
+      "edges": [{ "from": 0, "to": 1, "edge_type": "Sequential" }],
+      "wl_hash": 1827491749281
+    }
+  ],
+  "pdgs": [
+    {
+      "cfg": { "...": "..." },
+      "data_edges": [{ "from": 0, "to": 1, "variable": "a", "kind": "DataDependency" }]
+    }
+  ],
+  "comparison": {
+    "similarity": 0.95,
+    "is_semantic_clone": true,
+    "wl_hash_a": 1827491749281,
+    "wl_hash_b": 1827491749281
+  }
+}
+```
+
+---
+
 ### `GET /api/events`
 
 Subscribes to live Server-Sent Events (SSE) stream for real-time background file change notifications, progress tracking, and re-scan results.
@@ -794,6 +852,26 @@ Discovers multi-workspace packages in a monorepo and runs cross-package duplicat
 | :----------- | :------- | :------- | :------ | :---------------------------- |
 | `directory`  | `string` | No       | `"."`   | Monorepo root directory path  |
 | `min_tokens` | `number` | No       | `50`    | Minimum token clone threshold |
+
+#### `cddm_get_semantic_graph`
+
+Extracts Control Flow Graph (CFG) and Program Dependence Graph (PDG) structures, variable def-use dependencies, and Weisfeiler-Lehman hash from source code or file.
+
+| Parameter  | Type     | Required | Default  | Description                                 |
+| :--------- | :------- | :------- | :------- | :------------------------------------------ |
+| `code`     | `string` | No       | None     | Raw source code snippet                     |
+| `file`     | `string` | No       | None     | File path to read source from               |
+| `language` | `string` | No       | `"Rust"` | Target programming language (default: Rust) |
+
+#### `cddm_compare_semantic_graphs`
+
+Compares two code snippets for Type-4 semantic clone similarity via Weisfeiler-Lehman graph kernels.
+
+| Parameter  | Type     | Required | Default  | Description                                 |
+| :--------- | :------- | :------- | :------- | :------------------------------------------ |
+| `code_a`   | `string` | Yes      | None     | First code snippet to compare               |
+| `code_b`   | `string` | Yes      | None     | Second code snippet to compare              |
+| `language` | `string` | No       | `"Rust"` | Target programming language (default: Rust) |
 
 ### Resources
 

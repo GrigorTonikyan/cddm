@@ -12,6 +12,8 @@ import type {
   ScanConfig,
   ScanProgress,
   ScanResult,
+  SemanticGraphRequest,
+  SemanticGraphResponse,
   SuppressionConfig,
   TimelineTrend,
   VerifyRefactorRequest,
@@ -63,6 +65,16 @@ export interface CDDMStoreState {
   isSuppressionModalOpen: boolean;
   isRefactorSandboxOpen: boolean;
   isPolicyRulesModalOpen: boolean;
+  isSemanticGraphModalOpen: boolean;
+
+  /** Live watch sync counter and last sync events */
+  liveSyncCount: number;
+
+  /** Semantic graph inspection & comparison state */
+  semanticGraphRequest: SemanticGraphRequest | null;
+  semanticGraphResponse: SemanticGraphResponse | null;
+  isSemanticGraphLoading: boolean;
+  semanticGraphError: string | null;
 
   /** Historical timeline data and loading state */
   timelineData: TimelineTrend | null;
@@ -156,4 +168,9 @@ export interface CDDMStoreState {
   setIsSuppressionModalOpen: (open: boolean) => void;
   setIsRefactorSandboxOpen: (open: boolean) => void;
   setIsPolicyRulesModalOpen: (open: boolean) => void;
+  setIsSemanticGraphModalOpen: (open: boolean) => void;
+
+  /** Semantic graph actions */
+  fetchSemanticGraph: (req: SemanticGraphRequest) => Promise<SemanticGraphResponse>;
+  openSemanticGraphModal: (req?: SemanticGraphRequest) => Promise<void>;
 }

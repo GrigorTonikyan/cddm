@@ -4,6 +4,7 @@ pub mod assets;
 pub mod policy_handlers;
 pub mod refactor_handlers;
 pub mod scan_handlers;
+pub mod semantic_handlers;
 pub mod timeline_handlers;
 pub mod types;
 
@@ -18,6 +19,7 @@ use cddm_core::{CddmWatcher, ScanConfig};
 use policy_handlers::*;
 use refactor_handlers::*;
 use scan_handlers::*;
+use semantic_handlers::*;
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -74,6 +76,7 @@ pub fn build_app_with_state(state: AppState) -> Router {
         .route(ROUTE_API_CACHE_EXPORT, post(cache_export_handler))
         .route(ROUTE_API_CACHE_IMPORT, post(cache_import_handler))
         .route(ROUTE_API_MONOREPO, post(monorepo_handler))
+        .route(ROUTE_API_SEMANTIC_GRAPH, post(semantic_graph_handler))
         .fallback(static_asset_handler)
         .layer(CorsLayer::permissive())
         .with_state(state)

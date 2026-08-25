@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 use super::import_resolver::{generate_import_statement, is_import_already_present};
 use super::parser::parse_ast_tree;
 use super::type_infer::{format_call_site, format_function_signature};
@@ -17,16 +19,6 @@ pub fn synthesize_helper_function_block(
 
     let mut out = String::new();
     match ext.as_str() {
-        "rs" | "c" | "cpp" | "java" | "cs" | "ts" | "tsx" | "js" | "jsx" => {
-            out.push_str(&format!("{}{} {{\n", base_indent, sig));
-            for line in common_body_lines {
-                let trimmed = line.trim();
-                if !trimmed.is_empty() {
-                    out.push_str(&format!("{}{}\n", body_indent, trimmed));
-                }
-            }
-            out.push_str(&format!("{}}}\n", base_indent));
-        }
         "py" => {
             out.push_str(&format!("{}{}\n", base_indent, sig));
             if common_body_lines.is_empty() {
@@ -39,6 +31,36 @@ pub fn synthesize_helper_function_block(
                     }
                 }
             }
+        }
+        "rb" | "rake" => {
+            out.push_str(&format!("{}{}\n", base_indent, sig));
+            for line in common_body_lines {
+                let trimmed = line.trim();
+                if !trimmed.is_empty() {
+                    out.push_str(&format!("{}{}\n", body_indent, trimmed));
+                }
+            }
+            out.push_str(&format!("{}end\n", base_indent));
+        }
+        "ex" | "exs" => {
+            out.push_str(&format!("{}{}\n", base_indent, sig));
+            for line in common_body_lines {
+                let trimmed = line.trim();
+                if !trimmed.is_empty() {
+                    out.push_str(&format!("{}{}\n", body_indent, trimmed));
+                }
+            }
+            out.push_str(&format!("{}end\n", base_indent));
+        }
+        "lua" => {
+            out.push_str(&format!("{}{}\n", base_indent, sig));
+            for line in common_body_lines {
+                let trimmed = line.trim();
+                if !trimmed.is_empty() {
+                    out.push_str(&format!("{}{}\n", body_indent, trimmed));
+                }
+            }
+            out.push_str(&format!("{}end\n", base_indent));
         }
         "go" => {
             out.push_str(&format!("{}{} {{\n", base_indent, sig));
@@ -120,13 +142,16 @@ pub fn rewrite_source_file(
             generate_import_statement(file_path, target, helper_name, extension)
         && !is_import_already_present(&current_lines, &import_stmt)
     {
-        // Insert import near the top of the file
+        // Insert import near the top of the file after preambles/packages
         let mut insert_idx = 0;
         while insert_idx < current_lines.len() {
             let line = current_lines[insert_idx].trim();
             if line.starts_with("//")
                 || line.starts_with("/*")
+                || line.starts_with('*')
                 || line.starts_with("#!")
+                || line.starts_with("<?php")
+                || line.starts_with("#pragma")
                 || line.starts_with("package ")
             {
                 insert_idx += 1;
@@ -203,6 +228,35 @@ mod tests {
     }
 
     #[test]
+    fn test_synthesize_helper_function_ruby() {
+        let params = vec![InferredParameter {
+            name: "item".to_string(),
+            inferred_type: "".to_string(),
+            original_values: vec![],
+        }];
+        let body = vec!["puts item".to_string()];
+
+        let code = synthesize_helper_function_block("rb", "print_item", &params, &body, "");
+        assert!(code.contains("def print_item(item)"));
+        assert!(code.contains("    puts item"));
+        assert!(code.contains("end"));
+    }
+
+    #[test]
+    fn test_synthesize_helper_function_go() {
+        let params = vec![InferredParameter {
+            name: "x".to_string(),
+            inferred_type: "int".to_string(),
+            original_values: vec!["10".to_string()],
+        }];
+        let body = vec!["return x * 2".to_string()];
+
+        let code = synthesize_helper_function_block("go", "double_val", &params, &body, "");
+        assert!(code.contains("func DoubleVal(x int) {"));
+        assert!(code.contains("\treturn x * 2"));
+    }
+
+    #[test]
     fn test_rewrite_source_file_rust() {
         let source = r#"fn main() {
     let a = 1;
@@ -242,5 +296,10 @@ mod tests {
     fn test_validate_ast_syntax() {
         assert!(validate_ast_syntax("fn main() { let x = 10; }", "rs"));
         assert!(validate_ast_syntax("const x: number = 10;", "ts"));
+        assert!(validate_ast_syntax("package main\nfunc main() {}", "go"));
+        assert!(validate_ast_syntax(
+            "public class A { public void run() {} }",
+            "java"
+        ));
     }
 }

@@ -6,6 +6,7 @@ pub mod policy_tools;
 pub mod refactor_tools;
 pub mod scan_tools;
 pub mod schemas;
+pub mod semantic_tools;
 
 use crate::protocol::{
     JSONRPC_VERSION, JsonRpcResponse, make_error_response, mcp_tools, rpc_errors,
@@ -58,6 +59,10 @@ pub async fn dispatch_tool_call(
         mcp_tools::EXPORT_CACHE_PACK => scan_tools::handle_export_cache_pack(id, args),
         mcp_tools::IMPORT_CACHE_PACK => scan_tools::handle_import_cache_pack(id, args),
         mcp_tools::SCAN_MONOREPO => scan_tools::handle_scan_monorepo(id, args).await,
+        mcp_tools::GET_SEMANTIC_GRAPH => semantic_tools::handle_get_semantic_graph(id, args),
+        mcp_tools::COMPARE_SEMANTIC_GRAPHS => {
+            semantic_tools::handle_compare_semantic_graphs(id, args)
+        }
         _ => make_error_response(
             id,
             rpc_errors::METHOD_NOT_FOUND,

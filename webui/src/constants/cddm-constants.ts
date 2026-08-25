@@ -32,6 +32,7 @@ export const API_ROUTES = {
   REFACTOR_VERIFY: "/api/refactor/verify",
   POLICY_RULES: "/api/policy/rules",
   POLICY_EVALUATE: "/api/policy/evaluate",
+  SEMANTIC_GRAPH: "/api/semantic-graph",
 } as const;
 
 /**

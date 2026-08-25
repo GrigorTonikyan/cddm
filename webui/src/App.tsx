@@ -9,6 +9,7 @@ import { TimelineExplorerModal } from "./components/TimelineExplorerModal";
 import { SuppressionRulesModal } from "./components/SuppressionRulesModal";
 import { RefactorSandboxModal } from "./components/RefactorSandboxModal";
 import { PolicyRulesModal } from "./components/PolicyRulesModal";
+import { SemanticGraphModal } from "./components/SemanticGraphModal";
 import {
   Scissors,
   Terminal,
@@ -23,6 +24,7 @@ import {
   CheckCheck,
   X,
   History,
+  Network,
 } from "lucide-react";
 
 export const App: React.FC = () => {
@@ -45,6 +47,9 @@ export const App: React.FC = () => {
     setIsRefactorSandboxOpen,
     isPolicyRulesModalOpen,
     setIsPolicyRulesModalOpen,
+    isSemanticGraphModalOpen,
+    setIsSemanticGraphModalOpen,
+    liveSyncCount,
   } = useCDDMStore();
 
   return (
@@ -92,7 +97,13 @@ export const App: React.FC = () => {
                 isLiveWatchActive ? "text-emerald-400 animate-pulse" : "text-slate-500"
               }`}
             />
-            <span>{isLiveWatchActive ? "Live Watch: ON" : "Live Watch: OFF"}</span>
+            <span>
+              {isLiveWatchActive
+                ? liveSyncCount > 0
+                  ? `Live Watch (${liveSyncCount} syncs)`
+                  : "Live Watch: ON"
+                : "Live Watch: OFF"}
+            </span>
           </button>
 
           <button
@@ -129,6 +140,15 @@ export const App: React.FC = () => {
           >
             <Scale className="w-3.5 h-3.5 text-purple-400" />
             <span>Policy Studio</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsSemanticGraphModalOpen(true)}
+            className="px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 hover:bg-slate-800 text-slate-300 flex items-center gap-1.5 transition-colors shadow-sm"
+          >
+            <Network className="w-3.5 h-3.5 text-cyan-400" />
+            <span>Semantic Graph</span>
           </button>
 
           {results && (
@@ -218,6 +238,12 @@ export const App: React.FC = () => {
       <PolicyRulesModal
         isOpen={isPolicyRulesModalOpen}
         onClose={() => setIsPolicyRulesModalOpen(false)}
+      />
+
+      {/* Semantic Graph & CFG/PDG Explorer Modal */}
+      <SemanticGraphModal
+        isOpen={isSemanticGraphModalOpen}
+        onClose={() => setIsSemanticGraphModalOpen(false)}
       />
 
       {/* Footer */}
