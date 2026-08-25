@@ -5,6 +5,17 @@ import {
   LanguageClientOptions,
   ServerOptions,
 } from "vscode-languageclient/node";
+import {
+  handleCheckPolicies,
+  handleExportSarif,
+  handleOpenLocation,
+  handleShowHealth,
+} from "./commands/actions";
+import { DEFAULT_MIN_TOKENS, DEFAULT_STUDIO_URL, SUPPORTED_LANGUAGES } from "./constants";
+import { CDDMSidebarViewProvider } from "./webview/sidebar-provider";
+import { StudioPanel } from "./webview/studio-panel";
+
+export { SUPPORTED_LANGUAGES };
 
 let client: LanguageClient | undefined;
 let statusBarItem: vscode.StatusBarItem | undefined;
@@ -12,8 +23,8 @@ let statusBarItem: vscode.StatusBarItem | undefined;
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
   const config = vscode.workspace.getConfiguration("cddm");
   const executablePath = config.get<string>("executablePath", "cddm");
-  const minTokens = config.get<number>("minTokens", 50);
-  const studioUrl = config.get<string>("studioUrl", "http://127.0.0.1:3000");
+  const minTokens = config.get<number>("minTokens", DEFAULT_MIN_TOKENS);
+  const studioUrl = config.get<string>("studioUrl", DEFAULT_STUDIO_URL);
 
   const isStandaloneLsp =
     executablePath.endsWith("cddm-lsp") || executablePath.endsWith("cddm-lsp.exe");
@@ -36,19 +47,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   };
 
   const clientOptions: LanguageClientOptions = {
-    documentSelector: [
-      { scheme: "file", language: "rust" },
-      { scheme: "file", language: "typescript" },
-      { scheme: "file", language: "typescriptreact" },
-      { scheme: "file", language: "javascript" },
-      { scheme: "file", language: "javascriptreact" },
-      { scheme: "file", language: "python" },
-      { scheme: "file", language: "go" },
-      { scheme: "file", language: "c" },
-      { scheme: "file", language: "cpp" },
-      { scheme: "file", language: "java" },
-      { scheme: "file", language: "csharp" },
-    ],
+    documentSelector: SUPPORTED_LANGUAGES.map((lang) => ({ scheme: "file", language: lang })),
     synchronize: {
       fileEvents: vscode.workspace.createFileSystemWatcher("**/*"),
     },
@@ -64,7 +63,19 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   statusBarItem.show();
   context.subscriptions.push(statusBarItem);
 
+  // Sidebar Dashboard Webview Provider
+  const sidebarProvider = new CDDMSidebarViewProvider(context.extensionUri, studioUrl);
+  context.subscriptions.push(
+    vscode.window.registerWebviewViewProvider(CDDMSidebarViewProvider.viewType, sidebarProvider),
+  );
+
   // Register commands
+  context.subscriptions.push(
+    vscode.commands.registerCommand("cddm.openStudioView", () => {
+      StudioPanel.createOrShow(context.extensionUri, studioUrl);
+    }),
+  );
+
   context.subscriptions.push(
     vscode.commands.registerCommand("cddm.rescanWorkspace", async () => {
       if (!client) return;
@@ -91,23 +102,28 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   );
 
   context.subscriptions.push(
+    vscode.commands.registerCommand("cddm.showHealth", async () => {
+      await handleShowHealth(client, studioUrl);
+    }),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand("cddm.checkPolicies", async () => {
+      await handleCheckPolicies();
+    }),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand("cddm.exportSarif", async () => {
+      await handleExportSarif();
+    }),
+  );
+
+  context.subscriptions.push(
     vscode.commands.registerCommand(
       "cddm.openLocation",
       async (uriStr: string, startLine: number, endLine: number) => {
-        try {
-          const uri = vscode.Uri.parse(uriStr);
-          const doc = await vscode.workspace.openTextDocument(uri);
-          const editor = await vscode.window.showTextDocument(doc, { preview: false });
-
-          const start0 = Math.max(0, startLine - 1);
-          const end0 = Math.max(0, endLine - 1);
-          const selection = new vscode.Range(start0, 0, end0, 1000);
-
-          editor.selection = new vscode.Selection(selection.start, selection.end);
-          editor.revealRange(selection, vscode.TextEditorRevealType.InCenter);
-        } catch (err) {
-          vscode.window.showErrorMessage(`[CDDM] Failed to jump to location: ${String(err)}`);
-        }
+        await handleOpenLocation(uriStr, startLine, endLine);
       },
     ),
   );

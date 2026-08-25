@@ -15,6 +15,8 @@ const requiredPackagingFiles = [
   "packaging/install.sh",
   "packaging/install.ps1",
   "docs/JETBRAINS_SETUP.md",
+  "editors/vscode/package.json",
+  "editors/vscode/resources/cddm-icon.svg",
 ];
 
 console.log("\x1b[36m--> Verifying ecosystem distribution manifests and packaging...\x1b[0m");

@@ -411,6 +411,7 @@ export const Win2xWindow: React.FC<Win2xWindowProps> = ({
 
       {/* Main Window Frame */}
       <div
+        id={id}
         ref={windowContainerRef}
         style={containerStyle}
         className={combinedWindowClass}

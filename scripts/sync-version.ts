@@ -53,7 +53,17 @@ if (await npmPkgFile.exists()) {
   console.log(`\x1b[32m[OK] Updated npm/cddm/package.json -> ${newVersion}\x1b[0m`);
 }
 
-// 5. Update README.md badges
+// 5. Sync editors/vscode/package.json
+const vscodePkgPath = join(workspaceRoot, "editors", "vscode", "package.json");
+const vscodePkgFile = Bun.file(vscodePkgPath);
+if (await vscodePkgFile.exists()) {
+  const vscodePkg = await vscodePkgFile.json();
+  vscodePkg.version = newVersion;
+  await Bun.write(vscodePkgPath, JSON.stringify(vscodePkg, null, 2) + "\n");
+  console.log(`\x1b[32m[OK] Updated editors/vscode/package.json -> ${newVersion}\x1b[0m`);
+}
+
+// 6. Update README.md badges
 const readmePath = join(workspaceRoot, "README.md");
 const readmeFile = Bun.file(readmePath);
 if (await readmeFile.exists()) {

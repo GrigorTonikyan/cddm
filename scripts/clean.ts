@@ -34,7 +34,7 @@ export interface CleanResult {
   elapsedMs: number;
 }
 
-const PKG_ROOTS = ["", "webui", "tests/e2e"];
+const PKG_ROOTS = ["", "webui", "tests/e2e", "editors/vscode"];
 const LOCK_NAMES = ["bun.lock", "package-lock.json", "yarn.lock", "pnpm-lock.yaml"];
 
 export const KNOWN_CLEAN_DIRS: Array<{ path: string; category: CleanItem["category"] }> = [
@@ -44,6 +44,8 @@ export const KNOWN_CLEAN_DIRS: Array<{ path: string; category: CleanItem["catego
   { path: "webui/dist", category: "build" },
   { path: "webui/coverage", category: "test-report" },
   { path: "npm/cddm/dist", category: "build" },
+  { path: "editors/vscode/out", category: "build" },
+  { path: "packaging/vscode", category: "build" },
   ...PKG_ROOTS.map((p) => ({
     path: p ? `${p}/node_modules` : "node_modules",
     category: "cache" as const,
@@ -85,6 +87,7 @@ export const PROTECTED_PREFIXES = new Set([
   "scripts",
   "docs",
   "npm/cddm/bin",
+  "editors/vscode/src",
 ]);
 
 /**

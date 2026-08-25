@@ -69,5 +69,3 @@ main().catch((err) => {
   console.error("Fatal fix error:", err);
   process.exit(1);
 });
-
-export {};

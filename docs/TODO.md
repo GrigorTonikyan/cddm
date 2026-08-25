@@ -262,6 +262,19 @@
 
 ---
 
+### Milestone v2.1.0: First-Class IDE & Editor Ecosystem (VS Code Embedded Webview & VSIX Pipeline)
+
+- [x] **[EP-29] VS Code Embedded Webview Studio & Turnkey VSIX Packaging Engine**
+  - [x] Implement embedded full-screen Webview panel provider in `editors/vscode/src/webview/studio-panel.ts` (`cddm.openStudioView`)
+  - [x] Implement Activity Bar DRY health & duplication sidebar dashboard in `editors/vscode/src/webview/sidebar-provider.ts` (`cddm.sidebarView`)
+  - [x] Expand LSP document selectors and activation events to all 24 polyglot languages in `editors/vscode/src/extension.ts` and `constants.ts`
+  - [x] Add command palette suite (`cddm.showHealth`, `cddm.checkPolicies`, `cddm.exportSarif`, `cddm.openLocation`) in `commands/actions.ts`
+  - [x] Implement zero-dependency cross-platform VSIX packaging and validation engine in `scripts/package-vscode.ts`
+  - [x] Implement standard Open Packaging Conventions ZIP archive builder in `scripts/lib/zip-builder.ts`
+  - [x] Integrate VS Code packaging into `package-distribution.ts`, `sync-version.ts`, and full verification suite `scripts/verify.ts`
+
+---
+
 ## Completed Milestones (Verified)
 
 - [x] **v0.1.0**: Initial Rust core engine, Winnowing rolling hash, CLI scanner.
@@ -282,3 +295,4 @@
 - [x] **v1.8.0**: AI Code Surgeon & Autonomous Self-Healing Refactoring Engine (`crates/cddm-core/src/ai`, CLI `cddm heal`, Axum `POST /api/refactor/heal`, MCP `cddm_heal_refactor`, WebUI Auto-Heal tab).
 - [x] **v1.9.0**: Deep Semantic Graph Matching (PDG/CFG) & Monorepo Distributed Cache Archive (`.cddmpack`, `crates/cddm-core/src/semantic_graph`, `crates/cddm-core/src/cache/pack.rs`, `crates/cddm-core/src/monorepo.rs`, CLI `cddm cache export/import`, `cddm monorepo`, Axum endpoints, MCP tools).
 - [x] **v2.0.0**: Ecosystem Packaging, Distribution & JetBrains Integration (Homebrew Formula, Scoop manifest, Winget manifest, standalone `install.sh`/`install.ps1`, `docs/JETBRAINS_SETUP.md`, `scripts/package-distribution.ts`).
+- [x] **v2.1.0**: First-Class IDE & Editor Ecosystem (VS Code Embedded Webview Studio, Activity Bar Dashboard, 24-language polyglot selector, command suite, and turnkey VSIX packaging pipeline).

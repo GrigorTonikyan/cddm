@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-25 | Rust: 209/209 PASS | WebUI: 146/146 PASS across 38 suites | Repository Scripts: 34/34 PASS | Playwright E2E: 11/11 PASS | CI Workflows: PASS
+> Last verified: 2026-08-26 | Rust: 209/209 PASS | WebUI: 146/146 PASS across 38 suites | Repository Scripts, Extension & MCP: 45/45 PASS | Playwright E2E: 14/14 PASS | CI Workflows: PASS
 
 ---
 
@@ -376,16 +376,19 @@
 
 ---
 
-## 3. Repository Scripts & Release Tooling — Bun Test (34 unit tests)
+## 3. Repository Scripts & Release Tooling — Bun Test (45 unit tests)
 
-| Module           | Test Suite File                         | Test Cases | Status |
-| :--------------- | :-------------------------------------- | :--------- | :----- |
-| Commit Validator | `scripts/__tests__/version.test.ts`     | 4 tests    | PASS   |
-| Semantic Release | `scripts/__tests__/version.test.ts`     | 5 tests    | PASS   |
-| Doc Integrity    | `scripts/__tests__/docs.test.ts`        | 5 tests    | PASS   |
-| No-Emoji Policy  | `scripts/__tests__/no-emojis.test.ts`   | 5 tests    | PASS   |
-| File Length Cap  | `scripts/__tests__/file-length.test.ts` | 7 tests    | PASS   |
-| Workspace Engine | `scripts/__tests__/clean-reset.test.ts` | 8 tests    | PASS   |
+| Module           | Test Suite File                              | Test Cases | Status |
+| :--------------- | :------------------------------------------- | :--------- | :----- |
+| Commit Validator | `scripts/__tests__/version.test.ts`          | 4 tests    | PASS   |
+| Semantic Release | `scripts/__tests__/version.test.ts`          | 5 tests    | PASS   |
+| Doc Integrity    | `scripts/__tests__/docs.test.ts`             | 5 tests    | PASS   |
+| No-Emoji Policy  | `scripts/__tests__/no-emojis.test.ts`        | 5 tests    | PASS   |
+| File Length Cap  | `scripts/__tests__/file-length.test.ts`      | 7 tests    | PASS   |
+| Workspace Engine | `scripts/__tests__/clean-reset.test.ts`      | 8 tests    | PASS   |
+| VSIX Packager    | `scripts/__tests__/package-vscode.test.ts`   | 5 tests    | PASS   |
+| Extension Matrix | `scripts/__tests__/vscode-extension.test.ts` | 2 tests    | PASS   |
+| MCP Server E2E   | `scripts/__tests__/mcp-server.test.ts`       | 5 tests    | PASS   |
 
 ---
 

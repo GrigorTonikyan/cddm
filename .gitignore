@@ -13,6 +13,8 @@ node_modules/
 /coverage/
 /dist/
 /editors/vscode/out/
+*.vsix
+/packaging/vscode/
 
 # End-to-End test reports & results
 test-results/

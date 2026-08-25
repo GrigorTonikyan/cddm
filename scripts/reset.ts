@@ -26,7 +26,8 @@ export async function resetWorkspace(
 
   // Determine total steps
   const hasE2e = existsSync(join(workspaceRoot, "tests/e2e/package.json"));
-  const stepCount = (options.skipVerify ? 6 : 7) + (hasE2e ? 1 : 0);
+  const hasVscode = existsSync(join(workspaceRoot, "editors/vscode/package.json"));
+  const stepCount = (options.skipVerify ? 6 : 7) + (hasE2e ? 1 : 0) + (hasVscode ? 1 : 0);
   let currentStep = 1;
 
   // Step 1: Deep Clean
@@ -38,7 +39,6 @@ export async function resetWorkspace(
     `\x1b[32m[PASS] Removed ${cleanResult.dirsRemoved} directories and ${cleanResult.filesRemoved} files (${formatBytes(cleanResult.bytesFreed)})\x1b[0m`,
   );
 
-  // Step 2: Install Root Dependencies
   // Step 2: Install Root Dependencies
   currentStep++;
   await executeStep(
@@ -80,7 +80,22 @@ export async function resetWorkspace(
     );
   }
 
-  // Step 5: Configure Git Hooks
+  // Step 5: Install VS Code Extension Dependencies (if present)
+  if (hasVscode) {
+    currentStep++;
+    await executeStep(
+      {
+        title: "Installing VS Code extension dependencies (bun install)",
+        command: ["bun", "install"],
+        cwd: join(workspaceRoot, "editors/vscode"),
+      },
+      currentStep - 1,
+      stepCount,
+      "\x1b[35m",
+    );
+  }
+
+  // Step 6: Configure Git Hooks
   currentStep++;
   await executeStep(
     {

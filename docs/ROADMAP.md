@@ -34,6 +34,7 @@
 | **v1.8.0** | Stable Release | AI Code Surgeon & Self-Healing Refactor     | Closed-loop autonomous test feedback loop, multi-provider engine (Gemini/Claude/OpenAI/Ollama), `cddm heal`.     |
 | **v1.9.0** | Stable Release | Deep Semantic Graph & Monorepo Cache        | CFG/PDG extraction, Weisfeiler-Lehman graph kernels, monorepo multi-workspace scanner, portable `.cddmpack`.     |
 | **v2.0.0** | Major Release  | Ecosystem Packaging & JetBrains Integration | Homebrew, Scoop, Winget, standalone installers (`install.sh`/`install.ps1`), JetBrains LSP integration guide.    |
+| **v2.1.0** | Major Release  | IDE & Editor Ecosystem & VSIX Pipeline      | VS Code embedded Webview Studio panel, Activity Bar dashboard, 24 polyglot languages, and turnkey VSIX packager. |
 
 ---
 
@@ -774,6 +775,31 @@ Engineers using JetBrains IDEs require complete setup instructions for integrati
 
 ---
 
+### EP-29: VS Code Embedded Webview Studio & Turnkey VSIX Packaging Engine
+
+- **Target Milestone**: `v2.1.0`
+- **Component**: `editors/vscode`, `scripts/`
+- **Priority**: `High`
+- **Status**: `Completed (v2.1.0)`
+
+#### Problem Statement
+
+Developers need an embedded interactive WebUI Studio and Activity Bar sidebar dashboard inside Visual Studio Code and Cursor, with direct jump links to duplicate code sites and a turnkey cross-platform `.vsix` packaging workflow.
+
+#### Specification & Architecture
+
+1. **Embedded Webview Studio (`editors/vscode/src/webview/studio-panel.ts`)**:
+   - Full-tab interactive WebUI Studio panel (`cddm.openStudioView`) with bi-directional message bridge to VS Code editor.
+2. **Activity Bar Sidebar Dashboard (`editors/vscode/src/webview/sidebar-provider.ts`)**:
+   - Native `cddm.sidebarView` providing DRY Health Score gauge, cluster stats, and quick actions.
+3. **Polyglot LSP Registration & Commands**:
+   - Expand document selector to all 24 supported languages in `extension.ts` and `constants.ts`.
+   - Command palette integration (`showHealth`, `checkPolicies`, `exportSarif`, `openLocation`).
+4. **VSIX Packaging Pipeline (`scripts/package-vscode.ts`, `scripts/lib/zip-builder.ts`)**:
+   - Open Packaging Conventions (OPC) compliant `.vsix` packager generating standalone marketplace installers.
+
+---
+
 ## 3. Prioritized Action Checklist
 
 ```markdown
@@ -907,6 +933,16 @@ Engineers using JetBrains IDEs require complete setup instructions for integrati
 - [x] Create standalone Windows PowerShell installer in `packaging/install.ps1` [EP-27]
 - [x] Implement ecosystem packaging validation script in `scripts/package-distribution.ts` [EP-27]
 - [x] Create comprehensive JetBrains IDE setup guide in `docs/JETBRAINS_SETUP.md` [EP-28]
+
+### Milestone v2.1.0 (First-Class IDE & Editor Ecosystem)
+
+- [x] Implement embedded full-screen Webview panel provider in `editors/vscode/src/webview/studio-panel.ts` (`cddm.openStudioView`) [EP-29]
+- [x] Implement Activity Bar DRY health & duplication sidebar dashboard in `editors/vscode/src/webview/sidebar-provider.ts` (`cddm.sidebarView`) [EP-29]
+- [x] Expand LSP document selectors and activation events to all 24 polyglot languages in `editors/vscode/src/extension.ts` [EP-29]
+- [x] Add command palette suite (`cddm.showHealth`, `cddm.checkPolicies`, `cddm.exportSarif`, `cddm.openLocation`) in `commands/actions.ts` [EP-29]
+- [x] Implement zero-dependency cross-platform VSIX packaging and validation engine in `scripts/package-vscode.ts` [EP-29]
+- [x] Implement standard Open Packaging Conventions ZIP archive builder in `scripts/lib/zip-builder.ts` [EP-29]
+- [x] Integrate VS Code packaging into `package-distribution.ts`, `sync-version.ts`, and full verification suite `scripts/verify.ts` [EP-29]
 ```
 
 ---

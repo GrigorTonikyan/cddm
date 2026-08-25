@@ -57,6 +57,18 @@ const STEPS: ScriptStep[] = [
     command: ["bun", "scripts/package-distribution.ts"],
   },
   {
+    title: "VS Code extension TypeScript check (tsc -p editors/vscode)",
+    command: ["bunx", "tsc", "-p", "editors/vscode/tsconfig.json"],
+  },
+  {
+    title: "VS Code extension unit tests (bun test scripts/__tests__/vscode-extension.test.ts)",
+    command: ["bun", "test", "scripts/__tests__/vscode-extension.test.ts"],
+  },
+  {
+    title: "VS Code extension VSIX packaging (bun scripts/package-vscode.ts)",
+    command: ["bun", "scripts/package-vscode.ts"],
+  },
+  {
     title: "CDDM Dogfooding Self-Scan (cddm scan .)",
     command: [
       "cargo",
@@ -95,5 +107,3 @@ main().catch((err) => {
   console.error("Fatal verification error:", err);
   process.exit(1);
 });
-
-export {};
