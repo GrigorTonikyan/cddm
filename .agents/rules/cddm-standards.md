@@ -1,7 +1,5 @@
 ---
-description: "Non-negotiable coding and quality standards for CDDM agents"
-globs: ["**/*"]
-alwaysApply: true
+trigger: always_on
 ---
 
 # CDDM Agent Standards

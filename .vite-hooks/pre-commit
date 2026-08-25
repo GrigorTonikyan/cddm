@@ -13,4 +13,7 @@ cargo clippy --workspace --all-targets -- -D warnings
 echo "--> Running workspace Vite+ type-aware check (vp check)..."
 vp check
 
+echo "--> Checking file length and modularity policy..."
+bun scripts/check-file-length.ts
+
 echo "=== [Vite+ Git Hooks] All pre-commit checks PASSED cleanly! ==="

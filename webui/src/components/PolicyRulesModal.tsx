@@ -1,23 +1,40 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useCDDMStore } from "../store/cddm-store";
+import type { PolicyConfig, PolicySeverity, PolicyViolation } from "../types/cddm-types";
+import { PolicyActiveRulesTab } from "./policy/PolicyActiveRulesTab";
+import { PolicyViolationsTab } from "./policy/PolicyViolationsTab";
 import { Win2xWindow } from "./ui/win2x-manager";
-import {
-  Save,
-  RotateCcw,
-  Check,
-  ShieldCheck,
-  AlertTriangle,
-  Layers,
-  FileCode,
-  Sliders,
-  Play,
-} from "lucide-react";
-import { PolicyConfig, PolicyViolation, PolicySeverity } from "../types/cddm-types";
+import { AlertTriangle, Check, FileCode, Play, RotateCcw, Save, ShieldCheck } from "lucide-react";
 
 export interface PolicyRulesModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
+
+const DEFAULT_POLICY_TOML_TEMPLATE = `# CDDM Architectural Rules & Boundary Policy Configuration
+# Schema Reference: docs/ARCHITECTURE.md
+
+[[boundaries]]
+name = "domain-isolation"
+description = "Domain core logic must not be duplicated into presentation or infrastructure layers"
+source = "src/domain/**"
+forbidden_targets = ["src/presentation/**", "src/infra/**"]
+severity = "error"
+
+[[zero_duplication]]
+name = "auth-security-zone"
+description = "Authentication and cryptography modules must have zero code duplication"
+pattern = "src/auth/**"
+severity = "error"
+
+[[limits]]
+name = "api-cluster-limit"
+description = "API handlers must not exceed 100 duplicate tokens or 3 multi-site occurrences"
+pattern = "src/api/**"
+max_tokens = 100
+max_occurrences = 3
+severity = "warning"
+`;
 
 export const PolicyRulesModal: React.FC<PolicyRulesModalProps> = ({ isOpen, onClose }) => {
   const {
@@ -45,33 +62,7 @@ export const PolicyRulesModal: React.FC<PolicyRulesModalProps> = ({ isOpen, onCl
 
   useEffect(() => {
     if (policyConfig) {
-      setRawContent(
-        policyConfig.raw_toml ||
-          `# CDDM Architectural Rules & Boundary Policy Configuration
-# Schema Reference: docs/ARCHITECTURE.md
-
-# [[boundaries]]
-# name = "domain-isolation"
-# description = "Domain core logic must not be duplicated into presentation or infrastructure layers"
-# source = "src/domain/**"
-# forbidden_targets = ["src/presentation/**", "src/infra/**"]
-# severity = "error"
-
-# [[zero_duplication]]
-# name = "auth-security-zone"
-# description = "Authentication and cryptography modules must have zero code duplication"
-# pattern = "src/auth/**"
-# severity = "error"
-
-# [[limits]]
-# name = "api-cluster-limit"
-# description = "API handlers must not exceed 100 duplicate tokens or 3 multi-site occurrences"
-# pattern = "src/api/**"
-# max_tokens = 100
-# max_occurrences = 3
-# severity = "warning"
-`,
-      );
+      setRawContent(policyConfig.raw_toml || DEFAULT_POLICY_TOML_TEMPLATE);
     }
   }, [policyConfig]);
 
@@ -113,34 +104,6 @@ export const PolicyRulesModal: React.FC<PolicyRulesModalProps> = ({ isOpen, onCl
     } finally {
       setIsEvaluating(false);
     }
-  };
-
-  const handleResetDefault = () => {
-    const defaultTemplate = `# CDDM Architectural Rules & Boundary Policy Configuration
-# Schema Reference: docs/ARCHITECTURE.md
-
-[[boundaries]]
-name = "domain-isolation"
-description = "Domain core logic must not be duplicated into presentation or infrastructure layers"
-source = "src/domain/**"
-forbidden_targets = ["src/presentation/**", "src/infra/**"]
-severity = "error"
-
-[[zero_duplication]]
-name = "auth-security-zone"
-description = "Authentication and cryptography modules must have zero code duplication"
-pattern = "src/auth/**"
-severity = "error"
-
-[[limits]]
-name = "api-cluster-limit"
-description = "API handlers must not exceed 100 duplicate tokens or 3 multi-site occurrences"
-pattern = "src/api/**"
-max_tokens = 100
-max_occurrences = 3
-severity = "warning"
-`;
-    setRawContent(defaultTemplate);
   };
 
   const renderSeverityBadge = (sev: PolicySeverity) => {
@@ -272,196 +235,19 @@ severity = "warning"
         </div>
 
         {activeTab === "rules" && (
-          <div className="flex-1 overflow-y-auto p-6 space-y-6">
-            <div>
-              <h3 className="text-sm font-semibold text-slate-200 flex items-center gap-2 mb-3">
-                <Layers className="w-4 h-4 text-indigo-400" />
-                Cross-Layer Boundary Isolation
-              </h3>
-              {!policyConfig?.boundaries || policyConfig.boundaries.length === 0 ? (
-                <div className="p-4 rounded-lg bg-slate-900/60 border border-slate-800/80 text-xs text-slate-400">
-                  No boundary rules configured.
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 gap-3">
-                  {policyConfig.boundaries.map((b, idx) => (
-                    <div
-                      key={idx}
-                      className="p-3.5 rounded-lg bg-slate-900/70 border border-slate-800 hover:border-slate-700 transition-colors"
-                    >
-                      {renderPolicyRuleHeader(b.name, b.severity, b.description)}
-                      <div className="flex items-center gap-2 text-xs font-mono">
-                        <span className="text-slate-400">Source:</span>
-                        <span className="px-2 py-0.5 bg-slate-800/80 text-indigo-300 rounded border border-slate-700/60">
-                          {b.source}
-                        </span>
-                        <span className="text-slate-500">-&gt;</span>
-                        <span className="text-slate-400">Forbidden:</span>
-                        <div className="flex flex-wrap gap-1">
-                          {b.forbidden_targets.map((tgt, tIdx) => (
-                            <span
-                              key={tIdx}
-                              className="px-2 py-0.5 bg-rose-950/50 text-rose-300 rounded border border-rose-900/50"
-                            >
-                              {tgt}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div>
-              <h3 className="text-sm font-semibold text-slate-200 flex items-center gap-2 mb-3">
-                <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                Zero Duplication Zones
-              </h3>
-              {!policyConfig?.zero_duplication || policyConfig.zero_duplication.length === 0 ? (
-                <div className="p-4 rounded-lg bg-slate-900/60 border border-slate-800/80 text-xs text-slate-400">
-                  No zero-duplication zones.
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 gap-3">
-                  {policyConfig.zero_duplication.map((z, idx) => (
-                    <div
-                      key={idx}
-                      className="p-3.5 rounded-lg bg-slate-900/70 border border-slate-800 hover:border-slate-700 transition-colors"
-                    >
-                      {renderPolicyRuleHeader(z.name, z.severity, z.description)}
-                      <div className="flex items-center gap-2 text-xs font-mono">
-                        <span className="text-slate-400">Protected Pattern:</span>
-                        <span className="px-2 py-0.5 bg-slate-800/80 text-emerald-300 rounded border border-slate-700/60">
-                          {z.pattern}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div>
-              <h3 className="text-sm font-semibold text-slate-200 flex items-center gap-2 mb-3">
-                <Sliders className="w-4 h-4 text-cyan-400" />
-                Clone & Occurrence Limits
-              </h3>
-              {!policyConfig?.limits || policyConfig.limits.length === 0 ? (
-                <div className="p-4 rounded-lg bg-slate-900/60 border border-slate-800/80 text-xs text-slate-400">
-                  No limit rules configured.
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 gap-3">
-                  {policyConfig.limits.map((l, idx) => (
-                    <div
-                      key={idx}
-                      className="p-3.5 rounded-lg bg-slate-900/70 border border-slate-800 hover:border-slate-700 transition-colors"
-                    >
-                      {renderPolicyRuleHeader(l.name, l.severity, l.description)}
-                      <div className="flex flex-wrap items-center gap-3 text-xs font-mono">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-slate-400">Pattern:</span>
-                          <span className="px-2 py-0.5 bg-slate-800/80 text-cyan-300 rounded border border-slate-700/60">
-                            {l.pattern}
-                          </span>
-                        </div>
-                        {l.max_tokens !== undefined && (
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-slate-400">Max Tokens:</span>
-                            <span className="text-amber-300 font-bold">{l.max_tokens}</span>
-                          </div>
-                        )}
-                        {l.max_occurrences !== undefined && (
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-slate-400">Max Cluster Occurrences:</span>
-                            <span className="text-amber-300 font-bold">{l.max_occurrences}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
+          <PolicyActiveRulesTab
+            policyConfig={policyConfig}
+            renderPolicyRuleHeader={renderPolicyRuleHeader}
+          />
         )}
 
         {activeTab === "violations" && (
-          <div className="flex-1 overflow-y-auto p-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-slate-300 font-mono">
-                Total Detected Violations: {evalViolations.length}
-              </span>
-              <button
-                onClick={handleEvaluate}
-                disabled={isEvaluating}
-                className="px-3.5 py-1.5 rounded-lg text-xs font-medium bg-indigo-900/60 text-indigo-200 hover:bg-indigo-800/70 border border-indigo-700/50 transition-colors flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
-              >
-                <ShieldCheck className="w-3.5 h-3.5" />
-                {isEvaluating ? "Evaluating..." : "Run Policy Check"}
-              </button>
-            </div>
-
-            {evalViolations.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-64 text-center p-6 rounded-xl bg-slate-900/40 border border-slate-800">
-                <ShieldCheck className="w-12 h-12 text-emerald-400 mb-3" />
-                <h4 className="text-sm font-semibold text-slate-200 mb-1">
-                  Zero Architectural Policy Violations
-                </h4>
-                <p className="text-xs text-slate-400 max-w-md">
-                  All cross-layer boundaries, zero-duplication zones, and token limit rules are
-                  currently satisfied.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {evalViolations.map((v, idx) => (
-                  <div
-                    key={idx}
-                    className="p-4 rounded-lg bg-slate-900/80 border border-rose-900/40 space-y-2 hover:border-rose-700/60 transition-colors"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        {renderSeverityBadge(v.severity)}
-                        <span className="font-semibold text-xs font-mono text-slate-100">
-                          {v.rule_name}
-                        </span>
-                        <span className="text-xs px-2 py-0.5 bg-slate-800 rounded text-slate-400 font-mono">
-                          {v.rule_type}
-                        </span>
-                      </div>
-                      <span className="text-xs text-slate-400 font-mono">
-                        {v.token_count} matching tokens
-                      </span>
-                    </div>
-
-                    <p className="text-xs text-slate-300">{v.message}</p>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-mono pt-1">
-                      <div className="p-2 rounded bg-slate-950 border border-slate-800/80">
-                        <span className="text-slate-500 block text-[10px]">PRIMARY LOCATION:</span>
-                        <span className="text-indigo-300 font-medium">
-                          {v.file_a}:{v.start_line_a}-{v.end_line_a}
-                        </span>
-                      </div>
-                      {v.file_b && (
-                        <div className="p-2 rounded bg-slate-950 border border-slate-800/80">
-                          <span className="text-slate-500 block text-[10px]">
-                            OFFENDING COUNTERPART:
-                          </span>
-                          <span className="text-rose-300 font-medium">
-                            {v.file_b}:{v.start_line_b}-{v.end_line_b}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <PolicyViolationsTab
+            evalViolations={evalViolations}
+            isEvaluating={isEvaluating}
+            onEvaluate={handleEvaluate}
+            renderSeverityBadge={renderSeverityBadge}
+          />
         )}
 
         {/* Tab 3: Raw TOML Editor */}
@@ -474,7 +260,7 @@ severity = "warning"
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={handleResetDefault}
+                  onClick={() => setRawContent(DEFAULT_POLICY_TOML_TEMPLATE)}
                   className="px-3 py-1 rounded text-xs font-mono bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700 transition-colors flex items-center gap-1.5 cursor-pointer"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />

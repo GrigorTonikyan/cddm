@@ -191,3 +191,19 @@ The WebUI frontend is split into two clean architectural layers:
    - **Components**: `TitleBar`, `WindowControls`, `ResizeHandle`, `ResizeHandleGroup`, `Win2xWindow`.
    - **Design Tokens**: Parameterized `--win2x-*` custom properties with modern nested CSS scoping.
    - **Compositor Pipeline**: 120fps hardware-accelerated movement via `transform: translate3d(x, y, 0)`, dynamic blur decoupling on `[data-moving="true"]`, and CSS containment (`contain: layout paint`).
+
+---
+
+## 9. AI Agent Governance & Progressive Customizations (`Antigravity 2.0`)
+
+To maintain pristine engineering standards and prevent context window degradation during AI pair programming:
+
+1. **Root SSoT Index ([AGENTS.md](../AGENTS.md))**:
+   - Lightweight index loaded unconditionally, pointing to modular rules and skills in `.agents/`.
+
+2. **Progressive Customization Engine (`.agents/`)**:
+   - **Modular Rules (`.agents/rules/`)**: Scoped `trigger: always_on` rule files for task completion workflow, file length limits, legacy remediation, and core coding standards.
+   - **Workspace Skills (`.agents/skills/`)**: On-demand runbooks (`cddm-task-workflow`, `cddm-modular-refactoring`) activated by agent decision.
+
+3. **Automated Quality Gate (`scripts/verify.ts`)**:
+   - Dynamically executes all verification checks (Rust, TypeScript, Vitest, documentation integrity, file length caps, dogfooding self-scan) with zero hardcoded step counts.

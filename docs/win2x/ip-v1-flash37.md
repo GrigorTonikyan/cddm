@@ -5,7 +5,7 @@
 The user has specified the requirements for the **`win2x-manager`** subsystem:
 
 1. **Self-Contained & Fully Portable**:
-   - Placed under [`webui/src/components/ui/win2x-manager/`](file:///x:/projects/cddm/webui/src/components/ui/win2x-manager/).
+   - Placed under [`webui/src/components/ui/win2x-manager/`](../webui/src/components/ui/win2x-manager/).
    - Contains its own complete documentation suite directly inside `webui/src/components/ui/win2x-manager/docs/`.
    - Zero Tailwind dependency: 100% pure modern **CSS Modules (`*.module.css`)** with scoped **CSS Custom Properties (`--win2x-*`)**.
    - Strict kebab-case naming for all directories and files (`win2x-window.tsx`, `win2x-window.module.css`).

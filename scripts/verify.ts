@@ -49,6 +49,10 @@ const STEPS: ScriptStep[] = [
     command: ["bun", "scripts/check-docs.ts"],
   },
   {
+    title: "File length cap & modularity check (bun scripts/check-file-length.ts)",
+    command: ["bun", "scripts/check-file-length.ts"],
+  },
+  {
     title: "CDDM Dogfooding Self-Scan (cddm scan .)",
     command: [
       "cargo",

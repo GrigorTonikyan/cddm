@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-24 | Rust: 193/193 PASS | WebUI: 136/136 PASS across 35 suites | Repository Scripts: 27/27 PASS | Playwright E2E: 11/11 PASS | CI Workflows: PASS
+> Last verified: 2026-08-24 | Rust: 193/193 PASS | WebUI: 136/136 PASS across 35 suites | Repository Scripts: 34/34 PASS | Playwright E2E: 11/11 PASS | CI Workflows: PASS
 
 ---
 
@@ -350,7 +350,7 @@
 
 ---
 
-## 3. Repository Scripts & Release Tooling — Bun Test (27 unit tests)
+## 3. Repository Scripts & Release Tooling — Bun Test (34 unit tests)
 
 | Module           | Test Suite File                         | Test Cases | Status |
 | :--------------- | :-------------------------------------- | :--------- | :----- |
@@ -358,18 +358,21 @@
 | Semantic Release | `scripts/__tests__/version.test.ts`     | 5 tests    | PASS   |
 | Doc Integrity    | `scripts/__tests__/docs.test.ts`        | 5 tests    | PASS   |
 | No-Emoji Policy  | `scripts/__tests__/no-emojis.test.ts`   | 5 tests    | PASS   |
+| File Length Cap  | `scripts/__tests__/file-length.test.ts` | 7 tests    | PASS   |
 | Workspace Engine | `scripts/__tests__/clean-reset.test.ts` | 8 tests    | PASS   |
 
 ---
 
 ## 4. GitHub Automation & Governance Validation
 
-| Layer                       | Validation Target                                              | Status     |
-| :-------------------------- | :------------------------------------------------------------- | :--------- |
-| **Commit Message Linter**   | `@commitlint/cli` + `commitlint.config.ts` in `.vite-hooks`    | Enforced   |
-| **Semantic Versioning**     | `bumpp` + `conventional-changelog` via `vp run bump`           | Enforced   |
-| **CI Automation**           | `.github/workflows/ci.yml` (Matrix build, clippy, fmt, vitest) | Configured |
-| **Release Automation**      | `.github/workflows/release.yml` (Cross-compiling 4 targets)    | Configured |
-| **Documentation Integrity** | `bun scripts/check-docs.ts` (Links, tables, roadmap sync)      | Enforced   |
-| **Community Templates**     | Issue templates & Pull Request checklist template              | Active     |
-| **Registry Metadata**       | `crates.io` keywords/categories + `npm` keywords/links         | Validated  |
+| Layer                        | Validation Target                                              | Status     |
+| :--------------------------- | :------------------------------------------------------------- | :--------- |
+| **Commit Message Linter**    | `@commitlint/cli` + `commitlint.config.ts` in `.vite-hooks`    | Enforced   |
+| **Semantic Versioning**      | `bumpp` + `conventional-changelog` via `vp run bump`           | Enforced   |
+| **CI Automation**            | `.github/workflows/ci.yml` (Matrix build, clippy, fmt, vitest) | Configured |
+| **Release Automation**       | `.github/workflows/release.yml` (Cross-compiling 4 targets)    | Configured |
+| **Documentation Integrity**  | `bun scripts/check-docs.ts` (Links, tables, roadmap sync)      | Enforced   |
+| **File Length & Modularity** | `bun scripts/check-file-length.ts` (500-line ceiling & caps)   | Enforced   |
+| **Agentic Governance (AGY)** | `AGENTS.md` + `.agents/` progressive rules & skills            | Active     |
+| **Community Templates**      | Issue templates & Pull Request checklist template              | Active     |
+| **Registry Metadata**        | `crates.io` keywords/categories + `npm` keywords/links         | Validated  |

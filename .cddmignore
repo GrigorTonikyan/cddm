@@ -1,0 +1,29 @@
+# CDDM Code De-Duplication Meister — Suppression Rules (.cddmignore)
+# Global path ignore patterns (globs):
+node_modules/**
+target/**
+dist/**
+build/**
+.git/**
+.logs/**
+.cddm/**
+.vite-hooks/**
+**/__tests__/**
+**/*.test.*
+**/*.spec.*
+**/tests/**
+**/tests.rs
+**/*_test.rs
+
+# Generated code files:
+*.generated.*
+*.pb.go
+*_pb2.py
+*.g.dart
+
+# Custom min-token thresholds for specific directories:
+# [threshold] tests/** min_tokens=100
+# [threshold] fixtures/** min_tokens=80
+
+# Exclude specific clone types from detection:
+# [type-filter] src/mocks/** ignore=Exact,Renamed

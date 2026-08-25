@@ -156,7 +156,7 @@ webui/src/components/ui/win2x-manager/
 
 ## 3. CSS Custom Properties Contract (`--win2x-*`)
 
-All visual tokens are declared in [`win2x-theme.css`](file:///x:/projects/cddm/webui/src/components/ui/win2x-manager/styles/win2x-theme.css) and consumed by CSS Modules:
+All visual tokens are declared in [`win2x-theme.css`](../webui/src/components/ui/win2x-manager/styles/win2x-theme.css) and consumed by CSS Modules:
 
 | Category   | Variable                     | Default Value             | Purpose                       |
 | :--------- | :--------------------------- | :------------------------ | :---------------------------- |
@@ -269,7 +269,7 @@ Create the entire `webui/src/components/ui/win2x-manager/` tree from scratch. Th
 
 ### Phase 2: Migrate Consumer (`RefactorPatchModal`)
 
-Update [`RefactorPatchModal.tsx`](file:///x:/projects/cddm/webui/src/components/RefactorPatchModal.tsx) to import from `win2x-manager/index.ts` instead of the old `./ui` barrel:
+Update [`RefactorPatchModal.tsx`](../webui/src/components/RefactorPatchModal.tsx) to import from `win2x-manager/index.ts` instead of the old `./ui` barrel:
 
 ```diff
 -import { Window, CollapsibleCard, CodeBlock } from "./ui";
@@ -315,7 +315,7 @@ export * from "./win2x-manager";
 
 ### Phase 5: Remove `ModalWindowState` from CDDM Store
 
-Remove `modalWindowState`, `setModalWindowState`, `loadPersistedWindowState()`, `persistWindowState()` from [`cddm-store.ts`](file:///x:/projects/cddm/webui/src/store/cddm-store.ts) and `ModalWindowState`/`DEFAULT_MODAL_WINDOW_STATE` from [`cddm-types.ts`](file:///x:/projects/cddm/webui/src/types/cddm-types.ts). The window state is now self-contained inside `win2x-manager` via its own `StorageAdapter`.
+Remove `modalWindowState`, `setModalWindowState`, `loadPersistedWindowState()`, `persistWindowState()` from [`cddm-store.ts`](../webui/src/store/cddm-store.ts) and `ModalWindowState`/`DEFAULT_MODAL_WINDOW_STATE` from [`cddm-types.ts`](../webui/src/types/cddm-types.ts). The window state is now self-contained inside `win2x-manager` via its own `StorageAdapter`.
 
 ---
 

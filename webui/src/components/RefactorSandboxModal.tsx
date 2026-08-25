@@ -1,24 +1,27 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useCDDMStore } from "../store/cddm-store";
-import { Win2xWindow } from "./ui/win2x-manager";
-import {
-  Sparkles,
-  GitBranch,
-  Play,
-  Copy,
-  Download,
-  Check,
-  AlertCircle,
-  FileCode2,
-  RefreshCw,
-  Sliders,
-  TrendingDown,
-} from "lucide-react";
-import {
+import type {
   AiOccurrenceContext,
   AiRefactorPromptRequest,
   RefactorSandboxRequest,
 } from "../types/cddm-types";
+import { AstRewritePreview } from "./sandbox/AstRewritePreview";
+import { PatchDiffPreview } from "./sandbox/PatchDiffPreview";
+import { SandboxHeaderControls } from "./sandbox/SandboxHeaderControls";
+import { TestVerificationPanel } from "./sandbox/TestVerificationPanel";
+import { Win2xWindow } from "./ui/win2x-manager";
+import {
+  AlertCircle,
+  Check,
+  Copy,
+  Download,
+  FileCode2,
+  GitBranch,
+  Play,
+  RefreshCw,
+  Sparkles,
+  TrendingDown,
+} from "lucide-react";
 
 export interface RefactorSandboxModalProps {
   isOpen: boolean;
@@ -328,68 +331,16 @@ export const RefactorSandboxModal: React.FC<RefactorSandboxModalProps> = ({ isOp
     >
       <div className="space-y-4 font-mono text-xs text-slate-300">
         {/* Sandbox Configuration Controls */}
-        <div className="p-3.5 bg-slate-900/80 border border-slate-800 rounded-xl space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-slate-200 font-semibold text-xs flex items-center gap-2">
-              <Sliders className="w-3.5 h-3.5 text-indigo-400" />
-              Parameterized Refactoring Studio Controls
-            </span>
-            <button
-              type="button"
-              onClick={handleSimulate}
-              disabled={isSandboxLoading}
-              className="px-3 py-1 rounded-lg bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-300 border border-indigo-500/40 text-xs flex items-center gap-1.5 transition-colors font-semibold"
-            >
-              {isSandboxLoading ? (
-                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <Play className="w-3.5 h-3.5" />
-              )}
-              Re-Simulate Sandbox
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="space-y-1">
-              <label className="text-[11px] text-slate-400 block font-medium">
-                Extracted Function Name
-              </label>
-              <input
-                type="text"
-                value={customFunctionName}
-                onChange={(e) => setCustomFunctionName(e.target.value)}
-                placeholder="extracted_shared_helper"
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 font-mono focus:outline-none focus:border-indigo-500/60"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-[11px] text-slate-400 block font-medium">
-                Destination Module Path (Optional)
-              </label>
-              <input
-                type="text"
-                value={targetModulePath}
-                onChange={(e) => setTargetModulePath(e.target.value)}
-                placeholder="shared_utils.rs / helper.ts"
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 font-mono focus:outline-none focus:border-indigo-500/60"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-[11px] text-slate-400 block font-medium">
-                Dedicated Git Branch Name
-              </label>
-              <input
-                type="text"
-                value={branchName}
-                onChange={(e) => setBranchName(e.target.value)}
-                placeholder="cddm/refactor-cluster-1"
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 font-mono focus:outline-none focus:border-indigo-500/60"
-              />
-            </div>
-          </div>
-        </div>
+        <SandboxHeaderControls
+          customFunctionName={customFunctionName}
+          onFunctionNameChange={setCustomFunctionName}
+          targetModulePath={targetModulePath}
+          onTargetModuleChange={setTargetModulePath}
+          branchName={branchName}
+          onBranchNameChange={setBranchName}
+          isSandboxLoading={isSandboxLoading}
+          onSimulate={handleSimulate}
+        />
 
         {/* Metrics Summary Strip */}
         {sandboxResult && (
@@ -462,198 +413,29 @@ export const RefactorSandboxModal: React.FC<RefactorSandboxModalProps> = ({ isOp
 
         {/* Tab 1: Unified Patch & Diff Preview */}
         {activeTab === "patch" && (
-          <div className="space-y-2">
-            <span className="text-slate-200 font-semibold text-xs flex items-center gap-2">
-              <FileCode2 className="w-3.5 h-3.5 text-indigo-400" />
-              Live Synthesized Unified Diff Patch
-            </span>
-
-            {isSandboxLoading ? (
-              <div className="py-16 flex flex-col items-center justify-center gap-3 text-slate-400 font-mono text-xs bg-slate-950/60 border border-slate-800 rounded-xl">
-                <RefreshCw className="w-6 h-6 animate-spin text-indigo-400" />
-                <span>Synthesizing multi-site unified refactoring patch...</span>
-              </div>
-            ) : sandboxError ? (
-              <div className="p-4 bg-rose-950/40 border border-rose-900/60 rounded-xl text-xs font-mono text-rose-300 flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-rose-400 flex-shrink-0" />
-                <span>{sandboxError}</span>
-              </div>
-            ) : currentPatch ? (
-              <div className="border border-slate-800 rounded-xl bg-slate-950 overflow-hidden">
-                <pre className="p-4 text-xs font-mono overflow-x-auto max-h-[340px] leading-relaxed">
-                  {currentPatch.split("\n").map((line, idx) => {
-                    let lineClass = "text-slate-400";
-                    if (line.startsWith("+") && !line.startsWith("+++")) {
-                      lineClass = "text-emerald-400 bg-emerald-950/30 -mx-4 px-4 block";
-                    } else if (line.startsWith("-") && !line.startsWith("---")) {
-                      lineClass = "text-rose-400 bg-rose-950/30 -mx-4 px-4 block";
-                    } else if (line.startsWith("@@")) {
-                      lineClass = "text-indigo-400 font-semibold bg-indigo-950/20 -mx-4 px-4 block";
-                    } else if (line.startsWith("---") || line.startsWith("+++")) {
-                      lineClass = "text-slate-200 font-bold";
-                    }
-                    return (
-                      <span key={idx} className={lineClass}>
-                        {line}
-                        {"\n"}
-                      </span>
-                    );
-                  })}
-                </pre>
-              </div>
-            ) : (
-              <div className="p-8 bg-slate-950/60 border border-slate-800 rounded-xl text-center text-slate-500">
-                Click &quot;Re-Simulate Sandbox&quot; to synthesize unified refactoring patch.
-              </div>
-            )}
-          </div>
+          <PatchDiffPreview
+            currentPatch={currentPatch}
+            isSandboxLoading={isSandboxLoading}
+            sandboxError={sandboxError}
+          />
         )}
 
         {/* Tab 2: AST-Native Rewrite Preview */}
         {activeTab === "ast" && (
-          <div className="space-y-3">
-            {isAstLoading ? (
-              <div className="py-16 flex flex-col items-center justify-center gap-3 text-slate-400 font-mono text-xs bg-slate-950/60 border border-slate-800 rounded-xl">
-                <RefreshCw className="w-6 h-6 animate-spin text-purple-400" />
-                <span>Synthesizing Tree-sitter AST refactoring and inferring types...</span>
-              </div>
-            ) : astError ? (
-              <div className="p-4 bg-rose-950/40 border border-rose-900/60 rounded-xl text-xs font-mono text-rose-300 flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-rose-400 flex-shrink-0" />
-                <span>{astError}</span>
-              </div>
-            ) : astRewriteResult ? (
-              <div className="space-y-3">
-                {/* Extracted Helper Header */}
-                <div className="p-3.5 bg-slate-900/90 border border-purple-800/40 rounded-xl space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-purple-300 font-bold text-xs flex items-center gap-2">
-                      <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-                      Extracted Shared Helper: {astRewriteResult.function_name}()
-                    </span>
-                    <span className="text-slate-400 text-[11px] font-mono">
-                      Target: {astRewriteResult.target_module_path}
-                    </span>
-                  </div>
-
-                  {astRewriteResult.inferred_parameters.length > 0 && (
-                    <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                      <span className="text-[11px] text-slate-400 mr-1">Inferred Parameters:</span>
-                      {astRewriteResult.inferred_parameters.map((param, pIdx) => (
-                        <span
-                          key={pIdx}
-                          className="px-2 py-0.5 bg-purple-950/60 border border-purple-800/60 text-purple-300 rounded font-mono text-[11px]"
-                        >
-                          {param.name}:{" "}
-                          <span className="text-amber-300">{param.inferred_type}</span>
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Synthesized Helper Code Block */}
-                <div className="border border-slate-800 rounded-xl bg-slate-950 overflow-hidden">
-                  <div className="px-3.5 py-2 bg-slate-900/60 border-b border-slate-800 text-[11px] text-slate-400 font-mono">
-                    Synthesized Function Implementation
-                  </div>
-                  <pre className="p-3.5 text-xs font-mono text-slate-200 overflow-x-auto max-h-[160px] leading-relaxed">
-                    {astRewriteResult.helper_function_code}
-                  </pre>
-                </div>
-
-                {/* Rewritten Source Files List */}
-                <div className="space-y-2">
-                  <span className="text-slate-300 font-semibold text-xs">
-                    Transformed Source Files ({astRewriteResult.rewritten_files.length})
-                  </span>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {astRewriteResult.rewritten_files.map((rf, rfIdx) => (
-                      <div
-                        key={rfIdx}
-                        className="p-2.5 bg-slate-900/60 border border-slate-800 rounded-lg space-y-1 text-[11px]"
-                      >
-                        <div className="flex items-center justify-between text-slate-200 font-medium">
-                          <span className="truncate">{rf.file_path}</span>
-                          <span className="text-emerald-400 font-mono text-[10px]">
-                            {rf.call_sites_count} call site(s)
-                          </span>
-                        </div>
-                        <div className="text-slate-400 text-[10px] flex items-center justify-between font-mono">
-                          <span>
-                            {rf.original_line_count} -&gt; {rf.new_line_count} lines
-                          </span>
-                          {rf.imports_added.length > 0 && (
-                            <span className="text-indigo-400">
-                              +{rf.imports_added.length} import
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="p-8 bg-slate-950/60 border border-slate-800 rounded-xl text-center text-slate-500">
-                Click &quot;Re-Simulate Sandbox&quot; to synthesize Tree-sitter AST refactoring.
-              </div>
-            )}
-          </div>
+          <AstRewritePreview
+            astRewriteResult={astRewriteResult}
+            isAstLoading={isAstLoading}
+            astError={astError}
+          />
         )}
 
-        {/* Test Verification Panel (Collapsible / Active) */}
-        {showVerifyOutput && (
-          <div className="p-3.5 bg-slate-900/90 border border-slate-800 rounded-xl space-y-2 font-mono text-xs">
-            <div className="flex items-center justify-between">
-              <span className="text-slate-200 font-semibold flex items-center gap-2">
-                <Play className="w-3.5 h-3.5 text-emerald-400" />
-                Test Suite Verification
-              </span>
-              {isVerifying ? (
-                <span className="text-slate-400 flex items-center gap-1.5">
-                  <RefreshCw className="w-3 h-3 animate-spin text-emerald-400" />
-                  Running test suite...
-                </span>
-              ) : verifyResult ? (
-                <span
-                  className={`font-bold px-2 py-0.5 rounded text-[11px] border ${
-                    verifyResult.success
-                      ? "bg-emerald-950/80 text-emerald-400 border-emerald-800/60"
-                      : "bg-rose-950/80 text-rose-400 border-rose-800/60"
-                  }`}
-                >
-                  {verifyResult.success ? "[PASS]" : "[FAIL]"} (exit {verifyResult.exit_code} in{" "}
-                  {verifyResult.duration_ms}ms)
-                </span>
-              ) : null}
-            </div>
-
-            {verifyError && (
-              <div className="p-2 bg-rose-950/40 border border-rose-900/50 rounded text-rose-300 text-[11px]">
-                {verifyError}
-              </div>
-            )}
-
-            {verifyResult && (
-              <div className="space-y-1.5">
-                <div className="text-slate-400 text-[11px]">
-                  Command:{" "}
-                  <span className="text-slate-200 font-semibold">
-                    {verifyResult.command_executed}
-                  </span>
-                </div>
-                <div className="p-2.5 bg-slate-950 border border-slate-800 rounded-lg max-h-[140px] overflow-y-auto font-mono text-[11px] text-slate-300 leading-normal">
-                  <pre>
-                    {verifyResult.stdout_snippet ||
-                      verifyResult.stderr_snippet ||
-                      verifyResult.message}
-                  </pre>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+        {/* Test Verification Panel */}
+        <TestVerificationPanel
+          showVerifyOutput={showVerifyOutput}
+          isVerifying={isVerifying}
+          verifyResult={verifyResult}
+          verifyError={verifyError}
+        />
       </div>
     </Win2xWindow>
   );

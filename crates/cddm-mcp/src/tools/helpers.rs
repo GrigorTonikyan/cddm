@@ -1,0 +1,98 @@
+#![forbid(unsafe_code)]
+
+use crate::protocol::mcp_tools;
+use cddm_core::{DEFAULT_DIRECTORY, DEFAULT_MIN_TOKENS, ScanConfig, ScanResult, run_scan};
+use serde_json::json;
+use std::sync::{Arc, atomic::AtomicBool};
+use tokio::sync::mpsc;
+
+pub fn clone_pair_input_schema() -> serde_json::Value {
+    json!({
+        "type": "object",
+        "properties": {
+            mcp_tools::PARAM_FILE_A: {
+                "type": "string",
+                "description": "File path of fragment A"
+            },
+            mcp_tools::PARAM_START_LINE_A: {
+                "type": "number",
+                "description": "1-based start line of fragment A"
+            },
+            mcp_tools::PARAM_END_LINE_A: {
+                "type": "number",
+                "description": "1-based end line of fragment A"
+            },
+            mcp_tools::PARAM_FILE_B: {
+                "type": "string",
+                "description": "File path of fragment B"
+            },
+            mcp_tools::PARAM_START_LINE_B: {
+                "type": "number",
+                "description": "1-based start line of fragment B"
+            },
+            mcp_tools::PARAM_END_LINE_B: {
+                "type": "number",
+                "description": "1-based end line of fragment B"
+            }
+        },
+        "required": [
+            mcp_tools::PARAM_FILE_A,
+            mcp_tools::PARAM_START_LINE_A,
+            mcp_tools::PARAM_END_LINE_A,
+            mcp_tools::PARAM_FILE_B,
+            mcp_tools::PARAM_START_LINE_B,
+            mcp_tools::PARAM_END_LINE_B
+        ]
+    })
+}
+
+pub fn parse_clone_pair_args(
+    args: Option<&serde_json::Value>,
+) -> Option<(&str, usize, usize, &str, usize, usize)> {
+    let a = args?;
+    Some((
+        a.get(mcp_tools::PARAM_FILE_A)?.as_str()?,
+        a.get(mcp_tools::PARAM_START_LINE_A)?.as_u64()? as usize,
+        a.get(mcp_tools::PARAM_END_LINE_A)?.as_u64()? as usize,
+        a.get(mcp_tools::PARAM_FILE_B)?.as_str()?,
+        a.get(mcp_tools::PARAM_START_LINE_B)?.as_u64()? as usize,
+        a.get(mcp_tools::PARAM_END_LINE_B)?.as_u64()? as usize,
+    ))
+}
+
+pub async fn run_scan_from_mcp_args(
+    args: Option<&serde_json::Value>,
+    enable_git_blame: bool,
+) -> Result<ScanResult, String> {
+    let dir = args
+        .and_then(|a| a.get(mcp_tools::PARAM_DIRECTORY))
+        .and_then(|d| d.as_str())
+        .unwrap_or(DEFAULT_DIRECTORY);
+    let min_tokens = args
+        .and_then(|a| a.get(mcp_tools::PARAM_MIN_TOKENS))
+        .and_then(|t| t.as_u64())
+        .unwrap_or(DEFAULT_MIN_TOKENS as u64) as usize;
+
+    let config = ScanConfig {
+        directory: dir.to_string(),
+        min_tokens,
+        languages: vec![],
+        ignore_patterns: ScanConfig::default().ignore_patterns,
+        detect_type2: true,
+        scan_self: true,
+        enable_git_blame,
+        cache_dir: None,
+        enable_cache: true,
+        cddmignore_path: None,
+        ignore_tests: false,
+        ignore_mocks: false,
+        ignore_generated: true,
+        rules_path: None,
+        enforce_policies: false,
+    };
+
+    let (tx, _rx) = mpsc::channel(100);
+    let cancel_flag = Arc::new(AtomicBool::new(false));
+
+    run_scan(config, tx, cancel_flag).await
+}

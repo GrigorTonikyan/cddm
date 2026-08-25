@@ -1,22 +1,14 @@
-import React, { createContext, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { createContext, useCallback, useEffect, useMemo, useState } from "react";
 import {
   ResizeDirection,
   SnapLayoutPreset,
   Win2xTheme,
   WIN2X_DATA_ATTRS,
   WIN2X_DEFAULTS,
-  WIN2X_KEYS,
-  WIN2X_LAYOUT_MODES,
   WIN2X_SNAP_ZONES,
   WIN2X_THEMES,
-  WIN2X_Z_INDEX,
 } from "../constants/win2x-constants";
-import {
-  SnapAssistSession,
-  WindowRegistration,
-  Win2xManagerContextValue,
-  WindowLayoutMode,
-} from "../core/types";
+import type { SnapAssistSession, Win2xManagerContextValue, WindowLayoutMode } from "../core/types";
 import {
   calculateCascadePositions,
   calculateTileGridPositions,
@@ -27,7 +19,8 @@ import {
 } from "../core/geometry-engine";
 import { DockBar } from "../components/dock-bar/dock-bar";
 import { SnapAssistModal } from "../components/snap-assist/snap-assist-modal";
-import { defaultStorage, saveWindowState } from "../core/storage-adapter";
+import { useWin2xRegistry } from "../hooks/use-win2x-registry";
+import { useWin2xShortcuts } from "../hooks/use-win2x-shortcuts";
 
 export const Win2xManagerContext = createContext<Win2xManagerContextValue | null>(null);
 
@@ -45,124 +38,20 @@ export const Win2xManagerProvider: React.FC<Win2xManagerProviderProps> = ({
   initialTheme = WIN2X_THEMES.DARK,
 }) => {
   const [theme, setTheme] = useState<Win2xTheme>(initialTheme);
-  const [windows, setWindows] = useState<Map<string, WindowRegistration>>(new Map());
-  const [activeWindowId, setActiveWindowId] = useState<string | null>(null);
   const [snapAssistSession, setSnapAssistSession] = useState<SnapAssistSession | null>(null);
 
-  // Synchronous ref to prevent stale closures and unnecessary re-renders
-  const windowsRef = useRef<Map<string, WindowRegistration>>(windows);
-  windowsRef.current = windows;
-
-  // Keep track of the z-index stack ordered from bottom to top
-  const zIndexStackRef = useRef<string[]>([]);
-
-  const recomputeZIndices = useCallback(
-    (stack: string[], currentWindows: Map<string, WindowRegistration>) => {
-      const nextWindows = new Map(currentWindows);
-      stack.forEach((id, index) => {
-        const win = nextWindows.get(id);
-        if (win) {
-          nextWindows.set(id, {
-            ...win,
-            zIndex: WIN2X_Z_INDEX.BASE_WINDOW + index * WIN2X_Z_INDEX.ACTIVE_STEP,
-          });
-        }
-      });
-      return nextWindows;
-    },
-    [],
-  );
-
-  const registerWindow = useCallback(
-    (id: string, initialData: Omit<WindowRegistration, "zIndex">) => {
-      setWindows((prev) => {
-        if (prev.has(id)) return prev;
-        const stack = [...zIndexStackRef.current, id];
-        zIndexStackRef.current = stack;
-        const next = new Map(prev);
-        next.set(id, { ...initialData, zIndex: 0 });
-        return recomputeZIndices(stack, next);
-      });
-      setActiveWindowId(id);
-    },
-    [recomputeZIndices],
-  );
-
-  const unregisterWindow = useCallback(
-    (id: string) => {
-      setWindows((prev) => {
-        if (!prev.has(id)) return prev;
-        const stack = zIndexStackRef.current.filter((windowId) => windowId !== id);
-        zIndexStackRef.current = stack;
-        const next = new Map(prev);
-        next.delete(id);
-        return recomputeZIndices(stack, next);
-      });
-      setActiveWindowId((prev) => {
-        if (prev === id) {
-          const stack = zIndexStackRef.current;
-          return stack.length > 0 ? (stack[stack.length - 1] ?? null) : null;
-        }
-        return prev;
-      });
-    },
-    [recomputeZIndices],
-  );
-
-  const updateWindow = useCallback((id: string, updates: Partial<WindowRegistration>) => {
-    setWindows((prev) => {
-      const current = prev.get(id);
-      if (!current) return prev;
-
-      let hasChanges = false;
-      for (const key of Object.keys(updates) as (keyof WindowRegistration)[]) {
-        if (current[key] !== updates[key]) {
-          hasChanges = true;
-          break;
-        }
-      }
-      if (!hasChanges) return prev;
-
-      const updated = { ...current, ...updates };
-      const next = new Map(prev);
-      next.set(id, updated);
-
-      // Persist on 2 levels
-      saveWindowState(
-        defaultStorage,
-        id,
-        {
-          x: updated.rect.x,
-          y: updated.rect.y,
-          width: updated.rect.width,
-          height: updated.rect.height,
-          isMaximized: updated.isMaximized,
-          isMinimized: updated.isMinimized,
-        },
-        updated.windowType,
-      );
-
-      return next;
-    });
-  }, []);
-
-  const focusWindow = useCallback(
-    (id: string) => {
-      if (activeWindowId === id) return;
-
-      setWindows((prev) => {
-        if (!prev.has(id)) return prev;
-
-        const stack = zIndexStackRef.current.filter((windowId) => windowId !== id);
-        stack.push(id);
-        zIndexStackRef.current = stack;
-
-        return recomputeZIndices(stack, prev);
-      });
-      setActiveWindowId(id);
-    },
-    [activeWindowId, recomputeZIndices],
-  );
+  const {
+    windows,
+    setWindows,
+    windowsRef,
+    zIndexStackRef,
+    activeWindowId,
+    setActiveWindowId,
+    registerWindow,
+    unregisterWindow,
+    updateWindow,
+    focusWindow,
+  } = useWin2xRegistry();
 
   const expandWindowInDirection = useCallback(
     (id: string, direction: ResizeDirection) => {
@@ -195,7 +84,7 @@ export const Win2xManagerProvider: React.FC<Win2xManagerProviderProps> = ({
       });
       focusWindow(id);
     },
-    [updateWindow, focusWindow],
+    [windowsRef, updateWindow, focusWindow],
   );
 
   const applySnapPreset = useCallback(
@@ -242,7 +131,7 @@ export const Win2xManagerProvider: React.FC<Win2xManagerProviderProps> = ({
         }
       }
     },
-    [updateWindow, focusWindow],
+    [windowsRef, updateWindow, focusWindow],
   );
 
   const dismissSnapAssist = useCallback(() => {
@@ -296,7 +185,7 @@ export const Win2xManagerProvider: React.FC<Win2xManagerProviderProps> = ({
         setSnapAssistSession(null);
       }
     },
-    [snapAssistSession, updateWindow],
+    [snapAssistSession, windowsRef, updateWindow],
   );
 
   const cascadeWindows = useCallback(() => {
@@ -334,47 +223,58 @@ export const Win2xManagerProvider: React.FC<Win2xManagerProviderProps> = ({
       });
       return next;
     });
-  }, []);
+  }, [setWindows, zIndexStackRef]);
 
-  const tileWindows = useCallback((mode: WindowLayoutMode) => {
-    setWindows((prev) => {
-      const activeIds = zIndexStackRef.current.filter(
-        (id) => !prev.get(id)?.isMinimized && !prev.get(id)?.isMaximized,
-      );
-      if (activeIds.length === 0) return prev;
-
-      const viewportW =
-        typeof window !== "undefined" ? window.innerWidth : WIN2X_DEFAULTS.FALLBACK_VIEWPORT_WIDTH;
-      const viewportH =
-        typeof window !== "undefined"
-          ? window.innerHeight
-          : WIN2X_DEFAULTS.FALLBACK_VIEWPORT_HEIGHT;
-
-      let newRects = new Map<string, { x: number; y: number; width: number; height: number }>();
-      if (mode === "tile-grid") {
-        newRects = calculateTileGridPositions(activeIds, viewportW, viewportH);
-      } else if (mode === "tile-horizontal" || mode === "tile-vertical") {
-        newRects = calculateTileSplitPositions(
-          activeIds,
-          viewportW,
-          viewportH,
-          mode === "tile-horizontal" ? "horizontal" : "vertical",
+  const tileWindows = useCallback(
+    (mode: WindowLayoutMode) => {
+      setWindows((prev) => {
+        const activeIds = zIndexStackRef.current.filter(
+          (id) => !prev.get(id)?.isMinimized && !prev.get(id)?.isMaximized,
         );
-      }
+        if (activeIds.length === 0) return prev;
 
-      if (newRects.size === 0) return prev;
+        const viewportW =
+          typeof window !== "undefined"
+            ? window.innerWidth
+            : WIN2X_DEFAULTS.FALLBACK_VIEWPORT_WIDTH;
+        const viewportH =
+          typeof window !== "undefined"
+            ? window.innerHeight
+            : WIN2X_DEFAULTS.FALLBACK_VIEWPORT_HEIGHT;
 
-      const next = new Map(prev);
-      activeIds.forEach((id) => {
-        const win = next.get(id)!;
-        const rect = newRects.get(id);
-        if (rect) {
-          next.set(id, { ...win, rect, preSnapRect: null, snappedZone: null, snappedPreset: null });
+        let newRects = new Map<string, { x: number; y: number; width: number; height: number }>();
+        if (mode === "tile-grid") {
+          newRects = calculateTileGridPositions(activeIds, viewportW, viewportH);
+        } else if (mode === "tile-horizontal" || mode === "tile-vertical") {
+          newRects = calculateTileSplitPositions(
+            activeIds,
+            viewportW,
+            viewportH,
+            mode === "tile-horizontal" ? "horizontal" : "vertical",
+          );
         }
+
+        if (newRects.size === 0) return prev;
+
+        const next = new Map(prev);
+        activeIds.forEach((id) => {
+          const win = next.get(id)!;
+          const rect = newRects.get(id);
+          if (rect) {
+            next.set(id, {
+              ...win,
+              rect,
+              preSnapRect: null,
+              snappedZone: null,
+              snappedPreset: null,
+            });
+          }
+        });
+        return next;
       });
-      return next;
-    });
-  }, []);
+    },
+    [setWindows, zIndexStackRef],
+  );
 
   const minimizeAllWindows = useCallback(() => {
     setWindows((prev) => {
@@ -387,7 +287,7 @@ export const Win2xManagerProvider: React.FC<Win2xManagerProviderProps> = ({
       return next;
     });
     setActiveWindowId(null);
-  }, []);
+  }, [setWindows, setActiveWindowId]);
 
   const restoreAllWindows = useCallback(() => {
     setWindows((prev) => {
@@ -402,7 +302,7 @@ export const Win2xManagerProvider: React.FC<Win2xManagerProviderProps> = ({
     if (zIndexStackRef.current.length > 0) {
       setActiveWindowId(zIndexStackRef.current[zIndexStackRef.current.length - 1] ?? null);
     }
-  }, []);
+  }, [setWindows, zIndexStackRef, setActiveWindowId]);
 
   const closeWindow = useCallback(
     (id: string) => {
@@ -413,43 +313,17 @@ export const Win2xManagerProvider: React.FC<Win2xManagerProviderProps> = ({
         unregisterWindow(id);
       }
     },
-    [unregisterWindow],
+    [windowsRef, unregisterWindow],
   );
 
-  // Global keyboard shortcuts for cascade, tile, minimize all, restore all
-  useEffect(() => {
-    if (!enableKeyboardShortcuts || typeof window === "undefined") return;
+  useWin2xShortcuts({
+    enabled: enableKeyboardShortcuts,
+    cascadeWindows,
+    tileWindows,
+    minimizeAllWindows,
+    restoreAllWindows,
+  });
 
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.altKey && e.shiftKey) {
-        const key = e.key.toLowerCase();
-        if (key === WIN2X_KEYS.KEY_C) {
-          e.preventDefault();
-          cascadeWindows();
-        } else if (key === WIN2X_KEYS.KEY_G) {
-          e.preventDefault();
-          tileWindows(WIN2X_LAYOUT_MODES.TILE_GRID);
-        } else if (key === WIN2X_KEYS.KEY_H) {
-          e.preventDefault();
-          tileWindows(WIN2X_LAYOUT_MODES.TILE_HORIZONTAL);
-        } else if (key === WIN2X_KEYS.KEY_V) {
-          e.preventDefault();
-          tileWindows(WIN2X_LAYOUT_MODES.TILE_VERTICAL);
-        } else if (key === WIN2X_KEYS.KEY_M) {
-          e.preventDefault();
-          minimizeAllWindows();
-        } else if (key === WIN2X_KEYS.KEY_R) {
-          e.preventDefault();
-          restoreAllWindows();
-        }
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [enableKeyboardShortcuts, cascadeWindows, tileWindows, minimizeAllWindows, restoreAllWindows]);
-
-  // Sync active theme to document.documentElement for global tokens
   useEffect(() => {
     if (typeof document !== "undefined" && document.documentElement) {
       document.documentElement.setAttribute(WIN2X_DATA_ATTRS.THEME, theme);

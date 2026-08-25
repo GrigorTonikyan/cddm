@@ -36,4 +36,4 @@
 8. **100% Test Coverage & Zero Quality Bypasses**:
    - Every core engine, hook, and component must have comprehensive unit/component tests in `__tests__/`.
    - All tests must pass with zero warnings (`vp -C webui run test`).
-   - The master verification script (`bun scripts/verify.ts`) must pass all 11 quality gates.
+   - The master verification script (`bun scripts/verify.ts`) must pass all quality gates.

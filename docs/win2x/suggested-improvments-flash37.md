@@ -174,7 +174,7 @@ Created implementation_plan.md
 
 I have created the detailed implementation plan in [`implementation_plan.md`](file:///C:/Users/admin/.gemini/antigravity/brain/de657bab-c67f-42ea-a49d-cdd2386eb5da/implementation_plan.md) covering:
 
-1. **Comprehensive Architectural Guide**: Documenting all 5 optimization avenues, browser rendering pipeline trade-offs, and design decisions in [`docs/WINDOW_SYSTEM_GUIDE.md`](file:///x:/projects/cddm/docs/WINDOW_SYSTEM_GUIDE.md).
+1. **Comprehensive Architectural Guide**: Documenting all 5 optimization avenues, browser rendering pipeline trade-offs, and design decisions in [`docs/WINDOW_SYSTEM_GUIDE.md`](../docs/WINDOW_SYSTEM_GUIDE.md).
 2. **Implementation of All 5 Avenues (A, B, C, D, and E)**:
    - **A**: Hardware-accelerated `translate3d` composite-only positioning.
    - **B**: Dynamic motion state isolation & blur decoupling during active motion.
