@@ -10,10 +10,31 @@ mod types;
 use commands::*;
 use types::*;
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     tracing_subscriber::fmt::init();
 
+    let res = std::thread::Builder::new()
+        .stack_size(8 * 1024 * 1024)
+        .spawn(|| {
+            let rt = tokio::runtime::Builder::new_multi_thread()
+                .enable_all()
+                .build()
+                .expect("Failed to build Tokio runtime");
+            match rt.block_on(run_app()) {
+                Ok(()) => Ok(()),
+                Err(e) => Err(e.to_string()),
+            }
+        })?
+        .join()
+        .unwrap_or_else(|e| std::panic::resume_unwind(e));
+
+    match res {
+        Ok(()) => Ok(()),
+        Err(e) => Err(e.into()),
+    }
+}
+
+async fn run_app() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
 
     match cli.command {
@@ -208,228 +229,66 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         } => {
             run_comment_command(directory, min_tokens, fail_threshold, platform, output).await?;
         }
+
+        Commands::Heal {
+            directory,
+            cluster,
+            pair,
+            provider,
+            model,
+            api_key,
+            endpoint,
+            max_iterations,
+            verify,
+            test_cmd,
+            branch,
+            fn_name,
+            target_module,
+            custom_instructions,
+            min_tokens,
+        } => {
+            run_heal_command(HealCliArgs {
+                directory,
+                cluster,
+                pair,
+                provider_str: provider,
+                model,
+                api_key,
+                endpoint,
+                max_iterations,
+                verify,
+                test_cmd,
+                branch,
+                fn_name,
+                target_module,
+                custom_instructions,
+                min_tokens,
+            })
+            .await?;
+        }
+
+        Commands::Cache { action } => match action {
+            CacheAction::Export { cache_dir, output } => {
+                run_cache_export_command(cache_dir, output)?;
+            }
+            CacheAction::Import {
+                pack_file,
+                target_dir,
+            } => {
+                run_cache_import_command(pack_file, target_dir)?;
+            }
+        },
+
+        Commands::Monorepo {
+            directory,
+            min_tokens,
+        } => {
+            run_monorepo_command(directory, min_tokens).await?;
+        }
     }
 
     Ok(())
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use cddm_core::{
-        CloneCluster, CloneLocation, ClonePair, CloneStatus, CloneType, DiffClonePair,
-        DiffScanResult, DiffSummary, LanguageStats, ScanResult, TimelineSnapshot, TimelineTrend,
-    };
-    use formatters::*;
-
-    fn make_test_result() -> ScanResult {
-        ScanResult {
-            scan_id: "test-scan-id".to_string(),
-            total_files: 3,
-            total_tokens: 500,
-            total_clones: 1,
-            total_clusters: 1,
-            duplication_percentage: 20.0,
-            dry_health_score: 80.0,
-            clone_pairs: vec![ClonePair {
-                file_a: "src/a.rs".to_string(),
-                start_line_a: 10,
-                end_line_a: 20,
-                file_b: "src/b.rs".to_string(),
-                start_line_b: 30,
-                end_line_b: 40,
-                token_count: 50,
-                similarity: 1.0,
-                fragment_hash: "hash1".to_string(),
-                clone_type: CloneType::Exact,
-                author_a: None,
-                author_b: None,
-            }],
-            clone_clusters: vec![CloneCluster {
-                id: 1,
-                clone_type: CloneType::Exact,
-                token_count: 50,
-                similarity: 1.0,
-                fragment_hash: "hash1".to_string(),
-                occurrences: vec![
-                    CloneLocation {
-                        file: "src/a.rs".to_string(),
-                        start_line: 10,
-                        end_line: 20,
-                        author: None,
-                    },
-                    CloneLocation {
-                        file: "src/b.rs".to_string(),
-                        start_line: 30,
-                        end_line: 40,
-                        author: None,
-                    },
-                ],
-            }],
-            duration_ms: 15,
-            language_breakdown: vec![LanguageStats {
-                language: "Rust".to_string(),
-                files: 3,
-                tokens: 500,
-                clones: 1,
-            }],
-            policy_violations: Vec::new(),
-        }
-    }
-
-    #[test]
-    fn test_output_format_variants() {
-        assert_eq!(OutputFormat::Console, OutputFormat::Console);
-        assert_ne!(OutputFormat::Json, OutputFormat::Sarif);
-        assert_eq!(OutputFormat::Sarif, OutputFormat::Sarif);
-        assert_eq!(OutputFormat::Markdown, OutputFormat::Markdown);
-    }
-
-    #[test]
-    fn test_print_sarif_report_succeeds() {
-        let result = make_test_result();
-        let res = print_sarif_report(&result);
-        assert!(res.is_ok());
-    }
-
-    #[test]
-    fn test_print_console_and_markdown_reports() {
-        let result = make_test_result();
-        print_console_report(&result);
-        print_markdown_report(&result);
-    }
-
-    #[test]
-    fn test_print_diff_reports() {
-        let diff_result = DiffScanResult {
-            scan_id: "test-diff".to_string(),
-            summary: DiffSummary {
-                base_ref: "main".to_string(),
-                target_ref: "HEAD".to_string(),
-                base_dry_score: 90.0,
-                target_dry_score: 95.0,
-                net_dry_delta: 5.0,
-                total_changed_files: 2,
-                new_clones: 1,
-                legacy_clones: 1,
-                resolved_clones: 0,
-            },
-            diff_clones: vec![
-                DiffClonePair {
-                    clone_pair: make_test_result().clone_pairs[0].clone(),
-                    status: CloneStatus::New,
-                },
-                DiffClonePair {
-                    clone_pair: make_test_result().clone_pairs[0].clone(),
-                    status: CloneStatus::Legacy,
-                },
-            ],
-            duration_ms: 25,
-        };
-
-        print_diff_console_report(&diff_result);
-        print_diff_markdown_report(&diff_result);
-    }
-
-    #[test]
-    fn test_print_trend_reports() {
-        let trend = TimelineTrend {
-            snapshots: vec![
-                TimelineSnapshot {
-                    commit_hash: "1111111111111111111111111111111111111111".to_string(),
-                    short_hash: "1111111".to_string(),
-                    author: "Tester".to_string(),
-                    commit_time: 1700000000,
-                    formatted_date: "2026-08-20 10:00:00".to_string(),
-                    message: "initial commit".to_string(),
-                    tag: Some("v1.0.0".to_string()),
-                    total_files: 10,
-                    total_tokens: 1000,
-                    total_clones: 5,
-                    total_clusters: 2,
-                    duplication_percentage: 10.0,
-                    dry_health_score: 85.0,
-                },
-                TimelineSnapshot {
-                    commit_hash: "2222222222222222222222222222222222222222".to_string(),
-                    short_hash: "2222222".to_string(),
-                    author: "Tester".to_string(),
-                    commit_time: 1700100000,
-                    formatted_date: "2026-08-24 10:00:00".to_string(),
-                    message: "refactor duplicates".to_string(),
-                    tag: None,
-                    total_files: 10,
-                    total_tokens: 950,
-                    total_clones: 1,
-                    total_clusters: 1,
-                    duplication_percentage: 2.0,
-                    dry_health_score: 97.0,
-                },
-            ],
-            initial_score: 85.0,
-            current_score: 97.0,
-            score_delta: 12.0,
-            duplication_delta: -8.0,
-            churn_hotspots: vec![],
-        };
-
-        print_trend_console_report(&trend);
-        print_trend_markdown_report(&trend);
-    }
-
-    #[test]
-    fn test_cli_subcommands_parsing() {
-        let cli_lsp =
-            Cli::try_parse_from(["cddm", "lsp", "--min-tokens", "40"]).expect("parse lsp");
-        match cli_lsp.command {
-            Commands::Lsp { min_tokens, .. } => assert_eq!(min_tokens, 40),
-            _ => panic!("expected Lsp command"),
-        }
-
-        let cli_trend =
-            Cli::try_parse_from(["cddm", "trend", "--max-samples", "15"]).expect("parse trend");
-        match cli_trend.command {
-            Commands::Trend { max_samples, .. } => assert_eq!(max_samples, 15),
-            _ => panic!("expected Trend command"),
-        }
-
-        let cli_hook = Cli::try_parse_from([
-            "cddm",
-            "hook",
-            "install",
-            "--hook-type",
-            "pre-push",
-            "--fail-threshold",
-            "12.5",
-        ])
-        .expect("parse hook");
-        match cli_hook.command {
-            Commands::Hook { action } => match action {
-                HookAction::Install {
-                    hook_type,
-                    fail_threshold,
-                    ..
-                } => {
-                    assert_eq!(hook_type, "pre-push");
-                    assert_eq!(fail_threshold, 12.5);
-                }
-                _ => panic!("expected HookAction::Install"),
-            },
-            _ => panic!("expected Hook command"),
-        }
-
-        let cli_init = Cli::try_parse_from(["cddm", "init", "github", "--fail-threshold", "10.0"])
-            .expect("parse init");
-        match cli_init.command {
-            Commands::Init {
-                platform,
-                fail_threshold,
-                ..
-            } => {
-                assert_eq!(platform, PlatformChoice::Github);
-                assert_eq!(fail_threshold, 10.0);
-            }
-            _ => panic!("expected Init command"),
-        }
-    }
-}
+mod tests;

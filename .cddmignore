@@ -8,6 +8,7 @@ build/**
 .logs/**
 .cddm/**
 .vite-hooks/**
+packaging/**
 **/__tests__/**
 **/*.test.*
 **/*.spec.*

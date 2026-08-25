@@ -59,6 +59,18 @@ pub const ROUTE_API_POLICY_RULES: &str = "/api/policy/rules";
 /// API endpoint path for on-demand policy evaluation against scan results.
 pub const ROUTE_API_POLICY_EVALUATE: &str = "/api/policy/evaluate";
 
+/// API endpoint path for AI Code Surgeon autonomous healing.
+pub const ROUTE_API_REFACTOR_HEAL: &str = "/api/refactor/heal";
+
+/// API endpoint path for cache pack export.
+pub const ROUTE_API_CACHE_EXPORT: &str = "/api/cache/export";
+
+/// API endpoint path for cache pack import.
+pub const ROUTE_API_CACHE_IMPORT: &str = "/api/cache/import";
+
+/// API endpoint path for monorepo workspace discovery and scan.
+pub const ROUTE_API_MONOREPO: &str = "/api/monorepo";
+
 /// Default localhost IPv4 binding.
 pub const DEFAULT_HOST_IP: [u8; 4] = [127, 0, 0, 1];
 
@@ -196,4 +208,25 @@ pub struct ApplyPatchRequest {
 pub struct AiPromptResponse {
     /// Formatted AI assistant prompt specification markdown
     pub prompt: String,
+}
+
+/// Request payload for exporting persistent cache pack.
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Default)]
+pub struct CacheExportRequest {
+    pub cache_dir: Option<std::path::PathBuf>,
+    pub output_pack_path: Option<std::path::PathBuf>,
+}
+
+/// Request payload for importing persistent cache pack.
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+pub struct CacheImportRequest {
+    pub pack_file: std::path::PathBuf,
+    pub target_cache_dir: Option<std::path::PathBuf>,
+}
+
+/// Request payload for monorepo workspace scan.
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Default)]
+pub struct MonorepoScanRequest {
+    pub directory: Option<std::path::PathBuf>,
+    pub min_tokens: Option<usize>,
 }

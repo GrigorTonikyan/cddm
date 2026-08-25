@@ -53,6 +53,10 @@ const STEPS: ScriptStep[] = [
     command: ["bun", "scripts/check-file-length.ts"],
   },
   {
+    title: "Ecosystem distribution packaging validation (bun scripts/package-distribution.ts)",
+    command: ["bun", "scripts/package-distribution.ts"],
+  },
+  {
     title: "CDDM Dogfooding Self-Scan (cddm scan .)",
     command: [
       "cargo",

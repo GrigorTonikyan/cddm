@@ -52,7 +52,7 @@ async fn list_mcp_items(method: &'static str, key: &'static str) -> Vec<serde_js
 #[tokio::test]
 async fn test_mcp_tools_list() {
     let tools = list_mcp_items(mcp_methods::TOOLS_LIST, "tools").await;
-    assert_eq!(tools.len(), 14);
+    assert_eq!(tools.len(), 18);
     let tool_names: Vec<&str> = tools.iter().map(|t| t["name"].as_str().unwrap()).collect();
     assert!(tool_names.contains(&mcp_tools::SCAN_CODEBASE));
     assert!(tool_names.contains(&mcp_tools::GET_CLONE_PAIR));
@@ -68,6 +68,10 @@ async fn test_mcp_tools_list() {
     assert!(tool_names.contains(&mcp_tools::AST_REFACTOR));
     assert!(tool_names.contains(&mcp_tools::VERIFY_REFACTOR));
     assert!(tool_names.contains(&mcp_tools::CHECK_POLICIES));
+    assert!(tool_names.contains(&mcp_tools::HEAL_REFACTOR));
+    assert!(tool_names.contains(&mcp_tools::EXPORT_CACHE_PACK));
+    assert!(tool_names.contains(&mcp_tools::IMPORT_CACHE_PACK));
+    assert!(tool_names.contains(&mcp_tools::SCAN_MONOREPO));
 }
 
 #[tokio::test]
@@ -148,7 +152,7 @@ async fn test_mcp_check_suppression_tool() {
 #[tokio::test]
 async fn test_mcp_resources_list() {
     let resources = list_mcp_items(mcp_methods::RESOURCES_LIST, "resources").await;
-    assert_eq!(resources.len(), 6);
+    assert_eq!(resources.len(), 7);
     assert_eq!(resources[0]["uri"], mcp_resources::URI_WORKSPACE_HEALTH);
     assert_eq!(resources[1]["uri"], mcp_resources::URI_WORKSPACE_CLONES);
     assert_eq!(resources[2]["uri"], mcp_resources::URI_WORKSPACE_CLUSTERS);
@@ -158,6 +162,10 @@ async fn test_mcp_resources_list() {
         mcp_resources::URI_WORKSPACE_SUPPRESSIONS
     );
     assert_eq!(resources[5]["uri"], mcp_resources::URI_WORKSPACE_POLICIES);
+    assert_eq!(
+        resources[6]["uri"],
+        mcp_resources::URI_WORKSPACE_SEMANTIC_GRAPH
+    );
 }
 
 #[tokio::test]

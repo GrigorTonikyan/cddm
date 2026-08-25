@@ -1,0 +1,30 @@
+PackageIdentifier: GrigorTonikyan.cddm
+PackageVersion: 1.7.0
+PackageName: CDDM
+Publisher: Grigor Tonikyan
+License: MIT
+ShortDescription: Polyglot Code De-Duplication Meister & Autonomous Refactoring Engine
+PackageUrl: https://github.com/GrigorTonikyan/cddm
+Installers:
+  - Architecture: x64
+    InstallerType: zip
+    InstallerUrl: https://github.com/GrigorTonikyan/cddm/releases/download/v1.7.0/cddm-v1.7.0-x86_64-pc-windows-msvc.zip
+    InstallerSha256: 0000000000000000000000000000000000000000000000000000000000000000
+    NestedInstallerType: portable
+    NestedInstallerFiles:
+      - RelativeFilePath: cddm.exe
+        PortableCommandAlias: cddm
+      - RelativeFilePath: cddm-mcp.exe
+        PortableCommandAlias: cddm-mcp
+  - Architecture: arm64
+    InstallerType: zip
+    InstallerUrl: https://github.com/GrigorTonikyan/cddm/releases/download/v1.7.0/cddm-v1.7.0-aarch64-pc-windows-msvc.zip
+    InstallerSha256: 0000000000000000000000000000000000000000000000000000000000000000
+    NestedInstallerType: portable
+    NestedInstallerFiles:
+      - RelativeFilePath: cddm.exe
+        PortableCommandAlias: cddm
+      - RelativeFilePath: cddm-mcp.exe
+        PortableCommandAlias: cddm-mcp
+ManifestType: singleton
+ManifestVersion: 1.6.0

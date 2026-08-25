@@ -91,29 +91,32 @@ pub async fn apply_patch_handler(
                 // Trigger background re-scan to refresh workspace state
                 let state_clone = state.clone();
                 tokio::spawn(async move {
-                    let config = state_clone.current_config.read().await.clone();
-                    let (tx, mut rx) = mpsc::channel(100);
-                    let cancel_flag = Arc::new(AtomicBool::new(false));
-
-                    let b_tx = state_clone.broadcast_tx.clone();
-                    tokio::spawn(async move {
-                        while let Some(progress) = rx.recv().await {
-                            let _ = b_tx.send(ServerEvent::ScanProgress(progress));
-                        }
-                    });
-
-                    if let Ok(scan_res) = run_scan(config, tx, cancel_flag).await {
-                        *state_clone.latest_result.write().await = Some(scan_res.clone());
-                        let _ = state_clone
-                            .broadcast_tx
-                            .send(ServerEvent::ScanComplete(scan_res));
-                    }
+                    execute_background_refresh(&state_clone).await;
                 });
             }
 
             Ok(Json(result))
         }
         Err(err) => Err((StatusCode::BAD_REQUEST, err)),
+    }
+}
+
+/// Executes a full background workspace scan and broadcasts progress and completion events.
+pub async fn execute_background_refresh(state: &AppState) {
+    let config = state.current_config.read().await.clone();
+    let (tx, mut rx) = mpsc::channel(100);
+    let cancel_flag = Arc::new(AtomicBool::new(false));
+
+    let b_tx = state.broadcast_tx.clone();
+    tokio::spawn(async move {
+        while let Some(progress) = rx.recv().await {
+            let _ = b_tx.send(ServerEvent::ScanProgress(progress));
+        }
+    });
+
+    if let Ok(scan_res) = run_scan(config, tx, cancel_flag).await {
+        *state.latest_result.write().await = Some(scan_res.clone());
+        let _ = state.broadcast_tx.send(ServerEvent::ScanComplete(scan_res));
     }
 }
 

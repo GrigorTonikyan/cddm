@@ -4,7 +4,10 @@ use crate::code_actions::generate_code_actions;
 use crate::diagnostics::{clone_pair_to_diagnostics, generate_workspace_diagnostics};
 use crate::hover::generate_hover;
 use crate::state::ServerState;
-use crate::utils::{line_range_to_lsp_range, normalize_path_for_compare, path_to_url, url_to_path};
+use crate::utils::{
+    line_range_to_lsp_range, match_clone_occurrence, normalize_path_for_compare, path_to_url,
+    url_to_path,
+};
 use std::path::PathBuf;
 use tower_lsp::jsonrpc::Result;
 use tower_lsp::lsp_types::{
@@ -261,36 +264,10 @@ impl LanguageServer for CddmLspServer {
         };
 
         for clone in clones {
-            let norm_a = normalize_path_for_compare(&clone.file_a);
-            let norm_b = normalize_path_for_compare(&clone.file_b);
-
-            let is_a = norm_a == target_norm
-                || target_norm.ends_with(&norm_a)
-                || norm_a.ends_with(&target_norm);
-            let is_b = norm_b == target_norm
-                || target_norm.ends_with(&norm_b)
-                || norm_b.ends_with(&target_norm);
-
-            if !is_a && !is_b {
+            let Some((my_start, my_end, other_file, other_start, other_end)) =
+                match_clone_occurrence(&clone, &target_norm)
+            else {
                 continue;
-            }
-
-            let (my_start, my_end, other_file, other_start, other_end) = if is_a {
-                (
-                    clone.start_line_a,
-                    clone.end_line_a,
-                    &clone.file_b,
-                    clone.start_line_b,
-                    clone.end_line_b,
-                )
-            } else {
-                (
-                    clone.start_line_b,
-                    clone.end_line_b,
-                    &clone.file_a,
-                    clone.start_line_a,
-                    clone.end_line_a,
-                )
             };
 
             let start_0 = if my_start > 0 { my_start - 1 } else { 0 };

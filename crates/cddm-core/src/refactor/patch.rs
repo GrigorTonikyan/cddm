@@ -122,6 +122,15 @@ pub fn apply_patch_to_workspace(
     patch_content: &str,
     dry_run: bool,
 ) -> Result<ApplyPatchResult, String> {
+    apply_patch_to_workspace_dir(Path::new("."), patch_content, dry_run)
+}
+
+/// Applies a synthesized unified refactoring patch directly to files within the given workspace directory.
+pub fn apply_patch_to_workspace_dir(
+    workspace_dir: &Path,
+    patch_content: &str,
+    dry_run: bool,
+) -> Result<ApplyPatchResult, String> {
     let file_patches = parse_unified_patch(patch_content)?;
     let mut modified_files = Vec::new();
     let mut total_hunks = 0;
@@ -129,18 +138,25 @@ pub fn apply_patch_to_workspace(
     let mut file_modifications: Vec<(PathBuf, String)> = Vec::new();
 
     for file_patch in &file_patches {
-        let file_path = Path::new(&file_patch.file_path);
+        let raw_p = Path::new(&file_patch.file_path);
+        let file_path = if raw_p.is_absolute() {
+            raw_p.to_path_buf()
+        } else {
+            workspace_dir.join(raw_p)
+        };
+
         if !file_path.exists() {
             return Err(format!(
                 "Target file '{}' specified in patch does not exist",
-                file_patch.file_path
+                file_path.display()
             ));
         }
 
-        let raw_content = fs::read_to_string(file_path).map_err(|e| {
+        let raw_content = fs::read_to_string(&file_path).map_err(|e| {
             format!(
                 "Failed to read target file '{}': {}",
-                file_patch.file_path, e
+                file_path.display(),
+                e
             )
         })?;
 

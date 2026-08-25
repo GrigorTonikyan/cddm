@@ -344,3 +344,107 @@ pub fn handle_verify_refactor(
         Err(err) => make_error_response(id, rpc_errors::INTERNAL_ERROR, err),
     }
 }
+
+pub async fn handle_heal_refactor(
+    id: Option<serde_json::Value>,
+    args: Option<&serde_json::Value>,
+) -> JsonRpcResponse {
+    if let Some(args_val) = args {
+        let dir_str = args_val
+            .get("directory")
+            .and_then(|v| v.as_str())
+            .unwrap_or(".");
+        let cluster_id = args_val
+            .get("cluster_id")
+            .and_then(|v| v.as_u64())
+            .map(|c| c as usize);
+        let pair_id = args_val
+            .get("pair_id")
+            .and_then(|v| v.as_u64())
+            .map(|p| p as usize);
+        let provider_str = args_val
+            .get("provider")
+            .and_then(|v| v.as_str())
+            .unwrap_or("mock");
+        let model = args_val
+            .get("model")
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string());
+        let api_key = args_val
+            .get("api_key")
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string());
+        let endpoint = args_val
+            .get("endpoint")
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string());
+        let max_iters = args_val
+            .get("max_iterations")
+            .and_then(|v| v.as_u64())
+            .unwrap_or(3) as usize;
+        let verify = args_val
+            .get("verify")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(true);
+        let test_cmd = args_val
+            .get("test_command")
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string());
+        let branch = args_val
+            .get("branch_name")
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string());
+        let fn_name = args_val
+            .get("function_name")
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string());
+        let target_mod = args_val
+            .get("target_module")
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string());
+
+        let provider_kind = match provider_str.to_lowercase().as_str() {
+            "gemini" => cddm_core::AiProviderKind::Gemini,
+            "claude" => cddm_core::AiProviderKind::Claude,
+            "openai" => cddm_core::AiProviderKind::OpenAi,
+            "ollama" => cddm_core::AiProviderKind::Ollama,
+            _ => cddm_core::AiProviderKind::Mock,
+        };
+
+        let req = cddm_core::HealRefactorRequest {
+            cluster_id,
+            pair_id,
+            occurrences: Vec::new(),
+            function_name: fn_name,
+            target_module: target_mod,
+            custom_instructions: None,
+            provider_config: cddm_core::AiProviderConfig {
+                provider: provider_kind,
+                model,
+                api_key,
+                endpoint,
+                temperature: Some(0.2),
+                timeout_secs: Some(60),
+            },
+            max_iterations: max_iters,
+            apply_branch: branch,
+            verify,
+            test_cmd,
+            workspace_root: Some(Path::new(dir_str).to_path_buf()),
+        };
+
+        match cddm_core::heal_cluster_refactor(Path::new(dir_str), &req).await {
+            Ok(heal_res) => {
+                let json_str = serde_json::to_string_pretty(&heal_res).unwrap_or_default();
+                make_text_response(id, json_str)
+            }
+            Err(e) => make_error_response(id, rpc_errors::INTERNAL_ERROR, e),
+        }
+    } else {
+        make_error_response(
+            id,
+            rpc_errors::INVALID_PARAMS,
+            "Missing arguments for cddm_heal_refactor",
+        )
+    }
+}

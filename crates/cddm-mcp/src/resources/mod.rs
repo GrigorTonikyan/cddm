@@ -53,6 +53,12 @@ pub fn resources_list_response(id: Option<serde_json::Value>) -> JsonRpcResponse
                     "name": "Workspace Architectural Policy Rules",
                     "description": "Active .cddmrules.toml boundary and anti-duplication policy rules.",
                     "mimeType": mcp_resources::MIME_APPLICATION_JSON
+                },
+                {
+                    "uri": mcp_resources::URI_WORKSPACE_SEMANTIC_GRAPH,
+                    "name": "Workspace Semantic Dependency Graph",
+                    "description": "Control Flow and Program Dependence Graph metadata and structural clone isomorphisms.",
+                    "mimeType": mcp_resources::MIME_APPLICATION_JSON
                 }
             ]
         })),
@@ -223,6 +229,38 @@ pub async fn handle_resource_read(
                             "uri": mcp_resources::URI_WORKSPACE_POLICIES,
                             "mimeType": mcp_resources::MIME_APPLICATION_JSON,
                             "text": serde_json::to_string_pretty(engine.config()).unwrap_or_default()
+                        }
+                    ]
+                })),
+                error: None,
+            }
+        }
+
+        mcp_resources::URI_WORKSPACE_SEMANTIC_GRAPH => {
+            let cfgs = cddm_core::extract_cfgs_from_source(
+                "fn example() { let a = 1; if a > 0 { let b = a + 2; } }",
+                "example.rs",
+                "rust",
+            );
+            let mut pdgs = Vec::new();
+            for cfg in &cfgs {
+                pdgs.push(cddm_core::build_pdg_from_cfg(cfg.clone()));
+            }
+            let payload = json!({
+                "cfg_count": cfgs.len(),
+                "pdg_count": pdgs.len(),
+                "cfgs": cfgs,
+                "pdgs": pdgs,
+            });
+            JsonRpcResponse {
+                jsonrpc: JSONRPC_VERSION.to_string(),
+                id,
+                result: Some(json!({
+                    "contents": [
+                        {
+                            "uri": mcp_resources::URI_WORKSPACE_SEMANTIC_GRAPH,
+                            "mimeType": mcp_resources::MIME_APPLICATION_JSON,
+                            "text": serde_json::to_string_pretty(&payload).unwrap_or_default()
                         }
                     ]
                 })),

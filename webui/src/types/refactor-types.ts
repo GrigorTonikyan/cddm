@@ -226,3 +226,64 @@ export interface VerifyRefactorResult {
   stderr_snippet: string;
   message: string;
 }
+
+/**
+ * Supported AI provider backend variants.
+ */
+export type AiProviderKind = "Mock" | "Gemini" | "Claude" | "OpenAi" | "Ollama";
+
+/**
+ * Configuration options for AI Code Surgeon provider.
+ */
+export interface AiProviderConfig {
+  provider: AiProviderKind;
+  model?: string;
+  api_key?: string;
+  endpoint?: string;
+  temperature?: number;
+  timeout_secs?: number;
+}
+
+/**
+ * Log record for an individual autonomous healing iteration.
+ */
+export interface HealIterationLog {
+  iteration: number;
+  prompt_sent: string;
+  raw_response: string;
+  patch_extracted: string;
+  patch_applied: boolean;
+  test_passed: boolean;
+  error_feedback?: string;
+}
+
+/**
+ * Request payload for autonomous AI Code Surgeon refactoring loop.
+ */
+export interface HealRefactorRequest {
+  cluster_id?: number;
+  pair_id?: number;
+  occurrences: CloneLocation[];
+  function_name?: string;
+  target_module?: string;
+  custom_instructions?: string;
+  provider_config: AiProviderConfig;
+  max_iterations: number;
+  apply_branch?: string;
+  verify: boolean;
+  test_cmd?: string;
+  workspace_root?: string;
+}
+
+/**
+ * Complete result of autonomous AI healing session.
+ */
+export interface HealRefactorResult {
+  success: boolean;
+  iterations_run: number;
+  final_patch?: string;
+  branch_created?: string;
+  iterations: HealIterationLog[];
+  modified_files: string[];
+  message: string;
+}

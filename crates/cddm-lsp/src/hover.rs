@@ -26,36 +26,10 @@ pub fn generate_hover(
     };
 
     for clone in clones {
-        let norm_a = normalize_path_for_compare(&clone.file_a);
-        let norm_b = normalize_path_for_compare(&clone.file_b);
-
-        let is_a = norm_a == target_norm
-            || target_norm.ends_with(&norm_a)
-            || norm_a.ends_with(&target_norm);
-        let is_b = norm_b == target_norm
-            || target_norm.ends_with(&norm_b)
-            || norm_b.ends_with(&target_norm);
-
-        if !is_a && !is_b {
+        let Some((my_start, my_end, other_file, other_start, other_end)) =
+            crate::utils::match_clone_occurrence(clone, &target_norm)
+        else {
             continue;
-        }
-
-        let (my_start, my_end, other_file, other_start, other_end) = if is_a {
-            (
-                clone.start_line_a,
-                clone.end_line_a,
-                &clone.file_b,
-                clone.start_line_b,
-                clone.end_line_b,
-            )
-        } else {
-            (
-                clone.start_line_b,
-                clone.end_line_b,
-                &clone.file_a,
-                clone.start_line_a,
-                clone.end_line_a,
-            )
         };
 
         if !range_overlaps_lines(&pos_range, my_start, my_end) {

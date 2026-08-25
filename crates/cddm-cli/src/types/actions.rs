@@ -149,6 +149,30 @@ impl From<PlatformChoice> for cddm_core::WorkflowPlatform {
     }
 }
 
+#[derive(Subcommand, Debug, Clone, PartialEq)]
+pub enum CacheAction {
+    /// Export persistent cache database to a portable .cddmpack archive
+    Export {
+        /// Custom path to cache database (default: .cddm/cache.db)
+        #[arg(long)]
+        cache_dir: Option<PathBuf>,
+
+        /// Output pack archive file path (default: cddm-cache.cddmpack)
+        #[arg(short, long)]
+        output: Option<PathBuf>,
+    },
+
+    /// Import a portable .cddmpack archive into persistent cache database
+    Import {
+        /// Path to .cddmpack archive file to import
+        pack_file: PathBuf,
+
+        /// Target cache directory to populate (default: .cddm)
+        #[arg(long)]
+        target_dir: Option<PathBuf>,
+    },
+}
+
 #[derive(ValueEnum, Clone, Copy, Debug, PartialEq, Eq)]
 pub enum OutputFormat {
     Console,

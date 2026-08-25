@@ -31,6 +31,9 @@
 | **v1.5.0** | Stable Release | Polyglot Expansion & AI Prompt Synthesizer  | 16 Tree-sitter AST grammars (Ruby, PHP, Swift, Bash, Lua, JSON, HTML), AI refactor prompt engine, PR comments.   |
 | **v1.6.0** | Stable Release | AST-Native Rewrite & Test Verification      | Tree-sitter CST node substitution, type-aware helper synthesis, import generation, closed-loop test runner.      |
 | **v1.7.0** | Stable Release | Boundary Policies & Polyglot Expansion      | Architectural `.cddmrules.toml`, boundary isolation, zero-dup zones, limits, Kotlin/Zig/Scala/Elixir/SQL/Docker. |
+| **v1.8.0** | Stable Release | AI Code Surgeon & Self-Healing Refactor     | Closed-loop autonomous test feedback loop, multi-provider engine (Gemini/Claude/OpenAI/Ollama), `cddm heal`.     |
+| **v1.9.0** | Stable Release | Deep Semantic Graph & Monorepo Cache        | CFG/PDG extraction, Weisfeiler-Lehman graph kernels, monorepo multi-workspace scanner, portable `.cddmpack`.     |
+| **v2.0.0** | Major Release  | Ecosystem Packaging & JetBrains Integration | Homebrew, Scoop, Winget, standalone installers (`install.sh`/`install.ps1`), JetBrains LSP integration guide.    |
 
 ---
 
@@ -652,6 +655,125 @@ Extend CDDM's Tree-sitter AST parsing, comment stripping, and keyword lexing cap
 
 ---
 
+### EP-24: Autonomous AI Code Surgeon & Closed-Loop Healing Engine
+
+- **Target Milestone**: `v1.8.0`
+- **Component**: `crates/cddm-core`, `crates/cddm-cli`, `crates/cddm-mcp`, `webui`
+- **Priority**: `High`
+- **Status**: `Completed (v1.8.0)`
+
+#### Problem Statement
+
+Manual refactoring of duplicate code clusters is error-prone. CDDM provides an autonomous AI Code Surgeon loop that iteratively generates patches, tests them against the project test suite, and feeds compiler/test failure logs back to the LLM until full test passage is achieved.
+
+#### Specification & Architecture
+
+1. **AI Provider Abstraction (`cddm-core::ai::provider`)**:
+   - Async `AiProvider` trait supporting Google Gemini, Anthropic Claude, OpenAI GPT-4o, Ollama (local), and Mock provider for testing.
+2. **Closed-Loop Healing Loop (`cddm-core::ai::heal`)**:
+   - Iterative prompting with error feedback when tests fail or patches do not apply.
+   - Transactional Git branch application (`gix`).
+3. **Surfaces**:
+   - CLI: `cddm heal`
+   - REST API: `POST /api/refactor/heal`
+   - MCP Tool: `cddm_heal_refactor`
+   - WebUI: Interactive Auto-Heal tab in `RefactorSandboxModal.tsx`.
+
+---
+
+### EP-25: Deep Semantic Graph Matching (CFG/PDG & Weisfeiler-Lehman Graph Isomorphism)
+
+- **Target Milestone**: `v1.9.0`
+- **Component**: `crates/cddm-core`, `crates/cddm-mcp`
+- **Priority**: `Medium`
+- **Status**: `Completed (v1.9.0)`
+
+#### Problem Statement
+
+Type-4 semantic clones share identical logical data dependencies and control flows despite having completely different syntactic structures and identifiers.
+
+#### Specification & Architecture
+
+1. **Control Flow Graph Extraction (`cddm-core::semantic_graph::cfg`)**:
+   - Function AST to basic blocks, branches, loops, and return edges.
+2. **Program Dependence Graph Builder (`cddm-core::semantic_graph::pdg`)**:
+   - Variable def-use chains and data dependency edges.
+3. **Weisfeiler-Lehman Graph Kernel (`cddm-core::semantic_graph::isomorphism`)**:
+   - Multi-iteration neighborhood hashing and graph similarity metrics.
+4. **MCP Resource**:
+   - `cddm://workspace/semantic_graph`.
+
+---
+
+### EP-26: Monorepo Multi-Workspace Scanner & Distributed Cache Archive (.cddmpack)
+
+- **Target Milestone**: `v1.9.0`
+- **Component**: `crates/cddm-core`, `crates/cddm-cli`, `crates/cddm-mcp`
+- **Priority**: `High`
+- **Status**: `Completed (v1.9.0)`
+
+#### Problem Statement
+
+Enterprise monorepos contain multiple independent packages and workspaces. Teams need cross-workspace duplication detection and portable binary cache export/import for CI pipelines.
+
+#### Specification & Architecture
+
+1. **Portable Cache Pack Archive (`cddm-core::cache::pack`)**:
+   - Export and import `.cddmpack` binary archives with SHA-256 integrity checksums.
+2. **Monorepo Workspace Discovery (`cddm-core::monorepo`)**:
+   - Automatic detection of Cargo, npm/pnpm/yarn/bun workspaces, Go modules, Gradle, Lerna, Turborepo, and Nx.
+3. **Surfaces**:
+   - CLI: `cddm cache export`, `cddm cache import`, `cddm monorepo`.
+   - REST: `/api/cache/export`, `/api/cache/import`, `/api/monorepo`.
+   - MCP: `cddm_export_cache_pack`, `cddm_import_cache_pack`, `cddm_scan_monorepo`.
+
+---
+
+### EP-27: Cross-Platform Ecosystem Distribution & Standalone Installers
+
+- **Target Milestone**: `v2.0.0`
+- **Component**: `packaging/`, `scripts/`
+- **Priority**: `High`
+- **Status**: `Completed (v2.0.0)`
+
+#### Problem Statement
+
+Users require seamless one-command installation across macOS, Linux, and Windows via native package managers and standalone shell scripts.
+
+#### Specification & Architecture
+
+1. **Package Managers**:
+   - Homebrew Formula: `packaging/homebrew/cddm.rb`
+   - Scoop Manifest: `packaging/scoop/cddm.json`
+   - Winget Manifest: `packaging/winget/GrigorTonikyan.cddm.yaml`
+2. **Standalone Installers**:
+   - POSIX Shell: `packaging/install.sh` (curl-to-sh with platform/arch detection)
+   - PowerShell: `packaging/install.ps1` (Windows installer with PATH registration)
+3. **Validation**:
+   - Automated packaging validator: `scripts/package-distribution.ts`.
+
+---
+
+### EP-28: JetBrains IDE Integration (IntelliJ, PyCharm, WebStorm, RustRover, GoLand)
+
+- **Target Milestone**: `v2.0.0`
+- **Component**: `docs/`
+- **Priority**: `Medium`
+- **Status**: `Completed (v2.0.0)`
+
+#### Problem Statement
+
+Engineers using JetBrains IDEs require complete setup instructions for integrating CDDM Language Server Protocol (`cddm lsp`), External Tools, and Git pre-commit hooks.
+
+#### Specification & Architecture
+
+1. **Setup Guide (`docs/JETBRAINS_SETUP.md`)**:
+   - Native LSP server configuration.
+   - External Tool shortcuts and keybindings.
+   - Git quality gate hook setup.
+
+---
+
 ## 3. Prioritized Action Checklist
 
 ```markdown
@@ -755,6 +877,36 @@ Extend CDDM's Tree-sitter AST parsing, comment stripping, and keyword lexing cap
 - [x] Surface real-time architectural policy diagnostics in `cddm-lsp::diagnostics` [EP-22]
 - [x] Implement `PolicyRulesModal.tsx` visual studio and live TOML editor in WebUI Studio [EP-22]
 - [x] Implement Tree-sitter parsers for Kotlin, Zig, Scala, Elixir, SQL, and Dockerfile in `cddm-core::ast::parser` [EP-23]
+
+### Milestone v1.8.0 (AI Code Surgeon & Autonomous Self-Healing Refactor Engine)
+
+- [x] Implement async `AiProvider` trait and Gemini, Claude, OpenAI, Ollama, Mock providers in `cddm-core::ai::provider` [EP-24]
+- [x] Implement autonomous error-feedback test healing loop and branch committing in `cddm-core::ai::heal` [EP-24]
+- [x] Add `cddm heal` CLI command in `cddm-cli` [EP-24]
+- [x] Expose Axum REST endpoint `POST /api/refactor/heal` in `cddm-cli::serve` [EP-24]
+- [x] Expose MCP tool `cddm_heal_refactor` in `cddm-mcp` [EP-24]
+- [x] Implement WebUI Studio Auto-Heal tab in `RefactorSandboxModal.tsx` [EP-24]
+
+### Milestone v1.9.0 (Deep Semantic Graph Matching & Monorepo Distributed Cache)
+
+- [x] Implement CFG extraction and PDG variable def-use data dependency graphs in `cddm-core::semantic_graph` [EP-25]
+- [x] Implement Weisfeiler-Lehman graph kernel hashing and structural clone similarity in `cddm-core::semantic_graph` [EP-25]
+- [x] Implement `.cddmpack` portable cache archive export and import with SHA-256 validation in `cddm-core::cache::pack` [EP-26]
+- [x] Implement monorepo multi-workspace discovery and scanner in `cddm-core::monorepo` [EP-26]
+- [x] Add `cddm cache export`, `cddm cache import`, and `cddm monorepo` CLI commands in `cddm-cli` [EP-26]
+- [x] Expose Axum REST endpoints `/api/cache/export`, `/api/cache/import`, `/api/monorepo` in `cddm-cli::serve` [EP-26]
+- [x] Expose MCP tools `cddm_export_cache_pack`, `cddm_import_cache_pack`, `cddm_scan_monorepo` in `cddm-mcp` [EP-26]
+- [x] Expose MCP resource `cddm://workspace/semantic_graph` in `cddm-mcp` [EP-25]
+
+### Milestone v2.0.0 (Ecosystem Packaging, Distribution & JetBrains Integration)
+
+- [x] Create Homebrew Formula in `packaging/homebrew/cddm.rb` [EP-27]
+- [x] Create Scoop Windows manifest in `packaging/scoop/cddm.json` [EP-27]
+- [x] Create Winget manifest in `packaging/winget/GrigorTonikyan.cddm.yaml` [EP-27]
+- [x] Create standalone cross-platform curl-to-sh installer in `packaging/install.sh` [EP-27]
+- [x] Create standalone Windows PowerShell installer in `packaging/install.ps1` [EP-27]
+- [x] Implement ecosystem packaging validation script in `scripts/package-distribution.ts` [EP-27]
+- [x] Create comprehensive JetBrains IDE setup guide in `docs/JETBRAINS_SETUP.md` [EP-28]
 ```
 
 ---

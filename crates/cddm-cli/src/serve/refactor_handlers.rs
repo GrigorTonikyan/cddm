@@ -95,3 +95,70 @@ pub async fn refactor_verify_handler(
     .map(Json)
     .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))
 }
+
+pub async fn refactor_heal_handler(
+    Json(req): Json<cddm_core::HealRefactorRequest>,
+) -> Result<Json<cddm_core::HealRefactorResult>, (StatusCode, String)> {
+    let dir = req
+        .workspace_root
+        .clone()
+        .unwrap_or_else(|| std::path::PathBuf::from("."));
+    match cddm_core::heal_cluster_refactor(&dir, &req).await {
+        Ok(res) => Ok(Json(res)),
+        Err(err) => Err((StatusCode::BAD_REQUEST, err)),
+    }
+}
+
+pub async fn cache_export_handler(
+    Json(req): Json<CacheExportRequest>,
+) -> Result<Json<cddm_core::CachePackSummary>, (StatusCode, String)> {
+    let db_path = req
+        .cache_dir
+        .unwrap_or_else(|| std::path::PathBuf::from(".cddm/cache.db"));
+    let out_path = req
+        .output_pack_path
+        .unwrap_or_else(|| std::path::PathBuf::from("cddm-cache.cddmpack"));
+    cddm_core::export_cache_pack(&db_path, &out_path)
+        .map(Json)
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))
+}
+
+pub async fn cache_import_handler(
+    Json(req): Json<CacheImportRequest>,
+) -> Result<Json<cddm_core::CachePackSummary>, (StatusCode, String)> {
+    let target_dir = req
+        .target_cache_dir
+        .unwrap_or_else(|| std::path::PathBuf::from(".cddm"));
+    cddm_core::import_cache_pack(&req.pack_file, &target_dir)
+        .map(Json)
+        .map_err(|e| (StatusCode::BAD_REQUEST, e))
+}
+
+pub async fn monorepo_handler(
+    Json(req): Json<MonorepoScanRequest>,
+) -> Result<Json<cddm_core::MonorepoScanSummary>, (StatusCode, String)> {
+    let dir = req
+        .directory
+        .unwrap_or_else(|| std::path::PathBuf::from("."));
+    let config = cddm_core::ScanConfig {
+        directory: dir.to_string_lossy().to_string(),
+        min_tokens: req.min_tokens.unwrap_or(50),
+        languages: vec![],
+        ignore_patterns: vec![],
+        detect_type2: true,
+        scan_self: false,
+        enable_git_blame: false,
+        cache_dir: None,
+        enable_cache: false,
+        cddmignore_path: None,
+        ignore_tests: false,
+        ignore_mocks: false,
+        ignore_generated: true,
+        rules_path: None,
+        enforce_policies: false,
+    };
+    cddm_core::run_monorepo_scan(&dir, &config)
+        .await
+        .map(Json)
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))
+}

@@ -11,8 +11,15 @@ pub const DEFAULT_MIN_TOKENS: usize = 50;
 pub const DEFAULT_DIRECTORY: &str = ".";
 
 /// Default glob patterns excluded from scanning.
-pub const DEFAULT_IGNORE_PATTERNS: &[&str] =
-    &["node_modules", "target", ".git", "dist", "build", ".logs"];
+pub const DEFAULT_IGNORE_PATTERNS: &[&str] = &[
+    "node_modules",
+    "target",
+    ".git",
+    "dist",
+    "build",
+    ".logs",
+    "packaging",
+];
 
 /// Minimum DRY health score bounds.
 pub const MIN_HEALTH_SCORE: f64 = 0.0;

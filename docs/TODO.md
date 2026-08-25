@@ -220,6 +220,48 @@
 
 ---
 
+### Milestone v1.8.0: AI Code Surgeon & Autonomous Self-Healing Refactoring Engine
+
+- [x] **[EP-24] Autonomous AI Code Surgeon & Closed-Loop Healing Engine**
+  - [x] Implement `AiProvider` async trait with Gemini, Claude, OpenAI, Ollama, and Mock providers in `crates/cddm-core/src/ai/provider.rs`
+  - [x] Implement closed-loop error feedback prompting and transactional patch repair in `crates/cddm-core/src/ai/heal.rs`
+  - [x] Add CLI subcommand `cddm heal` in `crates/cddm-cli/src/commands/heal.rs`
+  - [x] Expose Axum REST endpoint `POST /api/refactor/heal` in `crates/cddm-cli/src/serve/refactor_handlers.rs`
+  - [x] Expose MCP tool `cddm_heal_refactor` in `crates/cddm-mcp/src/tools/refactor_tools.rs`
+  - [x] Implement WebUI Studio Auto-Heal tab in `webui/src/components/sandbox/AutoHealTab.tsx`
+
+---
+
+### Milestone v1.9.0: Deep Semantic Graph Matching (PDG/CFG) & Monorepo Distributed Cache
+
+- [x] **[EP-25] Deep Semantic Graph Matching (CFG/PDG & Weisfeiler-Lehman Graph Isomorphism)**
+  - [x] Implement CFG extraction from AST in `crates/cddm-core/src/semantic_graph/cfg.rs`
+  - [x] Implement PDG variable def-use data dependency graph in `crates/cddm-core/src/semantic_graph/pdg.rs`
+  - [x] Implement Weisfeiler-Lehman graph kernel hashing and structural clone similarity in `crates/cddm-core/src/semantic_graph/isomorphism.rs`
+  - [x] Expose MCP resource `cddm://workspace/semantic_graph` in `crates/cddm-mcp/src/resources/`
+- [x] **[EP-26] Monorepo Multi-Workspace Scanner & Distributed Cache Archive (`.cddmpack`)**
+  - [x] Implement portable `.cddmpack` export and import with SHA-256 integrity validation in `crates/cddm-core/src/cache/pack.rs`
+  - [x] Implement monorepo multi-workspace discovery (Cargo, npm, pnpm, yarn, bun, Go, Gradle, Lerna, Turborepo, Nx) in `crates/cddm-core/src/monorepo.rs`
+  - [x] Add CLI commands `cddm cache export`, `cddm cache import`, and `cddm monorepo` in `crates/cddm-cli/src/commands/`
+  - [x] Expose Axum REST endpoints `/api/cache/export`, `/api/cache/import`, and `/api/monorepo` in `crates/cddm-cli/src/serve/`
+  - [x] Expose MCP tools `cddm_export_cache_pack`, `cddm_import_cache_pack`, and `cddm_scan_monorepo` in `crates/cddm-mcp/src/tools/`
+
+---
+
+### Milestone v2.0.0: Ecosystem Packaging, Distribution & JetBrains Integration
+
+- [x] **[EP-27] Cross-Platform Ecosystem Distribution & Standalone Installers**
+  - [x] Create Homebrew Formula in `packaging/homebrew/cddm.rb`
+  - [x] Create Scoop Windows manifest in `packaging/scoop/cddm.json`
+  - [x] Create Windows Package Manager (Winget) manifest in `packaging/winget/GrigorTonikyan.cddm.yaml`
+  - [x] Create cross-platform curl-to-sh standalone installer in `packaging/install.sh`
+  - [x] Create Windows PowerShell standalone installer in `packaging/install.ps1`
+  - [x] Implement ecosystem packaging validation script in `scripts/package-distribution.ts`
+- [x] **[EP-28] JetBrains IDE Integration (IntelliJ, PyCharm, WebStorm, RustRover, GoLand)**
+  - [x] Create comprehensive setup guide and configuration walkthrough in `docs/JETBRAINS_SETUP.md`
+
+---
+
 ## Completed Milestones (Verified)
 
 - [x] **v0.1.0**: Initial Rust core engine, Winnowing rolling hash, CLI scanner.
@@ -237,3 +279,6 @@
 - [x] **v1.5.0**: Polyglot AST Expansion (16 Tree-sitter languages: Ruby, PHP, Swift, Bash, Lua, JSON, HTML) & AI Refactoring Prompt Synthesizer with `cddm refactor --prompt`, `POST /api/refactor/ai-prompt`, MCP `cddm_generate_ai_prompt`, WebUI Studio "Copy AI Prompt" button, and turnkey PR/MR markdown quality gate comment generator (`cddm comment`).
 - [x] **v1.6.0**: AST-Native Rewrite Engine & Type-Aware Automated Refactoring with Tree-sitter parameter typing, import synthesis, CST node substitution, closed-loop test verification (`cddm refactor --ast --verify`), Axum endpoints (`/api/refactor/ast`, `/api/refactor/verify`), MCP tools (`cddm_ast_refactor`, `cddm_verify_refactor`), and WebUI Studio AST-Native tabs & test runner panel.
 - [x] **v1.7.0**: Architectural Boundary & Anti-Duplication Policy Engine (`.cddmrules.toml`) and Polyglot Language Expansion (Kotlin, Zig, Scala, Elixir, SQL, Dockerfile) across core engine, CLI (`rules init`, `rules check`, `--rules`, `--enforce-policies`), REST API (`/api/policy/*`), LSP diagnostics, MCP server (`cddm_check_policies`, `cddm://workspace/policies`), SARIF reporting (`CDDM_BOUNDARY`, `CDDM_ZERO_DUP`, `CDDM_LIMIT`), and WebUI Policy Studio modal.
+- [x] **v1.8.0**: AI Code Surgeon & Autonomous Self-Healing Refactoring Engine (`crates/cddm-core/src/ai`, CLI `cddm heal`, Axum `POST /api/refactor/heal`, MCP `cddm_heal_refactor`, WebUI Auto-Heal tab).
+- [x] **v1.9.0**: Deep Semantic Graph Matching (PDG/CFG) & Monorepo Distributed Cache Archive (`.cddmpack`, `crates/cddm-core/src/semantic_graph`, `crates/cddm-core/src/cache/pack.rs`, `crates/cddm-core/src/monorepo.rs`, CLI `cddm cache export/import`, `cddm monorepo`, Axum endpoints, MCP tools).
+- [x] **v2.0.0**: Ecosystem Packaging, Distribution & JetBrains Integration (Homebrew Formula, Scoop manifest, Winget manifest, standalone `install.sh`/`install.ps1`, `docs/JETBRAINS_SETUP.md`, `scripts/package-distribution.ts`).

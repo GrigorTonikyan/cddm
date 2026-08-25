@@ -31,13 +31,18 @@ graph TD
         Sandbox["Refactor Sandbox & Transactional Git Brancher (gix)"]
         Timeline["Git History Timeline & Trend Analyzer (gix)"]
         Workflow["Turnkey CI/CD & Hook Generator (workflow.rs)"]
-        Cache["SHA-256 Incremental Cache"]
+        AiEngine["AI Code Surgeon & Self-Healing Loop (ai/)"]
+        SemanticGraph["Semantic Graph & WL Kernels (semantic_graph/)"]
+        MonorepoEngine["Monorepo Multi-Workspace Scanner (monorepo.rs)"]
+        CachePack["Distributed Cache Pack (.cddmpack)"]
+        Cache["SHA-256 Incremental Cache (redb)"]
         Watcher["FileSystem Watcher (notify)"]
     end
 
     CLI --> Core
     Serve --> Core
     MCP --> Core
+    LSP --> Core
 
     IO --> Tokenizer
     Grammar --> Tokenizer
@@ -51,10 +56,15 @@ graph TD
     Detector --> Cluster
     Cluster --> Refactor
     Cluster --> AstRewrite
+    Cluster --> AiEngine
     Refactor --> Sandbox
     AstRewrite --> VerifyEngine
+    AiEngine --> VerifyEngine
+    AiEngine --> Sandbox
     Timeline --> Detector
     Workflow --> Detector
+    MonorepoEngine --> Detector
+    CachePack --> Cache
 ```
 
 ---

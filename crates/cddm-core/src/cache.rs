@@ -72,10 +72,12 @@ impl FingerprintCache {
     }
 }
 
+pub mod pack;
+
 /// Persistent, disk-backed ACID cache for file tokens and fingerprints powered by `redb`.
 #[derive(Debug, Clone)]
 pub struct DiskFingerprintCache {
-    db: Option<Arc<Database>>,
+    pub(crate) db: Option<Arc<Database>>,
     cache_path: PathBuf,
 }
 

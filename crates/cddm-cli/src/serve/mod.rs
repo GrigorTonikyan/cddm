@@ -14,15 +14,15 @@ use axum::{
     Router,
     routing::{get, post},
 };
-use cddm_core::{CddmWatcher, ScanConfig, run_scan};
+use cddm_core::{CddmWatcher, ScanConfig};
 use policy_handlers::*;
 use refactor_handlers::*;
 use scan_handlers::*;
 use std::net::SocketAddr;
 use std::path::PathBuf;
-use std::sync::{Arc, atomic::AtomicBool};
+use std::sync::Arc;
 use timeline_handlers::*;
-use tokio::sync::{RwLock, broadcast, mpsc};
+use tokio::sync::{RwLock, broadcast};
 use tower_http::cors::CorsLayer;
 
 /// Builds the Axum application router and default shared state.
@@ -70,6 +70,10 @@ pub fn build_app_with_state(state: AppState) -> Router {
         )
         .route(ROUTE_API_REFACTOR_AST, post(refactor_ast_handler))
         .route(ROUTE_API_REFACTOR_VERIFY, post(refactor_verify_handler))
+        .route(ROUTE_API_REFACTOR_HEAL, post(refactor_heal_handler))
+        .route(ROUTE_API_CACHE_EXPORT, post(cache_export_handler))
+        .route(ROUTE_API_CACHE_IMPORT, post(cache_import_handler))
+        .route(ROUTE_API_MONOREPO, post(monorepo_handler))
         .fallback(static_asset_handler)
         .layer(CorsLayer::permissive())
         .with_state(state)
@@ -100,23 +104,7 @@ pub async fn start_server(port: u16, open_browser: bool) -> Result<(), Box<dyn s
                 };
                 let changed_files = watcher.collect_changed_paths(&ignores);
                 if !changed_files.is_empty() {
-                    let config = watcher_state.current_config.read().await.clone();
-                    let (tx, mut rx) = mpsc::channel(100);
-                    let cancel_flag = Arc::new(AtomicBool::new(false));
-
-                    let b_tx = watcher_state.broadcast_tx.clone();
-                    tokio::spawn(async move {
-                        while let Some(p) = rx.recv().await {
-                            let _ = b_tx.send(ServerEvent::ScanProgress(p));
-                        }
-                    });
-
-                    if let Ok(res) = run_scan(config, tx, cancel_flag).await {
-                        *watcher_state.latest_result.write().await = Some(res.clone());
-                        let _ = watcher_state
-                            .broadcast_tx
-                            .send(ServerEvent::ScanComplete(res));
-                    }
+                    scan_handlers::execute_background_refresh(&watcher_state).await;
                 }
             }
         }

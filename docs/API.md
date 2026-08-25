@@ -750,15 +750,62 @@ Executes closed-loop automated test suite verification against the workspace or 
 | `branch_name`     | `string` | No       | None    | Optional Git branch to verify             |
 | `timeout_seconds` | `number` | No       | `60`    | Maximum test execution timeout in seconds |
 
+#### `cddm_heal_refactor`
+
+Runs autonomous AI Code Surgeon loop with test error-feedback repair and automated branch creation.
+
+| Parameter        | Type      | Required | Default  | Description                                                        |
+| :--------------- | :-------- | :------- | :------- | :----------------------------------------------------------------- |
+| `directory`      | `string`  | No       | `"."`    | Workspace root directory                                           |
+| `cluster_id`     | `number`  | No       | None     | Target clone cluster index to heal                                 |
+| `pair_id`        | `number`  | No       | None     | Target clone pair index to heal                                    |
+| `provider`       | `string`  | No       | `"mock"` | AI provider (`gemini`, `claude`, `openai`, `ollama`, `mock`)       |
+| `model`          | `string`  | No       | None     | AI model identifier (e.g. `gemini-1.5-pro`, `gpt-4o`, `codellama`) |
+| `api_key`        | `string`  | No       | None     | Secret API authentication key                                      |
+| `endpoint`       | `string`  | No       | None     | Custom endpoint URL                                                |
+| `max_iterations` | `number`  | No       | `3`      | Maximum healing repair iterations                                  |
+| `verify`         | `boolean` | No       | `true`   | Verify refactoring against test suite                              |
+| `test_command`   | `string`  | No       | None     | Custom test command                                                |
+| `branch_name`    | `string`  | No       | None     | Git branch to commit passing refactoring to                        |
+
+#### `cddm_export_cache_pack`
+
+Exports persistent fingerprint cache database into a portable `.cddmpack` binary archive.
+
+| Parameter          | Type     | Required | Default                 | Description                         |
+| :----------------- | :------- | :------- | :---------------------- | :---------------------------------- |
+| `cache_dir`        | `string` | No       | `".cddm/cache.db"`      | Path to source cache database       |
+| `output_pack_path` | `string` | No       | `"cddm-cache.cddmpack"` | Target `.cddmpack` output file path |
+
+#### `cddm_import_cache_pack`
+
+Imports a portable `.cddmpack` binary archive into the persistent cache database.
+
+| Parameter          | Type     | Required | Default   | Description                        |
+| :----------------- | :------- | :------- | :-------- | :--------------------------------- |
+| `pack_file`        | `string` | Yes      | None      | Path to `.cddmpack` file to import |
+| `target_cache_dir` | `string` | No       | `".cddm"` | Target cache directory to populate |
+
+#### `cddm_scan_monorepo`
+
+Discovers multi-workspace packages in a monorepo and runs cross-package duplication analysis.
+
+| Parameter    | Type     | Required | Default | Description                   |
+| :----------- | :------- | :------- | :------ | :---------------------------- |
+| `directory`  | `string` | No       | `"."`   | Monorepo root directory path  |
+| `min_tokens` | `number` | No       | `50`    | Minimum token clone threshold |
+
 ### Resources
 
-| URI                             | MIME Type          | Description                                                     |
-| :------------------------------ | :----------------- | :-------------------------------------------------------------- |
-| `cddm://workspace/health`       | `application/json` | Real-time DRY Health Index, file metrics, and language stats.   |
-| `cddm://workspace/clones`       | `application/json` | Registry of active duplicate code clones across files.          |
-| `cddm://workspace/clusters`     | `application/json` | Disjoint-set partitioned N-way clone equivalence clusters.      |
-| `cddm://workspace/timeline`     | `application/json` | Historical commit snapshots, DRY trajectory, and churn metrics. |
-| `cddm://workspace/suppressions` | `application/json` | Active `.cddmignore` glob patterns and category filters.        |
+| URI                               | MIME Type          | Description                                                     |
+| :-------------------------------- | :----------------- | :-------------------------------------------------------------- |
+| `cddm://workspace/health`         | `application/json` | Real-time DRY Health Index, file metrics, and language stats.   |
+| `cddm://workspace/clones`         | `application/json` | Registry of active duplicate code clones across files.          |
+| `cddm://workspace/clusters`       | `application/json` | Disjoint-set partitioned N-way clone equivalence clusters.      |
+| `cddm://workspace/timeline`       | `application/json` | Historical commit snapshots, DRY trajectory, and churn metrics. |
+| `cddm://workspace/suppressions`   | `application/json` | Active `.cddmignore` glob patterns and category filters.        |
+| `cddm://workspace/policies`       | `application/json` | Active `.cddmrules.toml` boundary and anti-duplication rules.   |
+| `cddm://workspace/semantic_graph` | `application/json` | Control Flow and Program Dependence Graph structural metadata.  |
 
 ### Prompts
 

@@ -306,6 +306,29 @@
 | F-27.4 | Clone token limit and multi-site occurrence enforcement | `policy::tests::test_limits_rule_violation`                  | PASS   |
 | F-27.5 | MCP policy tools, resources & LSP diagnostics           | `cddm_mcp::tests::test_mcp_check_policies_tool_and_resource` | PASS   |
 
+### AI Code Surgeon & Self-Healing Refactor (`crates/cddm-core/src/ai/`)
+
+| ID     | Feature Variant                                    | Test Function                                     | Result |
+| :----- | :------------------------------------------------- | :------------------------------------------------ | :----- |
+| F-28.1 | AI Provider factory and Mock provider execution    | `ai::tests::test_mock_ai_provider_completion`     | PASS   |
+| F-28.2 | Closed-loop error feedback autonomous healing loop | `ai::tests::test_heal_cluster_refactor_mock_loop` | PASS   |
+
+### Semantic Graph Engine (`crates/cddm-core/src/semantic_graph/`)
+
+| ID     | Feature Variant                                          | Test Function                                         | Result |
+| :----- | :------------------------------------------------------- | :---------------------------------------------------- | :----- |
+| F-29.1 | AST to Control Flow Graph basic block extraction         | `semantic_graph::tests::test_extract_cfg_and_wl_hash` | PASS   |
+| F-29.2 | CFG to Program Dependence Graph def-use dependency build | `semantic_graph::tests::test_build_pdg`               | PASS   |
+| F-29.3 | Weisfeiler-Lehman graph kernel isomorphism & similarity  | `semantic_graph::tests::test_graph_similarity`        | PASS   |
+
+### Distributed Cache Pack & Monorepos (`crates/cddm-core/src/cache/pack.rs`, `src/monorepo.rs`)
+
+| ID     | Feature Variant                                       | Test Function                                           | Result |
+| :----- | :---------------------------------------------------- | :------------------------------------------------------ | :----- |
+| F-30.1 | Portable `.cddmpack` binary archive export & import   | `cache::pack::tests::test_export_and_import_cache_pack` | PASS   |
+| F-30.2 | Multi-workspace monorepo discovery (Cargo, npm, etc.) | `monorepo::tests::test_discover_workspaces_cargo`       | PASS   |
+| F-30.3 | Non-monorepo empty workspace fallback                 | `monorepo::tests::test_discover_workspaces_empty`       | PASS   |
+
 ---
 
 ## 2. WebUI Frontend — React 19 + TypeScript + Vitest (136 unit tests across 35 suites)

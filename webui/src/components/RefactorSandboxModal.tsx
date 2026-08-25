@@ -6,12 +6,14 @@ import type {
   RefactorSandboxRequest,
 } from "../types/cddm-types";
 import { AstRewritePreview } from "./sandbox/AstRewritePreview";
+import { AutoHealTab } from "./sandbox/AutoHealTab";
 import { PatchDiffPreview } from "./sandbox/PatchDiffPreview";
 import { SandboxHeaderControls } from "./sandbox/SandboxHeaderControls";
 import { TestVerificationPanel } from "./sandbox/TestVerificationPanel";
 import { Win2xWindow } from "./ui/win2x-manager";
 import {
   AlertCircle,
+  Bot,
   Check,
   Copy,
   Download,
@@ -47,7 +49,7 @@ export const RefactorSandboxModal: React.FC<RefactorSandboxModalProps> = ({ isOp
     generateAiPrompt,
   } = useCDDMStore();
 
-  const [activeTab, setActiveTab] = useState<"patch" | "ast">("patch");
+  const [activeTab, setActiveTab] = useState<"patch" | "ast" | "heal">("patch");
   const [customFunctionName, setCustomFunctionName] = useState<string>("");
   const [targetModulePath, setTargetModulePath] = useState<string>("");
   const [branchName, setBranchName] = useState<string>("");
@@ -398,6 +400,18 @@ export const RefactorSandboxModal: React.FC<RefactorSandboxModalProps> = ({ isOp
                 </span>
               )}
             </button>
+            <button
+              type="button"
+              onClick={() => handleTabChange("heal" as "patch" | "ast")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors ${
+                activeTab === "heal"
+                  ? "bg-emerald-600/30 text-emerald-300 border border-emerald-500/50"
+                  : "bg-slate-900/60 text-slate-400 hover:text-slate-200 border border-slate-800"
+              }`}
+            >
+              <Bot className="w-3.5 h-3.5 text-emerald-400" />
+              Auto-Heal (AI Surgeon)
+            </button>
           </div>
 
           <div className="flex items-center gap-2">
@@ -426,6 +440,16 @@ export const RefactorSandboxModal: React.FC<RefactorSandboxModalProps> = ({ isOp
             astRewriteResult={astRewriteResult}
             isAstLoading={isAstLoading}
             astError={astError}
+          />
+        )}
+
+        {/* Tab 3: AI Code Surgeon Auto-Heal */}
+        {activeTab === "heal" && (
+          <AutoHealTab
+            occurrences={sandboxRequest.occurrences}
+            clusterId={sandboxRequest.cluster_id}
+            customFunctionName={customFunctionName}
+            targetModulePath={targetModulePath}
           />
         )}
 

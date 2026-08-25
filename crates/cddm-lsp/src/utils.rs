@@ -80,6 +80,42 @@ pub fn path_matches_url(file_path: &str, url: &Url) -> bool {
     false
 }
 
+/// Matches a clone pair against a target normalized path.
+/// Returns (my_start, my_end, other_file, other_start, other_end) if matched.
+#[must_use]
+pub fn match_clone_occurrence<'a>(
+    clone: &'a cddm_core::ClonePair,
+    target_norm: &str,
+) -> Option<(usize, usize, &'a str, usize, usize)> {
+    let norm_a = normalize_path_for_compare(&clone.file_a);
+    let norm_b = normalize_path_for_compare(&clone.file_b);
+
+    let is_a =
+        norm_a == target_norm || target_norm.ends_with(&norm_a) || norm_a.ends_with(target_norm);
+    let is_b =
+        norm_b == target_norm || target_norm.ends_with(&norm_b) || norm_b.ends_with(target_norm);
+
+    if is_a {
+        Some((
+            clone.start_line_a,
+            clone.end_line_a,
+            &clone.file_b,
+            clone.start_line_b,
+            clone.end_line_b,
+        ))
+    } else if is_b {
+        Some((
+            clone.start_line_b,
+            clone.end_line_b,
+            &clone.file_a,
+            clone.start_line_a,
+            clone.end_line_a,
+        ))
+    } else {
+        None
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -14,7 +14,7 @@ pub use consensus::{
     analyze_cluster_snippets_refactoring, analyze_snippets_refactoring, backtrack_lcs_alignment,
     compute_lcs_matrix, preview_cluster_refactor, read_file_lines_range,
 };
-pub use patch::{apply_patch_to_workspace, parse_unified_patch};
+pub use patch::{apply_patch_to_workspace, apply_patch_to_workspace_dir, parse_unified_patch};
 pub use types::*;
 pub use verify::verify_refactor_test_suite;
 

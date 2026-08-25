@@ -54,6 +54,10 @@ pub mod mcp_tools {
     pub const AST_REFACTOR: &str = "cddm_ast_refactor";
     pub const VERIFY_REFACTOR: &str = "cddm_verify_refactor";
     pub const CHECK_POLICIES: &str = "cddm_check_policies";
+    pub const HEAL_REFACTOR: &str = "cddm_heal_refactor";
+    pub const EXPORT_CACHE_PACK: &str = "cddm_export_cache_pack";
+    pub const IMPORT_CACHE_PACK: &str = "cddm_import_cache_pack";
+    pub const SCAN_MONOREPO: &str = "cddm_scan_monorepo";
 
     pub const PARAM_DIRECTORY: &str = "directory";
     pub const PARAM_MIN_TOKENS: &str = "min_tokens";
@@ -89,6 +93,7 @@ pub mod mcp_resources {
     pub const URI_WORKSPACE_TIMELINE: &str = "cddm://workspace/timeline";
     pub const URI_WORKSPACE_SUPPRESSIONS: &str = "cddm://workspace/suppressions";
     pub const URI_WORKSPACE_POLICIES: &str = "cddm://workspace/policies";
+    pub const URI_WORKSPACE_SEMANTIC_GRAPH: &str = "cddm://workspace/semantic_graph";
     pub const MIME_APPLICATION_JSON: &str = "application/json";
 }
 

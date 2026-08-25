@@ -125,3 +125,94 @@ pub fn handle_get_timeline(
         Err(e) => make_error_response(id, rpc_errors::INTERNAL_ERROR, e),
     }
 }
+
+pub fn handle_export_cache_pack(
+    id: Option<serde_json::Value>,
+    args: Option<&serde_json::Value>,
+) -> JsonRpcResponse {
+    let db_path_str = args
+        .and_then(|a| a.get("cache_dir"))
+        .and_then(|v| v.as_str())
+        .unwrap_or(".cddm/cache.db");
+    let out_path_str = args
+        .and_then(|a| a.get("output_pack_path"))
+        .and_then(|v| v.as_str())
+        .unwrap_or("cddm-cache.cddmpack");
+
+    match cddm_core::export_cache_pack(Path::new(db_path_str), Path::new(out_path_str)) {
+        Ok(summary) => {
+            let json_str = serde_json::to_string_pretty(&summary).unwrap_or_default();
+            make_text_response(id, json_str)
+        }
+        Err(e) => make_error_response(id, rpc_errors::INTERNAL_ERROR, e),
+    }
+}
+
+pub fn handle_import_cache_pack(
+    id: Option<serde_json::Value>,
+    args: Option<&serde_json::Value>,
+) -> JsonRpcResponse {
+    if let Some(pack_str) = args
+        .and_then(|a| a.get("pack_file"))
+        .and_then(|v| v.as_str())
+    {
+        let target_dir_str = args
+            .and_then(|a| a.get("target_cache_dir"))
+            .and_then(|v| v.as_str())
+            .unwrap_or(".cddm");
+
+        match cddm_core::import_cache_pack(Path::new(pack_str), Path::new(target_dir_str)) {
+            Ok(summary) => {
+                let json_str = serde_json::to_string_pretty(&summary).unwrap_or_default();
+                make_text_response(id, json_str)
+            }
+            Err(e) => make_error_response(id, rpc_errors::INTERNAL_ERROR, e),
+        }
+    } else {
+        make_error_response(
+            id,
+            rpc_errors::INVALID_PARAMS,
+            "Missing required 'pack_file' parameter",
+        )
+    }
+}
+
+pub async fn handle_scan_monorepo(
+    id: Option<serde_json::Value>,
+    args: Option<&serde_json::Value>,
+) -> JsonRpcResponse {
+    let dir_str = args
+        .and_then(|a| a.get(mcp_tools::PARAM_DIRECTORY))
+        .and_then(|v| v.as_str())
+        .unwrap_or(DEFAULT_DIRECTORY);
+    let min_tokens = args
+        .and_then(|a| a.get(mcp_tools::PARAM_MIN_TOKENS))
+        .and_then(|v| v.as_u64())
+        .unwrap_or(DEFAULT_MIN_TOKENS as u64) as usize;
+
+    let config = ScanConfig {
+        directory: dir_str.to_string(),
+        min_tokens,
+        languages: vec![],
+        ignore_patterns: vec![],
+        detect_type2: true,
+        scan_self: false,
+        enable_git_blame: false,
+        cache_dir: None,
+        enable_cache: false,
+        cddmignore_path: None,
+        ignore_tests: false,
+        ignore_mocks: false,
+        ignore_generated: true,
+        rules_path: None,
+        enforce_policies: false,
+    };
+
+    match cddm_core::run_monorepo_scan(Path::new(dir_str), &config).await {
+        Ok(summary) => {
+            let json_str = serde_json::to_string_pretty(&summary).unwrap_or_default();
+            make_text_response(id, json_str)
+        }
+        Err(e) => make_error_response(id, rpc_errors::INTERNAL_ERROR, e),
+    }
+}
