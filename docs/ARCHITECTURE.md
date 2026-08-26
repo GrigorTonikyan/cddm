@@ -8,6 +8,7 @@ CDDM (_Code De-Duplication Meister_) is a multi-threaded Rust workspace consisti
 graph TD
     subgraph UI ["User Interfaces & APIs"]
         CLI["cddm CLI (clap)"]
+        TUI["cddm tui (Ratatui + Crossterm)"]
         Serve["cddm serve (Axum + React 19)"]
         LSP["cddm-lsp (Stdio LSP 3.17)"]
         MCP["cddm-mcp (stdio JSON-RPC 2.0)"]
@@ -40,6 +41,7 @@ graph TD
     end
 
     CLI --> Core
+    TUI --> Core
     Serve --> Core
     MCP --> Core
     LSP --> Core
@@ -217,3 +219,16 @@ To maintain pristine engineering standards and prevent context window degradatio
 
 3. **Automated Quality Gate (`scripts/verify.ts`)**:
    - Dynamically executes all verification checks (Rust, TypeScript, Vitest, documentation integrity, file length caps, dogfooding self-scan) with zero hardcoded step counts.
+
+---
+
+## 10. Polyglot Testing Architecture
+
+CDDM maintains a multi-tier, zero-orphan testing architecture across all interaction pillars and languages:
+
+1. **Rust Engine & Crates**: Co-located module unit tests (`#[cfg(test)] mod tests` / sibling `tests.rs` submodules) and black-box integration suites (`crates/<crate>/tests/`).
+2. **WebUI Studio**: Co-located component, hook, store, and utility test suites (`*.test.tsx`, `*.test.ts`) powered by Vitest and React Testing Library.
+3. **Workspace Scripts**: Co-located library unit tests (`scripts/lib/*.test.ts`) and functional script CLI execution suites (`scripts/tests/*.test.ts`).
+4. **MCP Protocol & Tools**: 1:1 isolated tool test suites (`tests/mcp/tools/*.test.ts`) with dynamic runtime discovery (`tests/mcp/discovery.test.ts`).
+
+For detailed architectural guidelines and conventions, see [Testing Architecture (docs/TESTING.md)](TESTING.md) and [.agents/rules/test.md](../.agents/rules/test.md).

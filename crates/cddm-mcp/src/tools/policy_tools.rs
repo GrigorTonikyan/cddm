@@ -3,10 +3,7 @@
 use crate::protocol::{
     JsonRpcResponse, make_error_response, make_text_response, mcp_tools, rpc_errors,
 };
-use cddm_core::{
-    DEFAULT_DIRECTORY, DEFAULT_MIN_TOKENS, DEFAULT_RULES_FILE, PolicyEngine, ScanConfig,
-    SuppressionEngine, run_scan,
-};
+use cddm_core::{DEFAULT_RULES_FILE, PolicyEngine, ScanConfig, SuppressionEngine, run_scan};
 use serde_json::json;
 use std::path::Path;
 use std::sync::{Arc, atomic::AtomicBool};
@@ -103,36 +100,18 @@ pub async fn handle_check_policies(
     id: Option<serde_json::Value>,
     args: Option<&serde_json::Value>,
 ) -> JsonRpcResponse {
-    let dir = args
-        .and_then(|a| a.get(mcp_tools::PARAM_DIRECTORY))
-        .and_then(|d| d.as_str())
-        .unwrap_or(DEFAULT_DIRECTORY);
+    let (dir, min_tokens) = crate::tools::helpers::parse_dir_and_tokens(args);
     let rules_path = args
         .and_then(|a| a.get(mcp_tools::PARAM_RULES))
         .and_then(|r| r.as_str())
         .map(|s| s.to_string());
-    let min_tokens = args
-        .and_then(|a| a.get(mcp_tools::PARAM_MIN_TOKENS))
-        .and_then(|t| t.as_u64())
-        .unwrap_or(DEFAULT_MIN_TOKENS as u64) as usize;
 
     let config = ScanConfig {
         directory: dir.to_string(),
         min_tokens,
-        languages: vec![],
-        ignore_patterns: ScanConfig::default().ignore_patterns,
-        detect_type2: true,
-        scan_self: true,
-        enable_git_blame: false,
-        cache_dir: None,
-        enable_cache: true,
-        cddmignore_path: None,
-        ignore_tests: false,
-        ignore_mocks: false,
-        ignore_generated: true,
         rules_path: rules_path.clone(),
         enforce_policies: true,
-        cross_language: false,
+        ..Default::default()
     };
 
     let (tx, _rx) = mpsc::channel(100);

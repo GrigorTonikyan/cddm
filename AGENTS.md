@@ -17,8 +17,14 @@ The following rules dictate coding standards, architectural limits, and workflow
   - Details the 500-line absolute file ceiling, anti-monolith mandate, and the ratcheted grandfather allowlist (`scripts/check-file-length.ts`).
 - [Legacy Remediation Protocol](.agents/rules/legacy-remediation.md)
   - Details the strict protocol for handling legacy code that violates workspace standards, prioritizing full remediation or structured logging in `docs/TODO.md`.
-- [CDDM Agent Standards](.agents/rules/cddm-standards.md)
+- [General Agent Standards](.agents/rules/general.md)
   - Details core coding standards: zero bypasses, Vite Plus toolchain, conventional commits, dogfooding, and strict TypeScript.
+- [Universal Test Architecture Standard](.agents/rules/test.md)
+  - Details polyglot test architecture, co-location in WebUI, script testing in `scripts/tests/`, Rust unit/integration testing, and E2E standards.
+- [Cross-Interface Feature Parity Mandate](.agents/rules/interface-feature-parity.md)
+  - Details strict 4-pillar parity enforcement across CLI, WebUI Studio, MCP Server, and TUI Studio.
+- [MCP Tool Testing Standard](.agents/rules/test.mcp.md)
+  - Details the mandatory 1:1 isolated test suite per MCP tool under `tests/mcp/tools/` and dynamic discovery enforcement.
 
 ## 2. Workspace Skills (`.agents/skills/`)
 

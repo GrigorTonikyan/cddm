@@ -53,6 +53,7 @@ Whether integrated into **CI/CD pipelines**, used via the **Terminal CLI**, expl
 | **N-Way Graph Clustering**       | Disjoint-Set Union-Find algorithm partitioning pairwise clone graphs into transitive $N$-way equivalence classes.                      |
 | **Multi-Site Patch Synthesizer** | Computes multi-site consensus invariant lines and synthesizes unified multi-file `.patch` diffs across all clone occurrences.          |
 | **Language Server (LSP)**        | Real-time in-editor duplicate code diagnostics, one-click refactoring code actions, and hover tooltips for IDEs (`cddm-lsp`).          |
+| **Interactive Terminal TUI**     | Full-featured keyboard-driven Terminal UI (`cddm tui`) with 8 tab views, split diffs, and live watch powered by `ratatui`.             |
 | **Embedded Studio WebUI**        | High-performance interactive React 19 dashboard served directly from the single compiled binary via `axum` & `rust-embed`.             |
 | **AI Agent MCP Server**          | Stdio JSON-RPC 2.0 protocol (`cddm-mcp`) allowing AI assistants (Claude, Antigravity, Cursor) to inspect duplication programmatically. |
 | **Boundary Policy Engine**       | Enforce cross-layer boundary isolation, zero-duplication zones, and token caps via `.cddmrules.toml`.                                  |
@@ -247,6 +248,21 @@ cddm init gitlab --write
 
 # Generate Azure DevOps Pipelines (azure-pipelines.yml)
 cddm init azure --write
+```
+
+### `cddm tui [DIRECTORY]`
+
+Launches the interactive, keyboard-driven Terminal UI (TUI) Studio dashboard powered by `ratatui` and `crossterm`. Provides 8 rich tabs (Overview, Clones & Split Diffs, Semantic Clones, Refactor Sandbox, Shared Module Extractor, Policies & Suppression, Git Timeline, and CI/CD Hooks) with live background watch rescanning.
+
+```bash
+# Launch interactive TUI Studio on current directory
+cddm tui
+
+# Launch with live watch mode and custom token threshold
+cddm tui ./src --min-tokens 40 --watch
+
+# Launch with fail threshold for automated verification
+cddm tui . --fail-threshold 15.0
 ```
 
 ### `cddm lsp [DIRECTORY]`

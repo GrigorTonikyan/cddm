@@ -440,4 +440,30 @@ pub enum Commands {
         #[arg(short, long, default_value_t = cddm_core::DEFAULT_MIN_TOKENS)]
         min_tokens: usize,
     },
+
+    /// Launch interactive Terminal UI (TUI) Studio dashboard
+    Tui {
+        /// Directory path to scan (default: current directory)
+        directory: Option<PathBuf>,
+
+        /// Minimum token count to consider as duplicate clone
+        #[arg(short, long, default_value_t = cddm_core::DEFAULT_MIN_TOKENS)]
+        min_tokens: usize,
+
+        /// Enable live watch mode for real-time rescanning on file changes
+        #[arg(short, long, default_value_t = false)]
+        watch: bool,
+
+        /// Exit with non-zero status code if duplication percentage exceeds threshold (0-100)
+        #[arg(long)]
+        fail_threshold: Option<f64>,
+
+        /// Specific language(s) to scan
+        #[arg(short, long)]
+        languages: Vec<String>,
+
+        /// Glob patterns to ignore
+        #[arg(short, long)]
+        ignore: Vec<String>,
+    },
 }

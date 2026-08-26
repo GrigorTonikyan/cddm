@@ -4,6 +4,7 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "moduleDetection": "force",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "types": ["bun", "node"],
     "strict": true,
     "noImplicitAny": true,
@@ -22,5 +23,5 @@
     "noEmit": true,
     "skipLibCheck": true
   },
-  "include": ["scripts/**/*.ts"]
+  "include": ["scripts/**/*.ts", "tests/**/*.ts"]
 }

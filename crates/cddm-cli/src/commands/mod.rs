@@ -15,6 +15,7 @@ pub mod rules;
 pub mod scan;
 pub mod semantic;
 pub mod trend;
+pub mod tui;
 pub mod watch;
 
 pub use cache_pack::{run_cache_export_command, run_cache_import_command};
@@ -32,4 +33,5 @@ pub use rules::run_rules_command;
 pub use scan::run_scan_command;
 pub use semantic::run_semantic_command;
 pub use trend::run_trend_command;
+pub use tui::run_tui_command;
 pub use watch::run_watch_command;

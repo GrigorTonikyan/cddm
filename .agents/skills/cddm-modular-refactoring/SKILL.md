@@ -29,4 +29,4 @@ After decomposing a grandfathered file in [`scripts/check-file-length.ts`](scrip
 
 1. Run `bun scripts/check-file-length.ts` to get the new line count
 2. Lower the ceiling in `GRANDFATHERED_LINE_CAPS` to the new count
-3. Verify: `bun test scripts/__tests__/file-length.test.ts`
+3. Verify: `bun test scripts/tests/file-length.test.ts`

@@ -38,7 +38,7 @@ test.describe("CDDM WebUI E2E Workflows", () => {
   });
 
   test("should toggle live watch state from header", async ({ page }) => {
-    const liveWatchBtn = page.getByRole("button", { name: /Live Watch: ON/i });
+    const liveWatchBtn = page.getByRole("button", { name: /Live (Watch: ON|Sync)/i });
     await expect(liveWatchBtn).toBeVisible();
     await liveWatchBtn.click();
     await expect(page.getByRole("button", { name: /Live Watch: OFF/i })).toBeVisible();

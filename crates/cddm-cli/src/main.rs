@@ -5,6 +5,7 @@ use clap::Parser;
 mod commands;
 mod formatters;
 mod serve;
+mod tui;
 mod types;
 
 use commands::*;
@@ -295,6 +296,25 @@ async fn run_app() -> Result<(), Box<dyn std::error::Error>> {
             min_tokens,
         } => {
             run_monorepo_command(directory, min_tokens).await?;
+        }
+
+        Commands::Tui {
+            directory,
+            min_tokens,
+            watch,
+            fail_threshold,
+            languages,
+            ignore,
+        } => {
+            run_tui_command(
+                directory,
+                min_tokens,
+                watch,
+                fail_threshold,
+                languages,
+                ignore,
+            )
+            .await?;
         }
     }
 

@@ -10,6 +10,7 @@
 
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
+import { syncFeatureMatrixFile } from "./lib/test-matrix-generator";
 
 export interface DocCheckError {
   file: string;
@@ -237,6 +238,23 @@ export async function validateDocumentation(
   // 3. Roadmap <-> TODO synchronization
   const { proposalCount, errors: syncErrors } = checkRoadmapTodoSync(workspaceRoot);
   allErrors.push(...syncErrors);
+
+  // 4. Feature Matrix dynamic test discovery synchronization
+  try {
+    const { hasChanges } = syncFeatureMatrixFile(workspaceRoot);
+    if (hasChanges) {
+      allErrors.push({
+        file: "docs/FEATURE_MATRIX.md",
+        message:
+          "Feature matrix test tables are out of sync with discovered test files. Run `bun scripts/sync-feature-matrix.ts` to update.",
+      });
+    }
+  } catch (err) {
+    allErrors.push({
+      file: "docs/FEATURE_MATRIX.md",
+      message: `Failed to validate feature matrix synchronization: ${err instanceof Error ? err.message : String(err)}`,
+    });
+  }
 
   return {
     filesChecked,

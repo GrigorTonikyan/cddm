@@ -25,8 +25,12 @@ const STEPS: ScriptStep[] = [
     command: ["bunx", "tsc", "-p", "tsconfig.json"],
   },
   {
-    title: "Repository scripts unit tests (bun test scripts/__tests__)",
-    command: ["bun", "test", "scripts/__tests__"],
+    title: "Repository scripts unit tests (bun test scripts/tests)",
+    command: ["bun", "test", "scripts/tests"],
+  },
+  {
+    title: "MCP Server per-tool test suites & dynamic discovery (bun test tests/mcp)",
+    command: ["bun", "test", "tests/mcp"],
   },
   {
     title: "Workspace-wide Vite Plus type-aware verification (vp check)",
@@ -53,6 +57,10 @@ const STEPS: ScriptStep[] = [
     command: ["bun", "scripts/check-file-length.ts"],
   },
   {
+    title: "4-Pillar Cross-Interface Feature Parity check (bun scripts/check-feature-parity.ts)",
+    command: ["bun", "scripts/check-feature-parity.ts"],
+  },
+  {
     title: "Ecosystem distribution packaging validation (bun scripts/package-distribution.ts)",
     command: ["bun", "scripts/package-distribution.ts"],
   },
@@ -61,8 +69,8 @@ const STEPS: ScriptStep[] = [
     command: ["bunx", "tsc", "-p", "editors/vscode/tsconfig.json"],
   },
   {
-    title: "VS Code extension unit tests (bun test scripts/__tests__/vscode-extension.test.ts)",
-    command: ["bun", "test", "scripts/__tests__/vscode-extension.test.ts"],
+    title: "VS Code extension unit tests (bun test scripts/tests/vscode-extension.test.ts)",
+    command: ["bun", "test", "scripts/tests/vscode-extension.test.ts"],
   },
   {
     title: "VS Code extension VSIX packaging (bun scripts/package-vscode.ts)",

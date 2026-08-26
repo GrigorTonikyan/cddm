@@ -60,10 +60,7 @@ pub fn parse_clone_pair_args(
     ))
 }
 
-pub async fn run_scan_from_mcp_args(
-    args: Option<&serde_json::Value>,
-    enable_git_blame: bool,
-) -> Result<ScanResult, String> {
+pub fn parse_dir_and_tokens(args: Option<&serde_json::Value>) -> (&str, usize) {
     let dir = args
         .and_then(|a| a.get(mcp_tools::PARAM_DIRECTORY))
         .and_then(|d| d.as_str())
@@ -72,6 +69,14 @@ pub async fn run_scan_from_mcp_args(
         .and_then(|a| a.get(mcp_tools::PARAM_MIN_TOKENS))
         .and_then(|t| t.as_u64())
         .unwrap_or(DEFAULT_MIN_TOKENS as u64) as usize;
+    (dir, min_tokens)
+}
+
+pub async fn run_scan_from_mcp_args(
+    args: Option<&serde_json::Value>,
+    enable_git_blame: bool,
+) -> Result<ScanResult, String> {
+    let (dir, min_tokens) = parse_dir_and_tokens(args);
     let cross_language = args
         .and_then(|a| a.get("cross_language"))
         .and_then(|b| b.as_bool())
@@ -80,20 +85,9 @@ pub async fn run_scan_from_mcp_args(
     let config = ScanConfig {
         directory: dir.to_string(),
         min_tokens,
-        languages: vec![],
-        ignore_patterns: ScanConfig::default().ignore_patterns,
-        detect_type2: true,
-        scan_self: true,
         enable_git_blame,
-        cache_dir: None,
-        enable_cache: true,
-        cddmignore_path: None,
-        ignore_tests: false,
-        ignore_mocks: false,
-        ignore_generated: true,
-        rules_path: None,
-        enforce_policies: false,
         cross_language,
+        ..Default::default()
     };
 
     let (tx, _rx) = mpsc::channel(100);

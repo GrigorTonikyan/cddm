@@ -326,3 +326,4 @@
 - [x] **v2.1.0**: First-Class IDE & Editor Ecosystem (VS Code Embedded Webview Studio, Activity Bar Dashboard, 24-language polyglot selector, command suite, and turnkey VSIX packaging pipeline).
 - [x] **v2.3.0**: Cross-Language Semantic Matching & Hybrid Embeddings (Subword vector embeddings, Weisfeiler-Lehman graph kernels, `cddm semantic`, MCP `cddm_scan_cross_language`, and WebUI Studio Cross-Language Explorer).
 - [x] **v2.4.0**: Automated Shared Module & Crate Extraction (`cddm_core::extract`, CLI `cddm extract`, Axum `/api/extract/*`, MCP `cddm_extract_shared_module`, WebUI Extract tab).
+- [x] **v2.5.0**: Interactive Terminal UI Studio (`cddm tui`), Ratatui/Crossterm 8-tab visualizer, side-by-side split diffs, and 4-Pillar Cross-Interface Feature Parity governance policy & verification pipeline (`scripts/check-feature-parity.ts`).

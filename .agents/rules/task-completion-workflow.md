@@ -22,9 +22,10 @@ Dynamically discover available `cddm` MCP tools from the `<mcp_servers>` context
 
 Review `git diff` output. Verify zero hallucinated APIs, partial stubs, placeholder mocks, or broken edge cases.
 
-## Step 5: Documentation Synchronization
+## Step 5: Living Documentation & Test Matrix Synchronization
 
-Run `bun scripts/check-docs.ts` to validate documentation integrity. Update all relevant docs in `docs/` and root to reflect the current state of the codebase.
+Whenever tests are added, modified, renamed, or moved, run `bun scripts/sync-feature-matrix.ts` to dynamically regenerate and synchronize [`docs/FEATURE_MATRIX.md`](../../docs/FEATURE_MATRIX.md).
+Then run `bun scripts/check-docs.ts` to validate full documentation integrity, link resolution, and zero-drift verification across all markdown files. Update all relevant documentation in `docs/` and root to reflect the exact state of the codebase.
 
 ## Step 6: Version Sync and Conventional Commit
 

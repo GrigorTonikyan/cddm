@@ -180,7 +180,8 @@ pub fn handle_generate_ai_prompt(
                 arr.iter()
                     .map(|item| {
                         let path = item
-                            .get("path")
+                            .get("file")
+                            .or_else(|| item.get("path"))
                             .and_then(|p| p.as_str())
                             .unwrap_or("")
                             .to_string();
@@ -268,7 +269,8 @@ pub fn handle_ast_refactor(
                 arr.iter()
                     .map(|item| {
                         let path = item
-                            .get("path")
+                            .get("file")
+                            .or_else(|| item.get("path"))
                             .and_then(|p| p.as_str())
                             .unwrap_or("")
                             .to_string();

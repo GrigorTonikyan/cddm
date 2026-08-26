@@ -17,20 +17,7 @@ pub async fn run_comment_command(
     let config = ScanConfig {
         directory: directory.to_string_lossy().to_string(),
         min_tokens,
-        languages: vec![],
-        ignore_patterns: ScanConfig::default().ignore_patterns,
-        detect_type2: true,
-        scan_self: true,
-        enable_git_blame: false,
-        cache_dir: None,
-        enable_cache: true,
-        cddmignore_path: None,
-        ignore_tests: false,
-        ignore_mocks: false,
-        ignore_generated: true,
-        rules_path: None,
-        enforce_policies: false,
-        cross_language: false,
+        ..Default::default()
     };
 
     let (tx, _rx) = mpsc::channel(100);

@@ -4,9 +4,7 @@ use super::helpers::run_scan_from_mcp_args;
 use crate::protocol::{
     JsonRpcResponse, make_error_response, make_text_response, mcp_tools, rpc_errors,
 };
-use cddm_core::{
-    DEFAULT_DIRECTORY, DEFAULT_MIN_TOKENS, ScanConfig, generate_sarif_json, run_diff_scan,
-};
+use cddm_core::{ScanConfig, generate_sarif_json, run_diff_scan};
 use std::path::Path;
 use std::sync::{Arc, atomic::AtomicBool};
 use tokio::sync::mpsc;
@@ -38,35 +36,15 @@ pub async fn handle_diff_scan(
         .and_then(|b| b.as_str());
 
     if let Some(base) = base_ref {
-        let dir = args
-            .and_then(|a| a.get(mcp_tools::PARAM_DIRECTORY))
-            .and_then(|d| d.as_str())
-            .unwrap_or(DEFAULT_DIRECTORY);
+        let (dir, min_tokens) = crate::tools::helpers::parse_dir_and_tokens(args);
         let target = args
             .and_then(|a| a.get(mcp_tools::PARAM_TARGET_REF))
             .and_then(|t| t.as_str());
-        let min_tokens = args
-            .and_then(|a| a.get(mcp_tools::PARAM_MIN_TOKENS))
-            .and_then(|t| t.as_u64())
-            .unwrap_or(DEFAULT_MIN_TOKENS as u64) as usize;
 
         let config = ScanConfig {
             directory: dir.to_string(),
             min_tokens,
-            languages: vec![],
-            ignore_patterns: ScanConfig::default().ignore_patterns,
-            detect_type2: true,
-            scan_self: true,
-            enable_git_blame: false,
-            cache_dir: None,
-            enable_cache: true,
-            cddmignore_path: None,
-            ignore_tests: false,
-            ignore_mocks: false,
-            ignore_generated: true,
-            rules_path: None,
-            enforce_policies: false,
-            cross_language: false,
+            ..Default::default()
         };
 
         let (tx, _rx) = mpsc::channel(100);
@@ -105,18 +83,11 @@ pub fn handle_get_timeline(
     id: Option<serde_json::Value>,
     args: Option<&serde_json::Value>,
 ) -> JsonRpcResponse {
-    let dir = args
-        .and_then(|a| a.get(mcp_tools::PARAM_DIRECTORY))
-        .and_then(|d| d.as_str())
-        .unwrap_or(DEFAULT_DIRECTORY);
+    let (dir, min_tokens) = crate::tools::helpers::parse_dir_and_tokens(args);
     let max_samples = args
         .and_then(|a| a.get(mcp_tools::PARAM_MAX_SAMPLES))
         .and_then(|s| s.as_u64())
         .unwrap_or(10) as usize;
-    let min_tokens = args
-        .and_then(|a| a.get(mcp_tools::PARAM_MIN_TOKENS))
-        .and_then(|t| t.as_u64())
-        .unwrap_or(DEFAULT_MIN_TOKENS as u64) as usize;
 
     let cancel_flag = Arc::new(AtomicBool::new(false));
     match cddm_core::collect_git_timeline(Path::new(dir), max_samples, min_tokens, cancel_flag) {
@@ -182,32 +153,14 @@ pub async fn handle_scan_monorepo(
     id: Option<serde_json::Value>,
     args: Option<&serde_json::Value>,
 ) -> JsonRpcResponse {
-    let dir_str = args
-        .and_then(|a| a.get(mcp_tools::PARAM_DIRECTORY))
-        .and_then(|v| v.as_str())
-        .unwrap_or(DEFAULT_DIRECTORY);
-    let min_tokens = args
-        .and_then(|a| a.get(mcp_tools::PARAM_MIN_TOKENS))
-        .and_then(|v| v.as_u64())
-        .unwrap_or(DEFAULT_MIN_TOKENS as u64) as usize;
+    let (dir_str, min_tokens) = crate::tools::helpers::parse_dir_and_tokens(args);
 
     let config = ScanConfig {
         directory: dir_str.to_string(),
         min_tokens,
-        languages: vec![],
-        ignore_patterns: vec![],
-        detect_type2: true,
         scan_self: false,
-        enable_git_blame: false,
-        cache_dir: None,
         enable_cache: false,
-        cddmignore_path: None,
-        ignore_tests: false,
-        ignore_mocks: false,
-        ignore_generated: true,
-        rules_path: None,
-        enforce_policies: false,
-        cross_language: false,
+        ..Default::default()
     };
 
     match cddm_core::run_monorepo_scan(Path::new(dir_str), &config).await {

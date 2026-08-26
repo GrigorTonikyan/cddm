@@ -62,6 +62,27 @@ pub async fn scan_handler(
     }
 }
 
+pub async fn diff_handler(
+    State(_state): State<AppState>,
+    Json(req): Json<DiffScanRequest>,
+) -> Result<Json<cddm_core::DiffScanResult>, (StatusCode, String)> {
+    let (tx, _rx) = mpsc::channel(100);
+    let cancel_flag = Arc::new(AtomicBool::new(false));
+
+    match cddm_core::run_diff_scan(
+        &req.base_ref,
+        req.target_ref.as_deref(),
+        req.config,
+        tx,
+        cancel_flag,
+    )
+    .await
+    {
+        Ok(result) => Ok(Json(result)),
+        Err(err) => Err((StatusCode::INTERNAL_SERVER_ERROR, err)),
+    }
+}
+
 pub async fn events_handler(
     State(state): State<AppState>,
 ) -> Sse<impl tokio_stream::Stream<Item = Result<Event, Infallible>>> {

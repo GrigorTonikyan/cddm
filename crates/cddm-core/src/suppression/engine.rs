@@ -138,6 +138,25 @@ impl SuppressionEngine {
             return true;
         }
 
+        let norm_str = path.to_string_lossy().replace('\\', "/");
+        let norm_path = Path::new(&norm_str);
+        if self.gitignore.matched(norm_path, false).is_ignore() {
+            return true;
+        }
+
+        if let Ok(cur) = std::env::current_dir()
+            && let Ok(rel) = path.strip_prefix(&cur)
+        {
+            let rel_str = rel.to_string_lossy().replace('\\', "/");
+            if self
+                .gitignore
+                .matched(Path::new(&rel_str), false)
+                .is_ignore()
+            {
+                return true;
+            }
+        }
+
         // 2. Check test files filter
         if self.config.ignore_tests && is_test_path(path) {
             return true;
@@ -212,8 +231,10 @@ impl SuppressionEngine {
 
     /// Gets the effective minimum token threshold for a file path, taking overrides into account.
     pub fn get_effective_min_tokens(&self, path: &Path, default_min: usize) -> usize {
+        let norm_str = path.to_string_lossy().replace('\\', "/");
+        let norm_path = Path::new(&norm_str);
         for (gi, min) in &self.threshold_overrides {
-            if gi.matched(path, false).is_ignore() {
+            if gi.matched(path, false).is_ignore() || gi.matched(norm_path, false).is_ignore() {
                 return *min;
             }
         }
@@ -222,8 +243,12 @@ impl SuppressionEngine {
 
     /// Checks if a clone type is excluded for a given file path.
     pub fn is_clone_type_ignored(&self, path: &Path, clone_type: &CloneType) -> bool {
+        let norm_str = path.to_string_lossy().replace('\\', "/");
+        let norm_path = Path::new(&norm_str);
         for (gi, types) in &self.type_filters {
-            if gi.matched(path, false).is_ignore() && types.contains(clone_type) {
+            if (gi.matched(path, false).is_ignore() || gi.matched(norm_path, false).is_ignore())
+                && types.contains(clone_type)
+            {
                 return true;
             }
         }

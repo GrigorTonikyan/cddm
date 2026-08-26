@@ -22,12 +22,14 @@ chrono = { version = "^0.4", features = ["serde"] }
 clap = { version = "^4", features = ["derive", "env"] }
 comfy-table = "^8"
 criterion = { version = "^0.5", default-features = false, features = ["html_reports"] }
+crossterm = "^0.29"
 gix = "^0.87"
 ignore = "^0.4"
 memmap2 = "^0.9"
 mime_guess = "^2"
 notify = "^8"
 opener = "^0.8"
+ratatui = "^0.30"
 rayon = "^1"
 redb = "^4"
 rust-embed = { version = "^8", features = ["axum"] }

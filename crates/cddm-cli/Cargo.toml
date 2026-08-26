@@ -27,8 +27,10 @@ cddm-lsp = { path = "../cddm-lsp" }
 chrono.workspace = true
 clap.workspace = true
 comfy-table.workspace = true
+crossterm.workspace = true
 mime_guess.workspace = true
 opener.workspace = true
+ratatui.workspace = true
 rust-embed.workspace = true
 serde.workspace = true
 serde_json.workspace = true

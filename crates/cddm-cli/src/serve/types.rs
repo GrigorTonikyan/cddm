@@ -11,6 +11,9 @@ pub const ROUTE_API_HEALTH: &str = "/api/health";
 /// API endpoint path for asynchronous code duplication scans.
 pub const ROUTE_API_SCAN: &str = "/api/scan";
 
+/// API endpoint path for differential code duplication scans comparing git refs.
+pub const ROUTE_API_DIFF: &str = "/api/diff";
+
 /// API endpoint path for snippet source line retrieval.
 pub const ROUTE_API_SNIPPET: &str = "/api/snippet";
 
@@ -271,6 +274,15 @@ pub struct CacheExportRequest {
 pub struct CacheImportRequest {
     pub pack_file: std::path::PathBuf,
     pub target_cache_dir: Option<std::path::PathBuf>,
+}
+
+/// Request payload for differential git clone scan.
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+pub struct DiffScanRequest {
+    pub base_ref: String,
+    pub target_ref: Option<String>,
+    #[serde(default)]
+    pub config: ScanConfig,
 }
 
 /// Request payload for monorepo workspace scan.

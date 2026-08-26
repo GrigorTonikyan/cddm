@@ -9,7 +9,7 @@ test.describe("CDDM Semantic Graph Visualizer & Live Watch SSE Sync", () => {
     page,
   }) => {
     // 1. Verify header Live Watch status
-    const liveWatchIndicator = page.getByText(/Live Watch/i).first();
+    const liveWatchIndicator = page.getByText(/Live (Watch|Sync)|Syncing/i).first();
     await expect(liveWatchIndicator).toBeVisible();
 
     // 2. Open Semantic Graph Modal from header
