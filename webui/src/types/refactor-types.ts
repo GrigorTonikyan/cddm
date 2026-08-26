@@ -287,3 +287,66 @@ export interface HealRefactorResult {
   modified_files: string[];
   message: string;
 }
+
+/**
+ * Packaging strategy for automated shared extraction.
+ */
+export type ExtractTargetKind = "auto" | "new_crate" | "new_module" | "existing_module";
+
+/**
+ * Request payload for shared module and crate extraction.
+ */
+export interface ExtractRequest {
+  occurrences: CloneLocation[];
+  target_path: string;
+  custom_function_name?: string;
+  target_kind?: ExtractTargetKind;
+  custom_parameter_names?: string[];
+  dry_run?: boolean;
+}
+
+/**
+ * Newly generated or modified target file.
+ */
+export interface ExtractedFile {
+  file_path: string;
+  content: string;
+  is_new: boolean;
+}
+
+/**
+ * Manifest modification across workspace root or caller package.
+ */
+export interface ManifestUpdate {
+  manifest_path: string;
+  dependency_name: string;
+  diff_preview: string;
+  updated_content: string;
+}
+
+/**
+ * Occurrence caller file rewrite with injected import and callsite substitution.
+ */
+export interface CallerRewrite {
+  file_path: string;
+  injected_import?: string;
+  rewritten_content: string;
+  diff_patch: string;
+}
+
+/**
+ * Result of automated shared module and crate extraction.
+ */
+export interface ExtractResult {
+  function_name: string;
+  target_path: string;
+  target_kind: ExtractTargetKind;
+  helper_signature: string;
+  inferred_parameters: InferredParameter[];
+  generated_files: ExtractedFile[];
+  manifest_updates: ManifestUpdate[];
+  caller_rewrites: CallerRewrite[];
+  total_lines_saved: number;
+  syntax_valid: boolean;
+  message: string;
+}

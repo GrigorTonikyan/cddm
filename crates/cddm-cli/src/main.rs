@@ -168,6 +168,10 @@ async fn run_app() -> Result<(), Box<dyn std::error::Error>> {
             .await?;
         }
 
+        Commands::Extract(args) => {
+            run_extract_command(args).await?;
+        }
+
         Commands::Serve { port, open } => {
             serve::start_server(port, open).await?;
         }
@@ -253,39 +257,23 @@ async fn run_app() -> Result<(), Box<dyn std::error::Error>> {
             run_comment_command(directory, min_tokens, fail_threshold, platform, output).await?;
         }
 
-        Commands::Heal {
-            directory,
-            cluster,
-            pair,
-            provider,
-            model,
-            api_key,
-            endpoint,
-            max_iterations,
-            verify,
-            test_cmd,
-            branch,
-            fn_name,
-            target_module,
-            custom_instructions,
-            min_tokens,
-        } => {
+        Commands::Heal(args) => {
             run_heal_command(HealCliArgs {
-                directory,
-                cluster,
-                pair,
-                provider_str: provider,
-                model,
-                api_key,
-                endpoint,
-                max_iterations,
-                verify,
-                test_cmd,
-                branch,
-                fn_name,
-                target_module,
-                custom_instructions,
-                min_tokens,
+                directory: args.directory,
+                cluster: args.cluster,
+                pair: args.pair,
+                provider_str: args.provider,
+                model: args.model,
+                api_key: args.api_key,
+                endpoint: args.endpoint,
+                max_iterations: args.max_iterations,
+                verify: args.verify,
+                test_cmd: args.test_cmd,
+                branch: args.branch,
+                fn_name: args.fn_name,
+                target_module: args.target_module,
+                custom_instructions: args.custom_instructions,
+                min_tokens: args.min_tokens,
             })
             .await?;
         }

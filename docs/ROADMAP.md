@@ -832,6 +832,34 @@ Polyglot enterprise codebases frequently rewrite or duplicate algorithms, valida
 
 ---
 
+### EP-31: Automated Shared Module & Crate Extraction
+
+- **Target Milestone**: `v2.4.0`
+- **Component**: `crates/cddm-core`, `crates/cddm-cli`, `crates/cddm-mcp`, `webui`
+- **Priority**: `High`
+- **Status**: `Completed (v2.4.0)`
+
+#### Problem Statement
+
+Refactoring duplicate code across packages or crates currently stops at generating a patch. Developers need automated packaging that creates a standalone shared crate or module, updates workspace root manifests (`Cargo.toml`, `package.json`), adds inter-package dependencies, and rewrites all caller occurrences with imports.
+
+#### Specification & Architecture
+
+1. **Extraction Engine (`crates/cddm-core/src/extract/`)**:
+   - Manifest updaters for Cargo workspaces, npm/pnpm/yarn packages, pyproject.toml, and go.mod.
+   - Target crate/module boilerplate generators with public signature synthesis.
+   - Caller AST and text rewriters with import injection and callsite substitutions.
+   - Dry-run simulation and transactional disk execution.
+2. **CLI Subcommand (`cddm extract`)**:
+   - Flags: `--pair`, `--cluster`, `--target`, `--fn-name`, `--crate-type`, `--dry-run`, `--apply`.
+3. **Axum REST API & MCP Server**:
+   - Endpoints: `POST /api/extract/preview`, `POST /api/extract/apply`.
+   - MCP tool: `cddm_extract_shared_module`.
+4. **WebUI Studio Visualizer**:
+   - `ExtractModuleTab.tsx` in `RefactorSandboxModal.tsx` for visual inspection of generated files, manifest diffs, and caller rewrites.
+
+---
+
 ## 3. Prioritized Action Checklist
 
 ```markdown
@@ -986,6 +1014,17 @@ Polyglot enterprise codebases frequently rewrite or duplicate algorithms, valida
 - [x] Expose Axum REST endpoint `POST /api/semantic/scan` and dual-language graph comparison in `cddm-cli::serve` [EP-30]
 - [x] Expose MCP tool `cddm_scan_cross_language`, prompt `cross_language_audit`, and resource `cddm://workspace/cross_language_clones` in `cddm-mcp` [EP-30]
 - [x] Implement WebUI Studio Cross-Language Explorer tab, dual-language Polyglot Sandbox selectors, and `[Polyglot]` badges in `webui/` [EP-30]
+
+### Milestone v2.4.0 (Automated Shared Module & Crate Extraction)
+
+- [x] Implement `cddm_core::extract` engine (manifest, generator, rewriter, executor) [EP-31]
+- [x] Implement multi-language workspace manifest mutators (`Cargo.toml`, `package.json`) [EP-31]
+- [x] Implement shared crate boilerplate generator with public inferred function signatures [EP-31]
+- [x] Implement occurrence caller rewriter with injected import statements and callsite substitutions [EP-31]
+- [x] Add `cddm extract` CLI command in `cddm-cli` [EP-31]
+- [x] Expose Axum REST endpoints `POST /api/extract/preview` and `POST /api/extract/apply` in `cddm-cli::serve` [EP-31]
+- [x] Expose MCP tool `cddm_extract_shared_module` in `cddm-mcp` [EP-31]
+- [x] Implement WebUI Studio Extract Shared Crate/Module tab in `RefactorSandboxModal.tsx` and `ExtractModuleTab.tsx` [EP-31]
 ```
 
 ---

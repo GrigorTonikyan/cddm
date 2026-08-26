@@ -3,6 +3,7 @@
 pub mod cache_pack;
 pub mod comment;
 pub mod diff;
+pub mod extract;
 pub mod heal;
 pub mod hook;
 pub mod ignore;
@@ -19,6 +20,7 @@ pub mod watch;
 pub use cache_pack::{run_cache_export_command, run_cache_import_command};
 pub use comment::run_comment_command;
 pub use diff::run_diff_command;
+pub use extract::run_extract_command;
 pub use heal::{HealCliArgs, run_heal_command};
 pub use hook::run_hook_command;
 pub use ignore::run_ignore_command;

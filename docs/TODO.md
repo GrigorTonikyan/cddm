@@ -289,6 +289,20 @@
 
 ---
 
+### Milestone v2.4.0: Automated Shared Module & Crate Extraction (High Priority)
+
+- [x] **[EP-31] Automated Shared Module & Crate Extraction (`cddm extract`)**
+  - [x] Implement `cddm_core::extract` module (types, manifest, generator, rewriter, executor) in `crates/cddm-core/src/extract/`
+  - [x] Implement multi-language workspace manifest updaters (`Cargo.toml`, `package.json`, `pyproject.toml`, `go.mod`)
+  - [x] Implement target crate/module boilerplate generators with public inferred signatures
+  - [x] Implement caller file AST/text rewriting with injected import statements and callsite replacements
+  - [x] Add CLI subcommand `cddm extract` with `--pair`, `--cluster`, `--target`, `--fn-name`, `--crate-type`, `--dry-run`, `--apply` in `crates/cddm-cli/`
+  - [x] Expose Axum REST endpoints `POST /api/extract/preview` and `POST /api/extract/apply` in `crates/cddm-cli/src/serve/`
+  - [x] Expose MCP tool `cddm_extract_shared_module` in `crates/cddm-mcp/`
+  - [x] Implement WebUI Studio Extract Shared Crate/Module tab in `RefactorSandboxModal.tsx` and `ExtractModuleTab.tsx`
+
+---
+
 ## Completed Milestones (Verified)
 
 - [x] **v0.1.0**: Initial Rust core engine, Winnowing rolling hash, CLI scanner.
@@ -311,3 +325,4 @@
 - [x] **v2.0.0**: Ecosystem Packaging, Distribution & JetBrains Integration (Homebrew Formula, Scoop manifest, Winget manifest, standalone `install.sh`/`install.ps1`, `docs/JETBRAINS_SETUP.md`, `scripts/package-distribution.ts`).
 - [x] **v2.1.0**: First-Class IDE & Editor Ecosystem (VS Code Embedded Webview Studio, Activity Bar Dashboard, 24-language polyglot selector, command suite, and turnkey VSIX packaging pipeline).
 - [x] **v2.3.0**: Cross-Language Semantic Matching & Hybrid Embeddings (Subword vector embeddings, Weisfeiler-Lehman graph kernels, `cddm semantic`, MCP `cddm_scan_cross_language`, and WebUI Studio Cross-Language Explorer).
+- [x] **v2.4.0**: Automated Shared Module & Crate Extraction (`cddm_core::extract`, CLI `cddm extract`, Axum `/api/extract/*`, MCP `cddm_extract_shared_module`, WebUI Extract tab).

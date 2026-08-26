@@ -37,6 +37,8 @@ export const API_ROUTES = {
   WATCH_STATUS: "/api/watch/status",
   WATCH_TOGGLE: "/api/watch/toggle",
   WATCH_RESCAN: "/api/watch/rescan",
+  EXTRACT_PREVIEW: "/api/extract/preview",
+  EXTRACT_APPLY: "/api/extract/apply",
 } as const;
 
 /**

@@ -1,6 +1,7 @@
 #![forbid(unsafe_code)]
 
 pub mod assets;
+pub mod extract_handlers;
 pub mod policy_handlers;
 pub mod refactor_handlers;
 pub mod scan_handlers;
@@ -17,6 +18,7 @@ use axum::{
     routing::{get, post},
 };
 use cddm_core::{CddmWatcher, ScanConfig};
+use extract_handlers::*;
 use policy_handlers::*;
 use refactor_handlers::*;
 use scan_handlers::*;
@@ -88,6 +90,8 @@ pub fn build_app_with_state(state: AppState) -> Router {
         .route(ROUTE_API_WATCH_STATUS, get(watch_status_handler))
         .route(ROUTE_API_WATCH_TOGGLE, post(watch_toggle_handler))
         .route(ROUTE_API_WATCH_RESCAN, post(watch_rescan_handler))
+        .route(ROUTE_API_EXTRACT_PREVIEW, post(extract_preview_handler))
+        .route(ROUTE_API_EXTRACT_APPLY, post(extract_apply_handler))
         .fallback(static_asset_handler)
         .layer(CorsLayer::permissive())
         .with_state(state)

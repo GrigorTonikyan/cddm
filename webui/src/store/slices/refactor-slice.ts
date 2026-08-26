@@ -2,6 +2,8 @@ import { API_ROUTES } from "../../constants/cddm-constants";
 import type {
   AiPromptResponse,
   AiRefactorPromptRequest,
+  ExtractRequest,
+  ExtractResult,
   RefactorSandboxRequest,
   VerifyRefactorRequest,
 } from "../../types/cddm-types";
@@ -9,9 +11,16 @@ import type { GetStoreState, SetStoreState } from "./scan-slice";
 
 export const createRefactorSlice = (set: SetStoreState, _get: GetStoreState) => ({
   openRefactorSandbox: async (req: RefactorSandboxRequest) => {
+    const normalizedReq = {
+      ...req,
+      occurrences: (req.occurrences || []).map((occ) => ({
+        ...occ,
+        file: occ.file.replace(/\\/g, "/"),
+      })),
+    };
     set({
       isRefactorSandboxOpen: true,
-      sandboxRequest: req,
+      sandboxRequest: normalizedReq,
       sandboxResult: null,
       isSandboxLoading: true,
       sandboxError: null,
@@ -20,7 +29,7 @@ export const createRefactorSlice = (set: SetStoreState, _get: GetStoreState) => 
       const res = await fetch(API_ROUTES.REFACTOR_SANDBOX, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(req),
+        body: JSON.stringify(normalizedReq),
       });
       if (!res.ok) {
         const errorText = await res.text().catch(() => res.statusText);
@@ -35,12 +44,19 @@ export const createRefactorSlice = (set: SetStoreState, _get: GetStoreState) => 
   },
 
   previewRefactorSandbox: async (req: RefactorSandboxRequest) => {
+    const normalizedReq = {
+      ...req,
+      occurrences: (req.occurrences || []).map((occ) => ({
+        ...occ,
+        file: occ.file.replace(/\\/g, "/"),
+      })),
+    };
     set({ isSandboxLoading: true, sandboxError: null });
     try {
       const res = await fetch(API_ROUTES.REFACTOR_SANDBOX, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(req),
+        body: JSON.stringify(normalizedReq),
       });
       if (!res.ok) {
         const errorText = await res.text().catch(() => res.statusText);
@@ -48,7 +64,7 @@ export const createRefactorSlice = (set: SetStoreState, _get: GetStoreState) => 
       }
       const result = await res.json();
       set({
-        sandboxRequest: req,
+        sandboxRequest: normalizedReq,
         sandboxResult: result,
         isSandboxLoading: false,
         sandboxError: null,
@@ -62,12 +78,19 @@ export const createRefactorSlice = (set: SetStoreState, _get: GetStoreState) => 
   },
 
   previewAstRefactor: async (req: RefactorSandboxRequest) => {
+    const normalizedReq = {
+      ...req,
+      occurrences: (req.occurrences || []).map((occ) => ({
+        ...occ,
+        file: occ.file.replace(/\\/g, "/"),
+      })),
+    };
     set({ isAstLoading: true, astError: null });
     try {
       const res = await fetch(API_ROUTES.REFACTOR_AST, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(req),
+        body: JSON.stringify(normalizedReq),
       });
       if (!res.ok) {
         const errorText = await res.text().catch(() => res.statusText);
@@ -150,5 +173,66 @@ export const createRefactorSlice = (set: SetStoreState, _get: GetStoreState) => 
     }
     const data: AiPromptResponse = await res.json();
     return data.prompt;
+  },
+
+  previewExtractModule: async (req: ExtractRequest) => {
+    set({ isExtractLoading: true, extractError: null });
+    try {
+      const normalizedOccurrences = (req.occurrences || []).map((occ) => ({
+        ...occ,
+        file: occ.file.replace(/\\/g, "/"),
+      }));
+      const res = await fetch(API_ROUTES.EXTRACT_PREVIEW, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...req, occurrences: normalizedOccurrences }),
+      });
+      if (!res.ok) {
+        const errorText = await res.text().catch(() => res.statusText);
+        throw new Error(`Extract preview failed (${res.status}): ${errorText}`);
+      }
+      const result: ExtractResult = await res.json();
+      set({
+        extractResult: result,
+        isExtractLoading: false,
+        extractError: null,
+      });
+      return result;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to generate extraction preview";
+      set({ extractError: msg, isExtractLoading: false });
+      throw err;
+    }
+  },
+
+  applyExtractModule: async (req: ExtractRequest) => {
+    set({ isExtractLoading: true, extractError: null });
+    try {
+      const normalizedOccurrences = (req.occurrences || []).map((occ) => ({
+        ...occ,
+        file: occ.file.replace(/\\/g, "/"),
+      }));
+      const res = await fetch(API_ROUTES.EXTRACT_APPLY, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...req, occurrences: normalizedOccurrences, dry_run: false }),
+      });
+      if (!res.ok) {
+        const errorText = await res.text().catch(() => res.statusText);
+        throw new Error(`Extract application failed (${res.status}): ${errorText}`);
+      }
+      const result: ExtractResult = await res.json();
+      set({
+        extractResult: result,
+        isExtractLoading: false,
+        extractError: null,
+        patchStatusMessage: result.message,
+      });
+      return result;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to apply shared extraction";
+      set({ extractError: msg, isExtractLoading: false });
+      throw err;
+    }
   },
 });

@@ -4,6 +4,8 @@ import type {
   ApplyRefactorBranchResult,
   AstRewriteResult,
   CloneCluster,
+  ExtractRequest,
+  ExtractResult,
   HookStatus,
   PolicyConfig,
   PolicyEvaluationResult,
@@ -110,6 +112,11 @@ export interface CDDMStoreState {
   isVerifying: boolean;
   verifyError: string | null;
 
+  /** Shared crate / module extraction state */
+  extractResult: ExtractResult | null;
+  isExtractLoading: boolean;
+  extractError: string | null;
+
   /** Updates the scan configuration */
   setConfig: (config: Partial<ScanConfig>) => void;
   /** Initiates a new code duplication scan */
@@ -158,6 +165,10 @@ export interface CDDMStoreState {
   ) => Promise<ApplyRefactorBranchResult>;
   /** Synthesizes an LLM AI refactoring prompt specification */
   generateAiPrompt: (req: AiRefactorPromptRequest) => Promise<string>;
+  /** Generates a preview plan for extracting shared module/crate */
+  previewExtractModule: (req: ExtractRequest) => Promise<ExtractResult>;
+  /** Commits and applies extraction to workspace disk */
+  applyExtractModule: (req: ExtractRequest) => Promise<ExtractResult>;
 
   /** Modal visibility setters */
   setIsScanConfigOpen: (open: boolean) => void;

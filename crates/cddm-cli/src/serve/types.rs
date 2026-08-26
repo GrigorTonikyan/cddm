@@ -86,6 +86,12 @@ pub const ROUTE_API_WATCH_TOGGLE: &str = "/api/watch/toggle";
 /// API endpoint path for triggering an immediate manual watch rescan.
 pub const ROUTE_API_WATCH_RESCAN: &str = "/api/watch/rescan";
 
+/// API endpoint path for shared module and crate extraction preview.
+pub const ROUTE_API_EXTRACT_PREVIEW: &str = "/api/extract/preview";
+
+/// API endpoint path for applying shared module and crate extraction to disk.
+pub const ROUTE_API_EXTRACT_APPLY: &str = "/api/extract/apply";
+
 /// Default localhost IPv4 binding.
 pub const DEFAULT_HOST_IP: [u8; 4] = [127, 0, 0, 1];
 

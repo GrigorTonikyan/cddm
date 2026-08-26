@@ -61,6 +61,7 @@ pub mod mcp_tools {
     pub const GET_SEMANTIC_GRAPH: &str = "cddm_get_semantic_graph";
     pub const COMPARE_SEMANTIC_GRAPHS: &str = "cddm_compare_semantic_graphs";
     pub const SCAN_CROSS_LANGUAGE: &str = "cddm_scan_cross_language";
+    pub const EXTRACT_SHARED_MODULE: &str = "cddm_extract_shared_module";
 
     pub const PARAM_DIRECTORY: &str = "directory";
     pub const PARAM_MIN_TOKENS: &str = "min_tokens";

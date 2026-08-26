@@ -392,5 +392,34 @@ pub fn get_tool_definitions() -> Vec<serde_json::Value> {
                 }
             }
         }),
+        json!({
+            "name": mcp_tools::EXTRACT_SHARED_MODULE,
+            "description": "Automate extracting duplicate code into a standalone shared crate or module with manifest updates and caller rewrites.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "target": { "type": "string", "description": "Target crate path or module path (e.g. crates/shared_utils)" },
+                    "fn_name": { "type": "string", "description": "Custom function name for extracted helper" },
+                    "crate_type": { "type": "string", "description": "Packaging strategy: auto, crate, module, existing" },
+                    "dry_run": { "type": "boolean", "description": "Preview extraction without writing to disk (default: false)" },
+                    mcp_tools::PARAM_CLUSTER_ID: { "type": "number", "description": "1-based cluster index" },
+                    mcp_tools::PARAM_DIRECTORY: { "type": "string", "description": "Target directory path" },
+                    mcp_tools::PARAM_MIN_TOKENS: { "type": "number", "description": "Minimum token threshold" },
+                    mcp_tools::PARAM_OCCURRENCES: {
+                        "type": "array",
+                        "description": "Explicit list of cluster occurrence locations",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "file": { "type": "string" },
+                                "start_line": { "type": "number" },
+                                "end_line": { "type": "number" }
+                            },
+                            "required": ["file", "start_line", "end_line"]
+                        }
+                    }
+                }
+            }
+        }),
     ]
 }

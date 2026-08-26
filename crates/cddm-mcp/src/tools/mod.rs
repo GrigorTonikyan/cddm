@@ -1,6 +1,7 @@
 #![forbid(unsafe_code)]
 
 pub mod clone_tools;
+pub mod extract_tools;
 pub mod helpers;
 pub mod policy_tools;
 pub mod refactor_tools;
@@ -64,6 +65,9 @@ pub async fn dispatch_tool_call(
             semantic_tools::handle_compare_semantic_graphs(id, args)
         }
         mcp_tools::SCAN_CROSS_LANGUAGE => semantic_tools::handle_scan_cross_language(id, args),
+        mcp_tools::EXTRACT_SHARED_MODULE => {
+            extract_tools::handle_extract_shared_module(id, args).await
+        }
         _ => make_error_response(
             id,
             rpc_errors::METHOD_NOT_FOUND,

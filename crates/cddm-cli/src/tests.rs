@@ -176,13 +176,33 @@ fn test_cli_subcommands_parsing() {
     let cli_heal = Cli::try_parse_from(["cddm", "heal", "--cluster", "2", "--provider", "mock"])
         .expect("parse heal");
     match cli_heal.command {
-        Commands::Heal {
-            cluster, provider, ..
-        } => {
-            assert_eq!(cluster, Some(2));
-            assert_eq!(provider, "mock");
+        Commands::Heal(args) => {
+            assert_eq!(args.cluster, Some(2));
+            assert_eq!(args.provider, "mock");
         }
         _ => panic!("expected Heal command"),
+    }
+
+    let cli_extract = Cli::try_parse_from([
+        "cddm",
+        "extract",
+        "--pair",
+        "1",
+        "--target",
+        "crates/shared_utils",
+        "--fn-name",
+        "compute_sum",
+        "--dry-run",
+    ])
+    .expect("parse extract");
+    match cli_extract.command {
+        Commands::Extract(args) => {
+            assert_eq!(args.pair, Some(1));
+            assert_eq!(args.target, "crates/shared_utils");
+            assert_eq!(args.fn_name, Some("compute_sum".to_string()));
+            assert!(args.dry_run);
+        }
+        _ => panic!("expected Extract command"),
     }
 
     let cli_cache_export =

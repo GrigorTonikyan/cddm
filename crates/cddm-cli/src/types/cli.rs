@@ -3,6 +3,7 @@
 use super::actions::{
     CacheAction, HookAction, IgnoreAction, OutputFormat, PlatformChoice, RulesAction,
 };
+use super::commands::{ExtractArgs, HealArgs};
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
@@ -253,6 +254,9 @@ pub enum Commands {
         ignore: Vec<String>,
     },
 
+    /// Extract duplicate code into a standalone shared crate or module
+    Extract(ExtractArgs),
+
     /// Launch interactive WebUI dashboard in browser
     Serve {
         /// Port to bind the WebUI HTTP and WebSocket server to
@@ -417,67 +421,7 @@ pub enum Commands {
     },
 
     /// Autonomous AI Code Surgeon refactoring with closed-loop test healing
-    Heal {
-        /// Directory path to scan (default: current directory)
-        #[arg(default_value = cddm_core::DEFAULT_DIRECTORY)]
-        directory: PathBuf,
-
-        /// Target clone cluster index to heal
-        #[arg(short = 'c', long)]
-        cluster: Option<usize>,
-
-        /// Target clone pair index to heal
-        #[arg(short = 'p', long)]
-        pair: Option<usize>,
-
-        /// AI Provider backend (gemini, claude, openai, ollama, mock)
-        #[arg(long, default_value = "mock")]
-        provider: String,
-
-        /// Model identifier name (e.g. gemini-1.5-pro, claude-3-5-sonnet, gpt-4o, llama3)
-        #[arg(long)]
-        model: Option<String>,
-
-        /// Secret API key for authentication
-        #[arg(long)]
-        api_key: Option<String>,
-
-        /// Custom endpoint URL (e.g. http://localhost:11434 for Ollama)
-        #[arg(long)]
-        endpoint: Option<String>,
-
-        /// Maximum healing repair iterations
-        #[arg(short = 'i', long, default_value_t = 3)]
-        max_iterations: usize,
-
-        /// Verify refactoring against test suite
-        #[arg(long, default_value_t = true)]
-        verify: bool,
-
-        /// Custom test command (e.g. "cargo test", "bun test")
-        #[arg(long)]
-        test_cmd: Option<String>,
-
-        /// Apply passing refactoring to dedicated Git branch
-        #[arg(long)]
-        branch: Option<String>,
-
-        /// Custom extracted function name
-        #[arg(long)]
-        fn_name: Option<String>,
-
-        /// Target module path for helper function
-        #[arg(long)]
-        target_module: Option<String>,
-
-        /// Custom instructions or architectural constraints for the AI
-        #[arg(long)]
-        custom_instructions: Option<String>,
-
-        /// Minimum token count for clone detection
-        #[arg(short, long, default_value_t = cddm_core::DEFAULT_MIN_TOKENS)]
-        min_tokens: usize,
-    },
+    Heal(HealArgs),
 
     /// Manage persistent fingerprint cache and export/import .cddmpack archives
     Cache {

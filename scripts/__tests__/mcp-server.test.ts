@@ -11,12 +11,13 @@ interface JsonRpcResponse<T = unknown> {
   };
 }
 
+import { existsSync } from "node:fs";
+
 async function callMcpStdio(request: Record<string, unknown>): Promise<JsonRpcResponse> {
-  const binaryPath = join(
-    import.meta.dir,
-    "../../target/debug",
-    process.platform === "win32" ? "cddm-mcp.exe" : "cddm-mcp",
-  );
+  const exeName = process.platform === "win32" ? "cddm-mcp.exe" : "cddm-mcp";
+  const releasePath = join(import.meta.dir, "../../target/release", exeName);
+  const debugPath = join(import.meta.dir, "../../target/debug", exeName);
+  const binaryPath = existsSync(releasePath) ? releasePath : debugPath;
 
   const proc = Bun.spawn([binaryPath], {
     stdin: "pipe",
@@ -214,6 +215,29 @@ describe("CDDM Model Context Protocol (MCP) Stdio Server E2E", () => {
     expect(result?.content).toBeDefined();
     expect(result?.content?.[0]?.text).toContain("similarity");
     expect(result?.content?.[0]?.text).toContain("is_semantic_clone");
+  });
+
+  it("should execute cddm_extract_shared_module tool in dry-run mode", async () => {
+    const res = await callMcpStdio({
+      jsonrpc: "2.0",
+      id: 10,
+      method: "tools/call",
+      params: {
+        name: "cddm_extract_shared_module",
+        arguments: {
+          directory: ".",
+          target: "crates/test_shared",
+          fn_name: "test_calc",
+          dry_run: true,
+        },
+      },
+    });
+
+    expect(res.jsonrpc).toBe("2.0");
+    expect(res.id).toBe(10);
+    const result = res.result as { content?: Array<{ type: string; text: string }> };
+    expect(result?.content).toBeDefined();
+    expect(result?.content?.[0]?.text).toContain("function_name");
   });
 
   it("should list prompts including cross_language_audit", async () => {

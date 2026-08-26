@@ -188,6 +188,15 @@
 | F-15.10 | Axum router construction & route registration        | `serve::tests::test_build_app_router`                  | PASS   |
 | F-15.11 | CLI `cddm ignore` & `cddm lsp` argument parsing      | `main::tests::test_cli_subcommands_parsing`            | PASS   |
 
+### Automated Shared Module & Crate Extraction (`crates/cddm-core/src/extract/`)
+
+| ID     | Feature Variant                                        | Test Function                                     | Result |
+| :----- | :----------------------------------------------------- | :------------------------------------------------ | :----- |
+| F-15.1 | Rust shared crate extraction & Cargo.toml mutation     | `extract::tests::test_extract_rust_crate`         | PASS   |
+| F-15.2 | TypeScript shared module extraction & callsite rewrite | `extract::tests::test_extract_ts_module`          | PASS   |
+| F-15.3 | CLI `cddm extract` arguments parsing and dispatch      | `main::tests::test_cli_extract_parsing`           | PASS   |
+| F-15.4 | MCP `cddm_extract_shared_module` tool invocation       | `tool_tests::test_mcp_extract_shared_module_tool` | PASS   |
+
 ### Advanced MCP Server Protocol (`crates/cddm-mcp/src/main.rs`)
 
 | ID      | Feature Variant                                                  | Test Function                                                 | Result |
@@ -374,6 +383,7 @@
 | Win2x Window         | `webui/src/components/ui/win2x-manager/__tests__/win2x-window.test.tsx`          | 13 tests   | PASS   |
 | Win2x Tab Bar        | `webui/src/components/ui/win2x-manager/__tests__/tab-bar.test.tsx`               | 4 tests    | PASS   |
 | Semantic Graph Modal | `webui/src/components/__tests__/SemanticGraphModal.test.tsx`                     | 3 tests    | PASS   |
+| Extract Module Tab   | `webui/src/components/__tests__/ExtractModuleTab.test.tsx`                       | 3 tests    | PASS   |
 | Semantic Slice       | `webui/src/store/__tests__/semantic-slice.test.ts`                               | 4 tests    | PASS   |
 | Graph Layout Engine  | `webui/src/utils/__tests__/graph-layout.test.ts`                                 | 3 tests    | PASS   |
 

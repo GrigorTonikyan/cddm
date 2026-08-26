@@ -6,6 +6,7 @@ pub mod cache;
 pub mod cluster;
 pub mod detector;
 pub mod diff;
+pub mod extract;
 pub mod fingerprint;
 pub mod grammar;
 pub mod io;
@@ -35,6 +36,11 @@ pub use cache::{CachedFileEntry, DiskFingerprintCache};
 pub use cluster::cluster_clone_pairs;
 pub use detector::run_scan;
 pub use diff::{get_changed_files_between_refs, run_diff_scan};
+pub use extract::{
+    CallerRewrite, ExtractRequest, ExtractResult, ExtractTargetKind, ExtractedFile, ManifestUpdate,
+    apply_extraction_to_workspace, apply_shared_extraction, generate_extracted_target_files,
+    generate_shared_extraction, update_workspace_manifests,
+};
 pub use io::{FileSource, MMAP_THRESHOLD_BYTES, read_file_source};
 pub use monorepo::{
     MonorepoScanSummary, MonorepoWorkspace, discover_workspaces, run_monorepo_scan,

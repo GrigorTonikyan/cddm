@@ -481,6 +481,78 @@ Runs closed-loop test suite verification against the workspace or a dedicated re
 
 ---
 
+### `POST /api/extract/preview`
+
+Generates an automated plan to extract duplicate clone occurrences into a dedicated shared crate or module without writing changes to disk.
+
+**Request Body** (`application/json`):
+
+```json
+{
+  "occurrences": [
+    { "file": "crates/app_a/src/main.rs", "start_line": 10, "end_line": 25 },
+    { "file": "crates/app_b/src/main.rs", "start_line": 15, "end_line": 30 }
+  ],
+  "target_path": "crates/shared_utils",
+  "custom_function_name": "compute_score",
+  "target_kind": "auto",
+  "dry_run": true
+}
+```
+
+**Response** (`200 OK`):
+
+```json
+{
+  "function_name": "compute_score",
+  "target_path": "crates/shared_utils",
+  "target_kind": "new_crate",
+  "helper_signature": "pub fn compute_score() -> i32",
+  "inferred_parameters": [],
+  "generated_files": [
+    {
+      "file_path": "crates/shared_utils/Cargo.toml",
+      "content": "[package]\nname = \"shared_utils\"...",
+      "is_new": true
+    },
+    {
+      "file_path": "crates/shared_utils/src/lib.rs",
+      "content": "pub fn compute_score() -> i32 {\n    42\n}\n",
+      "is_new": true
+    }
+  ],
+  "manifest_updates": [
+    {
+      "manifest_path": "Cargo.toml",
+      "dependency_name": "crates/shared_utils",
+      "diff_preview": "+    \"crates/shared_utils\",",
+      "updated_content": "..."
+    }
+  ],
+  "caller_rewrites": [
+    {
+      "file_path": "crates/app_a/src/main.rs",
+      "injected_import": "use shared_utils::compute_score;",
+      "rewritten_content": "...",
+      "diff_patch": "..."
+    }
+  ],
+  "total_lines_saved": 28,
+  "syntax_valid": true,
+  "message": "Extracted shared new_crate to crates/shared_utils"
+}
+```
+
+---
+
+### `POST /api/extract/apply`
+
+Executes and commits automated shared crate/module extraction directly to workspace disk with directory creation, manifest mutation, and caller file rewrites.
+
+**Request Body** (`application/json`): Same schema as `POST /api/extract/preview` with `"dry_run": false`.
+
+---
+
 ### `POST /api/semantic/scan`
 
 Scans the target workspace for cross-language semantic duplicate clones using polyglot CFG/PDG graph extraction, Weisfeiler-Lehman graph kernels, and subword TF-IDF embedding vectors.
@@ -939,6 +1011,20 @@ Scans the target workspace for cross-language semantic duplicate clones using po
 | `min_tokens` | `number`   | No       | `50`    | Minimum token clone threshold                 |
 | `languages`  | `string[]` | No       | `[]`    | Specific languages to filter                  |
 | `ignore`     | `string[]` | No       | `[]`    | Glob patterns to ignore                       |
+
+#### `cddm_extract_shared_module`
+
+Extracts duplicate code fragments into a dedicated shared crate, package, or module with automated manifest mutations and caller import/call-site rewrites.
+
+| Parameter     | Type       | Required | Default                 | Description                                     |
+| :------------ | :--------- | :------- | :---------------------- | :---------------------------------------------- |
+| `directory`   | `string`   | No       | `"."`                   | Workspace directory path                        |
+| `target`      | `string`   | No       | `"crates/shared_utils"` | Target crate path or module file                |
+| `fn_name`     | `string`   | No       | None                    | Custom function name for extracted helper       |
+| `crate_type`  | `string`   | No       | `"auto"`                | Packaging strategy (`auto`, `crate`, `module`)  |
+| `dry_run`     | `boolean`  | No       | `false`                 | Preview extraction without writing disk changes |
+| `cluster_id`  | `number`   | No       | None                    | Target 1-based cluster index                    |
+| `occurrences` | `object[]` | No       | None                    | Explicit list of `{file, start_line, end_line}` |
 
 ### Resources
 

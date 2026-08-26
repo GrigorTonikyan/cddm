@@ -204,3 +204,23 @@ async fn test_mcp_semantic_graph_tools() {
     .expect("Expected response");
     assert!(resp_scan.error.is_none());
 }
+
+#[tokio::test]
+async fn test_mcp_extract_shared_module_tool() {
+    let resp = handle_mcp_request(make_test_req(
+        73,
+        mcp_methods::TOOLS_CALL,
+        Some(json!({
+            "name": mcp_tools::EXTRACT_SHARED_MODULE,
+            "arguments": {
+                "directory": ".",
+                "target": "crates/test_shared",
+                "fn_name": "helper_test",
+                "dry_run": true
+            }
+        })),
+    ))
+    .await
+    .expect("Expected response");
+    assert!(resp.error.is_none());
+}

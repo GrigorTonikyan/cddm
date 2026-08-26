@@ -7,23 +7,13 @@ import type {
 } from "../types/cddm-types";
 import { AstRewritePreview } from "./sandbox/AstRewritePreview";
 import { AutoHealTab } from "./sandbox/AutoHealTab";
+import { ExtractModuleTab } from "./sandbox/ExtractModuleTab";
 import { PatchDiffPreview } from "./sandbox/PatchDiffPreview";
+import { SandboxFooterActions } from "./sandbox/SandboxFooterActions";
 import { SandboxHeaderControls } from "./sandbox/SandboxHeaderControls";
 import { TestVerificationPanel } from "./sandbox/TestVerificationPanel";
 import { Win2xWindow } from "./ui/win2x-manager";
-import {
-  AlertCircle,
-  Bot,
-  Check,
-  Copy,
-  Download,
-  FileCode2,
-  GitBranch,
-  Play,
-  RefreshCw,
-  Sparkles,
-  TrendingDown,
-} from "lucide-react";
+import { Bot, Box, FileCode2, Sparkles, TrendingDown } from "lucide-react";
 
 export interface RefactorSandboxModalProps {
   isOpen: boolean;
@@ -42,14 +32,19 @@ export const RefactorSandboxModal: React.FC<RefactorSandboxModalProps> = ({ isOp
     verifyResult,
     isVerifying,
     verifyError,
+    extractResult,
+    isExtractLoading,
+    extractError,
     previewRefactorSandbox,
     previewAstRefactor,
     verifyRefactorTestSuite,
     applyRefactorBranch,
     generateAiPrompt,
+    previewExtractModule,
+    applyExtractModule,
   } = useCDDMStore();
 
-  const [activeTab, setActiveTab] = useState<"patch" | "ast" | "heal">("patch");
+  const [activeTab, setActiveTab] = useState<"patch" | "ast" | "heal" | "extract">("patch");
   const [customFunctionName, setCustomFunctionName] = useState<string>("");
   const [targetModulePath, setTargetModulePath] = useState<string>("");
   const [branchName, setBranchName] = useState<string>("");
@@ -109,7 +104,7 @@ export const RefactorSandboxModal: React.FC<RefactorSandboxModalProps> = ({ isOp
     previewAstRefactor,
   ]);
 
-  const handleTabChange = async (tab: "patch" | "ast") => {
+  const handleTabChange = async (tab: "patch" | "ast" | "heal" | "extract") => {
     setActiveTab(tab);
     if (tab === "ast" && !astRewriteResult && sandboxRequest) {
       const updatedReq: RefactorSandboxRequest = {
@@ -118,6 +113,13 @@ export const RefactorSandboxModal: React.FC<RefactorSandboxModalProps> = ({ isOp
         target_module_path: targetModulePath.trim() || undefined,
       };
       await previewAstRefactor(updatedReq).catch(() => {});
+    } else if (tab === "extract" && !extractResult && sandboxRequest) {
+      await previewExtractModule({
+        occurrences: sandboxRequest.occurrences,
+        target_path: targetModulePath.trim() || "crates/shared_utils",
+        custom_function_name: customFunctionName.trim() || undefined,
+        dry_run: true,
+      }).catch(() => {});
     }
   };
 
@@ -224,93 +226,23 @@ export const RefactorSandboxModal: React.FC<RefactorSandboxModalProps> = ({ isOp
   };
 
   const footerContent = (
-    <div className="flex items-center justify-between w-full">
-      <div className="flex items-center gap-3">
-        {branchAppliedSuccess && (
-          <span className="text-emerald-400 font-mono text-xs flex items-center gap-1.5 bg-emerald-950/40 px-2.5 py-1 rounded border border-emerald-800/40">
-            <Check className="w-3.5 h-3.5" />
-            {branchAppliedSuccess}
-          </span>
-        )}
-        {applyError && (
-          <span className="text-rose-400 font-mono text-xs flex items-center gap-1.5 bg-rose-950/40 px-2.5 py-1 rounded border border-rose-800/40">
-            <AlertCircle className="w-3.5 h-3.5" />
-            {applyError}
-          </span>
-        )}
-      </div>
-
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          onClick={handleRunVerification}
-          disabled={isVerifying}
-          className="px-3 py-1.5 rounded-lg bg-emerald-950/60 hover:bg-emerald-900/60 border border-emerald-700/50 disabled:opacity-50 text-emerald-300 font-mono text-xs flex items-center gap-1.5 transition-colors"
-        >
-          {isVerifying ? (
-            <RefreshCw className="w-3.5 h-3.5 animate-spin text-emerald-400" />
-          ) : (
-            <Play className="w-3.5 h-3.5 text-emerald-400" />
-          )}
-          {isVerifying ? "Verifying..." : "Run Test Verification"}
-        </button>
-        <button
-          type="button"
-          onClick={handleCopyAiPrompt}
-          disabled={isGeneratingPrompt}
-          className="px-3 py-1.5 rounded-lg bg-indigo-950/60 hover:bg-indigo-900/60 border border-indigo-700/50 disabled:opacity-50 text-indigo-300 font-mono text-xs flex items-center gap-1.5 transition-colors"
-        >
-          {copiedPrompt ? (
-            <Check className="w-3.5 h-3.5 text-emerald-400" />
-          ) : (
-            <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-          )}
-          {copiedPrompt ? "Prompt Copied" : isGeneratingPrompt ? "Generating..." : "Copy AI Prompt"}
-        </button>
-        <button
-          type="button"
-          onClick={handleCopyPatch}
-          disabled={!currentPatch}
-          className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-slate-200 font-mono text-xs flex items-center gap-1.5 transition-colors"
-        >
-          {copiedPatch ? (
-            <Check className="w-3.5 h-3.5 text-emerald-400" />
-          ) : (
-            <Copy className="w-3.5 h-3.5" />
-          )}
-          {copiedPatch ? "Copied" : "Copy Patch"}
-        </button>
-        <button
-          type="button"
-          onClick={handleDownloadPatch}
-          disabled={!currentPatch}
-          className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-slate-200 font-mono text-xs flex items-center gap-1.5 transition-colors"
-        >
-          {downloaded ? (
-            <Check className="w-3.5 h-3.5 text-emerald-400" />
-          ) : (
-            <Download className="w-3.5 h-3.5" />
-          )}
-          {downloaded ? "Downloaded" : "Download .patch"}
-        </button>
-        <button
-          type="button"
-          onClick={() => handleApplyToBranch(true)}
-          disabled={!currentPatch || isApplyingBranch}
-          className="px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-mono text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-lg shadow-indigo-900/30"
-        >
-          <GitBranch className="w-3.5 h-3.5" />
-          Apply to Git Branch
-        </button>
-        <button
-          type="button"
-          onClick={onClose}
-          className="px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-mono text-xs font-semibold transition-colors"
-        >
-          Close
-        </button>
-      </div>
-    </div>
+    <SandboxFooterActions
+      branchAppliedSuccess={branchAppliedSuccess}
+      applyError={applyError}
+      isVerifying={isVerifying}
+      onRunVerification={handleRunVerification}
+      copiedPrompt={copiedPrompt}
+      isGeneratingPrompt={isGeneratingPrompt}
+      onCopyAiPrompt={handleCopyAiPrompt}
+      copiedPatch={copiedPatch}
+      hasCurrentPatch={Boolean(currentPatch)}
+      onCopyPatch={handleCopyPatch}
+      downloaded={downloaded}
+      onDownloadPatch={handleDownloadPatch}
+      isApplyingBranch={isApplyingBranch}
+      onApplyToBranch={() => handleApplyToBranch(true)}
+      onClose={onClose}
+    />
   );
 
   const occCount = sandboxRequest.occurrences?.length || 0;
@@ -402,7 +334,7 @@ export const RefactorSandboxModal: React.FC<RefactorSandboxModalProps> = ({ isOp
             </button>
             <button
               type="button"
-              onClick={() => handleTabChange("heal" as "patch" | "ast")}
+              onClick={() => handleTabChange("heal")}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors ${
                 activeTab === "heal"
                   ? "bg-emerald-600/30 text-emerald-300 border border-emerald-500/50"
@@ -411,6 +343,18 @@ export const RefactorSandboxModal: React.FC<RefactorSandboxModalProps> = ({ isOp
             >
               <Bot className="w-3.5 h-3.5 text-emerald-400" />
               Auto-Heal (AI Surgeon)
+            </button>
+            <button
+              type="button"
+              onClick={() => handleTabChange("extract")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors ${
+                activeTab === "extract"
+                  ? "bg-cyan-600/30 text-cyan-300 border border-cyan-500/50"
+                  : "bg-slate-900/60 text-slate-400 hover:text-slate-200 border border-slate-800"
+              }`}
+            >
+              <Box className="w-3.5 h-3.5 text-cyan-400" />
+              Extract Shared Crate/Module
             </button>
           </div>
 
@@ -450,6 +394,18 @@ export const RefactorSandboxModal: React.FC<RefactorSandboxModalProps> = ({ isOp
             clusterId={sandboxRequest.cluster_id}
             customFunctionName={customFunctionName}
             targetModulePath={targetModulePath}
+          />
+        )}
+
+        {/* Tab 4: Shared Crate & Module Extraction */}
+        {activeTab === "extract" && (
+          <ExtractModuleTab
+            sandboxRequest={sandboxRequest}
+            extractResult={extractResult}
+            isExtractLoading={isExtractLoading}
+            extractError={extractError}
+            onPreview={previewExtractModule}
+            onApply={applyExtractModule}
           />
         )}
 

@@ -51,7 +51,7 @@ async fn test_mcp_ping() {
 #[tokio::test]
 async fn test_mcp_tools_list() {
     let tools = list_mcp_items(mcp_methods::TOOLS_LIST, "tools").await;
-    assert_eq!(tools.len(), 21);
+    assert_eq!(tools.len(), 22);
     let tool_names: Vec<&str> = tools.iter().map(|t| t["name"].as_str().unwrap()).collect();
     for expected in [
         mcp_tools::SCAN_CODEBASE,
@@ -75,6 +75,7 @@ async fn test_mcp_tools_list() {
         mcp_tools::GET_SEMANTIC_GRAPH,
         mcp_tools::COMPARE_SEMANTIC_GRAPHS,
         mcp_tools::SCAN_CROSS_LANGUAGE,
+        mcp_tools::EXTRACT_SHARED_MODULE,
     ] {
         assert!(tool_names.contains(&expected));
     }

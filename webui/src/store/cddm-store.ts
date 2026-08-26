@@ -75,6 +75,10 @@ export const useCDDMStore = create<CDDMStoreState>((set, get) => ({
   isVerifying: false,
   verifyError: null,
 
+  extractResult: null,
+  isExtractLoading: false,
+  extractError: null,
+
   setViewMode: (viewMode) => set({ viewMode }),
   setSelectedCluster: (selectedCluster) => set({ selectedCluster }),
 
