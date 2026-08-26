@@ -10,6 +10,8 @@ import { SuppressionRulesModal } from "./components/SuppressionRulesModal";
 import { RefactorSandboxModal } from "./components/RefactorSandboxModal";
 import { PolicyRulesModal } from "./components/PolicyRulesModal";
 import { SemanticGraphModal } from "./components/SemanticGraphModal";
+import { LiveWatchBar } from "./components/watch/LiveWatchBar";
+import { LiveEventInspectorModal } from "./components/watch/LiveEventInspectorModal";
 import {
   Scissors,
   Terminal,
@@ -20,7 +22,6 @@ import {
   Sliders,
   Award,
   FileDown,
-  Radio,
   CheckCheck,
   X,
   History,
@@ -31,9 +32,7 @@ export const App: React.FC = () => {
   const {
     error,
     results,
-    isLiveWatchActive,
     patchStatusMessage,
-    setIsLiveWatchActive,
     setPatchStatusMessage,
     isScanConfigOpen,
     setIsScanConfigOpen,
@@ -49,7 +48,8 @@ export const App: React.FC = () => {
     setIsPolicyRulesModalOpen,
     isSemanticGraphModalOpen,
     setIsSemanticGraphModalOpen,
-    liveSyncCount,
+    isLiveEventInspectorOpen,
+    setIsLiveEventInspectorOpen,
   } = useCDDMStore();
 
   return (
@@ -77,34 +77,8 @@ export const App: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5 text-xs font-mono text-slate-400">
-          {/* Live Watch Status Toggle */}
-          <button
-            type="button"
-            onClick={() => setIsLiveWatchActive(!isLiveWatchActive)}
-            title={
-              isLiveWatchActive
-                ? "Live Workspace Sync Active: Click to pause"
-                : "Live Workspace Sync Paused: Click to resume"
-            }
-            className={`px-3 py-1.5 rounded-lg border flex items-center gap-1.5 transition-colors shadow-sm ${
-              isLiveWatchActive
-                ? "bg-emerald-950/60 border-emerald-800/60 text-emerald-300 hover:bg-emerald-900/40"
-                : "bg-slate-950 border-slate-800 text-slate-400 hover:bg-slate-800"
-            }`}
-          >
-            <Radio
-              className={`w-3.5 h-3.5 ${
-                isLiveWatchActive ? "text-emerald-400 animate-pulse" : "text-slate-500"
-              }`}
-            />
-            <span>
-              {isLiveWatchActive
-                ? liveSyncCount > 0
-                  ? `Live Watch (${liveSyncCount} syncs)`
-                  : "Live Watch: ON"
-                : "Live Watch: OFF"}
-            </span>
-          </button>
+          {/* Live Watch & Sync HUD */}
+          <LiveWatchBar />
 
           <button
             type="button"
@@ -244,6 +218,12 @@ export const App: React.FC = () => {
       <SemanticGraphModal
         isOpen={isSemanticGraphModalOpen}
         onClose={() => setIsSemanticGraphModalOpen(false)}
+      />
+
+      {/* Live Watch & Sync Event Inspector Modal */}
+      <LiveEventInspectorModal
+        isOpen={isLiveEventInspectorOpen}
+        onClose={() => setIsLiveEventInspectorOpen(false)}
       />
 
       {/* Footer */}

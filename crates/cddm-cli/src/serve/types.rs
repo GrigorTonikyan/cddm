@@ -77,6 +77,15 @@ pub const ROUTE_API_SEMANTIC_GRAPH: &str = "/api/semantic-graph";
 /// API endpoint path for workspace cross-language semantic clone scans.
 pub const ROUTE_API_SEMANTIC_SCAN: &str = "/api/semantic/scan";
 
+/// API endpoint path for watch daemon status and metrics.
+pub const ROUTE_API_WATCH_STATUS: &str = "/api/watch/status";
+
+/// API endpoint path for toggling watch pause/resume.
+pub const ROUTE_API_WATCH_TOGGLE: &str = "/api/watch/toggle";
+
+/// API endpoint path for triggering an immediate manual watch rescan.
+pub const ROUTE_API_WATCH_RESCAN: &str = "/api/watch/rescan";
+
 /// Default localhost IPv4 binding.
 pub const DEFAULT_HOST_IP: [u8; 4] = [127, 0, 0, 1];
 
@@ -120,6 +129,12 @@ pub enum ServerEvent {
     ScanComplete(ScanResult),
     #[serde(rename = "patch_applied")]
     PatchApplied(ApplyPatchResult),
+    #[serde(rename = "watch_file_changed")]
+    WatchFileChanged { files: Vec<String>, timestamp: u64 },
+    #[serde(rename = "watch_scan_delta")]
+    WatchScanDelta(cddm_core::WatchDeltaReport),
+    #[serde(rename = "watch_status_changed")]
+    WatchStatusChanged { is_active: bool },
 }
 
 /// Shared application state for Axum router.
@@ -128,12 +143,34 @@ pub struct AppState {
     pub broadcast_tx: broadcast::Sender<ServerEvent>,
     pub current_config: Arc<RwLock<ScanConfig>>,
     pub latest_result: Arc<RwLock<Option<ScanResult>>>,
+    pub watch_active: Arc<std::sync::atomic::AtomicBool>,
+    pub watch_events_log: Arc<RwLock<Vec<cddm_core::WatchDeltaReport>>>,
+    pub last_sync_timestamp: Arc<std::sync::atomic::AtomicU64>,
+    pub sync_count: Arc<std::sync::atomic::AtomicUsize>,
 }
 
 impl std::fmt::Debug for AppState {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("AppState").finish_non_exhaustive()
     }
+}
+
+/// Status response for real-time workspace watch daemon.
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+pub struct WatchStatusResponse {
+    pub is_active: bool,
+    pub watch_directory: String,
+    pub debounce_ms: u64,
+    pub last_sync_timestamp: Option<u64>,
+    pub sync_count: usize,
+    pub last_duration_ms: Option<u128>,
+    pub recent_events: Vec<cddm_core::WatchDeltaReport>,
+}
+
+/// Request payload for toggling watch state.
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Default)]
+pub struct WatchToggleRequest {
+    pub active: Option<bool>,
 }
 
 /// Query parameters for snippet extraction.

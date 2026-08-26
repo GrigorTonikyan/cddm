@@ -118,7 +118,7 @@ pub struct LanguageStats {
 }
 
 /// The final result of a code duplication scan.
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Default)]
 pub struct ScanResult {
     /// Unique identifier for this scan run
     pub scan_id: String,

@@ -88,6 +88,7 @@ pub async fn run_scan_command(
         }
         OutputFormat::Markdown => print_markdown_report(&result),
         OutputFormat::Sarif => print_sarif_report(&result)?,
+        OutputFormat::Ndjson => println!("{}", serde_json::to_string(&result)?),
     }
 
     if let Some(threshold) = fail_threshold

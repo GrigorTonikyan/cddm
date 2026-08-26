@@ -9,6 +9,7 @@ pub fn format_semantic_report(
 ) -> String {
     match format {
         OutputFormat::Json => serde_json::to_string_pretty(pairs).unwrap_or_default(),
+        OutputFormat::Ndjson => serde_json::to_string(pairs).unwrap_or_default(),
         OutputFormat::Markdown => format_semantic_markdown(pairs, threshold),
         OutputFormat::Console | OutputFormat::Sarif => format_semantic_console(pairs, threshold),
     }

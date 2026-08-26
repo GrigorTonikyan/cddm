@@ -1,5 +1,7 @@
 use crate::grammar::get_grammar_for_path;
+use crate::types::ScanResult;
 use notify::{Config, Event, RecommendedWatcher, RecursiveMode, Watcher};
+use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::{Receiver, channel};
@@ -16,6 +18,86 @@ pub const DEFAULT_WATCH_IGNORES: &[&str] = &[
     ".output",
     "build",
 ];
+
+/// Detailed change event for an observed file.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct WatchFileEvent {
+    pub path: String,
+    pub timestamp_millis: u64,
+}
+
+/// Comparative delta metrics between successive incremental scans.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct WatchDeltaReport {
+    /// List of file paths modified in this watch batch
+    pub changed_files: Vec<String>,
+    /// Previous DRY health score (0.0 - 100.0)
+    pub previous_health_score: f64,
+    /// New DRY health score (0.0 - 100.0)
+    pub new_health_score: f64,
+    /// Shift in DRY health score
+    pub score_delta: f64,
+    /// Previous total clone pair count
+    pub previous_clones: usize,
+    /// New total clone pair count
+    pub new_clones: usize,
+    /// Shift in clone count (+ means more clones, - means fewer)
+    pub clone_count_delta: i64,
+    /// Previous total clone cluster count
+    pub previous_clusters: usize,
+    /// New total clone cluster count
+    pub new_clusters: usize,
+    /// Scan execution time in milliseconds
+    pub duration_ms: u128,
+    /// Timestamp in milliseconds since Unix epoch
+    pub timestamp_millis: u64,
+}
+
+impl WatchDeltaReport {
+    /// Computes delta metrics between an optional previous scan result and a new result.
+    pub fn compute(
+        prev: Option<&ScanResult>,
+        new_res: &ScanResult,
+        changed_paths: &[PathBuf],
+        duration_ms: u128,
+    ) -> Self {
+        let changed_files = changed_paths
+            .iter()
+            .map(|p| p.to_string_lossy().to_string().replace('\\', "/"))
+            .collect();
+
+        let previous_health_score = prev
+            .map(|p| p.dry_health_score)
+            .unwrap_or(new_res.dry_health_score);
+        let previous_clones = prev.map(|p| p.total_clones).unwrap_or(new_res.total_clones);
+        let previous_clusters = prev
+            .map(|p| p.total_clusters)
+            .unwrap_or(new_res.total_clusters);
+
+        let raw_delta = new_res.dry_health_score - previous_health_score;
+        let score_delta = (raw_delta * 10.0).round() / 10.0;
+        let clone_count_delta = new_res.total_clones as i64 - previous_clones as i64;
+
+        let timestamp_millis = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_millis() as u64;
+
+        Self {
+            changed_files,
+            previous_health_score,
+            new_health_score: new_res.dry_health_score,
+            score_delta,
+            previous_clones,
+            new_clones: new_res.total_clones,
+            clone_count_delta,
+            previous_clusters,
+            new_clusters: new_res.total_clusters,
+            duration_ms,
+            timestamp_millis,
+        }
+    }
+}
 
 /// Real-time file system change watcher built on `notify`.
 pub struct CddmWatcher {
@@ -124,5 +206,34 @@ mod tests {
 
         let non_source = Path::new("README.md");
         assert!(!CddmWatcher::is_relevant_path(non_source, &[]));
+    }
+
+    #[test]
+    fn test_watch_delta_report_computation() {
+        let res1 = ScanResult {
+            dry_health_score: 90.0,
+            total_clones: 5,
+            total_clusters: 2,
+            ..Default::default()
+        };
+
+        let res2 = ScanResult {
+            dry_health_score: 95.0,
+            total_clones: 3,
+            total_clusters: 1,
+            ..Default::default()
+        };
+
+        let changed_paths = vec![PathBuf::from("src/lib.rs")];
+        let delta = WatchDeltaReport::compute(Some(&res1), &res2, &changed_paths, 42);
+
+        assert_eq!(delta.changed_files, vec!["src/lib.rs".to_string()]);
+        assert_eq!(delta.previous_health_score, 90.0);
+        assert_eq!(delta.new_health_score, 95.0);
+        assert_eq!(delta.score_delta, 5.0);
+        assert_eq!(delta.clone_count_delta, -2);
+        assert_eq!(delta.previous_clones, 5);
+        assert_eq!(delta.new_clones, 3);
+        assert_eq!(delta.duration_ms, 42);
     }
 }

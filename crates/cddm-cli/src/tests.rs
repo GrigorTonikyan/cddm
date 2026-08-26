@@ -70,6 +70,7 @@ fn test_output_format_variants() {
     assert_ne!(OutputFormat::Json, OutputFormat::Sarif);
     assert_eq!(OutputFormat::Sarif, OutputFormat::Sarif);
     assert_eq!(OutputFormat::Markdown, OutputFormat::Markdown);
+    assert_eq!(OutputFormat::Ndjson, OutputFormat::Ndjson);
 }
 
 #[test]

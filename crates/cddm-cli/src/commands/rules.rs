@@ -166,6 +166,9 @@ pub async fn run_rules_command(action: RulesAction) -> Result<(), Box<dyn std::e
                 OutputFormat::Sarif => {
                     print_sarif_report(&result)?;
                 }
+                OutputFormat::Ndjson => {
+                    println!("{}", serde_json::to_string(&result.policy_violations)?);
+                }
             }
 
             if enforce_policies

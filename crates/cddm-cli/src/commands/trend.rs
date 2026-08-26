@@ -26,6 +26,9 @@ pub fn run_trend_command(
                 );
                 println!("{}", serde_json::to_string_pretty(&trend)?);
             }
+            OutputFormat::Ndjson => {
+                println!("{}", serde_json::to_string(&trend)?);
+            }
         },
         Err(err) => {
             eprintln!("[ERROR] Failed to collect Git timeline trend: {}", err);

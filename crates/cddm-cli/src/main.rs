@@ -182,6 +182,10 @@ async fn run_app() -> Result<(), Box<dyn std::error::Error>> {
             no_cache,
             debounce_ms,
             fail_threshold,
+            serve,
+            open,
+            format,
+            cross_language,
         } => {
             run_watch_command(
                 directory,
@@ -193,6 +197,10 @@ async fn run_app() -> Result<(), Box<dyn std::error::Error>> {
                 no_cache,
                 debounce_ms,
                 fail_threshold,
+                serve,
+                open,
+                format,
+                cross_language,
             )
             .await?;
         }

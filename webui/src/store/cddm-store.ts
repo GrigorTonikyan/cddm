@@ -7,6 +7,7 @@ import { createRefactorSlice } from "./slices/refactor-slice";
 import { createScanSlice } from "./slices/scan-slice";
 import { createSemanticSlice } from "./slices/semantic-slice";
 import { createTimelineSlice } from "./slices/timeline-slice";
+import { createWatchSlice } from "./slices/watch-slice";
 import type { CDDMStoreState } from "./types";
 
 export type { CDDMStoreState } from "./types";
@@ -43,7 +44,6 @@ export const useCDDMStore = create<CDDMStoreState>((set, get) => ({
   isRefactorSandboxOpen: false,
   isPolicyRulesModalOpen: false,
   isSemanticGraphModalOpen: false,
-
   semanticGraphRequest: null,
   semanticGraphResponse: null,
   isSemanticGraphLoading: false,
@@ -116,6 +116,7 @@ export const useCDDMStore = create<CDDMStoreState>((set, get) => ({
   ...createPolicySlice(set, get),
   ...createRefactorSlice(set, get),
   ...createSemanticSlice(set, get),
+  ...createWatchSlice(set, get),
 }));
 
 let eventSourceInstance: EventSource | null = null;
@@ -137,9 +138,24 @@ export function connectLiveWatchSSE(): void {
       try {
         const event: ServerEvent = JSON.parse(e.data);
         const { isLiveWatchActive } = useCDDMStore.getState();
-        if (!isLiveWatchActive) return;
 
-        if (event.type === "scan_started") {
+        if (event.type === "watch_status_changed") {
+          useCDDMStore.setState({ isLiveWatchActive: event.payload.is_active });
+          return;
+        }
+
+        if (!isLiveWatchActive && event.type !== "scan_started") return;
+
+        if (event.type === "watch_file_changed") {
+          useCDDMStore.setState({ recentModifiedFiles: event.payload.files });
+        } else if (event.type === "watch_scan_delta") {
+          const prevLog = useCDDMStore.getState().watchEventsLog;
+          const nextLog = [event.payload, ...prevLog].slice(0, 50);
+          useCDDMStore.setState({
+            lastWatchDelta: event.payload,
+            watchEventsLog: nextLog,
+          });
+        } else if (event.type === "scan_started") {
           useCDDMStore.setState({
             isScanning: true,
             activeScanId: event.payload.scan_id,

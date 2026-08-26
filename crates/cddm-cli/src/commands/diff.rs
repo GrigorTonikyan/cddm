@@ -82,6 +82,9 @@ pub async fn run_diff_command(
             eprintln!("Warning: SARIF format for diff scanning falls back to JSON");
             println!("{}", serde_json::to_string_pretty(&diff_result)?);
         }
+        OutputFormat::Ndjson => {
+            println!("{}", serde_json::to_string(&diff_result)?);
+        }
     }
 
     if let Some(threshold) = fail_threshold {

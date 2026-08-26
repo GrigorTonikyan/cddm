@@ -34,6 +34,9 @@ export const API_ROUTES = {
   POLICY_EVALUATE: "/api/policy/evaluate",
   SEMANTIC_GRAPH: "/api/semantic-graph",
   SEMANTIC_SCAN: "/api/semantic/scan",
+  WATCH_STATUS: "/api/watch/status",
+  WATCH_TOGGLE: "/api/watch/toggle",
+  WATCH_RESCAN: "/api/watch/rescan",
 } as const;
 
 /**

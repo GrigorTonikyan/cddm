@@ -146,13 +146,46 @@ export interface TreemapRect {
 }
 
 /**
+ * Comparative delta report for a single workspace watch sync event.
+ */
+export interface WatchDeltaReport {
+  changed_files: string[];
+  previous_health_score: number;
+  new_health_score: number;
+  score_delta: number;
+  previous_clones: number;
+  new_clones: number;
+  clone_count_delta: number;
+  previous_clusters: number;
+  new_clusters: number;
+  duration_ms: number;
+  timestamp_millis: number;
+}
+
+/**
+ * Status response for real-time workspace watch daemon.
+ */
+export interface WatchStatusResponse {
+  is_active: boolean;
+  watch_directory: string;
+  debounce_ms: number;
+  last_sync_timestamp: number | null;
+  sync_count: number;
+  last_duration_ms: number | null;
+  recent_events: WatchDeltaReport[];
+}
+
+/**
  * Server-Sent Event payload from backend /api/events.
  */
 export type ServerEvent =
   | { type: "scan_started"; payload: { scan_id: string } }
   | { type: "scan_progress"; payload: ScanProgress }
   | { type: "scan_complete"; payload: ScanResult }
-  | { type: "patch_applied"; payload: ApplyPatchResult };
+  | { type: "patch_applied"; payload: ApplyPatchResult }
+  | { type: "watch_file_changed"; payload: { files: string[]; timestamp: number } }
+  | { type: "watch_scan_delta"; payload: WatchDeltaReport }
+  | { type: "watch_status_changed"; payload: { is_active: boolean } };
 
 /**
  * A point-in-time duplication metrics snapshot for a Git commit.

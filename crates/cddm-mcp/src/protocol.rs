@@ -98,6 +98,7 @@ pub mod mcp_resources {
     pub const URI_WORKSPACE_POLICIES: &str = "cddm://workspace/policies";
     pub const URI_WORKSPACE_SEMANTIC_GRAPH: &str = "cddm://workspace/semantic_graph";
     pub const URI_WORKSPACE_CROSS_LANGUAGE_CLONES: &str = "cddm://workspace/cross_language_clones";
+    pub const URI_WORKSPACE_WATCH_STATUS: &str = "cddm://workspace/watch_status";
     pub const MIME_APPLICATION_JSON: &str = "application/json";
 }
 

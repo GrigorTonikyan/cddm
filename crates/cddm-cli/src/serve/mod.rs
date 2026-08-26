@@ -7,6 +7,7 @@ pub mod scan_handlers;
 pub mod semantic_handlers;
 pub mod timeline_handlers;
 pub mod types;
+pub mod watch_handlers;
 
 pub use types::*;
 
@@ -23,9 +24,11 @@ use semantic_handlers::*;
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize};
 use timeline_handlers::*;
 use tokio::sync::{RwLock, broadcast};
 use tower_http::cors::CorsLayer;
+use watch_handlers::*;
 
 /// Builds the Axum application router and default shared state.
 pub fn build_app() -> (AppState, Router) {
@@ -34,6 +37,10 @@ pub fn build_app() -> (AppState, Router) {
         broadcast_tx,
         current_config: Arc::new(RwLock::new(ScanConfig::default())),
         latest_result: Arc::new(RwLock::new(None)),
+        watch_active: Arc::new(AtomicBool::new(true)),
+        watch_events_log: Arc::new(RwLock::new(Vec::new())),
+        last_sync_timestamp: Arc::new(AtomicU64::new(0)),
+        sync_count: Arc::new(AtomicUsize::new(0)),
     };
     let router = build_app_with_state(state.clone());
     (state, router)
@@ -78,6 +85,9 @@ pub fn build_app_with_state(state: AppState) -> Router {
         .route(ROUTE_API_MONOREPO, post(monorepo_handler))
         .route(ROUTE_API_SEMANTIC_GRAPH, post(semantic_graph_handler))
         .route(ROUTE_API_SEMANTIC_SCAN, post(semantic_scan_handler))
+        .route(ROUTE_API_WATCH_STATUS, get(watch_status_handler))
+        .route(ROUTE_API_WATCH_TOGGLE, post(watch_toggle_handler))
+        .route(ROUTE_API_WATCH_RESCAN, post(watch_rescan_handler))
         .fallback(static_asset_handler)
         .layer(CorsLayer::permissive())
         .with_state(state)
@@ -108,7 +118,8 @@ pub async fn start_server(port: u16, open_browser: bool) -> Result<(), Box<dyn s
                 };
                 let changed_files = watcher.collect_changed_paths(&ignores);
                 if !changed_files.is_empty() {
-                    scan_handlers::execute_background_refresh(&watcher_state).await;
+                    watch_handlers::execute_watch_incremental_scan(&watcher_state, &changed_files)
+                        .await;
                 }
             }
         }

@@ -65,6 +65,12 @@ pub fn resources_list_response(id: Option<serde_json::Value>) -> JsonRpcResponse
                     "name": "Workspace Cross-Language Clones",
                     "description": "Cross-language semantic clone pairs detected across different programming languages via Weisfeiler-Lehman graph kernels and subword embeddings.",
                     "mimeType": mcp_resources::MIME_APPLICATION_JSON
+                },
+                {
+                    "uri": mcp_resources::URI_WORKSPACE_WATCH_STATUS,
+                    "name": "Workspace Live Watch Status",
+                    "description": "Real-time status of directory watcher daemon, debounce settings, and incremental delta metrics.",
+                    "mimeType": mcp_resources::MIME_APPLICATION_JSON
                 }
             ]
         })),
@@ -302,6 +308,30 @@ pub async fn handle_resource_read(
                     }
                 }
                 Err(e) => make_error_response(id, rpc_errors::INTERNAL_ERROR, e),
+            }
+        }
+
+        mcp_resources::URI_WORKSPACE_WATCH_STATUS => {
+            let payload = json!({
+                "is_watching": true,
+                "watch_directory": ".",
+                "debounce_ms": 300,
+                "supported_events": ["watch_file_changed", "watch_scan_delta", "watch_status_changed"],
+                "live_sync_protocol": "Server-Sent Events (/api/events)"
+            });
+            JsonRpcResponse {
+                jsonrpc: JSONRPC_VERSION.to_string(),
+                id,
+                result: Some(json!({
+                    "contents": [
+                        {
+                            "uri": mcp_resources::URI_WORKSPACE_WATCH_STATUS,
+                            "mimeType": mcp_resources::MIME_APPLICATION_JSON,
+                            "text": serde_json::to_string_pretty(&payload).unwrap_or_default()
+                        }
+                    ]
+                })),
+                error: None,
             }
         }
 

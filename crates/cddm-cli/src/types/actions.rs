@@ -179,4 +179,5 @@ pub enum OutputFormat {
     Json,
     Markdown,
     Sarif,
+    Ndjson,
 }

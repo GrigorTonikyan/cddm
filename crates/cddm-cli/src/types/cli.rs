@@ -301,6 +301,22 @@ pub enum Commands {
         /// Exit with non-zero status code if duplication percentage exceeds threshold (0-100)
         #[arg(long)]
         fail_threshold: Option<f64>,
+
+        /// Optionally start embedded WebUI Studio server on specified port (default: 3000)
+        #[arg(short = 's', long, num_args = 0..=1, default_missing_value = "3000")]
+        serve: Option<u16>,
+
+        /// Automatically open WebUI in browser when --serve is enabled
+        #[arg(short, long, default_value_t = false)]
+        open: bool,
+
+        /// Output report format (console, json, markdown, ndjson)
+        #[arg(short, long, value_enum, default_value_t = OutputFormat::Console)]
+        format: OutputFormat,
+
+        /// Detect cross-language semantic clones across different programming languages
+        #[arg(long, default_value_t = false)]
+        cross_language: bool,
     },
 
     /// Run Language Server Protocol (LSP) server for live IDE diagnostic squiggles

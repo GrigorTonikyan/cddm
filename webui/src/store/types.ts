@@ -171,6 +171,17 @@ export interface CDDMStoreState {
   setIsRefactorSandboxOpen: (open: boolean) => void;
   setIsPolicyRulesModalOpen: (open: boolean) => void;
   setIsSemanticGraphModalOpen: (open: boolean) => void;
+  setIsLiveEventInspectorOpen: (open: boolean) => void;
+
+  /** Live Watch Daemon state and actions */
+  isLiveEventInspectorOpen: boolean;
+  watchEventsLog: import("../types/cddm-types").WatchDeltaReport[];
+  lastWatchDelta: import("../types/cddm-types").WatchDeltaReport | null;
+  recentModifiedFiles: string[];
+  fetchWatchStatus: () => Promise<void>;
+  toggleWatch: (active?: boolean) => Promise<void>;
+  triggerManualRescan: () => Promise<void>;
+  clearWatchEventsLog: () => void;
 
   /** Semantic graph actions */
   fetchSemanticGraph: (req: SemanticGraphRequest) => Promise<SemanticGraphResponse>;

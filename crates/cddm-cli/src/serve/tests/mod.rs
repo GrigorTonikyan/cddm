@@ -1,5 +1,7 @@
 #![forbid(unsafe_code)]
 
+mod watch_tests;
+
 use super::*;
 use axum::extract::{Query, State};
 use axum::http::StatusCode;
@@ -126,12 +128,7 @@ async fn test_refactor_cluster_handler_success() {
 
 #[tokio::test]
 async fn test_apply_patch_handler_success() {
-    let (broadcast_tx, _) = broadcast::channel(100);
-    let state = AppState {
-        broadcast_tx,
-        current_config: Arc::new(RwLock::new(ScanConfig::default())),
-        latest_result: Arc::new(RwLock::new(None)),
-    };
+    let (state, _) = build_app();
 
     let mut file_a = NamedTempFile::new().unwrap();
     let path_str = file_a.path().to_str().unwrap().to_string();
@@ -158,12 +155,7 @@ async fn test_apply_patch_handler_success() {
 
 #[tokio::test]
 async fn test_apply_patch_handler_bad_request() {
-    let (broadcast_tx, _) = broadcast::channel(100);
-    let state = AppState {
-        broadcast_tx,
-        current_config: Arc::new(RwLock::new(ScanConfig::default())),
-        latest_result: Arc::new(RwLock::new(None)),
-    };
+    let (state, _) = build_app();
 
     let req = ApplyPatchRequest {
         patch: "invalid patch without hunks".to_string(),

@@ -83,7 +83,19 @@ async fn test_mcp_tools_list() {
 #[tokio::test]
 async fn test_mcp_resources_list() {
     let resources = list_mcp_items(mcp_methods::RESOURCES_LIST, "resources").await;
-    assert_eq!(resources.len(), 8);
+    assert_eq!(resources.len(), 9);
+}
+
+#[tokio::test]
+async fn test_mcp_resources_read_watch_status() {
+    let resp = handle_mcp_request(make_test_req(
+        99,
+        mcp_methods::RESOURCES_READ,
+        Some(json!({ "uri": mcp_resources::URI_WORKSPACE_WATCH_STATUS })),
+    ))
+    .await
+    .expect("Expected response");
+    assert!(resp.result.is_some());
 }
 
 #[tokio::test]

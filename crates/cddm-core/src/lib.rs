@@ -70,7 +70,7 @@ pub use types::{
     SuppressionConfig, SuppressionDirective, SuppressionRule, TimelineSnapshot, TimelineTrend,
     VerifyRefactorRequest, VerifyRefactorResult, WorkflowPlatform, ZeroDuplicationRule,
 };
-pub use watcher::CddmWatcher;
+pub use watcher::{CddmWatcher, WatchDeltaReport, WatchFileEvent};
 pub use workflow::{
     generate_azure_pipelines, generate_github_workflow, generate_gitlab_ci, get_hook_status,
     install_git_hook, uninstall_git_hook,
