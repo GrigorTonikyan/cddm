@@ -481,6 +481,49 @@ Runs closed-loop test suite verification against the workspace or a dedicated re
 
 ---
 
+### `POST /api/semantic/scan`
+
+Scans the target workspace for cross-language semantic duplicate clones using polyglot CFG/PDG graph extraction, Weisfeiler-Lehman graph kernels, and subword TF-IDF embedding vectors.
+
+**Request Body** (`application/json`):
+
+```json
+{
+  "directory": ".",
+  "threshold": 0.7,
+  "min_tokens": 50,
+  "languages": ["rust", "typescript", "python"],
+  "ignore_patterns": ["node_modules", "target", ".git"]
+}
+```
+
+**Response** (`200 OK`):
+
+```json
+{
+  "directory": ".",
+  "threshold": 0.7,
+  "total_pairs": 4,
+  "pairs": [
+    {
+      "file_a": "src/validator.rs",
+      "function_a": "validate_email",
+      "language_a": "rust",
+      "lines_a": [12, 28],
+      "file_b": "webui/src/utils/validator.ts",
+      "function_b": "validateEmail",
+      "language_b": "typescript",
+      "lines_b": [8, 24],
+      "graph_similarity": 1.0,
+      "token_similarity": 0.88,
+      "hybrid_score": 0.952
+    }
+  ]
+}
+```
+
+---
+
 ### `POST /api/semantic-graph`
 
 Extracts Control Flow Graphs (CFG), builds Program Dependence Graphs (PDG) with def-use variable dependency chains, and computes Weisfeiler-Lehman structural graph similarity metrics.
@@ -492,9 +535,9 @@ Extracts Control Flow Graphs (CFG), builds Program Dependence Graphs (PDG) with 
   "file": "src/calc.rs",
   "code": "pub fn compute(a: i32) -> i32 { if a > 0 { return a * 2; } else { return 0; } }",
   "language": "Rust",
-  "file_b": "src/calc_alt.rs",
-  "code_b": "pub fn calculate(b: i32) -> i32 { if b > 0 { return b * 2; } else { return 0; } }",
-  "language_b": "Rust"
+  "file_b": "src/calc_alt.ts",
+  "code_b": "export function calculate(b: number): number { if (b > 0) { return b * 2; } else { return 0; } }",
+  "language_b": "TypeScript"
 }
 ```
 
@@ -530,9 +573,19 @@ Extracts Control Flow Graphs (CFG), builds Program Dependence Graphs (PDG) with 
   ],
   "comparison": {
     "similarity": 0.95,
+    "graph_similarity": 1.0,
+    "token_similarity": 0.88,
+    "hybrid_score": 0.952,
     "is_semantic_clone": true,
+    "is_cross_language": true,
+    "language_a": "Rust",
+    "language_b": "TypeScript",
+    "function_a": "compute",
+    "function_b": "calculate",
     "wl_hash_a": 1827491749281,
-    "wl_hash_b": 1827491749281
+    "wl_hash_b": 1827491749281,
+    "nodes_a_count": 5,
+    "nodes_b_count": 5
   }
 }
 ```
@@ -865,32 +918,48 @@ Extracts Control Flow Graph (CFG) and Program Dependence Graph (PDG) structures,
 
 #### `cddm_compare_semantic_graphs`
 
-Compares two code snippets for Type-4 semantic clone similarity via Weisfeiler-Lehman graph kernels.
+Compares two code snippets for Type-4 semantic clone similarity via Weisfeiler-Lehman graph kernels and subword TF-IDF vector embeddings.
 
-| Parameter  | Type     | Required | Default  | Description                                 |
-| :--------- | :------- | :------- | :------- | :------------------------------------------ |
-| `code_a`   | `string` | Yes      | None     | First code snippet to compare               |
-| `code_b`   | `string` | Yes      | None     | Second code snippet to compare              |
-| `language` | `string` | No       | `"Rust"` | Target programming language (default: Rust) |
+| Parameter    | Type     | Required | Default  | Description                                        |
+| :----------- | :------- | :------- | :------- | :------------------------------------------------- |
+| `code_a`     | `string` | Yes      | None     | First code snippet to compare                      |
+| `code_b`     | `string` | Yes      | None     | Second code snippet to compare                     |
+| `language_a` | `string` | No       | `"Rust"` | Programming language for fragment A                |
+| `language_b` | `string` | No       | `"Rust"` | Programming language for fragment B                |
+| `language`   | `string` | No       | `"Rust"` | Fallback language when language_a/b are not passed |
+
+#### `cddm_scan_cross_language`
+
+Scans the target workspace for cross-language semantic duplicate clones using polyglot CFG/PDG graph extraction, Weisfeiler-Lehman graph kernels, and subword TF-IDF embedding vectors.
+
+| Parameter    | Type       | Required | Default | Description                                   |
+| :----------- | :--------- | :------- | :------ | :-------------------------------------------- |
+| `directory`  | `string`   | No       | `"."`   | Workspace directory path to scan              |
+| `threshold`  | `number`   | No       | `0.70`  | Hybrid similarity cutoff score ($0.50..0.95$) |
+| `min_tokens` | `number`   | No       | `50`    | Minimum token clone threshold                 |
+| `languages`  | `string[]` | No       | `[]`    | Specific languages to filter                  |
+| `ignore`     | `string[]` | No       | `[]`    | Glob patterns to ignore                       |
 
 ### Resources
 
-| URI                               | MIME Type          | Description                                                     |
-| :-------------------------------- | :----------------- | :-------------------------------------------------------------- |
-| `cddm://workspace/health`         | `application/json` | Real-time DRY Health Index, file metrics, and language stats.   |
-| `cddm://workspace/clones`         | `application/json` | Registry of active duplicate code clones across files.          |
-| `cddm://workspace/clusters`       | `application/json` | Disjoint-set partitioned N-way clone equivalence clusters.      |
-| `cddm://workspace/timeline`       | `application/json` | Historical commit snapshots, DRY trajectory, and churn metrics. |
-| `cddm://workspace/suppressions`   | `application/json` | Active `.cddmignore` glob patterns and category filters.        |
-| `cddm://workspace/policies`       | `application/json` | Active `.cddmrules.toml` boundary and anti-duplication rules.   |
-| `cddm://workspace/semantic_graph` | `application/json` | Control Flow and Program Dependence Graph structural metadata.  |
+| URI                                      | MIME Type          | Description                                                                     |
+| :--------------------------------------- | :----------------- | :------------------------------------------------------------------------------ |
+| `cddm://workspace/health`                | `application/json` | Real-time DRY Health Index, file metrics, and language stats.                   |
+| `cddm://workspace/clones`                | `application/json` | Registry of active duplicate code clones across files.                          |
+| `cddm://workspace/clusters`              | `application/json` | Disjoint-set partitioned N-way clone equivalence clusters.                      |
+| `cddm://workspace/timeline`              | `application/json` | Historical commit snapshots, DRY trajectory, and churn metrics.                 |
+| `cddm://workspace/suppressions`          | `application/json` | Active `.cddmignore` glob patterns and category filters.                        |
+| `cddm://workspace/policies`              | `application/json` | Active `.cddmrules.toml` boundary and anti-duplication rules.                   |
+| `cddm://workspace/semantic_graph`        | `application/json` | Control Flow and Program Dependence Graph structural metadata.                  |
+| `cddm://workspace/cross_language_clones` | `application/json` | Cross-language semantic clone pairs detected across different languages via WL. |
 
 ### Prompts
 
-| Prompt Name           | Description                                                            |
-| :-------------------- | :--------------------------------------------------------------------- |
-| `audit_dry_health`    | Pre-configured prompt to audit codebase DRY health and top hotspots.   |
-| `refactor_clone_pair` | Pre-configured prompt to extract duplicate fragments into shared code. |
+| Prompt Name            | Description                                                                    |
+| :--------------------- | :----------------------------------------------------------------------------- |
+| `audit_dry_health`     | Pre-configured prompt to audit codebase DRY health and top hotspots.           |
+| `refactor_clone_pair`  | Pre-configured prompt to extract duplicate fragments into shared code.         |
+| `cross_language_audit` | Pre-configured prompt to audit polyglot cross-language duplicate logic clones. |
 
 ---
 

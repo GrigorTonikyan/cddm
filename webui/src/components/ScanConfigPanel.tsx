@@ -10,6 +10,7 @@ import {
   Code,
   GitBranch,
   AppWindow,
+  Sparkles,
 } from "lucide-react";
 
 export interface ScanConfigPanelProps {
@@ -155,6 +156,19 @@ export const ScanConfigPanel: React.FC<ScanConfigPanelProps> = ({ className = ""
             <span className="flex items-center gap-1">
               <GitBranch className="w-3.5 h-3.5 text-indigo-400" />
               Git Blame (Authors)
+            </span>
+          </label>
+
+          <label className="flex items-center gap-2 text-xs font-medium text-slate-300 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={config.cross_language ?? false}
+              onChange={(e) => setConfig({ cross_language: e.target.checked })}
+              className="w-4 h-4 rounded border-slate-700 bg-slate-950 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-slate-900"
+            />
+            <span className="flex items-center gap-1 text-purple-300">
+              <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+              Cross-Language (Type-4)
             </span>
           </label>
         </div>

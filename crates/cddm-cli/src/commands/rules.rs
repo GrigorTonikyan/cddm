@@ -56,6 +56,7 @@ pub async fn run_rules_command(action: RulesAction) -> Result<(), Box<dyn std::e
                 ignore_generated: true,
                 rules_path: rules.as_ref().map(|p| p.to_string_lossy().to_string()),
                 enforce_policies,
+                cross_language: false,
             };
 
             let (tx, _rx) = mpsc::channel(100);

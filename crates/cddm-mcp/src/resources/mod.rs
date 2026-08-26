@@ -59,6 +59,12 @@ pub fn resources_list_response(id: Option<serde_json::Value>) -> JsonRpcResponse
                     "name": "Workspace Semantic Dependency Graph",
                     "description": "Control Flow and Program Dependence Graph metadata and structural clone isomorphisms.",
                     "mimeType": mcp_resources::MIME_APPLICATION_JSON
+                },
+                {
+                    "uri": mcp_resources::URI_WORKSPACE_CROSS_LANGUAGE_CLONES,
+                    "name": "Workspace Cross-Language Clones",
+                    "description": "Cross-language semantic clone pairs detected across different programming languages via Weisfeiler-Lehman graph kernels and subword embeddings.",
+                    "mimeType": mcp_resources::MIME_APPLICATION_JSON
                 }
             ]
         })),
@@ -238,9 +244,9 @@ pub async fn handle_resource_read(
 
         mcp_resources::URI_WORKSPACE_SEMANTIC_GRAPH => {
             let cfgs = cddm_core::extract_cfgs_from_source(
-                "fn example() { let a = 1; if a > 0 { let b = a + 2; } }",
                 "example.rs",
-                "rust",
+                "fn example() { let a = 1; if a > 0 { let b = a + 2; } }",
+                "Rust",
             );
             let mut pdgs = Vec::new();
             for cfg in &cfgs {
@@ -265,6 +271,37 @@ pub async fn handle_resource_read(
                     ]
                 })),
                 error: None,
+            }
+        }
+
+        mcp_resources::URI_WORKSPACE_CROSS_LANGUAGE_CLONES => {
+            let scan_cfg = ScanConfig {
+                cross_language: true,
+                ..Default::default()
+            };
+            match cddm_core::semantic_graph::scan_cross_language_workspace(&scan_cfg, 0.70) {
+                Ok(pairs) => {
+                    let payload = json!({
+                        "threshold": 0.70,
+                        "total_pairs": pairs.len(),
+                        "pairs": pairs,
+                    });
+                    JsonRpcResponse {
+                        jsonrpc: JSONRPC_VERSION.to_string(),
+                        id,
+                        result: Some(json!({
+                            "contents": [
+                                {
+                                    "uri": mcp_resources::URI_WORKSPACE_CROSS_LANGUAGE_CLONES,
+                                    "mimeType": mcp_resources::MIME_APPLICATION_JSON,
+                                    "text": serde_json::to_string_pretty(&payload).unwrap_or_default()
+                                }
+                            ]
+                        })),
+                        error: None,
+                    }
+                }
+                Err(e) => make_error_response(id, rpc_errors::INTERNAL_ERROR, e),
             }
         }
 

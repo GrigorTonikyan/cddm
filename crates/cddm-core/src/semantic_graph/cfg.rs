@@ -19,15 +19,7 @@ pub fn extract_cfgs_from_source(
         let trimmed = line.trim();
         let line_num = idx + 1;
 
-        if (trimmed.starts_with("fn ")
-            || trimmed.starts_with("pub fn ")
-            || trimmed.starts_with("def ")
-            || trimmed.starts_with("function ")
-            || trimmed.starts_with("export function ")
-            || trimmed.starts_with("public ")
-            || trimmed.starts_with("func "))
-            && trimmed.contains('(')
-        {
+        if is_function_header(trimmed) {
             if let Some((fn_name, start_line)) = current_fn.take() {
                 let cfg =
                     build_cfg_from_lines(file_path, &fn_name, start_line, line_num - 1, &fn_lines);
@@ -52,24 +44,65 @@ pub fn extract_cfgs_from_source(
     cfgs
 }
 
+fn is_function_header(line: &str) -> bool {
+    let trimmed = line.trim();
+    if trimmed.is_empty() || trimmed.starts_with("//") || trimmed.starts_with('#') {
+        return false;
+    }
+
+    (trimmed.starts_with("fn ")
+        || trimmed.starts_with("pub fn ")
+        || trimmed.starts_with("pub(crate) fn ")
+        || trimmed.starts_with("def ")
+        || trimmed.starts_with("defp ")
+        || trimmed.starts_with("function ")
+        || trimmed.starts_with("export function ")
+        || trimmed.starts_with("export async function ")
+        || trimmed.starts_with("public ")
+        || trimmed.starts_with("private ")
+        || trimmed.starts_with("protected ")
+        || trimmed.starts_with("static ")
+        || trimmed.starts_with("func ")
+        || trimmed.starts_with("fun ")
+        || (trimmed.starts_with("const ") && trimmed.contains(" = (") && trimmed.contains("=>"))
+        || (trimmed.starts_with("let ") && trimmed.contains(" = (") && trimmed.contains("=>")))
+        && (trimmed.contains('(') || trimmed.contains("=>"))
+}
+
 fn extract_fn_name(line: &str) -> String {
     let without_modifiers = line
         .trim_start_matches("pub ")
+        .trim_start_matches("pub(crate) ")
         .trim_start_matches("export ")
         .trim_start_matches("public ")
         .trim_start_matches("private ")
         .trim_start_matches("protected ")
+        .trim_start_matches("static ")
         .trim_start_matches("async ")
         .trim_start_matches("fn ")
         .trim_start_matches("def ")
+        .trim_start_matches("defp ")
         .trim_start_matches("function ")
-        .trim_start_matches("func ");
+        .trim_start_matches("func ")
+        .trim_start_matches("fun ")
+        .trim_start_matches("const ")
+        .trim_start_matches("let ");
+
+    if let Some(eq_pos) = without_modifiers.find('=') {
+        let candidate = without_modifiers[..eq_pos].trim();
+        if !candidate.is_empty() {
+            return candidate.to_string();
+        }
+    }
 
     if let Some(open_paren) = without_modifiers.find('(') {
-        without_modifiers[..open_paren].trim().to_string()
-    } else {
-        "anonymous_fn".to_string()
+        let name = without_modifiers[..open_paren].trim();
+        if !name.is_empty() {
+            return name.to_string();
+        }
     }
+
+    "anonymous_fn".to_string()
 }
 
 fn build_cfg_from_lines(
@@ -101,15 +134,23 @@ fn build_cfg_from_lines(
             continue;
         }
 
-        let (node_type, edge_type) = if line_text.starts_with("if ") || line_text.starts_with("if(")
+        let (node_type, edge_type) = if line_text.starts_with("if ")
+            || line_text.starts_with("if(")
+            || line_text.starts_with("elif ")
+            || line_text.starts_with("else if")
+            || line_text.starts_with("case ")
+            || line_text.starts_with("when ")
         {
             (CfgNodeType::Branch, CfgEdgeType::TrueBranch)
         } else if line_text.starts_with("for ")
+            || line_text.starts_with("for(")
             || line_text.starts_with("while ")
+            || line_text.starts_with("while(")
             || line_text.starts_with("loop")
+            || line_text.starts_with("do ")
         {
             (CfgNodeType::LoopHeader, CfgEdgeType::LoopBack)
-        } else if line_text.starts_with("return") {
+        } else if line_text.starts_with("return") || line_text.starts_with("yield") {
             (CfgNodeType::Return, CfgEdgeType::Sequential)
         } else {
             (CfgNodeType::BasicBlock, CfgEdgeType::Sequential)

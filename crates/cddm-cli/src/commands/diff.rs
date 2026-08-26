@@ -26,6 +26,7 @@ pub async fn run_diff_command(
     ignore_generated: bool,
     rules: Option<PathBuf>,
     enforce_policies: bool,
+    cross_language: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let cache_path = cache_dir.as_ref().map(|p| p.to_string_lossy().to_string());
 
@@ -49,6 +50,7 @@ pub async fn run_diff_command(
         ignore_generated,
         rules_path: rules.map(|p| p.to_string_lossy().to_string()),
         enforce_policies,
+        cross_language,
     };
 
     let (tx, mut rx) = mpsc::channel::<cddm_core::ScanProgress>(100);

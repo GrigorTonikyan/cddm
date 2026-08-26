@@ -178,13 +178,29 @@ async fn test_mcp_semantic_graph_tools() {
         Some(json!({
             "name": mcp_tools::COMPARE_SEMANTIC_GRAPHS,
             "arguments": {
-                "code_a": "fn f1() { let a = 1; if a > 0 { return; } }",
-                "code_b": "fn f2() { let b = 2; if b > 0 { return; } }",
-                "language": "Rust"
+                "code_a": "pub fn calc(a: i32) -> i32 { let mut x = a; if x > 0 { x += 1; } return x; }",
+                "code_b": "export function calc(b: number): number { let x = b; if (x > 0) { x += 1; } return x; }",
+                "language_a": "Rust",
+                "language_b": "TypeScript"
             }
         })),
     ))
     .await
     .expect("Expected response");
     assert!(resp_comp.error.is_none());
+
+    let resp_scan = handle_mcp_request(make_test_req(
+        72,
+        mcp_methods::TOOLS_CALL,
+        Some(json!({
+            "name": mcp_tools::SCAN_CROSS_LANGUAGE,
+            "arguments": {
+                "directory": ".",
+                "threshold": 0.70
+            }
+        })),
+    ))
+    .await
+    .expect("Expected response");
+    assert!(resp_scan.error.is_none());
 }

@@ -55,9 +55,36 @@ export interface ProgramDependenceGraph {
 
 export interface SemanticComparisonResponse {
   similarity: number;
+  graph_similarity?: number;
+  token_similarity?: number;
+  hybrid_score?: number;
   is_semantic_clone: boolean;
+  is_cross_language?: boolean;
   wl_hash_a: number;
   wl_hash_b: number;
+}
+
+export interface CrossLanguageClonePair {
+  file_a: string;
+  language_a: string;
+  function_a: string;
+  lines_a: [number, number];
+  file_b: string;
+  language_b: string;
+  function_b: string;
+  lines_b: [number, number];
+  graph_similarity: number;
+  token_similarity: number;
+  hybrid_score: number;
+  clone_type: string;
+}
+
+export interface SemanticScanRequest {
+  directory?: string;
+  threshold?: number;
+  min_tokens?: number;
+  languages?: string[];
+  ignore?: string[];
 }
 
 export interface SemanticGraphRequest {

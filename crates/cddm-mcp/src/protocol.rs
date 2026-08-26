@@ -60,6 +60,7 @@ pub mod mcp_tools {
     pub const SCAN_MONOREPO: &str = "cddm_scan_monorepo";
     pub const GET_SEMANTIC_GRAPH: &str = "cddm_get_semantic_graph";
     pub const COMPARE_SEMANTIC_GRAPHS: &str = "cddm_compare_semantic_graphs";
+    pub const SCAN_CROSS_LANGUAGE: &str = "cddm_scan_cross_language";
 
     pub const PARAM_DIRECTORY: &str = "directory";
     pub const PARAM_MIN_TOKENS: &str = "min_tokens";
@@ -96,6 +97,7 @@ pub mod mcp_resources {
     pub const URI_WORKSPACE_SUPPRESSIONS: &str = "cddm://workspace/suppressions";
     pub const URI_WORKSPACE_POLICIES: &str = "cddm://workspace/policies";
     pub const URI_WORKSPACE_SEMANTIC_GRAPH: &str = "cddm://workspace/semantic_graph";
+    pub const URI_WORKSPACE_CROSS_LANGUAGE_CLONES: &str = "cddm://workspace/cross_language_clones";
     pub const MIME_APPLICATION_JSON: &str = "application/json";
 }
 
@@ -103,6 +105,7 @@ pub mod mcp_resources {
 pub mod mcp_prompts {
     pub const AUDIT_DRY_HEALTH: &str = "audit_dry_health";
     pub const REFACTOR_CLONE_PAIR: &str = "refactor_clone_pair";
+    pub const AUDIT_CROSS_LANGUAGE: &str = "cross_language_audit";
 }
 
 #[derive(Debug, Serialize, Deserialize)]

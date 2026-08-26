@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-26 | Rust: 209/209 PASS | WebUI: 146/146 PASS across 38 suites | Repository Scripts, Extension & MCP: 45/45 PASS | Playwright E2E: 14/14 PASS | CI Workflows: PASS
+> Last verified: 2026-08-26 | Rust: 209/209 PASS | WebUI: 147/147 PASS across 38 suites | Repository Scripts, Extension & MCP: 49/49 PASS | Playwright E2E: 16/16 PASS | CI Workflows: PASS
 
 ---
 
@@ -315,11 +315,14 @@
 
 ### Semantic Graph Engine (`crates/cddm-core/src/semantic_graph/`)
 
-| ID     | Feature Variant                                          | Test Function                                         | Result |
-| :----- | :------------------------------------------------------- | :---------------------------------------------------- | :----- |
-| F-29.1 | AST to Control Flow Graph basic block extraction         | `semantic_graph::tests::test_extract_cfg_and_wl_hash` | PASS   |
-| F-29.2 | CFG to Program Dependence Graph def-use dependency build | `semantic_graph::tests::test_build_pdg`               | PASS   |
-| F-29.3 | Weisfeiler-Lehman graph kernel isomorphism & similarity  | `semantic_graph::tests::test_graph_similarity`        | PASS   |
+| ID     | Feature Variant                                           | Test Function                                              | Result |
+| :----- | :-------------------------------------------------------- | :--------------------------------------------------------- | :----- |
+| F-29.1 | AST to Control Flow Graph basic block extraction          | `semantic_graph::tests::test_extract_cfg_and_wl_hash`      | PASS   |
+| F-29.2 | CFG to Program Dependence Graph def-use dependency build  | `semantic_graph::tests::test_build_pdg`                    | PASS   |
+| F-29.3 | Weisfeiler-Lehman graph kernel isomorphism & similarity   | `semantic_graph::tests::test_graph_similarity`             | PASS   |
+| F-29.4 | Subword 3-gram vector embedding & cosine similarity       | `semantic_graph::tests::test_subword_embedding_similarity` | PASS   |
+| F-29.5 | Weighted hybrid similarity model ($S_{\text{hybrid}}$)    | `semantic_graph::tests::test_hybrid_similarity_identical`  | PASS   |
+| F-29.6 | Workspace cross-language polyglot duplicate clone scanner | `semantic_graph::tests::test_cross_language_matching`      | PASS   |
 
 ### Distributed Cache Pack & Monorepos (`crates/cddm-core/src/cache/pack.rs`, `src/monorepo.rs`)
 

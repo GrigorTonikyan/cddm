@@ -52,6 +52,7 @@ pub async fn run_refactor_command(
         ignore_generated: true,
         rules_path: None,
         enforce_policies: false,
+        cross_language: false,
     };
 
     let (tx, _rx) = mpsc::channel(100);

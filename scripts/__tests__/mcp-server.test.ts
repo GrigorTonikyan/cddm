@@ -154,4 +154,81 @@ describe("CDDM Model Context Protocol (MCP) Stdio Server E2E", () => {
     const readResult = readRes.result as { contents?: Array<{ uri: string; text: string }> };
     expect(readResult?.contents?.[0]?.uri).toBe("cddm://workspace/policies");
   });
+
+  it("should read semantic_graph resource", async () => {
+    const semRes = await callMcpStdio({
+      jsonrpc: "2.0",
+      id: 7,
+      method: "resources/read",
+      params: {
+        uri: "cddm://workspace/semantic_graph",
+      },
+    });
+
+    expect(semRes.jsonrpc).toBe("2.0");
+    const semResult = semRes.result as { contents?: Array<{ uri: string; text: string }> };
+    expect(semResult?.contents?.[0]?.uri).toBe("cddm://workspace/semantic_graph");
+    expect(semResult?.contents?.[0]?.text).toContain("cfg_count");
+  });
+
+  it("should execute cddm_scan_cross_language tool", async () => {
+    const res = await callMcpStdio({
+      jsonrpc: "2.0",
+      id: 75,
+      method: "tools/call",
+      params: {
+        name: "cddm_scan_cross_language",
+        arguments: {
+          directory: "scripts",
+          threshold: 0.9,
+        },
+      },
+    });
+
+    expect(res.jsonrpc).toBe("2.0");
+    expect(res.id).toBe(75);
+    const result = res.result as { content?: Array<{ type: string; text: string }> };
+    expect(result?.content).toBeDefined();
+    expect(result?.content?.[0]?.text).toContain("pairs");
+  });
+
+  it("should execute cddm_compare_semantic_graphs tool with dual languages", async () => {
+    const res = await callMcpStdio({
+      jsonrpc: "2.0",
+      id: 8,
+      method: "tools/call",
+      params: {
+        name: "cddm_compare_semantic_graphs",
+        arguments: {
+          code_a: "fn sum(a: i32, b: i32) -> i32 { a + b }",
+          language_a: "rust",
+          code_b: "function sum(a: number, b: number): number { return a + b; }",
+          language_b: "typescript",
+        },
+      },
+    });
+
+    expect(res.jsonrpc).toBe("2.0");
+    expect(res.id).toBe(8);
+    const result = res.result as { content?: Array<{ type: string; text: string }> };
+    expect(result?.content).toBeDefined();
+    expect(result?.content?.[0]?.text).toContain("similarity");
+    expect(result?.content?.[0]?.text).toContain("is_semantic_clone");
+  });
+
+  it("should list prompts including cross_language_audit", async () => {
+    const res = await callMcpStdio({
+      jsonrpc: "2.0",
+      id: 9,
+      method: "prompts/list",
+      params: {},
+    });
+
+    expect(res.jsonrpc).toBe("2.0");
+    expect(res.id).toBe(9);
+    const result = res.result as { prompts?: Array<{ name: string }> };
+    const promptNames = result?.prompts?.map((p) => p.name) || [];
+    expect(promptNames).toContain("cross_language_audit");
+    expect(promptNames).toContain("audit_dry_health");
+  });
 });

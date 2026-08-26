@@ -33,6 +33,7 @@ export const API_ROUTES = {
   POLICY_RULES: "/api/policy/rules",
   POLICY_EVALUATE: "/api/policy/evaluate",
   SEMANTIC_GRAPH: "/api/semantic-graph",
+  SEMANTIC_SCAN: "/api/semantic/scan",
 } as const;
 
 /**
@@ -49,6 +50,7 @@ export const DEFAULT_SCAN_CONFIG: ScanConfig = {
   ignore_tests: false,
   ignore_mocks: false,
   ignore_generated: true,
+  cross_language: false,
 };
 
 /**

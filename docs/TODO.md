@@ -275,6 +275,20 @@
 
 ---
 
+### Milestone v2.3.0: Cross-Language Semantic Matching & Hybrid Embeddings (High Priority)
+
+- [x] **[EP-30] Cross-Language Semantic Matching & Hybrid Embeddings (Type-4 Polyglot Duplication)**
+  - [x] Implement subword 3-gram vector embedding engine and sparse cosine similarity in `crates/cddm-core/src/semantic_graph/embedding.rs`
+  - [x] Implement polyglot CFG function extraction and canonical slot-normalized PDG variable def-use tracking in `crates/cddm-core/src/semantic_graph/`
+  - [x] Implement unified hybrid similarity calculator ($S_{\text{hybrid}} = \alpha \cdot S_{\text{graph}} + (1 - \alpha) \cdot S_{\text{token}}$)
+  - [x] Implement workspace cross-language clone scanner (`scan_cross_language_workspace`) in `crates/cddm-core/src/semantic_graph/cross_language.rs`
+  - [x] Add CLI subcommand `cddm semantic [DIR]` and `--cross-language` scanning flags in `crates/cddm-cli/`
+  - [x] Expose Axum REST endpoint `POST /api/semantic/scan` and dual-language graph comparison in `crates/cddm-cli/src/serve/`
+  - [x] Expose MCP tool `cddm_scan_cross_language`, prompt `cross_language_audit`, and resource `cddm://workspace/cross_language_clones` in `crates/cddm-mcp/`
+  - [x] Implement WebUI Studio Cross-Language Explorer tab, dual-language Polyglot Sandbox selectors, and `[Polyglot]` clone badges in `webui/`
+
+---
+
 ## Completed Milestones (Verified)
 
 - [x] **v0.1.0**: Initial Rust core engine, Winnowing rolling hash, CLI scanner.
@@ -296,3 +310,4 @@
 - [x] **v1.9.0**: Deep Semantic Graph Matching (PDG/CFG) & Monorepo Distributed Cache Archive (`.cddmpack`, `crates/cddm-core/src/semantic_graph`, `crates/cddm-core/src/cache/pack.rs`, `crates/cddm-core/src/monorepo.rs`, CLI `cddm cache export/import`, `cddm monorepo`, Axum endpoints, MCP tools).
 - [x] **v2.0.0**: Ecosystem Packaging, Distribution & JetBrains Integration (Homebrew Formula, Scoop manifest, Winget manifest, standalone `install.sh`/`install.ps1`, `docs/JETBRAINS_SETUP.md`, `scripts/package-distribution.ts`).
 - [x] **v2.1.0**: First-Class IDE & Editor Ecosystem (VS Code Embedded Webview Studio, Activity Bar Dashboard, 24-language polyglot selector, command suite, and turnkey VSIX packaging pipeline).
+- [x] **v2.3.0**: Cross-Language Semantic Matching & Hybrid Embeddings (Subword vector embeddings, Weisfeiler-Lehman graph kernels, `cddm semantic`, MCP `cddm_scan_cross_language`, and WebUI Studio Cross-Language Explorer).

@@ -74,6 +74,9 @@ pub const ROUTE_API_MONOREPO: &str = "/api/monorepo";
 /// API endpoint path for semantic graph extraction and comparison.
 pub const ROUTE_API_SEMANTIC_GRAPH: &str = "/api/semantic-graph";
 
+/// API endpoint path for workspace cross-language semantic clone scans.
+pub const ROUTE_API_SEMANTIC_SCAN: &str = "/api/semantic/scan";
+
 /// Default localhost IPv4 binding.
 pub const DEFAULT_HOST_IP: [u8; 4] = [127, 0, 0, 1];
 
@@ -245,11 +248,25 @@ pub struct SemanticGraphRequest {
     pub language_b: Option<String>,
 }
 
+/// Request payload for on-demand workspace cross-language clone scans.
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Default)]
+pub struct SemanticScanRequest {
+    pub directory: Option<String>,
+    pub threshold: Option<f64>,
+    pub min_tokens: Option<usize>,
+    pub languages: Option<Vec<String>>,
+    pub ignore: Option<Vec<String>>,
+}
+
 /// Comparison metrics between two semantic graphs.
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub struct SemanticComparisonResponse {
     pub similarity: f64,
+    pub graph_similarity: f64,
+    pub token_similarity: f64,
+    pub hybrid_score: f64,
     pub is_semantic_clone: bool,
+    pub is_cross_language: bool,
     pub wl_hash_a: u64,
     pub wl_hash_b: u64,
 }

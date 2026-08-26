@@ -88,6 +88,10 @@ pub enum Commands {
         /// Enforce architectural policy rules (exit code 1 on error-level violations)
         #[arg(long, default_value_t = false)]
         enforce_policies: bool,
+
+        /// Detect cross-language semantic clones across different programming languages
+        #[arg(long, default_value_t = false)]
+        cross_language: bool,
     },
 
     /// Differential duplication scan comparing current changes against a Git base revision
@@ -157,6 +161,37 @@ pub enum Commands {
         /// Enforce architectural policy rules (exit code 1 on error-level violations)
         #[arg(long, default_value_t = false)]
         enforce_policies: bool,
+
+        /// Detect cross-language semantic clones across different programming languages
+        #[arg(long, default_value_t = false)]
+        cross_language: bool,
+    },
+
+    /// Analyze cross-language semantic clones & Weisfeiler-Lehman graph isomorphisms
+    Semantic {
+        /// Directory path to scan (default: current directory)
+        #[arg(default_value = cddm_core::DEFAULT_DIRECTORY)]
+        directory: PathBuf,
+
+        /// Minimum hybrid similarity threshold (0.0 to 1.0, default: 0.70)
+        #[arg(short, long, default_value_t = 0.70)]
+        threshold: f64,
+
+        /// Minimum token count to consider as duplicate clone
+        #[arg(short, long, default_value_t = cddm_core::DEFAULT_MIN_TOKENS)]
+        min_tokens: usize,
+
+        /// Output report format (console, json, markdown)
+        #[arg(short, long, value_enum, default_value_t = OutputFormat::Console)]
+        format: OutputFormat,
+
+        /// Specific language(s) to scan
+        #[arg(short, long)]
+        languages: Vec<String>,
+
+        /// Glob patterns to ignore
+        #[arg(short, long)]
+        ignore: Vec<String>,
     },
 
     /// Synthesize automated refactoring suggestions for duplicate clone pairs

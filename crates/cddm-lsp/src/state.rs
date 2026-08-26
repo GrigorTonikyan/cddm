@@ -56,6 +56,7 @@ impl ServerStateInner {
             ignore_generated: true,
             rules_path: None,
             enforce_policies: false,
+            cross_language: false,
         }
     }
 }

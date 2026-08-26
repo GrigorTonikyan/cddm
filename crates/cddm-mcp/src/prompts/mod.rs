@@ -58,6 +58,22 @@ pub fn prompts_list_response(id: Option<serde_json::Value>) -> JsonRpcResponse {
                             "required": true
                         }
                     ]
+                },
+                {
+                    "name": mcp_prompts::AUDIT_CROSS_LANGUAGE,
+                    "description": "Audit cross-language semantic duplication and find isomorphic functions across polyglot boundaries.",
+                    "arguments": [
+                        {
+                            "name": "directory",
+                            "description": "Target workspace directory",
+                            "required": false
+                        },
+                        {
+                            "name": "threshold",
+                            "description": "Minimum hybrid similarity threshold (0.0 to 1.0, default: 0.70)",
+                            "required": false
+                        }
+                    ]
                 }
             ]
         })),
@@ -103,6 +119,14 @@ pub fn handle_prompt_get(
                 ),
             )
         }
+
+        mcp_prompts::AUDIT_CROSS_LANGUAGE => make_prompt_response(
+            id,
+            "Audit cross-language semantic duplicates across polyglot codebases.",
+            "Please run CDDM cross-language semantic analysis on this workspace using \
+             Weisfeiler-Lehman graph kernels and subword vector embeddings to detect isomorphic \
+             algorithms and business logic.",
+        ),
 
         _ => make_error_response(
             id,

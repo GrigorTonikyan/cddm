@@ -72,6 +72,10 @@ pub async fn run_scan_from_mcp_args(
         .and_then(|a| a.get(mcp_tools::PARAM_MIN_TOKENS))
         .and_then(|t| t.as_u64())
         .unwrap_or(DEFAULT_MIN_TOKENS as u64) as usize;
+    let cross_language = args
+        .and_then(|a| a.get("cross_language"))
+        .and_then(|b| b.as_bool())
+        .unwrap_or(false);
 
     let config = ScanConfig {
         directory: dir.to_string(),
@@ -89,6 +93,7 @@ pub async fn run_scan_from_mcp_args(
         ignore_generated: true,
         rules_path: None,
         enforce_policies: false,
+        cross_language,
     };
 
     let (tx, _rx) = mpsc::channel(100);

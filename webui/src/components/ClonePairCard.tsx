@@ -85,6 +85,10 @@ export const ClonePairCard: React.FC<ClonePairCardProps> = ({ pair, index }) => 
           ? "bg-amber-950/80 text-amber-300 border-amber-800/50"
           : "bg-purple-950/80 text-purple-300 border-purple-800/50";
 
+  const extA = pathA.filename.split(".").pop()?.toLowerCase();
+  const extB = pathB.filename.split(".").pop()?.toLowerCase();
+  const isCrossLang = extA && extB && extA !== extB;
+
   return (
     <div className="group bg-slate-900/70 border border-slate-800/80 hover:border-indigo-500/40 rounded-xl overflow-hidden shadow-lg transition-all duration-200 backdrop-blur-sm">
       {/* Card Header Header Bar */}
@@ -116,6 +120,14 @@ export const ClonePairCard: React.FC<ClonePairCardProps> = ({ pair, index }) => 
         {/* Right Side: Badges & Controls */}
         <div className="flex items-center justify-between md:justify-end gap-3 shrink-0">
           <div className="flex items-center gap-2">
+            {/* Cross-Language Polyglot Badge */}
+            {isCrossLang && (
+              <span className="text-[11px] font-mono px-2 py-0.5 rounded border flex items-center gap-1 bg-purple-950/90 text-purple-300 border-purple-800/60 font-semibold shadow-sm">
+                <Sparkles className="w-3 h-3 text-purple-400" />
+                Polyglot
+              </span>
+            )}
+
             {/* Clone Type Badge */}
             <span
               className={`text-[11px] font-mono px-2 py-0.5 rounded border flex items-center gap-1 ${cloneTypeBadge}`}

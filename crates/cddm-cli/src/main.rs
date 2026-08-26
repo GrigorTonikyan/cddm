@@ -55,6 +55,7 @@ async fn run_app() -> Result<(), Box<dyn std::error::Error>> {
             ignore_generated,
             rules,
             enforce_policies,
+            cross_language,
         } => {
             run_scan_command(
                 directory,
@@ -73,6 +74,7 @@ async fn run_app() -> Result<(), Box<dyn std::error::Error>> {
                 ignore_generated,
                 rules,
                 enforce_policies,
+                cross_language,
             )
             .await?;
         }
@@ -95,6 +97,7 @@ async fn run_app() -> Result<(), Box<dyn std::error::Error>> {
             ignore_generated,
             rules,
             enforce_policies,
+            cross_language,
         } => {
             run_diff_command(
                 base_ref,
@@ -114,8 +117,20 @@ async fn run_app() -> Result<(), Box<dyn std::error::Error>> {
                 ignore_generated,
                 rules,
                 enforce_policies,
+                cross_language,
             )
             .await?;
+        }
+
+        Commands::Semantic {
+            directory,
+            threshold,
+            min_tokens,
+            format,
+            languages,
+            ignore,
+        } => {
+            run_semantic_command(directory, threshold, min_tokens, format, languages, ignore)?;
         }
 
         Commands::Refactor {

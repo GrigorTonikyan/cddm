@@ -365,15 +365,31 @@ pub fn get_tool_definitions() -> Vec<serde_json::Value> {
         }),
         json!({
             "name": mcp_tools::COMPARE_SEMANTIC_GRAPHS,
-            "description": "Compare two code snippets for Type-4 semantic clone similarity via Weisfeiler-Lehman graph kernels.",
+            "description": "Compare two code snippets for Type-4 semantic clone similarity via Weisfeiler-Lehman graph kernels and subword embeddings.",
             "inputSchema": {
                 "type": "object",
                 "properties": {
                     "code_a": { "type": "string", "description": "First code snippet to compare" },
                     "code_b": { "type": "string", "description": "Second code snippet to compare" },
-                    "language": { "type": "string", "description": "Programming language (default: Rust)" }
+                    "language": { "type": "string", "description": "Default programming language (default: Rust)" },
+                    "language_a": { "type": "string", "description": "Language of first snippet" },
+                    "language_b": { "type": "string", "description": "Language of second snippet" }
                 },
                 "required": ["code_a", "code_b"]
+            }
+        }),
+        json!({
+            "name": mcp_tools::SCAN_CROSS_LANGUAGE,
+            "description": "Discover cross-language semantic clones across different programming languages via Weisfeiler-Lehman graph kernels and subword vector embeddings.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    mcp_tools::PARAM_DIRECTORY: { "type": "string", "description": "Target workspace directory to scan (default: current directory)" },
+                    "threshold": { "type": "number", "description": "Hybrid similarity threshold (0.0 to 1.0, default: 0.70)" },
+                    mcp_tools::PARAM_MIN_TOKENS: { "type": "number", "description": "Minimum token threshold (default: 50)" },
+                    "languages": { "type": "array", "items": { "type": "string" }, "description": "Optional list of languages to restrict analysis to" },
+                    "ignore": { "type": "array", "items": { "type": "string" }, "description": "Optional glob patterns to ignore" }
+                }
             }
         }),
     ]

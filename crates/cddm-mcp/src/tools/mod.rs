@@ -63,6 +63,7 @@ pub async fn dispatch_tool_call(
         mcp_tools::COMPARE_SEMANTIC_GRAPHS => {
             semantic_tools::handle_compare_semantic_graphs(id, args)
         }
+        mcp_tools::SCAN_CROSS_LANGUAGE => semantic_tools::handle_scan_cross_language(id, args),
         _ => make_error_response(
             id,
             rpc_errors::METHOD_NOT_FOUND,

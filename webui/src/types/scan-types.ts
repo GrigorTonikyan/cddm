@@ -70,6 +70,7 @@ export interface ScanConfig {
   ignore_generated?: boolean;
   rules_path?: string;
   enforce_policies?: boolean;
+  cross_language?: boolean;
 }
 
 /**

@@ -50,9 +50,11 @@ pub use refactor::{
 };
 pub use sarif::{SarifReport, generate_sarif_json, generate_sarif_report};
 pub use semantic_graph::{
-    CfgEdge, CfgEdgeType, CfgNode, CfgNodeType, ControlFlowGraph, PdgEdge, PdgEdgeKind,
-    ProgramDependenceGraph, SemanticCloneMatch, build_pdg_from_cfg, calculate_graph_similarity,
-    compute_weisfeiler_lehman_hash, extract_cfgs_from_source,
+    CfgEdge, CfgEdgeType, CfgNode, CfgNodeType, ControlFlowGraph, CrossLanguageClonePair,
+    HybridSimilarity, PdgEdge, PdgEdgeKind, ProgramDependenceGraph, SemanticCloneMatch,
+    SemanticComparisonResponse, build_pdg_from_cfg, calculate_embedding_similarity,
+    calculate_graph_similarity, compute_hybrid_similarity, compute_weisfeiler_lehman_hash,
+    extract_cfgs_from_source, scan_cross_language_workspace,
 };
 pub use simd::compute_kgram_rolling_hashes;
 pub use suppression::SuppressionEngine;

@@ -2,9 +2,7 @@
 
 use crate::protocol::{JsonRpcResponse, make_error_response, make_text_response, rpc_errors};
 use cddm_core::grammar::get_grammar_for_path;
-use cddm_core::semantic_graph::{
-    build_pdg_from_cfg, calculate_graph_similarity, extract_cfgs_from_source,
-};
+use cddm_core::semantic_graph::{build_pdg_from_cfg, extract_cfgs_from_source};
 use serde_json::json;
 use std::fs;
 use std::path::Path;
@@ -100,10 +98,18 @@ pub fn handle_compare_semantic_graphs(
 
     let code_a = args_obj.get("code_a").and_then(|v| v.as_str());
     let code_b = args_obj.get("code_b").and_then(|v| v.as_str());
-    let lang = args_obj
+    let default_lang = args_obj
         .get("language")
         .and_then(|v| v.as_str())
         .unwrap_or("Rust");
+    let lang_a = args_obj
+        .get("language_a")
+        .and_then(|v| v.as_str())
+        .unwrap_or(default_lang);
+    let lang_b = args_obj
+        .get("language_b")
+        .and_then(|v| v.as_str())
+        .unwrap_or(default_lang);
 
     let (src_a, src_b) = match (code_a, code_b) {
         (Some(a), Some(b)) => (a, b),
@@ -116,8 +122,8 @@ pub fn handle_compare_semantic_graphs(
         }
     };
 
-    let cfgs_a = extract_cfgs_from_source("a.rs", src_a, lang);
-    let cfgs_b = extract_cfgs_from_source("b.rs", src_b, lang);
+    let cfgs_a = extract_cfgs_from_source("a.rs", src_a, lang_a);
+    let cfgs_b = extract_cfgs_from_source("b.rs", src_b, lang_b);
 
     if cfgs_a.is_empty() || cfgs_b.is_empty() {
         return make_error_response(
@@ -127,16 +133,29 @@ pub fn handle_compare_semantic_graphs(
         );
     }
 
-    let similarity = calculate_graph_similarity(&cfgs_a[0], &cfgs_b[0]);
-    let is_semantic_clone = similarity >= 0.75;
+    let is_cross_lang = lang_a != lang_b;
+    let hybrid = cddm_core::semantic_graph::compute_hybrid_similarity(
+        &cfgs_a[0],
+        src_a,
+        &cfgs_b[0],
+        src_b,
+        is_cross_lang,
+    );
+    let is_semantic_clone = hybrid.hybrid_score >= 0.70;
 
     let payload = json!({
-        "similarity": similarity,
+        "similarity": hybrid.hybrid_score,
+        "graph_similarity": hybrid.graph_similarity,
+        "token_similarity": hybrid.token_similarity,
+        "hybrid_score": hybrid.hybrid_score,
         "is_semantic_clone": is_semantic_clone,
-        "wl_hash_a": cfgs_a[0].wl_hash,
-        "wl_hash_b": cfgs_b[0].wl_hash,
+        "is_cross_language": is_cross_lang,
+        "language_a": lang_a,
+        "language_b": lang_b,
         "function_a": cfgs_a[0].function_name,
         "function_b": cfgs_b[0].function_name,
+        "wl_hash_a": cfgs_a[0].wl_hash,
+        "wl_hash_b": cfgs_b[0].wl_hash,
         "nodes_a_count": cfgs_a[0].nodes.len(),
         "nodes_b_count": cfgs_b[0].nodes.len(),
     });
@@ -145,4 +164,94 @@ pub fn handle_compare_semantic_graphs(
         id,
         serde_json::to_string_pretty(&payload).unwrap_or_default(),
     )
+}
+
+/// Handler for `cddm_scan_cross_language` MCP tool.
+pub fn handle_scan_cross_language(
+    id: Option<serde_json::Value>,
+    args: Option<&serde_json::Value>,
+) -> JsonRpcResponse {
+    let args_obj = match args {
+        Some(serde_json::Value::Object(map)) => map,
+        _ => {
+            return make_error_response(
+                id,
+                rpc_errors::INVALID_PARAMS,
+                "Missing arguments object for 'cddm_scan_cross_language'",
+            );
+        }
+    };
+
+    let dir = args_obj
+        .get("directory")
+        .and_then(|v| v.as_str())
+        .unwrap_or(cddm_core::DEFAULT_DIRECTORY);
+    let threshold = args_obj
+        .get("threshold")
+        .and_then(|v| v.as_f64())
+        .unwrap_or(0.70);
+    let min_tokens = args_obj
+        .get("min_tokens")
+        .and_then(|v| v.as_u64())
+        .unwrap_or(cddm_core::DEFAULT_MIN_TOKENS as u64) as usize;
+
+    let languages = args_obj
+        .get("languages")
+        .and_then(|v| v.as_array())
+        .map(|arr| {
+            arr.iter()
+                .filter_map(|x| x.as_str().map(|s| s.to_string()))
+                .collect()
+        })
+        .unwrap_or_default();
+
+    let ignore_patterns = args_obj
+        .get("ignore")
+        .and_then(|v| v.as_array())
+        .map(|arr| {
+            arr.iter()
+                .filter_map(|x| x.as_str().map(|s| s.to_string()))
+                .collect()
+        })
+        .unwrap_or_else(|| {
+            cddm_core::ScanConfig::default()
+                .ignore_patterns
+                .into_iter()
+                .collect()
+        });
+
+    let config = cddm_core::ScanConfig {
+        directory: dir.to_string(),
+        min_tokens,
+        languages,
+        ignore_patterns,
+        detect_type2: true,
+        scan_self: true,
+        enable_git_blame: false,
+        cache_dir: None,
+        enable_cache: true,
+        cddmignore_path: None,
+        ignore_tests: false,
+        ignore_mocks: false,
+        ignore_generated: true,
+        rules_path: None,
+        enforce_policies: false,
+        cross_language: true,
+    };
+
+    match cddm_core::semantic_graph::scan_cross_language_workspace(&config, threshold) {
+        Ok(pairs) => {
+            let payload = json!({
+                "directory": dir,
+                "threshold": threshold,
+                "total_pairs": pairs.len(),
+                "pairs": pairs,
+            });
+            make_text_response(
+                id,
+                serde_json::to_string_pretty(&payload).unwrap_or_default(),
+            )
+        }
+        Err(e) => make_error_response(id, rpc_errors::INTERNAL_ERROR, e),
+    }
 }

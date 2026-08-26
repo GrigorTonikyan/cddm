@@ -51,7 +51,7 @@ async fn test_mcp_ping() {
 #[tokio::test]
 async fn test_mcp_tools_list() {
     let tools = list_mcp_items(mcp_methods::TOOLS_LIST, "tools").await;
-    assert_eq!(tools.len(), 20);
+    assert_eq!(tools.len(), 21);
     let tool_names: Vec<&str> = tools.iter().map(|t| t["name"].as_str().unwrap()).collect();
     for expected in [
         mcp_tools::SCAN_CODEBASE,
@@ -74,6 +74,7 @@ async fn test_mcp_tools_list() {
         mcp_tools::SCAN_MONOREPO,
         mcp_tools::GET_SEMANTIC_GRAPH,
         mcp_tools::COMPARE_SEMANTIC_GRAPHS,
+        mcp_tools::SCAN_CROSS_LANGUAGE,
     ] {
         assert!(tool_names.contains(&expected));
     }
@@ -82,7 +83,7 @@ async fn test_mcp_tools_list() {
 #[tokio::test]
 async fn test_mcp_resources_list() {
     let resources = list_mcp_items(mcp_methods::RESOURCES_LIST, "resources").await;
-    assert_eq!(resources.len(), 7);
+    assert_eq!(resources.len(), 8);
 }
 
 #[tokio::test]
@@ -124,7 +125,7 @@ async fn test_mcp_resources_read_clusters() {
 #[tokio::test]
 async fn test_mcp_prompts_list_and_get() {
     let prompts = list_mcp_items(mcp_methods::PROMPTS_LIST, "prompts").await;
-    assert_eq!(prompts.len(), 2);
+    assert_eq!(prompts.len(), 3);
 
     let resp_get = handle_mcp_request(make_test_req(
         6,

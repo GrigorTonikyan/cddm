@@ -77,6 +77,7 @@ pub fn build_app_with_state(state: AppState) -> Router {
         .route(ROUTE_API_CACHE_IMPORT, post(cache_import_handler))
         .route(ROUTE_API_MONOREPO, post(monorepo_handler))
         .route(ROUTE_API_SEMANTIC_GRAPH, post(semantic_graph_handler))
+        .route(ROUTE_API_SEMANTIC_SCAN, post(semantic_scan_handler))
         .fallback(static_asset_handler)
         .layer(CorsLayer::permissive())
         .with_state(state)

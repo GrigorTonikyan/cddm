@@ -69,4 +69,43 @@ test.describe("CDDM WebUI E2E Workflows", () => {
     await ideSelect.selectOption("cursor");
     await expect(ideSelect).toHaveValue("cursor");
   });
+
+  test("should toggle Cross-Language Type-4 option in scan configuration panel", async ({
+    page,
+  }) => {
+    const crossLangCheckbox = page.getByRole("checkbox", { name: /Cross-Language/i });
+    await expect(crossLangCheckbox).toBeVisible();
+    const isChecked = await crossLangCheckbox.isChecked();
+    await crossLangCheckbox.click();
+    await expect(crossLangCheckbox).toBeChecked({ checked: !isChecked });
+  });
+
+  test("should open Semantic Graph Modal and navigate all 3 tabs", async ({ page }) => {
+    const semanticBtn = page.getByRole("button", { name: /Semantic Graph/i });
+    await expect(semanticBtn).toBeVisible();
+    await semanticBtn.click();
+
+    // Verify modal title
+    await expect(page.getByText("Deep Semantic Graph & Polyglot Isomorphism Engine")).toBeVisible();
+
+    // Tab 1: Graph Visualizer
+    await expect(page.getByRole("button", { name: /Graph Visualizer/i }).first()).toBeVisible();
+
+    // Tab 2: Polyglot Sandbox
+    const sandboxTab = page.getByRole("button", { name: /Polyglot Sandbox/i });
+    await expect(sandboxTab).toBeVisible();
+    await sandboxTab.click();
+    await expect(page.getByText(/Implementation A:/i)).toBeVisible();
+    await expect(page.getByText(/Implementation B:/i)).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /Extract CFGs & Compare Isomorphism/i }),
+    ).toBeVisible();
+
+    // Tab 3: Cross-Language Explorer
+    const explorerTab = page.getByRole("button", { name: /Cross-Language Explorer/i });
+    await expect(explorerTab).toBeVisible();
+    await explorerTab.click();
+    await expect(page.getByText(/Similarity Cutoff/i)).toBeVisible();
+    await expect(page.getByRole("button", { name: /Discover Polyglot Clones/i })).toBeVisible();
+  });
 });

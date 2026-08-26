@@ -437,3 +437,17 @@ async fn test_semantic_graph_handler() {
     assert!(comp.similarity >= 0.8);
     assert!(comp.is_semantic_clone);
 }
+
+#[tokio::test]
+async fn test_semantic_scan_handler() {
+    let req = SemanticScanRequest {
+        directory: Some(".".to_string()),
+        threshold: Some(0.70),
+        min_tokens: Some(50),
+        languages: None,
+        ignore: None,
+    };
+
+    let res = semantic_scan_handler(axum::Json(req)).await;
+    assert!(res.is_ok());
+}

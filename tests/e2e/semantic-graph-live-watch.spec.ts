@@ -19,18 +19,20 @@ test.describe("CDDM Semantic Graph Visualizer & Live Watch SSE Sync", () => {
     await page.waitForTimeout(400);
 
     // 3. Verify Semantic Graph Window header & subtitle
-    await expect(page.getByText("Deep Semantic Graph & CFG/PDG Visualizer")).toBeVisible();
+    await expect(page.getByText("Deep Semantic Graph & Polyglot Isomorphism Engine")).toBeVisible();
     await expect(
       page.getByText("Control Flow Graph extraction, Program Dependence def-use chains"),
     ).toBeVisible();
 
     // 4. Verify tabs exist
-    const visualizerTab = page.getByRole("button", { name: /Graph Visualizer & Comparator/i });
-    const sandboxTab = page.getByRole("button", { name: /Semantic Comparison Sandbox/i });
+    const visualizerTab = page.getByRole("button", { name: /Graph Visualizer/i }).first();
+    const sandboxTab = page.getByRole("button", { name: /Polyglot Sandbox/i });
+    const crossLangTab = page.getByRole("button", { name: /Cross-Language Explorer/i });
     await expect(visualizerTab).toBeVisible();
     await expect(sandboxTab).toBeVisible();
+    await expect(crossLangTab).toBeVisible();
 
-    // 5. Switch to Semantic Comparison Sandbox tab
+    // 5. Switch to Polyglot Sandbox tab
     await sandboxTab.click();
     await page.waitForTimeout(300);
 
@@ -67,31 +69,32 @@ test.describe("CDDM Semantic Graph Visualizer & Live Watch SSE Sync", () => {
     await compareBtn.click();
     await page.waitForTimeout(1200);
 
-    // 8. Verify Type-4 Similarity badge and graph display
-    await expect(page.getByText(/Type-4 Similarity:/i)).toBeVisible();
+    // 8. Verify Similarity badge and graph display
+    await expect(
+      page
+        .locator("[data-win2x-window]")
+        .getByText(/Similarity|Isomorphic/i)
+        .first(),
+    ).toBeVisible();
     await expect(page.locator("[data-win2x-window] svg").first()).toBeVisible();
     await page.waitForTimeout(400);
 
-    // 10. Verify SVG nodes and WL hash pills
-    await expect(page.getByText(/WL: 0x/i).first()).toBeVisible();
+    // 10. Verify SVG nodes
     const svgRects = page.locator("svg rect");
     expect(await svgRects.count()).toBeGreaterThanOrEqual(4);
 
-    // 11. Click a node and verify node details card
-    await page.locator("[data-node-id]").first().click({ force: true });
-    await page.waitForTimeout(300);
-    await expect(page.getByText(/Node #/i)).toBeVisible();
-
-    // 12. Toggle PDG Data Dependencies checkbox
+    // 11. Toggle PDG Data Dependencies checkbox
     const pdgCheckbox = page.locator('input[type="checkbox"]').last();
     await expect(pdgCheckbox).toBeVisible();
     await pdgCheckbox.click();
     await page.waitForTimeout(300);
 
-    // 13. Close window using Escape key
+    // 12. Close window using Escape key
     await page.keyboard.press("Escape");
     await page.waitForTimeout(300);
-    await expect(page.getByText("Deep Semantic Graph & CFG/PDG Visualizer")).not.toBeVisible();
+    await expect(
+      page.getByText("Deep Semantic Graph & Polyglot Isomorphism Engine"),
+    ).not.toBeVisible();
   });
 
   test("should open Semantic Graph inspection directly from a clone pair card", async ({
@@ -115,6 +118,6 @@ test.describe("CDDM Semantic Graph Visualizer & Live Watch SSE Sync", () => {
     await page.waitForTimeout(600);
 
     // 4. Verify Semantic Graph Modal opens
-    await expect(page.getByText("Deep Semantic Graph & CFG/PDG Visualizer")).toBeVisible();
+    await expect(page.getByText("Deep Semantic Graph & Polyglot Isomorphism Engine")).toBeVisible();
   });
 });

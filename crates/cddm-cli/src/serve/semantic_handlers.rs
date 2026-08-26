@@ -5,8 +5,10 @@ use super::types::*;
 use axum::{extract::Json, http::StatusCode};
 use cddm_core::grammar::get_grammar_for_path;
 use cddm_core::semantic_graph::{
-    build_pdg_from_cfg, calculate_graph_similarity, extract_cfgs_from_source,
+    CrossLanguageClonePair, build_pdg_from_cfg, compute_hybrid_similarity,
+    extract_cfgs_from_source, scan_cross_language_workspace,
 };
+use cddm_core::{DEFAULT_DIRECTORY, DEFAULT_MIN_TOKENS, ScanConfig};
 use std::fs;
 use std::path::Path;
 
@@ -72,7 +74,7 @@ pub async fn semantic_graph_handler(
 
     let mut comparison = None;
 
-    // If fragment B is provided, extract CFGs/PDGs for B and compute graph similarity
+    // If fragment B is provided, extract CFGs/PDGs for B and compute hybrid similarity
     if req.code_b.is_some() || req.file_b.is_some() {
         let (path_b, code_b, lang_b) = resolve_code_and_language(
             req.file_b.as_deref(),
@@ -86,11 +88,17 @@ pub async fn semantic_graph_handler(
         }
 
         if let (Some(first_a), Some(first_b)) = (cfgs.first(), cfgs_b.first()) {
-            let similarity = calculate_graph_similarity(first_a, first_b);
-            let is_semantic_clone = similarity >= 0.75;
+            let is_cross_lang = lang_a != lang_b;
+            let hybrid =
+                compute_hybrid_similarity(first_a, &code_a, first_b, &code_b, is_cross_lang);
+            let is_semantic_clone = hybrid.hybrid_score >= 0.70;
             comparison = Some(SemanticComparisonResponse {
-                similarity,
+                similarity: hybrid.hybrid_score,
+                graph_similarity: hybrid.graph_similarity,
+                token_similarity: hybrid.token_similarity,
+                hybrid_score: hybrid.hybrid_score,
                 is_semantic_clone,
+                is_cross_language: is_cross_lang,
                 wl_hash_a: first_a.wl_hash,
                 wl_hash_b: first_b.wl_hash,
             });
@@ -104,4 +112,42 @@ pub async fn semantic_graph_handler(
         pdgs,
         comparison,
     }))
+}
+
+/// Handler for `POST /api/semantic/scan` executing on-demand cross-language clone discovery.
+pub async fn semantic_scan_handler(
+    Json(req): Json<SemanticScanRequest>,
+) -> Result<Json<Vec<CrossLanguageClonePair>>, (StatusCode, String)> {
+    let dir = req
+        .directory
+        .unwrap_or_else(|| DEFAULT_DIRECTORY.to_string());
+    let threshold = req.threshold.unwrap_or(0.70);
+    let min_tokens = req.min_tokens.unwrap_or(DEFAULT_MIN_TOKENS);
+    let languages = req.languages.unwrap_or_default();
+    let ignore_patterns = req
+        .ignore
+        .unwrap_or_else(|| ScanConfig::default().ignore_patterns.into_iter().collect());
+
+    let config = ScanConfig {
+        directory: dir,
+        min_tokens,
+        languages,
+        ignore_patterns,
+        detect_type2: true,
+        scan_self: true,
+        enable_git_blame: false,
+        cache_dir: None,
+        enable_cache: true,
+        cddmignore_path: None,
+        ignore_tests: false,
+        ignore_mocks: false,
+        ignore_generated: true,
+        rules_path: None,
+        enforce_policies: false,
+        cross_language: true,
+    };
+
+    scan_cross_language_workspace(&config, threshold)
+        .map(Json)
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))
 }

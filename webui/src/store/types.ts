@@ -75,6 +75,8 @@ export interface CDDMStoreState {
   semanticGraphResponse: SemanticGraphResponse | null;
   isSemanticGraphLoading: boolean;
   semanticGraphError: string | null;
+  crossLanguageClones: import("../types/cddm-types").CrossLanguageClonePair[];
+  isCrossLanguageLoading: boolean;
 
   /** Historical timeline data and loading state */
   timelineData: TimelineTrend | null;
@@ -172,5 +174,9 @@ export interface CDDMStoreState {
 
   /** Semantic graph actions */
   fetchSemanticGraph: (req: SemanticGraphRequest) => Promise<SemanticGraphResponse>;
+  scanCrossLanguageClones: (
+    threshold?: number,
+    directory?: string,
+  ) => Promise<import("../types/cddm-types").CrossLanguageClonePair[]>;
   openSemanticGraphModal: (req?: SemanticGraphRequest) => Promise<void>;
 }

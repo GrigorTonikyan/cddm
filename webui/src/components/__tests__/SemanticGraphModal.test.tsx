@@ -100,7 +100,7 @@ describe("SemanticGraphModal Component", () => {
       </Win2xManagerProvider>,
     );
 
-    expect(screen.getByText("Deep Semantic Graph & CFG/PDG Visualizer")).toBeDefined();
+    expect(screen.getByText("Deep Semantic Graph & Polyglot Isomorphism Engine")).toBeDefined();
     expect(screen.getByText("95.0% Isomorphic")).toBeDefined();
     expect(screen.getByText("Type-4 Similarity: 95.0%")).toBeDefined();
     expect(screen.getByText("Fragment A: compute_a")).toBeDefined();
@@ -116,18 +116,22 @@ describe("SemanticGraphModal Component", () => {
     expect(onClose).toHaveBeenCalled();
   });
 
-  it("should switch between visualizer and sandbox tabs", () => {
+  it("should switch between visualizer, sandbox, and cross-language explorer tabs", () => {
     render(
       <Win2xManagerProvider>
         <SemanticGraphModal isOpen={true} onClose={() => {}} />
       </Win2xManagerProvider>,
     );
 
-    const sandboxTab = screen.getByText("Semantic Comparison Sandbox");
+    const sandboxTab = screen.getByText("Polyglot Sandbox");
     fireEvent.click(sandboxTab);
 
-    expect(screen.getByText("Function Implementation A:")).toBeDefined();
-    expect(screen.getByText("Function Implementation B:")).toBeDefined();
+    expect(screen.getByText("Implementation A:")).toBeDefined();
+    expect(screen.getByText("Implementation B:")).toBeDefined();
     expect(screen.getByText("Extract CFGs & Compare Isomorphism")).toBeDefined();
+
+    const crossLangTab = screen.getByText("Cross-Language Explorer");
+    fireEvent.click(crossLangTab);
+    expect(screen.getByText("Discover Polyglot Clones")).toBeDefined();
   });
 });

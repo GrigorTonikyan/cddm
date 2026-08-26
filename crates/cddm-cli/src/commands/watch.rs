@@ -41,6 +41,7 @@ pub async fn run_watch_command(
         ignore_generated: true,
         rules_path: None,
         enforce_policies: false,
+        cross_language: false,
     };
 
     println!(

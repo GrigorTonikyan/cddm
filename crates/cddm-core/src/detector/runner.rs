@@ -229,11 +229,39 @@ pub async fn run_scan(
         let suppression_engine_clone = suppression_engine.clone();
 
         tokio::task::spawn_blocking(move || {
-            index_and_match_clone_pairs(
+            let (mut pairs, total) = index_and_match_clone_pairs(
                 &parsed_files_clone,
                 &config_clone,
                 &suppression_engine_clone,
-            )
+            );
+
+            if config_clone.cross_language {
+                let scan_res =
+                    crate::semantic_graph::scan_cross_language_workspace(&config_clone, 0.70);
+                if let Ok(cross_pairs) = scan_res {
+                    for cp in cross_pairs {
+                        pairs.push(crate::types::ClonePair {
+                            file_a: cp.file_a,
+                            start_line_a: cp.lines_a.0,
+                            end_line_a: cp.lines_a.1,
+                            file_b: cp.file_b,
+                            start_line_b: cp.lines_b.0,
+                            end_line_b: cp.lines_b.1,
+                            token_count: config_clone.min_tokens,
+                            similarity: cp.hybrid_score,
+                            fragment_hash: format!(
+                                "cross-lang-{:x}",
+                                (cp.hybrid_score * 10000.0) as u64
+                            ),
+                            clone_type: crate::types::CloneType::Semantic,
+                            author_a: Some(format!("Language: {}", cp.language_a)),
+                            author_b: Some(format!("Language: {}", cp.language_b)),
+                        });
+                    }
+                }
+            }
+
+            (pairs, total)
         })
         .await
         .unwrap()

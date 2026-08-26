@@ -1,16 +1,24 @@
 #![forbid(unsafe_code)]
 
 pub mod cfg;
+pub mod cross_language;
+pub mod embedding;
 pub mod isomorphism;
 pub mod pdg;
 pub mod types;
 
 pub use cfg::extract_cfgs_from_source;
+pub use cross_language::{extract_workspace_cfgs, scan_cross_language_workspace};
+pub use embedding::{
+    calculate_embedding_similarity, compute_hybrid_similarity, compute_tf_vector,
+    cosine_similarity, extract_semantic_tokens,
+};
 pub use isomorphism::{calculate_graph_similarity, compute_weisfeiler_lehman_hash};
 pub use pdg::build_pdg_from_cfg;
 pub use types::{
-    CfgEdge, CfgEdgeType, CfgNode, CfgNodeType, ControlFlowGraph, PdgEdge, PdgEdgeKind,
-    ProgramDependenceGraph, SemanticCloneMatch,
+    CfgEdge, CfgEdgeType, CfgNode, CfgNodeType, ControlFlowGraph, CrossLanguageClonePair,
+    HybridSimilarity, PdgEdge, PdgEdgeKind, ProgramDependenceGraph, SemanticCloneMatch,
+    SemanticComparisonResponse,
 };
 
 #[cfg(test)]
@@ -84,5 +92,60 @@ mod tests {
         let pdg = build_pdg_from_cfg(cfgs[0].clone());
         assert!(!pdg.data_edges.is_empty());
         assert_eq!(pdg.data_edges[0].variable, "x");
+    }
+
+    #[test]
+    fn test_cross_language_hybrid_matching() {
+        // Rust implementation
+        let rust_code = r#"
+        pub fn calculate_discount(price: f64, is_member: bool) -> f64 {
+            let mut rate = 0.05;
+            if is_member {
+                rate = 0.20;
+            }
+            let discount = price * rate;
+            return discount;
+        }
+        "#;
+
+        // TypeScript implementation
+        let ts_code = r#"
+        export function calculateDiscount(price: number, isMember: boolean): number {
+            let rate = 0.05;
+            if (isMember) {
+                rate = 0.20;
+            }
+            const discount = price * rate;
+            return discount;
+        }
+        "#;
+
+        let cfgs_rust = extract_cfgs_from_source("calc.rs", rust_code, "Rust");
+        let cfgs_ts = extract_cfgs_from_source("calc.ts", ts_code, "TypeScript");
+
+        assert_eq!(cfgs_rust.len(), 1);
+        assert_eq!(cfgs_ts.len(), 1);
+
+        let hybrid =
+            compute_hybrid_similarity(&cfgs_rust[0], rust_code, &cfgs_ts[0], ts_code, true);
+
+        assert!(
+            hybrid.hybrid_score >= 0.70,
+            "Expected high hybrid similarity between TS and Rust logic, got: {:?}",
+            hybrid
+        );
+        assert!(hybrid.is_cross_language);
+    }
+
+    #[test]
+    fn test_token_vector_cosine_similarity() {
+        let code_a = "let total = 0; for x in items { total += x; } return total;";
+        let code_b = "let sum = 0; for (const val of nums) { sum += val; } return sum;";
+        let sim = calculate_embedding_similarity(code_a, code_b);
+        assert!(
+            sim >= 0.35,
+            "Embedding similarity should be significant for isomorphic loops, got: {}",
+            sim
+        );
     }
 }

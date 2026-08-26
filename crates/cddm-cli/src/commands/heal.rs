@@ -60,6 +60,7 @@ pub async fn run_heal_command(args: HealCliArgs) -> Result<(), Box<dyn std::erro
         ignore_generated: true,
         rules_path: None,
         enforce_policies: false,
+        cross_language: false,
     };
 
     println!("\x1b[33m--> Scanning workspace for target clone locations...\x1b[0m");

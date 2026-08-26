@@ -12,6 +12,7 @@ pub mod monorepo;
 pub mod refactor;
 pub mod rules;
 pub mod scan;
+pub mod semantic;
 pub mod trend;
 pub mod watch;
 
@@ -27,5 +28,6 @@ pub use monorepo::run_monorepo_command;
 pub use refactor::run_refactor_command;
 pub use rules::run_rules_command;
 pub use scan::run_scan_command;
+pub use semantic::run_semantic_command;
 pub use trend::run_trend_command;
 pub use watch::run_watch_command;

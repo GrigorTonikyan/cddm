@@ -66,6 +66,7 @@ pub async fn handle_diff_scan(
             ignore_generated: true,
             rules_path: None,
             enforce_policies: false,
+            cross_language: false,
         };
 
         let (tx, _rx) = mpsc::channel(100);
@@ -206,6 +207,7 @@ pub async fn handle_scan_monorepo(
         ignore_generated: true,
         rules_path: None,
         enforce_policies: false,
+        cross_language: false,
     };
 
     match cddm_core::run_monorepo_scan(Path::new(dir_str), &config).await {

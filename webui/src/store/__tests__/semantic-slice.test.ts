@@ -90,4 +90,34 @@ describe("useCDDMStore - Semantic Slice", () => {
     const state = useCDDMStore.getState();
     expect(state.isSemanticGraphModalOpen).toBe(true);
   });
+
+  it("should successfully scan cross-language clones", async () => {
+    const mockClones = [
+      {
+        file_a: "src/calc.rs",
+        language_a: "Rust",
+        function_a: "add",
+        lines_a: [1, 5] as [number, number],
+        file_b: "webui/src/calc.ts",
+        language_b: "TypeScript",
+        function_b: "add",
+        lines_b: [1, 5] as [number, number],
+        graph_similarity: 0.95,
+        token_similarity: 0.85,
+        hybrid_score: 0.91,
+        clone_type: "Semantic",
+      },
+    ];
+
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(mockClones),
+    } as Response);
+
+    const res = await useCDDMStore.getState().scanCrossLanguageClones(0.75, ".");
+    expect(res).toEqual(mockClones);
+    const state = useCDDMStore.getState();
+    expect(state.crossLanguageClones).toEqual(mockClones);
+    expect(state.isCrossLanguageLoading).toBe(false);
+  });
 });

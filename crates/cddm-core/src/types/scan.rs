@@ -181,6 +181,8 @@ pub struct ScanConfig {
     pub rules_path: Option<String>,
     /// Enforce policy compliance and fail if violations exist (default: false)
     pub enforce_policies: bool,
+    /// Detect cross-language semantic clones across different programming languages (default: false)
+    pub cross_language: bool,
 }
 
 impl Default for ScanConfig {
@@ -204,6 +206,7 @@ impl Default for ScanConfig {
             ignore_generated: true,
             rules_path: None,
             enforce_policies: false,
+            cross_language: false,
         }
     }
 }

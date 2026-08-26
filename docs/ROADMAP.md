@@ -17,24 +17,25 @@
 +----------------------------------------------------------------------------------------------------+
 ```
 
-| Milestone  | Target Horizon | Strategic Focus                             | Key Deliverables                                                                                                 |
-| :--------- | :------------- | :------------------------------------------ | :--------------------------------------------------------------------------------------------------------------- |
-| **v0.2.0** | Short-term     | CI/CD Integration & AI Agent Tooling        | SARIF `--format sarif`, expanded MCP tools (`get_clone_context`, `suggest_refactor`), official GitHub Action.    |
-| **v0.3.0** | Mid-term       | Caching, Differential Scans & Refactoring   | Embedded `redb` disk cache, `cddm diff <branch>`, automated patch synthesis (`cddm refactor`).                   |
-| **v0.4.0** | Mid-term       | WebUI Studio & Visual Analytics             | Side-by-side Monaco diff visualizer, D3 hierarchical duplication treemap, historical Git trend graph.            |
-| **v0.5.0** | Long-term      | AST Pipeline & Extended Polyglot            | Integrated AST Merkle subtree matching, Type-3 near-miss detection, Go, C/C++, Java Tree-sitter parsers.         |
-| **v1.0.0** | Stable Release | High-Throughput Enterprise Engine           | AVX2/NEON SIMD vectorization, memory-mapped zero-copy I/O, semantic AST graph clones (Type-4).                   |
-| **v1.1.0** | Stable Release | N-Way Clustering & Multi-Site Deduplication | Disjoint-Set Union-Find clustering, multi-site patch synthesis, N-way cluster cards, Axum cluster endpoint.      |
-| **v1.2.0** | Stable Release | Language Server Protocol & IDE Extensions   | Full LSP 3.17 daemon (`crates/cddm-lsp`), official VS Code extension, inline diagnostics & code actions.         |
-| **v1.3.0** | Stable Release | Historical Trends & Turnkey Workflows       | Git timeline duplication trajectories (`cddm trend`), turnkey CI workflow generator (`cddm init`, `hook`).       |
-| **v1.4.0** | Stable Release | AST Suppressions & Refactor Sandbox         | Intelligent `.cddmignore` engine, inline comment directives, interactive WebUI refactoring sandbox studio.       |
-| **v1.5.0** | Stable Release | Polyglot Expansion & AI Prompt Synthesizer  | 16 Tree-sitter AST grammars (Ruby, PHP, Swift, Bash, Lua, JSON, HTML), AI refactor prompt engine, PR comments.   |
-| **v1.6.0** | Stable Release | AST-Native Rewrite & Test Verification      | Tree-sitter CST node substitution, type-aware helper synthesis, import generation, closed-loop test runner.      |
-| **v1.7.0** | Stable Release | Boundary Policies & Polyglot Expansion      | Architectural `.cddmrules.toml`, boundary isolation, zero-dup zones, limits, Kotlin/Zig/Scala/Elixir/SQL/Docker. |
-| **v1.8.0** | Stable Release | AI Code Surgeon & Self-Healing Refactor     | Closed-loop autonomous test feedback loop, multi-provider engine (Gemini/Claude/OpenAI/Ollama), `cddm heal`.     |
-| **v1.9.0** | Stable Release | Deep Semantic Graph & Monorepo Cache        | CFG/PDG extraction, Weisfeiler-Lehman graph kernels, monorepo multi-workspace scanner, portable `.cddmpack`.     |
-| **v2.0.0** | Major Release  | Ecosystem Packaging & JetBrains Integration | Homebrew, Scoop, Winget, standalone installers (`install.sh`/`install.ps1`), JetBrains LSP integration guide.    |
-| **v2.1.0** | Major Release  | IDE & Editor Ecosystem & VSIX Pipeline      | VS Code embedded Webview Studio panel, Activity Bar dashboard, 24 polyglot languages, and turnkey VSIX packager. |
+| Milestone  | Target Horizon | Strategic Focus                             | Key Deliverables                                                                                                  |
+| :--------- | :------------- | :------------------------------------------ | :---------------------------------------------------------------------------------------------------------------- |
+| **v0.2.0** | Short-term     | CI/CD Integration & AI Agent Tooling        | SARIF `--format sarif`, expanded MCP tools (`get_clone_context`, `suggest_refactor`), official GitHub Action.     |
+| **v0.3.0** | Mid-term       | Caching, Differential Scans & Refactoring   | Embedded `redb` disk cache, `cddm diff <branch>`, automated patch synthesis (`cddm refactor`).                    |
+| **v0.4.0** | Mid-term       | WebUI Studio & Visual Analytics             | Side-by-side Monaco diff visualizer, D3 hierarchical duplication treemap, historical Git trend graph.             |
+| **v0.5.0** | Long-term      | AST Pipeline & Extended Polyglot            | Integrated AST Merkle subtree matching, Type-3 near-miss detection, Go, C/C++, Java Tree-sitter parsers.          |
+| **v1.0.0** | Stable Release | High-Throughput Enterprise Engine           | AVX2/NEON SIMD vectorization, memory-mapped zero-copy I/O, semantic AST graph clones (Type-4).                    |
+| **v1.1.0** | Stable Release | N-Way Clustering & Multi-Site Deduplication | Disjoint-Set Union-Find clustering, multi-site patch synthesis, N-way cluster cards, Axum cluster endpoint.       |
+| **v1.2.0** | Stable Release | Language Server Protocol & IDE Extensions   | Full LSP 3.17 daemon (`crates/cddm-lsp`), official VS Code extension, inline diagnostics & code actions.          |
+| **v1.3.0** | Stable Release | Historical Trends & Turnkey Workflows       | Git timeline duplication trajectories (`cddm trend`), turnkey CI workflow generator (`cddm init`, `hook`).        |
+| **v1.4.0** | Stable Release | AST Suppressions & Refactor Sandbox         | Intelligent `.cddmignore` engine, inline comment directives, interactive WebUI refactoring sandbox studio.        |
+| **v1.5.0** | Stable Release | Polyglot Expansion & AI Prompt Synthesizer  | 16 Tree-sitter AST grammars (Ruby, PHP, Swift, Bash, Lua, JSON, HTML), AI refactor prompt engine, PR comments.    |
+| **v1.6.0** | Stable Release | AST-Native Rewrite & Test Verification      | Tree-sitter CST node substitution, type-aware helper synthesis, import generation, closed-loop test runner.       |
+| **v1.7.0** | Stable Release | Boundary Policies & Polyglot Expansion      | Architectural `.cddmrules.toml`, boundary isolation, zero-dup zones, limits, Kotlin/Zig/Scala/Elixir/SQL/Docker.  |
+| **v1.8.0** | Stable Release | AI Code Surgeon & Self-Healing Refactor     | Closed-loop autonomous test feedback loop, multi-provider engine (Gemini/Claude/OpenAI/Ollama), `cddm heal`.      |
+| **v1.9.0** | Stable Release | Deep Semantic Graph & Monorepo Cache        | CFG/PDG extraction, Weisfeiler-Lehman graph kernels, monorepo multi-workspace scanner, portable `.cddmpack`.      |
+| **v2.0.0** | Major Release  | Ecosystem Packaging & JetBrains Integration | Homebrew, Scoop, Winget, standalone installers (`install.sh`/`install.ps1`), JetBrains LSP integration guide.     |
+| **v2.1.0** | Major Release  | IDE & Editor Ecosystem & VSIX Pipeline      | VS Code embedded Webview Studio panel, Activity Bar dashboard, 24 polyglot languages, and turnkey VSIX packager.  |
+| **v2.3.0** | Stable Release | Cross-Language Semantic & Hybrid Embeddings | Subword vector embeddings, Weisfeiler-Lehman graph kernels, `cddm semantic`, MCP & WebUI polyglot clone explorer. |
 
 ---
 
@@ -800,6 +801,37 @@ Developers need an embedded interactive WebUI Studio and Activity Bar sidebar da
 
 ---
 
+### EP-30: Cross-Language Semantic Matching & Hybrid Embeddings (Type-4 Polyglot Duplication)
+
+- **Target Milestone**: `v2.3.0`
+- **Component**: `crates/cddm-core`, `crates/cddm-cli`, `crates/cddm-mcp`, `webui`
+- **Priority**: `High`
+- **Status**: `Completed (v2.3.0)`
+
+#### Problem Statement
+
+Polyglot enterprise codebases frequently rewrite or duplicate algorithms, validation routines, and domain business logic across different programming languages (e.g. TypeScript frontend matching Rust backend, Python data pipeline matching Go microservice). Detecting these cross-language semantic duplicates requires polyglot CFG/PDG graph isomorphism combined with subword vector embeddings.
+
+#### Specification & Architecture
+
+1. **Subword Vector Embeddings & Cosine Similarity (`cddm-core::semantic_graph::embedding`)**:
+   - Sparse normalized term-frequency vectors combined with subword 3-grams and canonical operational tokens (`decl_var`, `ctrl_loop`, `op_add`, `lit_num`).
+   - Fast cosine dot-product similarity computation ($0.0 \dots 1.0$).
+2. **Polyglot Graph Isomorphism & Def-Use Slots (`cddm-core::semantic_graph::cfg`, `pdg`)**:
+   - Language-agnostic CFG function boundary detection across 24 supported languages.
+   - Slot-normalized variable def-use chain mapping ($v_0, v_1, \dots$).
+   - Weisfeiler-Lehman graph coloring kernel.
+3. **Unified Hybrid Similarity Model (`compute_hybrid_similarity`)**:
+   - Combines structural graph isomorphism ($S_{\text{graph}}$) and subword token embedding ($S_{\text{token}}$):
+     $$S_{\text{hybrid}} = \alpha \cdot S_{\text{graph}} + (1 - \alpha) \cdot S_{\text{token}}$$
+4. **Surfaces & Integrations**:
+   - **CLI**: `cddm semantic [DIR] [--threshold <N>] [--format console|json|markdown]` and `--cross-language` scanning flags for `scan` and `diff`.
+   - **Axum REST API**: `POST /api/semantic/scan` and dual-language `POST /api/semantic-graph`.
+   - **MCP Server**: `cddm_scan_cross_language` tool, `cross_language_audit` prompt, and `cddm://workspace/cross_language_clones` resource.
+   - **WebUI Studio**: Interactive Cross-Language Explorer tab, dual-language Polyglot Sandbox selectors, and `[Polyglot]` clone badges.
+
+---
+
 ## 3. Prioritized Action Checklist
 
 ```markdown
@@ -943,6 +975,17 @@ Developers need an embedded interactive WebUI Studio and Activity Bar sidebar da
 - [x] Implement zero-dependency cross-platform VSIX packaging and validation engine in `scripts/package-vscode.ts` [EP-29]
 - [x] Implement standard Open Packaging Conventions ZIP archive builder in `scripts/lib/zip-builder.ts` [EP-29]
 - [x] Integrate VS Code packaging into `package-distribution.ts`, `sync-version.ts`, and full verification suite `scripts/verify.ts` [EP-29]
+
+### Milestone v2.3.0 (Cross-Language Semantic Matching & Hybrid Embeddings)
+
+- [x] Implement subword vector embedding engine & cosine similarity in `cddm-core::semantic_graph::embedding` [EP-30]
+- [x] Implement polyglot CFG function extraction and slot-normalized PDG def-use analysis in `cddm-core::semantic_graph` [EP-30]
+- [x] Implement unified hybrid similarity calculator ($S_{\text{hybrid}} = \alpha S_{\text{graph}} + (1-\alpha) S_{\text{token}}$) in `cddm-core` [EP-30]
+- [x] Implement cross-language workspace scanner (`scan_cross_language_workspace`) in `cddm-core` [EP-30]
+- [x] Add `cddm semantic [DIR]` CLI command and `--cross-language` scanning flags in `cddm-cli` [EP-30]
+- [x] Expose Axum REST endpoint `POST /api/semantic/scan` and dual-language graph comparison in `cddm-cli::serve` [EP-30]
+- [x] Expose MCP tool `cddm_scan_cross_language`, prompt `cross_language_audit`, and resource `cddm://workspace/cross_language_clones` in `cddm-mcp` [EP-30]
+- [x] Implement WebUI Studio Cross-Language Explorer tab, dual-language Polyglot Sandbox selectors, and `[Polyglot]` badges in `webui/` [EP-30]
 ```
 
 ---

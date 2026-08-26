@@ -132,6 +132,7 @@ pub async fn handle_check_policies(
         ignore_generated: true,
         rules_path: rules_path.clone(),
         enforce_policies: true,
+        cross_language: false,
     };
 
     let (tx, _rx) = mpsc::channel(100);
