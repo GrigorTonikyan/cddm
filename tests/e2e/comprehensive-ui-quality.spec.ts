@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 import path from "node:path";
 
 const SCREENSHOT_DIR =
-  "C:/Users/admin/.gemini/antigravity/brain/7885ace6-6b18-42e9-bad7-23fe47e164dc/screenshots";
+  "C:/Users/admin/.gemini/antigravity/brain/15d9056d-4125-4fdf-911b-d8eb76cf40e5/screenshots";
 
 test.describe("CDDM WebUI Studio Comprehensive UI/UX Quality Verification", () => {
   test.setTimeout(180000);
