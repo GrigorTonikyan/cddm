@@ -44,14 +44,15 @@ pub fn update_caller_pom_xml(
     }
 
     if !inserted {
-        return None;
+        new_lines.push("\n  <dependencies>".to_string());
+        new_lines.push(dep_block.clone());
+        new_lines.push("  </dependencies>".to_string());
     }
 
     let updated_content = new_lines.join("\n") + "\n";
     let diff = format!(
-        "--- a/pom.xml\n+++ b/pom.xml\n@@ <dependencies> @@\n+        <dependency>\n+            \
-         <artifactId>{}</artifactId>\n+        </dependency>",
-        artifact_id
+        "--- a/pom.xml\n+++ b/pom.xml\n@@ <dependencies> @@\n+{}",
+        dep_block
     );
 
     Some(create_manifest_update(
@@ -100,9 +101,8 @@ pub fn update_caller_build_gradle(
 
     let updated_content = new_lines.join("\n") + "\n";
     let diff = format!(
-        "--- a/build.gradle\n+++ b/build.gradle\n@@ dependencies @@\n+    implementation \
-         project(':{}')",
-        project_name
+        "--- a/build.gradle\n+++ b/build.gradle\n@@ dependencies @@\n+{}",
+        dep_line
     );
 
     Some(create_manifest_update(
