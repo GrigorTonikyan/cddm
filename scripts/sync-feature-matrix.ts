@@ -12,7 +12,6 @@
  * eliminating manual hardcoding and guaranteeing documentation truth.
  */
 
-import { join } from "node:path";
 import { syncFeatureMatrixFile } from "./lib/test-matrix-generator";
 
 const isCheckMode = process.argv.includes("--check");
@@ -38,7 +37,7 @@ if (isCheckMode) {
     console.log("[PASS] docs/FEATURE_MATRIX.md is 100% synchronized with all test suites.");
   }
 } else {
-  const matrixPath = join(repoRoot, "docs/FEATURE_MATRIX.md");
+  const matrixPath = `${repoRoot}/docs/FEATURE_MATRIX.md`;
   await Bun.write(matrixPath, updatedContent);
   try {
     Bun.spawnSync(["vp", "fmt", "docs/FEATURE_MATRIX.md"], {

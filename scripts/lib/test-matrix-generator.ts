@@ -1,5 +1,4 @@
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
-import { join, relative } from "node:path";
+import { existsSync, readFileSync } from "node:fs";
 
 export interface TestSuiteEntry {
   category: string;
@@ -19,20 +18,27 @@ export interface TestMatrixSummary {
   mcpTestCount: number;
 }
 
-function walkDir(dir: string, pattern: RegExp, results: string[] = []): string[] {
-  if (!existsSync(dir)) return results;
-  for (const entry of readdirSync(dir)) {
-    const fullPath = join(dir, entry);
-    const stat = statSync(fullPath);
-    if (stat.isDirectory()) {
-      if (!["node_modules", "target", "dist", ".git", "build"].includes(entry)) {
-        walkDir(fullPath, pattern, results);
+function scanGlob(dir: string, pattern: string): string[] {
+  const glob = new Bun.Glob(pattern);
+  const results: string[] = [];
+  try {
+    for (const match of glob.scanSync({ cwd: dir })) {
+      const normalized = match.replace(/\\/g, "/");
+      if (
+        normalized.includes("node_modules") ||
+        normalized.includes("target") ||
+        normalized.includes("dist") ||
+        normalized.includes(".git") ||
+        normalized.includes("build")
+      ) {
+        continue;
       }
-    } else if (pattern.test(entry)) {
-      results.push(fullPath);
+      results.push(`${dir}/${normalized}`.replace(/\\/g, "/"));
     }
+  } catch {
+    // Directory might not exist
   }
-  return results;
+  return results.sort();
 }
 
 function countTestCases(content: string): number {
@@ -111,10 +117,15 @@ function deriveMcpName(filePath: string): string {
 }
 
 export function discoverTestMatrix(repoRoot: string = process.cwd()): TestMatrixSummary {
+  const root = repoRoot.replace(/\\/g, "/");
+
   // 1. WebUI Test Suites
-  const webuiFiles = walkDir(join(repoRoot, "webui/src"), /\.test\.(ts|tsx)$/).sort();
+  const webuiFiles = [
+    ...scanGlob(`${root}/webui/src`, "**/*.test.ts"),
+    ...scanGlob(`${root}/webui/src`, "**/*.test.tsx"),
+  ].sort();
   const webuiSuites: TestSuiteEntry[] = webuiFiles.map((file) => {
-    const relPath = formatRelativePath(relative(repoRoot, file));
+    const relPath = file.replace(`${root}/`, "");
     const content = readFileSync(file, "utf8");
     return {
       category: "WebUI",
@@ -128,11 +139,11 @@ export function discoverTestMatrix(repoRoot: string = process.cwd()): TestMatrix
 
   // 2. Scripts Test Suites
   const scriptFiles = [
-    ...walkDir(join(repoRoot, "scripts/tests"), /\.test\.ts$/),
-    ...walkDir(join(repoRoot, "scripts/lib"), /\.test\.ts$/),
+    ...scanGlob(`${root}/scripts/tests`, "**/*.test.ts"),
+    ...scanGlob(`${root}/scripts/lib`, "**/*.test.ts"),
   ].sort();
   const scriptSuites: TestSuiteEntry[] = scriptFiles.map((file) => {
-    const relPath = formatRelativePath(relative(repoRoot, file));
+    const relPath = file.replace(`${root}/`, "");
     const content = readFileSync(file, "utf8");
     return {
       category: "Scripts",
@@ -146,11 +157,11 @@ export function discoverTestMatrix(repoRoot: string = process.cwd()): TestMatrix
 
   // 3. MCP Test Suites
   const mcpFiles = [
-    ...walkDir(join(repoRoot, "tests/mcp/tools"), /\.test\.ts$/),
-    ...walkDir(join(repoRoot, "tests/mcp"), /^discovery\.test\.ts$/),
+    ...scanGlob(`${root}/tests/mcp/tools`, "**/*.test.ts"),
+    ...scanGlob(`${root}/tests/mcp`, "discovery.test.ts"),
   ].sort();
   const mcpSuites: TestSuiteEntry[] = mcpFiles.map((file) => {
-    const relPath = formatRelativePath(relative(repoRoot, file));
+    const relPath = file.replace(`${root}/`, "");
     const content = readFileSync(file, "utf8");
     return {
       category: "MCP",
@@ -163,7 +174,7 @@ export function discoverTestMatrix(repoRoot: string = process.cwd()): TestMatrix
   const mcpTestCount = mcpSuites.reduce((sum, s) => sum + s.testCount, 0);
 
   // 4. Rust Tests
-  const rustFiles = walkDir(join(repoRoot, "crates"), /\.rs$/);
+  const rustFiles = scanGlob(`${root}/crates`, "**/*.rs");
   let rustTestCount = 0;
   for (const file of rustFiles) {
     const content = readFileSync(file, "utf8");
@@ -206,7 +217,7 @@ export function generateScriptsAndMcpTable(
   const lines: string[] = [
     `## 3. Repository Scripts & MCP Protocol — Bun Test Suites (${scriptTotal + mcpTotal} tests across ${scriptSuites.length + mcpSuites.length} suites)`,
     "",
-    "### Repository Tooling & Automation Suites",
+    `### Repository Tooling & Automation Suites`,
     "",
     "| Module | Test Suite File | Test Cases | Status |",
     "| :--- | :--- | :--- | :--- |",
@@ -216,11 +227,13 @@ export function generateScriptsAndMcpTable(
     lines.push(`| ${s.name} | \`${s.filePath}\` | ${s.testCount} tests | ${s.status} |`);
   }
 
-  lines.push("");
-  lines.push("### Model Context Protocol (MCP) 1:1 Tool Test Suites");
-  lines.push("");
-  lines.push("| Tool / Protocol Feature | Test Suite File | Test Cases | Status |");
-  lines.push("| :--- | :--- | :--- | :--- |");
+  lines.push(
+    "",
+    `### Model Context Protocol (MCP) 1:1 Tool Test Suites`,
+    "",
+    "| Tool / Protocol Feature | Test Suite File | Test Cases | Status |",
+    "| :--- | :--- | :--- | :--- |",
+  );
 
   for (const s of mcpSuites) {
     lines.push(`| ${s.name} | \`${s.filePath}\` | ${s.testCount} tests | ${s.status} |`);
@@ -229,8 +242,8 @@ export function generateScriptsAndMcpTable(
   return lines.join("\n");
 }
 
-export function normalizeMarkdown(text: string): string {
-  return text
+function normalizeMarkdown(content: string): string {
+  return content
     .split("\n")
     .map((line) => {
       const trimmed = line.trim();
@@ -255,7 +268,8 @@ export function syncFeatureMatrixFile(repoRoot: string = process.cwd()): {
   updatedContent: string;
   hasChanges: boolean;
 } {
-  const matrixPath = join(repoRoot, "docs/FEATURE_MATRIX.md");
+  const root = repoRoot.replace(/\\/g, "/");
+  const matrixPath = `${root}/docs/FEATURE_MATRIX.md`;
   if (!existsSync(matrixPath)) {
     throw new Error(`docs/FEATURE_MATRIX.md not found at ${matrixPath}`);
   }
