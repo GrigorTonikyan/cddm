@@ -208,14 +208,12 @@ mod tests {
         let dir = tempdir().unwrap();
         let root = dir.path();
 
-        // Create workspace Cargo.toml
         fs::write(
             root.join("Cargo.toml"),
             "[workspace]\nmembers = [\n    \"crates/app_a\",\n    \"crates/app_b\",\n]\n",
         )
         .unwrap();
 
-        // Create caller crate A
         let app_a = root.join("crates/app_a");
         fs::create_dir_all(app_a.join("src")).unwrap();
         fs::write(
@@ -229,7 +227,6 @@ mod tests {
         )
         .unwrap();
 
-        // Create caller crate B
         let app_b = root.join("crates/app_b");
         fs::create_dir_all(app_b.join("src")).unwrap();
         fs::write(
@@ -277,7 +274,6 @@ mod tests {
         let lib_content = fs::read_to_string(root.join("crates/shared_math/src/lib.rs")).unwrap();
         assert!(lib_content.contains("pub fn compute_double()"));
 
-        // Check caller Cargo.toml updated
         let app_a_cargo = fs::read_to_string(app_a.join("Cargo.toml")).unwrap();
         assert!(app_a_cargo.contains("shared_math = { path = \"../shared_math\" }"));
     }
@@ -330,5 +326,67 @@ mod tests {
 
         let mod_content = fs::read_to_string(root.join("src/components/common_utils.ts")).unwrap();
         assert!(mod_content.contains("export function doubleValue()"));
+    }
+
+    #[test]
+    fn test_generate_shared_extraction_python_package() {
+        let dir = tempdir().unwrap();
+        let root = dir.path();
+
+        let svc_a = root.join("services/api");
+        fs::create_dir_all(&svc_a).unwrap();
+        fs::write(
+            svc_a.join("pyproject.toml"),
+            "[project]\nname = \"api\"\ndependencies = []\n",
+        )
+        .unwrap();
+        fs::write(
+            svc_a.join("views.py"),
+            "def handle():\n    val = 10\n    return val * 5\n",
+        )
+        .unwrap();
+
+        let svc_b = root.join("services/worker");
+        fs::create_dir_all(&svc_b).unwrap();
+        fs::write(
+            svc_b.join("pyproject.toml"),
+            "[project]\nname = \"worker\"\ndependencies = []\n",
+        )
+        .unwrap();
+        fs::write(
+            svc_b.join("tasks.py"),
+            "def run():\n    val = 10\n    return val * 5\n",
+        )
+        .unwrap();
+
+        let req = ExtractRequest {
+            occurrences: vec![
+                CloneLocation {
+                    file: "services/api/views.py".to_string(),
+                    start_line: 2,
+                    end_line: 3,
+                    author: None,
+                },
+                CloneLocation {
+                    file: "services/worker/tasks.py".to_string(),
+                    start_line: 2,
+                    end_line: 3,
+                    author: None,
+                },
+            ],
+            target_path: "packages/math_utils".to_string(),
+            custom_function_name: Some("calc_multiplier".to_string()),
+            target_kind: ExtractTargetKind::NewCrate,
+            custom_parameter_names: None,
+            dry_run: false,
+        };
+
+        let res = apply_shared_extraction(root, &req);
+        assert!(res.is_ok(), "{:?}", res.err());
+        let result = res.unwrap();
+
+        assert_eq!(result.function_name, "calc_multiplier");
+        assert!(root.join("packages/math_utils/pyproject.toml").exists());
+        assert!(root.join("packages/math_utils/__init__.py").exists());
     }
 }

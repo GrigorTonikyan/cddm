@@ -16,12 +16,20 @@ pub async fn handle_extract_shared_module(
     args: Option<&serde_json::Value>,
 ) -> JsonRpcResponse {
     let target_path = args
-        .and_then(|a| a.get("target").or_else(|| a.get("target_path")))
+        .and_then(|a| {
+            a.get("target_path")
+                .or_else(|| a.get("target"))
+                .or_else(|| a.get("destination"))
+        })
         .and_then(|t| t.as_str())
         .unwrap_or("crates/shared_utils");
 
     let fn_name = args
-        .and_then(|a| a.get("fn_name").or_else(|| a.get("function_name")))
+        .and_then(|a| {
+            a.get("custom_function_name")
+                .or_else(|| a.get("fn_name"))
+                .or_else(|| a.get("function_name"))
+        })
         .and_then(|f| f.as_str())
         .map(|s| s.to_string());
 

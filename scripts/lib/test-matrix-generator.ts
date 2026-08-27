@@ -114,6 +114,27 @@ function deriveMcpName(filePath: string): string {
   return `Tool: cddm_${base.replace(/-/g, "_")}`;
 }
 
+async function createSuiteEntries(
+  files: string[],
+  category: string,
+  nameDeriver: (file: string) => string,
+  root: string,
+): Promise<TestSuiteEntry[]> {
+  return Promise.all(
+    files.map(async (file) => {
+      const relPath = file.replace(`${root}/`, "");
+      const content = await Bun.file(file).text();
+      return {
+        category,
+        name: nameDeriver(file),
+        filePath: relPath,
+        testCount: countTestCases(content),
+        status: "PASS" as const,
+      };
+    }),
+  );
+}
+
 export async function discoverTestMatrix(
   repoRoot: string = process.cwd(),
 ): Promise<TestMatrixSummary> {
@@ -124,19 +145,7 @@ export async function discoverTestMatrix(
     ...scanGlob(`${root}/webui/src`, "**/*.test.ts"),
     ...scanGlob(`${root}/webui/src`, "**/*.test.tsx"),
   ].sort();
-  const webuiSuites: TestSuiteEntry[] = await Promise.all(
-    webuiFiles.map(async (file) => {
-      const relPath = file.replace(`${root}/`, "");
-      const content = await Bun.file(file).text();
-      return {
-        category: "WebUI",
-        name: deriveWebUIName(file),
-        filePath: relPath,
-        testCount: countTestCases(content),
-        status: "PASS",
-      };
-    }),
-  );
+  const webuiSuites = await createSuiteEntries(webuiFiles, "WebUI", deriveWebUIName, root);
   const webuiTestCount = webuiSuites.reduce((sum, s) => sum + s.testCount, 0);
 
   // 2. Scripts Test Suites
@@ -144,19 +153,7 @@ export async function discoverTestMatrix(
     ...scanGlob(`${root}/scripts/tests`, "**/*.test.ts"),
     ...scanGlob(`${root}/scripts/lib`, "**/*.test.ts"),
   ].sort();
-  const scriptSuites: TestSuiteEntry[] = await Promise.all(
-    scriptFiles.map(async (file) => {
-      const relPath = file.replace(`${root}/`, "");
-      const content = await Bun.file(file).text();
-      return {
-        category: "Scripts",
-        name: deriveScriptName(file),
-        filePath: relPath,
-        testCount: countTestCases(content),
-        status: "PASS",
-      };
-    }),
-  );
+  const scriptSuites = await createSuiteEntries(scriptFiles, "Scripts", deriveScriptName, root);
   const scriptTestCount = scriptSuites.reduce((sum, s) => sum + s.testCount, 0);
 
   // 3. MCP Test Suites
@@ -164,19 +161,7 @@ export async function discoverTestMatrix(
     ...scanGlob(`${root}/tests/mcp/tools`, "**/*.test.ts"),
     ...scanGlob(`${root}/tests/mcp`, "discovery.test.ts"),
   ].sort();
-  const mcpSuites: TestSuiteEntry[] = await Promise.all(
-    mcpFiles.map(async (file) => {
-      const relPath = file.replace(`${root}/`, "");
-      const content = await Bun.file(file).text();
-      return {
-        category: "MCP",
-        name: deriveMcpName(file),
-        filePath: relPath,
-        testCount: countTestCases(content),
-        status: "PASS",
-      };
-    }),
-  );
+  const mcpSuites = await createSuiteEntries(mcpFiles, "MCP", deriveMcpName, root);
   const mcpTestCount = mcpSuites.reduce((sum, s) => sum + s.testCount, 0);
 
   // 4. Rust Tests

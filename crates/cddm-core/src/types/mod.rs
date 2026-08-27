@@ -9,7 +9,7 @@ pub mod suppression;
 pub mod timeline;
 pub mod workflow;
 
-pub use clone::{CloneCluster, CloneLocation, ClonePair, CloneType};
+pub use clone::{CloneCluster, CloneLocation, ClonePair, CloneType, deduplicate_clone_pairs};
 pub use diff::{CloneStatus, DiffClonePair, DiffScanResult, DiffSummary};
 pub use policy::{
     BoundaryRule, LimitRule, PolicyConfig, PolicyEvaluationResult, PolicySeverity, PolicyViolation,

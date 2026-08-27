@@ -232,24 +232,7 @@ pub fn evaluate_in_memory_duplication(
         push_pair_if_valid(current, curr_f_a_idx, curr_f_b_idx);
     }
 
-    // Dedup identical clone pairs
-    merged_pairs.sort_by(|a, b| {
-        a.file_a
-            .cmp(&b.file_a)
-            .then(a.file_b.cmp(&b.file_b))
-            .then(a.start_line_a.cmp(&b.start_line_a))
-            .then(a.start_line_b.cmp(&b.start_line_b))
-            .then(a.end_line_a.cmp(&b.end_line_a))
-            .then(a.end_line_b.cmp(&b.end_line_b))
-    });
-    merged_pairs.dedup_by(|a, b| {
-        a.file_a == b.file_a
-            && a.file_b == b.file_b
-            && a.start_line_a == b.start_line_a
-            && a.end_line_a == b.end_line_a
-            && a.start_line_b == b.start_line_b
-            && a.end_line_b == b.end_line_b
-    });
+    crate::types::deduplicate_clone_pairs(&mut merged_pairs);
 
     let total_clones = merged_pairs.len();
     let total_duplicated_tokens: usize = merged_pairs.iter().map(|p| p.token_count).sum();

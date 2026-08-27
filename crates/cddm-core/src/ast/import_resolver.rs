@@ -16,10 +16,19 @@ pub fn generate_import_statement(
     let ext = extension.to_lowercase();
     let caller_path = Path::new(caller_file);
     let target_path = Path::new(target_module);
-    let module_stem = target_path
-        .file_stem()
-        .and_then(|s| s.to_str())
-        .unwrap_or("helper");
+
+    let module_stem = if target_path.file_name().and_then(|s| s.to_str()) == Some("__init__.py") {
+        target_path
+            .parent()
+            .and_then(|p| p.file_stem())
+            .and_then(|s| s.to_str())
+            .unwrap_or("shared_utils")
+    } else {
+        target_path
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or("helper")
+    };
 
     match ext.as_str() {
         "rs" => {
@@ -40,7 +49,13 @@ pub fn generate_import_statement(
                 function_name, rel_import
             ))
         }
-        "py" => Some(format!("from .{} import {}", module_stem, function_name)),
+        "py" => {
+            if caller_path.parent() == target_path.parent() {
+                Some(format!("from .{} import {}", module_stem, function_name))
+            } else {
+                Some(format!("from {} import {}", module_stem, function_name))
+            }
+        }
         "go" => {
             let pkg_name = target_path
                 .parent()
@@ -137,6 +152,20 @@ mod tests {
         assert_eq!(
             import,
             Some("import { formatData } from \"./utils\";".to_string())
+        );
+    }
+
+    #[test]
+    fn test_python_import_generation() {
+        let import = generate_import_statement(
+            "app/worker.py",
+            "packages/shared_utils/__init__.py",
+            "calculate_tax",
+            "py",
+        );
+        assert_eq!(
+            import,
+            Some("from shared_utils import calculate_tax".to_string())
         );
     }
 

@@ -17,6 +17,22 @@ describe("MCP Tool: cddm_extract_shared_module", () => {
     expect(Array.isArray(res.generated_files)).toBe(true);
   });
 
+  it("should generate shared module extraction plan for TypeScript files", async () => {
+    const res = await executeTool("cddm_extract_shared_module", {
+      occurrences: [
+        { file: "webui/src/store/slices/watch-slice.ts", start_line: 1, end_line: 10 },
+        { file: "webui/src/store/slices/policy-slice.ts", start_line: 1, end_line: 10 },
+      ],
+      target_path: "webui/src/store/shared_store_utils.ts",
+      fn_name: "sharedStoreHelper",
+      dry_run: true,
+    });
+
+    expect(res).toBeDefined();
+    expect(res.function_name).toBe("sharedStoreHelper");
+    expect(Array.isArray(res.generated_files)).toBe(true);
+  });
+
   it("should reject invocation when cluster_id does not exist", async () => {
     await assertToolError(
       "cddm_extract_shared_module",

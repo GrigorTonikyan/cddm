@@ -73,3 +73,24 @@ pub struct ClonePair {
     /// Optional author attribution for fragment B
     pub author_b: Option<String>,
 }
+
+/// Canonical sort and deduplication of clone pairs.
+pub fn deduplicate_clone_pairs(pairs: &mut Vec<ClonePair>) {
+    pairs.sort_by(|a, b| {
+        a.file_a
+            .cmp(&b.file_a)
+            .then(a.file_b.cmp(&b.file_b))
+            .then(a.start_line_a.cmp(&b.start_line_a))
+            .then(a.start_line_b.cmp(&b.start_line_b))
+            .then(a.end_line_a.cmp(&b.end_line_a))
+            .then(a.end_line_b.cmp(&b.end_line_b))
+    });
+    pairs.dedup_by(|a, b| {
+        a.file_a == b.file_a
+            && a.file_b == b.file_b
+            && a.start_line_a == b.start_line_a
+            && a.end_line_a == b.end_line_a
+            && a.start_line_b == b.start_line_b
+            && a.end_line_b == b.end_line_b
+    });
+}

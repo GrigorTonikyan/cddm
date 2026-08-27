@@ -303,6 +303,30 @@
 
 ---
 
+### Milestone v2.5.0: Interactive Terminal UI Studio & 4-Pillar Feature Parity (High Priority)
+
+- [x] **[EP-32] TUI Studio Interactive Terminal Dashboard**
+  - [x] Implement high-speed Ratatui & Crossterm TUI engine in `crates/cddm-cli/src/tui/` across 8 dedicated tabs
+  - [x] Implement interactive side-by-side split diff and unified refactor diff panes with scrolling
+  - [x] Add `cddm tui` CLI subcommand with live watch re-scanning support
+  - [x] Create 4-Pillar Cross-Interface Feature Parity governance standard in `.agents/rules/interface-feature-parity.md`
+  - [x] Create SSoT parity documentation matrix in `docs/FEATURE_PARITY.md` across 15 core capabilities
+  - [x] Implement automated parity verification gate `scripts/check-feature-parity.ts` integrated into `vp run verify`
+  - [x] Verify complete cross-interface feature parity across CLI, WebUI, MCP, and TUI surfaces
+
+---
+
+### Milestone v2.6.0: Polyglot AST-Native Rewriters & Multi-Language Shared Module Extraction (High Priority)
+
+- [x] **[EP-33] Polyglot AST-Native Rewriters & Multi-Language Shared Module Extraction Engine**
+  - [x] Implement multi-language manifest updaters for Python (`pyproject.toml`), Go (`go.mod`, `go.work`), Java (`pom.xml`, `build.gradle`), and C# (`.csproj`) in `crates/cddm-core/src/extract/manifest/`
+  - [x] Implement polyglot package boilerplate generators with typed function signatures and class encapsulation in `crates/cddm-core/src/extract/generator.rs`
+  - [x] Implement return type and multi-return inference engine in `crates/cddm-core/src/ast/type_infer/`
+  - [x] Implement polyglot import statement resolution and CST replacement in `crates/cddm-core/src/ast/import_resolver.rs` and `rewriter.rs`
+  - [x] Verify complete cross-interface feature parity across CLI, WebUI, MCP, and TUI surfaces
+
+---
+
 ## Completed Milestones (Verified)
 
 - [x] **v0.1.0**: Initial Rust core engine, Winnowing rolling hash, CLI scanner.
@@ -327,3 +351,4 @@
 - [x] **v2.3.0**: Cross-Language Semantic Matching & Hybrid Embeddings (Subword vector embeddings, Weisfeiler-Lehman graph kernels, `cddm semantic`, MCP `cddm_scan_cross_language`, and WebUI Studio Cross-Language Explorer).
 - [x] **v2.4.0**: Automated Shared Module & Crate Extraction (`cddm_core::extract`, CLI `cddm extract`, Axum `/api/extract/*`, MCP `cddm_extract_shared_module`, WebUI Extract tab).
 - [x] **v2.5.0**: Interactive Terminal UI Studio (`cddm tui`), Ratatui/Crossterm 8-tab visualizer, side-by-side split diffs, and 4-Pillar Cross-Interface Feature Parity governance policy & verification pipeline (`scripts/check-feature-parity.ts`).
+- [x] **v2.6.0**: Polyglot AST-Native Rewriters & Multi-Language Shared Module Extraction Engine across Python, Go, Java, and C# (`cddm_core::extract::manifest`, `generator`, `type_infer`, `rewriter`).

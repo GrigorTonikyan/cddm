@@ -11,6 +11,37 @@ use cddm_core::{
 };
 use std::path::Path;
 
+fn parse_occurrences_locations(args_val: &serde_json::Value) -> Vec<CloneLocation> {
+    args_val
+        .get("occurrences")
+        .and_then(|v| v.as_array())
+        .map(|arr| {
+            arr.iter()
+                .map(|item| {
+                    let path = item
+                        .get("file")
+                        .or_else(|| item.get("path"))
+                        .and_then(|p| p.as_str())
+                        .unwrap_or("")
+                        .to_string();
+                    let s_line =
+                        item.get("start_line").and_then(|l| l.as_u64()).unwrap_or(1) as usize;
+                    let e_line = item
+                        .get("end_line")
+                        .and_then(|l| l.as_u64())
+                        .unwrap_or(s_line as u64) as usize;
+                    CloneLocation {
+                        file: path,
+                        start_line: s_line,
+                        end_line: e_line,
+                        author: None,
+                    }
+                })
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
 pub fn handle_suggest_refactor(
     id: Option<serde_json::Value>,
     args: Option<&serde_json::Value>,
@@ -41,28 +72,10 @@ pub async fn handle_suggest_cluster_refactor(
         .and_then(|cid| cid.as_u64())
         .map(|cid| cid as usize);
 
-    let explicit_occs = args
-        .and_then(|a| a.get(mcp_tools::PARAM_OCCURRENCES))
-        .and_then(|o| o.as_array());
+    let explicit_occs = args.map(parse_occurrences_locations).unwrap_or_default();
 
-    if let Some(occs_arr) = explicit_occs {
-        let mut parsed_occs = Vec::new();
-        for item in occs_arr {
-            if let (Some(file), Some(start), Some(end)) = (
-                item.get("file").and_then(|f| f.as_str()),
-                item.get("start_line").and_then(|s| s.as_u64()),
-                item.get("end_line").and_then(|e| e.as_u64()),
-            ) {
-                parsed_occs.push(CloneLocation {
-                    file: file.to_string(),
-                    start_line: start as usize,
-                    end_line: end as usize,
-                    author: None,
-                });
-            }
-        }
-
-        if parsed_occs.len() < 2 {
+    if !explicit_occs.is_empty() {
+        if explicit_occs.len() < 2 {
             return make_error_response(
                 id,
                 rpc_errors::INVALID_PARAMS,
@@ -70,7 +83,7 @@ pub async fn handle_suggest_cluster_refactor(
             );
         }
 
-        match analyze_cluster_refactoring("cluster-custom", &parsed_occs) {
+        match analyze_cluster_refactoring("cluster-custom", &explicit_occs) {
             Ok(suggestion) => make_text_response(
                 id,
                 serde_json::to_string_pretty(&suggestion).unwrap_or_default(),
@@ -173,52 +186,29 @@ pub fn handle_generate_ai_prompt(
             })
             .unwrap_or_default();
 
-        let occurrences: Vec<AiOccurrenceContext> = args_val
-            .get("occurrences")
-            .and_then(|v| v.as_array())
-            .map(|arr| {
-                arr.iter()
-                    .map(|item| {
-                        let path = item
-                            .get("file")
-                            .or_else(|| item.get("path"))
-                            .and_then(|p| p.as_str())
-                            .unwrap_or("")
-                            .to_string();
-                        let s_line =
-                            item.get("start_line").and_then(|l| l.as_u64()).unwrap_or(1) as usize;
-                        let e_line = item
-                            .get("end_line")
-                            .and_then(|l| l.as_u64())
-                            .unwrap_or(s_line as u64) as usize;
-                        let snippet = item
-                            .get("snippet")
-                            .and_then(|s| s.as_str())
-                            .map(|s| s.to_string())
-                            .unwrap_or_else(|| {
-                                let file_content =
-                                    std::fs::read_to_string(&path).unwrap_or_default();
-                                let lines: Vec<&str> = file_content.lines().collect();
-                                if s_line > 0 && s_line <= lines.len() {
-                                    let end = e_line.min(lines.len());
-                                    lines[s_line - 1..end].join("\n")
-                                } else {
-                                    String::new()
-                                }
-                            });
-                        AiOccurrenceContext {
-                            path,
-                            span: LineSpan {
-                                line_start: s_line,
-                                line_end: e_line,
-                                byte_offset: 0,
-                            },
-                            snippet,
-                        }
-                    })
-                    .collect()
+        let parsed_occs = parse_occurrences_locations(args_val);
+        let occurrences: Vec<AiOccurrenceContext> = parsed_occs
+            .into_iter()
+            .map(|occ| {
+                let file_content = std::fs::read_to_string(&occ.file).unwrap_or_default();
+                let lines: Vec<&str> = file_content.lines().collect();
+                let snippet = if occ.start_line > 0 && occ.start_line <= lines.len() {
+                    let end = occ.end_line.min(lines.len());
+                    lines[occ.start_line - 1..end].join("\n")
+                } else {
+                    String::new()
+                };
+                AiOccurrenceContext {
+                    path: occ.file,
+                    span: LineSpan {
+                        line_start: occ.start_line,
+                        line_end: occ.end_line,
+                        byte_offset: 0,
+                    },
+                    snippet,
+                }
             })
-            .unwrap_or_default();
+            .collect();
 
         let prompt_req = AiRefactorPromptRequest {
             clone_type: CloneType::Renamed,
@@ -262,35 +252,7 @@ pub fn handle_ast_refactor(
                     .collect()
             });
 
-        let occurrences: Vec<CloneLocation> = args_val
-            .get("occurrences")
-            .and_then(|v| v.as_array())
-            .map(|arr| {
-                arr.iter()
-                    .map(|item| {
-                        let path = item
-                            .get("file")
-                            .or_else(|| item.get("path"))
-                            .and_then(|p| p.as_str())
-                            .unwrap_or("")
-                            .to_string();
-                        let s_line =
-                            item.get("start_line").and_then(|l| l.as_u64()).unwrap_or(1) as usize;
-                        let e_line = item
-                            .get("end_line")
-                            .and_then(|l| l.as_u64())
-                            .unwrap_or(s_line as u64) as usize;
-                        CloneLocation {
-                            file: path,
-                            start_line: s_line,
-                            end_line: e_line,
-                            author: None,
-                        }
-                    })
-                    .collect()
-            })
-            .unwrap_or_default();
-
+        let occurrences = parse_occurrences_locations(args_val);
         if occurrences.is_empty() {
             return make_error_response(
                 id,
