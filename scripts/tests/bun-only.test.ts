@@ -1,25 +1,17 @@
 import { describe, expect, it } from "bun:test";
-import { readdirSync, readFileSync, statSync } from "node:fs";
-import { join } from "node:path";
 
 function getScriptFiles(dir: string): string[] {
+  const glob = new Bun.Glob("**/*.{ts,js}");
   const files: string[] = [];
-  const entries = readdirSync(dir);
-  for (const entry of entries) {
-    const fullPath = join(dir, entry);
-    const stat = statSync(fullPath);
-    if (stat.isDirectory()) {
-      files.push(...getScriptFiles(fullPath));
-    } else if (entry.endsWith(".ts") || entry.endsWith(".js")) {
-      files.push(fullPath);
-    }
+  for (const match of glob.scanSync({ cwd: dir })) {
+    files.push(`${dir}/${match}`.replace(/\\/g, "/"));
   }
   return files;
 }
 
 describe("Bun-Only Runtime & API Mandate Scanner", () => {
-  it("should enforce zero child_process imports across all scripts/", () => {
-    const scriptsDir = join(process.cwd(), "scripts");
+  it("should enforce zero child_process imports across all scripts/", async () => {
+    const scriptsDir = `${process.cwd()}/scripts`.replace(/\\/g, "/");
     const scriptFiles = getScriptFiles(scriptsDir);
     const violations: Array<{ file: string; match: string }> = [];
 
@@ -32,7 +24,7 @@ describe("Bun-Only Runtime & API Mandate Scanner", () => {
 
     for (const file of scriptFiles) {
       if (file.endsWith("bun-only.test.ts")) continue;
-      const content = readFileSync(file, "utf8");
+      const content = await Bun.file(file).text();
       for (const pattern of forbiddenPatterns) {
         const match = content.match(pattern);
         if (match) {

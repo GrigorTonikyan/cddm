@@ -7,8 +7,8 @@ import {
 } from "../lib/test-matrix-generator";
 
 describe("Feature Matrix Dynamic Discovery & Generator", () => {
-  it("should dynamically discover all polyglot test tiers", () => {
-    const matrix = discoverTestMatrix();
+  it("should dynamically discover all polyglot test tiers", async () => {
+    const matrix = await discoverTestMatrix();
 
     expect(matrix.rustTestCount).toBeGreaterThanOrEqual(170);
     expect(matrix.webuiSuites.length).toBe(41);
@@ -19,8 +19,8 @@ describe("Feature Matrix Dynamic Discovery & Generator", () => {
     expect(matrix.mcpTestCount).toBeGreaterThanOrEqual(39);
   });
 
-  it("should generate valid WebUI markdown table", () => {
-    const matrix = discoverTestMatrix();
+  it("should generate valid WebUI markdown table", async () => {
+    const matrix = await discoverTestMatrix();
     const table = generateWebUITable(matrix.webuiSuites, matrix.webuiTestCount);
 
     expect(table).toContain("## 2. WebUI Frontend");
@@ -29,8 +29,8 @@ describe("Feature Matrix Dynamic Discovery & Generator", () => {
     expect(table).toContain("webui/src/components/ScanResults.test.tsx");
   });
 
-  it("should generate valid Scripts and MCP markdown table", () => {
-    const matrix = discoverTestMatrix();
+  it("should generate valid Scripts and MCP markdown table", async () => {
+    const matrix = await discoverTestMatrix();
     const table = generateScriptsAndMcpTable(
       matrix.scriptSuites,
       matrix.mcpSuites,
@@ -45,8 +45,8 @@ describe("Feature Matrix Dynamic Discovery & Generator", () => {
     expect(table).toContain("tests/mcp/tools/scan-codebase.test.ts");
   });
 
-  it("should verify that docs/FEATURE_MATRIX.md is currently in sync", () => {
-    const { hasChanges } = syncFeatureMatrixFile();
+  it("should verify that docs/FEATURE_MATRIX.md is currently in sync", async () => {
+    const { hasChanges } = await syncFeatureMatrixFile();
     expect(hasChanges).toBe(false);
   });
 });

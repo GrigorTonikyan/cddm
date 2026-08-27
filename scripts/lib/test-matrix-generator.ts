@@ -1,5 +1,3 @@
-import { existsSync, readFileSync } from "node:fs";
-
 export interface TestSuiteEntry {
   category: string;
   name: string;
@@ -116,7 +114,9 @@ function deriveMcpName(filePath: string): string {
   return `Tool: cddm_${base.replace(/-/g, "_")}`;
 }
 
-export function discoverTestMatrix(repoRoot: string = process.cwd()): TestMatrixSummary {
+export async function discoverTestMatrix(
+  repoRoot: string = process.cwd(),
+): Promise<TestMatrixSummary> {
   const root = repoRoot.replace(/\\/g, "/");
 
   // 1. WebUI Test Suites
@@ -124,17 +124,19 @@ export function discoverTestMatrix(repoRoot: string = process.cwd()): TestMatrix
     ...scanGlob(`${root}/webui/src`, "**/*.test.ts"),
     ...scanGlob(`${root}/webui/src`, "**/*.test.tsx"),
   ].sort();
-  const webuiSuites: TestSuiteEntry[] = webuiFiles.map((file) => {
-    const relPath = file.replace(`${root}/`, "");
-    const content = readFileSync(file, "utf8");
-    return {
-      category: "WebUI",
-      name: deriveWebUIName(file),
-      filePath: relPath,
-      testCount: countTestCases(content),
-      status: "PASS",
-    };
-  });
+  const webuiSuites: TestSuiteEntry[] = await Promise.all(
+    webuiFiles.map(async (file) => {
+      const relPath = file.replace(`${root}/`, "");
+      const content = await Bun.file(file).text();
+      return {
+        category: "WebUI",
+        name: deriveWebUIName(file),
+        filePath: relPath,
+        testCount: countTestCases(content),
+        status: "PASS",
+      };
+    }),
+  );
   const webuiTestCount = webuiSuites.reduce((sum, s) => sum + s.testCount, 0);
 
   // 2. Scripts Test Suites
@@ -142,17 +144,19 @@ export function discoverTestMatrix(repoRoot: string = process.cwd()): TestMatrix
     ...scanGlob(`${root}/scripts/tests`, "**/*.test.ts"),
     ...scanGlob(`${root}/scripts/lib`, "**/*.test.ts"),
   ].sort();
-  const scriptSuites: TestSuiteEntry[] = scriptFiles.map((file) => {
-    const relPath = file.replace(`${root}/`, "");
-    const content = readFileSync(file, "utf8");
-    return {
-      category: "Scripts",
-      name: deriveScriptName(file),
-      filePath: relPath,
-      testCount: countTestCases(content),
-      status: "PASS",
-    };
-  });
+  const scriptSuites: TestSuiteEntry[] = await Promise.all(
+    scriptFiles.map(async (file) => {
+      const relPath = file.replace(`${root}/`, "");
+      const content = await Bun.file(file).text();
+      return {
+        category: "Scripts",
+        name: deriveScriptName(file),
+        filePath: relPath,
+        testCount: countTestCases(content),
+        status: "PASS",
+      };
+    }),
+  );
   const scriptTestCount = scriptSuites.reduce((sum, s) => sum + s.testCount, 0);
 
   // 3. MCP Test Suites
@@ -160,27 +164,31 @@ export function discoverTestMatrix(repoRoot: string = process.cwd()): TestMatrix
     ...scanGlob(`${root}/tests/mcp/tools`, "**/*.test.ts"),
     ...scanGlob(`${root}/tests/mcp`, "discovery.test.ts"),
   ].sort();
-  const mcpSuites: TestSuiteEntry[] = mcpFiles.map((file) => {
-    const relPath = file.replace(`${root}/`, "");
-    const content = readFileSync(file, "utf8");
-    return {
-      category: "MCP",
-      name: deriveMcpName(file),
-      filePath: relPath,
-      testCount: countTestCases(content),
-      status: "PASS",
-    };
-  });
+  const mcpSuites: TestSuiteEntry[] = await Promise.all(
+    mcpFiles.map(async (file) => {
+      const relPath = file.replace(`${root}/`, "");
+      const content = await Bun.file(file).text();
+      return {
+        category: "MCP",
+        name: deriveMcpName(file),
+        filePath: relPath,
+        testCount: countTestCases(content),
+        status: "PASS",
+      };
+    }),
+  );
   const mcpTestCount = mcpSuites.reduce((sum, s) => sum + s.testCount, 0);
 
   // 4. Rust Tests
   const rustFiles = scanGlob(`${root}/crates`, "**/*.rs");
   let rustTestCount = 0;
-  for (const file of rustFiles) {
-    const content = readFileSync(file, "utf8");
-    const matches = content.match(/#\[(?:tokio::)?test\]/g);
-    if (matches) rustTestCount += matches.length;
-  }
+  await Promise.all(
+    rustFiles.map(async (file) => {
+      const content = await Bun.file(file).text();
+      const matches = content.match(/#\[(?:tokio::)?test\]/g);
+      if (matches) rustTestCount += matches.length;
+    }),
+  );
 
   return {
     rustTestCount,
@@ -263,19 +271,20 @@ function normalizeMarkdown(content: string): string {
     .join("\n");
 }
 
-export function syncFeatureMatrixFile(repoRoot: string = process.cwd()): {
+export async function syncFeatureMatrixFile(repoRoot: string = process.cwd()): Promise<{
   matrix: TestMatrixSummary;
   updatedContent: string;
   hasChanges: boolean;
-} {
+}> {
   const root = repoRoot.replace(/\\/g, "/");
   const matrixPath = `${root}/docs/FEATURE_MATRIX.md`;
-  if (!existsSync(matrixPath)) {
+  const matrixFile = Bun.file(matrixPath);
+  if (!(await matrixFile.exists())) {
     throw new Error(`docs/FEATURE_MATRIX.md not found at ${matrixPath}`);
   }
 
-  const currentContent = readFileSync(matrixPath, "utf8");
-  const matrix = discoverTestMatrix(repoRoot);
+  const currentContent = await matrixFile.text();
+  const matrix = await discoverTestMatrix(repoRoot);
 
   const webuiTable = generateWebUITable(matrix.webuiSuites, matrix.webuiTestCount);
   const scriptsMcpTable = generateScriptsAndMcpTable(

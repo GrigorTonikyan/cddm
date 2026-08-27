@@ -241,7 +241,7 @@ export async function validateDocumentation(
 
   // 4. Feature Matrix dynamic test discovery synchronization
   try {
-    const { hasChanges } = syncFeatureMatrixFile(workspaceRoot);
+    const { hasChanges } = await syncFeatureMatrixFile(workspaceRoot);
     if (hasChanges) {
       allErrors.push({
         file: "docs/FEATURE_MATRIX.md",

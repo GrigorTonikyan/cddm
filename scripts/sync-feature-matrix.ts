@@ -18,7 +18,7 @@ const isCheckMode = process.argv.includes("--check");
 const repoRoot = process.cwd();
 
 console.log("--> Discovering all polyglot test suites dynamically...");
-const { matrix, updatedContent, hasChanges } = syncFeatureMatrixFile(repoRoot);
+const { matrix, updatedContent, hasChanges } = await syncFeatureMatrixFile(repoRoot);
 
 console.log(`Discovered:
 - Rust Engine: ${matrix.rustTestCount} #[test] units
