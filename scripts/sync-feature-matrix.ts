@@ -12,8 +12,6 @@
  * eliminating manual hardcoding and guaranteeing documentation truth.
  */
 
-import { execSync } from "node:child_process";
-import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { syncFeatureMatrixFile } from "./lib/test-matrix-generator";
 
@@ -41,9 +39,12 @@ if (isCheckMode) {
   }
 } else {
   const matrixPath = join(repoRoot, "docs/FEATURE_MATRIX.md");
-  writeFileSync(matrixPath, updatedContent, "utf8");
+  await Bun.write(matrixPath, updatedContent);
   try {
-    execSync("vp fmt docs/FEATURE_MATRIX.md", { stdio: "ignore" });
+    Bun.spawnSync(["vp", "fmt", "docs/FEATURE_MATRIX.md"], {
+      stdout: "ignore",
+      stderr: "ignore",
+    });
   } catch {
     // Ignore if vp is not in path
   }
