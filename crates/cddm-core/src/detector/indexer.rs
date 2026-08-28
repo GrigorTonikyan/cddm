@@ -86,82 +86,12 @@ pub fn index_and_match_clone_pairs(
         }
     }
 
-    // Merge overlapping and adjacent clone pairs
-    raw_pairs.sort_by(|a, b| {
-        a.file_a
-            .cmp(&b.file_a)
-            .then(a.file_b.cmp(&b.file_b))
-            .then(a.start_line_a.cmp(&b.start_line_a))
-            .then(a.start_line_b.cmp(&b.start_line_b))
+    let mut merged_pairs = merge_overlapping_clone_pairs(raw_pairs, config.min_tokens, k, |path| {
+        parsed_files
+            .iter()
+            .find(|f| f.path == path)
+            .map(|f| f.token_spans.as_slice())
     });
-
-    let mut merged_pairs = Vec::new();
-    if !raw_pairs.is_empty() {
-        let mut push_pair_if_valid = |mut pair: ClonePair, file_a_idx: usize, file_b_idx: usize| {
-            let count_a = count_tokens_in_line_span(
-                &parsed_files[file_a_idx].token_spans,
-                pair.start_line_a,
-                pair.end_line_a,
-            );
-            let count_b = count_tokens_in_line_span(
-                &parsed_files[file_b_idx].token_spans,
-                pair.start_line_b,
-                pair.end_line_b,
-            );
-            pair.token_count = std::cmp::max(k, std::cmp::min(count_a, count_b));
-            if pair.token_count >= config.min_tokens {
-                merged_pairs.push(pair);
-            }
-        };
-
-        let mut current = raw_pairs[0].clone();
-        let mut curr_file_a_idx = parsed_files
-            .iter()
-            .position(|f| f.path == current.file_a)
-            .unwrap_or(0);
-        let mut curr_file_b_idx = parsed_files
-            .iter()
-            .position(|f| f.path == current.file_b)
-            .unwrap_or(0);
-
-        for next in raw_pairs.into_iter().skip(1) {
-            let is_same_file = current.file_a == current.file_b;
-            let candidate_end_a = std::cmp::max(current.end_line_a, next.end_line_a);
-            let candidate_end_b = std::cmp::max(current.end_line_b, next.end_line_b);
-            let (first_end, second_start) = if current.start_line_a <= current.start_line_b {
-                (candidate_end_a, current.start_line_b)
-            } else {
-                (candidate_end_b, current.start_line_a)
-            };
-            let would_overlap = is_same_file && (first_end >= second_start);
-
-            if current.file_a == next.file_a
-                && current.file_b == next.file_b
-                && next.start_line_a <= current.end_line_a + 3
-                && next.start_line_b <= current.end_line_b + 3
-                && !would_overlap
-            {
-                current.end_line_a = candidate_end_a;
-                current.end_line_b = candidate_end_b;
-            } else {
-                push_pair_if_valid(current, curr_file_a_idx, curr_file_b_idx);
-                current = next;
-                curr_file_a_idx = parsed_files
-                    .iter()
-                    .position(|f| f.path == current.file_a)
-                    .unwrap_or(0);
-                curr_file_b_idx = parsed_files
-                    .iter()
-                    .position(|f| f.path == current.file_b)
-                    .unwrap_or(0);
-            }
-        }
-
-        push_pair_if_valid(current, curr_file_a_idx, curr_file_b_idx);
-    }
-
-    crate::types::deduplicate_clone_pairs(&mut merged_pairs);
-    merged_pairs.sort_by_key(|b| std::cmp::Reverse(b.token_count));
 
     for pair in &mut merged_pairs {
         let ext_a = Path::new(&pair.file_a)
@@ -212,4 +142,73 @@ pub fn index_and_match_clone_pairs(
     });
 
     (merged_pairs, total_tokens)
+}
+
+/// Merges overlapping and adjacent clone pairs based on token distance.
+pub fn merge_overlapping_clone_pairs<'a, F>(
+    mut raw_pairs: Vec<ClonePair>,
+    min_tokens: usize,
+    k: usize,
+    mut get_spans: F,
+) -> Vec<ClonePair>
+where
+    F: FnMut(&str) -> Option<&'a [crate::types::LineSpan]>,
+{
+    if raw_pairs.is_empty() {
+        return Vec::new();
+    }
+
+    raw_pairs.sort_by(|a, b| {
+        a.file_a
+            .cmp(&b.file_a)
+            .then(a.file_b.cmp(&b.file_b))
+            .then(a.start_line_a.cmp(&b.start_line_a))
+            .then(a.start_line_b.cmp(&b.start_line_b))
+    });
+
+    let mut merged_pairs = Vec::new();
+    let mut push_pair_if_valid = |mut pair: ClonePair| {
+        let count_a = get_spans(&pair.file_a)
+            .map(|spans| count_tokens_in_line_span(spans, pair.start_line_a, pair.end_line_a))
+            .unwrap_or(k);
+        let count_b = get_spans(&pair.file_b)
+            .map(|spans| count_tokens_in_line_span(spans, pair.start_line_b, pair.end_line_b))
+            .unwrap_or(k);
+        pair.token_count = std::cmp::max(k, std::cmp::min(count_a, count_b));
+        if pair.token_count >= min_tokens {
+            merged_pairs.push(pair);
+        }
+    };
+
+    let mut current = raw_pairs[0].clone();
+
+    for next in raw_pairs.into_iter().skip(1) {
+        let is_same_file = current.file_a == current.file_b;
+        let candidate_end_a = std::cmp::max(current.end_line_a, next.end_line_a);
+        let candidate_end_b = std::cmp::max(current.end_line_b, next.end_line_b);
+        let (first_end, second_start) = if current.start_line_a <= current.start_line_b {
+            (candidate_end_a, current.start_line_b)
+        } else {
+            (candidate_end_b, current.start_line_a)
+        };
+        let would_overlap = is_same_file && (first_end >= second_start);
+
+        if current.file_a == next.file_a
+            && current.file_b == next.file_b
+            && next.start_line_a <= current.end_line_a + 3
+            && next.start_line_b <= current.end_line_b + 3
+            && !would_overlap
+        {
+            current.end_line_a = candidate_end_a;
+            current.end_line_b = candidate_end_b;
+        } else {
+            push_pair_if_valid(current);
+            current = next;
+        }
+    }
+
+    push_pair_if_valid(current);
+    crate::types::deduplicate_clone_pairs(&mut merged_pairs);
+    merged_pairs.sort_by_key(|b| std::cmp::Reverse(b.token_count));
+    merged_pairs
 }

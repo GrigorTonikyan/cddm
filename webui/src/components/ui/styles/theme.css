@@ -38,6 +38,7 @@
   --cddm-ui-accent-active: #4f46e5;
   --cddm-ui-success-text: #34d399;
 
+  /* cddm:ignore-start */
   /* Badge Color Variants */
   --cddm-ui-badge-indigo-bg: rgba(49, 46, 129, 0.5);
   --cddm-ui-badge-indigo-text: #a5b4fc;
@@ -64,6 +65,7 @@
   --cddm-ui-code-highlight-bg: rgba(49, 46, 129, 0.4);
   --cddm-ui-code-highlight-border: rgba(99, 102, 241, 0.5);
   --cddm-ui-code-highlight-text: #c7d2fe;
+  /* cddm:ignore-end */
 
   /* Radii */
   --cddm-ui-radius-card: 12px;

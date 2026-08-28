@@ -8,6 +8,31 @@ import type {
   VerifyRefactorRequest,
 } from "../../types/cddm-types";
 import type { GetStoreState, SetStoreState } from "./scan-slice";
+async function postExtractRequest(
+  endpoint: string,
+  req: ExtractRequest,
+  actionLabel: string,
+  dryRun?: boolean,
+): Promise<ExtractResult> {
+  const normalizedOccurrences = (req.occurrences || []).map((occ) => ({
+    ...occ,
+    file: occ.file.replace(/\\/g, "/"),
+  }));
+  const body =
+    dryRun !== undefined
+      ? { ...req, occurrences: normalizedOccurrences, dry_run: dryRun }
+      : { ...req, occurrences: normalizedOccurrences };
+  const res = await fetch(endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const errorText = await res.text().catch(() => res.statusText);
+    throw new Error(`${actionLabel} failed (${res.status}): ${errorText}`);
+  }
+  return (await res.json()) as ExtractResult;
+}
 
 export const createRefactorSlice = (set: SetStoreState, _get: GetStoreState) => ({
   openRefactorSandbox: async (req: RefactorSandboxRequest) => {
@@ -178,20 +203,7 @@ export const createRefactorSlice = (set: SetStoreState, _get: GetStoreState) => 
   previewExtractModule: async (req: ExtractRequest) => {
     set({ isExtractLoading: true, extractError: null });
     try {
-      const normalizedOccurrences = (req.occurrences || []).map((occ) => ({
-        ...occ,
-        file: occ.file.replace(/\\/g, "/"),
-      }));
-      const res = await fetch(API_ROUTES.EXTRACT_PREVIEW, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...req, occurrences: normalizedOccurrences }),
-      });
-      if (!res.ok) {
-        const errorText = await res.text().catch(() => res.statusText);
-        throw new Error(`Extract preview failed (${res.status}): ${errorText}`);
-      }
-      const result: ExtractResult = await res.json();
+      const result = await postExtractRequest(API_ROUTES.EXTRACT_PREVIEW, req, "Extract preview");
       set({
         extractResult: result,
         isExtractLoading: false,
@@ -208,20 +220,12 @@ export const createRefactorSlice = (set: SetStoreState, _get: GetStoreState) => 
   applyExtractModule: async (req: ExtractRequest) => {
     set({ isExtractLoading: true, extractError: null });
     try {
-      const normalizedOccurrences = (req.occurrences || []).map((occ) => ({
-        ...occ,
-        file: occ.file.replace(/\\/g, "/"),
-      }));
-      const res = await fetch(API_ROUTES.EXTRACT_APPLY, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...req, occurrences: normalizedOccurrences, dry_run: false }),
-      });
-      if (!res.ok) {
-        const errorText = await res.text().catch(() => res.statusText);
-        throw new Error(`Extract application failed (${res.status}): ${errorText}`);
-      }
-      const result: ExtractResult = await res.json();
+      const result = await postExtractRequest(
+        API_ROUTES.EXTRACT_APPLY,
+        req,
+        "Extract application",
+        false,
+      );
       set({
         extractResult: result,
         isExtractLoading: false,

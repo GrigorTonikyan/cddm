@@ -143,6 +143,7 @@
   --win2x-accent-active: #4338ca;
   --win2x-accent-glow: rgba(99, 102, 241, 0.15);
 
+  /* cddm:ignore-start */
   /* Badge Color Variants */
   --win2x-badge-indigo-bg: rgba(224, 231, 255, 0.85);
   --win2x-badge-indigo-text: #4338ca;
@@ -169,12 +170,14 @@
   --win2x-code-highlight-bg: rgba(224, 231, 255, 0.5);
   --win2x-code-highlight-border: rgba(99, 102, 241, 0.5);
   --win2x-code-highlight-text: #3730a3;
+  /* cddm:ignore-end */
 
   /* Elevation Shadows */
   --win2x-shadow-window: 0 20px 40px -10px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.08);
   --win2x-shadow-pill: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
 }
 
+/* cddm:ignore-start */
 [data-win2x-theme="high-contrast"] {
   /* High-Contrast WCAG AAA Solid Surfaces */
   --win2x-bg-base: #000000;
@@ -218,6 +221,7 @@
   --win2x-accent-hover: #ffffff;
   --win2x-accent-active: #00ffff;
   --win2x-accent-glow: rgba(255, 255, 0, 0.4);
+  /* cddm:ignore-end */
 
   /* High-Contrast Badges */
   --win2x-badge-indigo-bg: #000000;

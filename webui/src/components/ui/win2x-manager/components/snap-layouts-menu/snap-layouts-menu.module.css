@@ -7,6 +7,7 @@
   z-index: 10000;
   width: 290px;
   padding: 10px;
+  /* cddm:ignore-start */
   background-color: var(--win2x-bg-acrylic, rgba(15, 23, 42, 0.88));
   border: 1px solid var(--win2x-border-window, rgba(255, 255, 255, 0.12));
   border-radius: var(--win2x-radius-window, 12px);
@@ -15,6 +16,7 @@
     0 0 0 1px rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(var(--win2x-blur-acrylic, 24px));
   -webkit-backdrop-filter: blur(var(--win2x-blur-acrylic, 24px));
+  /* cddm:ignore-end */
   user-select: none;
   animation: flyoutIn 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   transform-origin: top right;

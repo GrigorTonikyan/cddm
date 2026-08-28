@@ -5,12 +5,14 @@
   z-index: 9895;
   box-sizing: border-box;
   padding: 16px;
+  /* cddm:ignore-start */
   background-color: var(--win2x-bg-acrylic, rgba(15, 23, 42, 0.88));
   border: 2px dashed var(--win2x-accent-primary, #6366f1);
   border-radius: var(--win2x-radius-window, 12px);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(var(--win2x-blur-acrylic, 24px));
   -webkit-backdrop-filter: blur(var(--win2x-blur-acrylic, 24px));
+  /* cddm:ignore-end */
   display: flex;
   flex-direction: column;
   gap: 12px;

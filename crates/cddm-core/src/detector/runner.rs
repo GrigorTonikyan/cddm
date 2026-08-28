@@ -142,7 +142,17 @@ pub async fn run_scan(
                     let file_size = meta.len();
                     let content_hash = blake3::hash(content.as_bytes()).to_hex().to_string();
 
-                    let tokens = tokenize(&content, grammar, config_clone.detect_type2);
+                    let path_str = path.to_string_lossy().to_string();
+                    let mut tokens = tokenize(&content, grammar, config_clone.detect_type2);
+                    let directives =
+                        crate::suppression::parse_inline_directives(&path_str, &content);
+                    if !directives.is_empty() {
+                        tokens.retain(|(_, span)| {
+                            !directives.iter().any(|d| {
+                                span.line_start <= d.end_line && span.line_end >= d.start_line
+                            })
+                        });
+                    }
                     let token_count = tokens.len();
                     let token_spans: Vec<_> = tokens.iter().map(|(_, span)| span.clone()).collect();
 
@@ -150,7 +160,6 @@ pub async fn run_scan(
                     let w = k + WINDOW_OFFSET;
                     let fingerprints = winnow(&tokens, k, w);
 
-                    let path_str = path.to_string_lossy().to_string();
                     let parsed = ParsedFile {
                         path: path_str.clone(),
                         language: grammar.name.to_string(),

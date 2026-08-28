@@ -53,46 +53,14 @@ pub fn generate_ast_cluster_refactor(
         return Err("Failed to extract code snippets from occurrences".to_string());
     }
 
-    // Step 2: Compute common invariant lines
+    // Step 2 & 3: Compute common invariant lines and infer parameters
     let occ_pairs: Vec<(&CloneLocation, &[String])> = site_snippets
         .iter()
         .map(|(occ, snip)| (*occ, snip.as_slice()))
         .collect();
-    let cluster_refactor = analyze_cluster_snippets_refactoring("ast-preview", &occ_pairs);
-    let common_body_lines = cluster_refactor.common_body_lines;
-
-    // Step 3: Infer parameters across sites
-    let mut inferred_parameters = Vec::new();
-    let mut param_index = 0;
-
-    let mut param_diff_groups: Vec<Vec<String>> = Vec::new();
-    for site in &cluster_refactor.sites {
-        for (i, diff) in site.parameter_differences.iter().enumerate() {
-            if i >= param_diff_groups.len() {
-                param_diff_groups.push(Vec::new());
-            }
-            if !diff.fragment_a_code.is_empty() {
-                param_diff_groups[i].push(diff.fragment_a_code.clone());
-            }
-        }
-    }
-
-    for (i, vals) in param_diff_groups.iter().enumerate() {
-        let name = if let Some(custom_names) = custom_parameter_names
-            && i < custom_names.len()
-        {
-            custom_names[i].clone()
-        } else {
-            param_index += 1;
-            format!("param_{}", param_index)
-        };
-        let inferred_type = crate::ast::type_infer::infer_parameter_type(ext, vals);
-        inferred_parameters.push(InferredParameter {
-            name,
-            inferred_type,
-            original_values: vals.clone(),
-        });
-    }
+    let (cluster_refactor, inferred_parameters) =
+        collect_consensus_and_parameters(ext, "ast-preview", &occ_pairs, custom_parameter_names);
+    let common_body_lines = cluster_refactor.common_body_lines.clone();
 
     // Step 4: Synthesize helper function code
     let helper_sig =
@@ -172,4 +140,50 @@ pub fn generate_ast_cluster_refactor(
         total_lines_saved,
         syntax_valid,
     })
+}
+
+pub(crate) fn collect_consensus_and_parameters(
+    ext: &str,
+    cluster_name: &str,
+    site_snippets: &[(&CloneLocation, &[String])],
+    custom_parameter_names: Option<&[String]>,
+) -> (
+    super::types::ClusterRefactorSuggestion,
+    Vec<InferredParameter>,
+) {
+    let cluster_refactor = analyze_cluster_snippets_refactoring(cluster_name, site_snippets);
+
+    let mut inferred_parameters = Vec::new();
+    let mut param_index = 0;
+
+    let mut param_diff_groups: Vec<Vec<String>> = Vec::new();
+    for site in &cluster_refactor.sites {
+        for (i, diff) in site.parameter_differences.iter().enumerate() {
+            if i >= param_diff_groups.len() {
+                param_diff_groups.push(Vec::new());
+            }
+            if !diff.fragment_a_code.is_empty() {
+                param_diff_groups[i].push(diff.fragment_a_code.clone());
+            }
+        }
+    }
+
+    for (i, vals) in param_diff_groups.iter().enumerate() {
+        let name = if let Some(custom_names) = custom_parameter_names
+            && i < custom_names.len()
+        {
+            custom_names[i].clone()
+        } else {
+            param_index += 1;
+            format!("param_{}", param_index)
+        };
+        let inferred_type = crate::ast::type_infer::infer_parameter_type(ext, vals);
+        inferred_parameters.push(InferredParameter {
+            name,
+            inferred_type,
+            original_values: vals.clone(),
+        });
+    }
+
+    (cluster_refactor, inferred_parameters)
 }

@@ -125,15 +125,10 @@ pub async fn apply_patch_handler(
 /// Executes a full background workspace scan and broadcasts progress and completion events.
 pub async fn execute_background_refresh(state: &AppState) {
     let config = state.current_config.read().await.clone();
-    let (tx, mut rx) = mpsc::channel(100);
+    let (tx, rx) = mpsc::channel(100);
     let cancel_flag = Arc::new(AtomicBool::new(false));
 
-    let b_tx = state.broadcast_tx.clone();
-    tokio::spawn(async move {
-        while let Some(progress) = rx.recv().await {
-            let _ = b_tx.send(ServerEvent::ScanProgress(progress));
-        }
-    });
+    crate::serve::spawn_progress_broadcaster(rx, state.broadcast_tx.clone());
 
     if let Ok(scan_res) = run_scan(config, tx, cancel_flag).await {
         *state.latest_result.write().await = Some(scan_res.clone());

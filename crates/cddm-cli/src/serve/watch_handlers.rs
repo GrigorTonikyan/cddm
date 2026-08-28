@@ -128,16 +128,11 @@ pub async fn execute_watch_incremental_scan(state: &AppState, changed_paths: &[P
     let config = state.current_config.read().await.clone();
     let previous_result = state.latest_result.read().await.clone();
 
-    let (tx, mut rx) = mpsc::channel(100);
+    let (tx, rx) = mpsc::channel(100);
     let cancel_flag = Arc::new(AtomicBool::new(false));
     let start_time = std::time::Instant::now();
 
-    let b_tx = state.broadcast_tx.clone();
-    tokio::spawn(async move {
-        while let Some(progress) = rx.recv().await {
-            let _ = b_tx.send(ServerEvent::ScanProgress(progress));
-        }
-    });
+    crate::serve::spawn_progress_broadcaster(rx, state.broadcast_tx.clone());
 
     if let Ok(new_result) = run_scan(config, tx, cancel_flag).await {
         let duration_ms = start_time.elapsed().as_millis();

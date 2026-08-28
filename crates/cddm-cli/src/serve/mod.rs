@@ -138,5 +138,17 @@ pub async fn start_server(port: u16, open_browser: bool) -> Result<(), Box<dyn s
     Ok(())
 }
 
+/// Spawns a background task that forwards scan progress to the SSE broadcast channel.
+pub fn spawn_progress_broadcaster(
+    mut rx: tokio::sync::mpsc::Receiver<cddm_core::ScanProgress>,
+    b_tx: broadcast::Sender<ServerEvent>,
+) {
+    tokio::spawn(async move {
+        while let Some(progress) = rx.recv().await {
+            let _ = b_tx.send(ServerEvent::ScanProgress(progress));
+        }
+    });
+}
+
 #[cfg(test)]
 mod tests;

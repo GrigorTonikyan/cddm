@@ -139,8 +139,16 @@ impl SuppressionEngine {
         }
 
         let norm_str = path.to_string_lossy().replace('\\', "/");
-        let norm_path = Path::new(&norm_str);
-        if self.gitignore.matched(norm_path, false).is_ignore() {
+        let clean_str = norm_str.trim_start_matches("./");
+        if self
+            .gitignore
+            .matched(Path::new(clean_str), false)
+            .is_ignore()
+            || self
+                .gitignore
+                .matched(Path::new(&norm_str), false)
+                .is_ignore()
+        {
             return true;
         }
 
@@ -148,10 +156,15 @@ impl SuppressionEngine {
             && let Ok(rel) = path.strip_prefix(&cur)
         {
             let rel_str = rel.to_string_lossy().replace('\\', "/");
+            let clean_rel = rel_str.trim_start_matches("./");
             if self
                 .gitignore
-                .matched(Path::new(&rel_str), false)
+                .matched(Path::new(clean_rel), false)
                 .is_ignore()
+                || self
+                    .gitignore
+                    .matched(Path::new(&rel_str), false)
+                    .is_ignore()
             {
                 return true;
             }

@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-27 | Rust: 244 #[test] units | WebUI: 162 tests across 41 suites | Scripts & MCP: 93 tests across 33 suites | CI Workflows: PASS
+> Last verified: 2026-08-27 | Rust: 244 #[test] units | WebUI: 162 tests across 41 suites | Scripts & MCP: 93 tests across 34 suites | CI Workflows: PASS
 
 ---
 
@@ -406,22 +406,23 @@
 
 ---
 
-## 3. Repository Scripts & MCP Protocol — Bun Test Suites (93 tests across 33 suites)
+## 3. Repository Scripts & MCP Protocol — Bun Test Suites (93 tests across 34 suites)
 
 ### Repository Tooling & Automation Suites
 
-| Module                        | Test Suite File                          | Test Cases | Status |
-| :---------------------------- | :--------------------------------------- | :--------- | :----- |
-| bun-only                      | `scripts/tests/bun-only.test.ts`         | 2 tests    | PASS   |
-| Workspace Engine & Reset      | `scripts/tests/clean-reset.test.ts`      | 9 tests    | PASS   |
-| Documentation Integrity       | `scripts/tests/docs.test.ts`             | 5 tests    | PASS   |
-| Feature Matrix Synchronizer   | `scripts/tests/feature-matrix.test.ts`   | 4 tests    | PASS   |
-| 4-Pillar Feature Parity       | `scripts/tests/feature-parity.test.ts`   | 2 tests    | PASS   |
-| File Length Cap & Modularity  | `scripts/tests/file-length.test.ts`      | 7 tests    | PASS   |
-| Zero-Emoji Policy             | `scripts/tests/no-emojis.test.ts`        | 7 tests    | PASS   |
-| VSIX Packaging Pipeline       | `scripts/tests/package-vscode.test.ts`   | 5 tests    | PASS   |
-| Semantic Versioning & Commits | `scripts/tests/version.test.ts`          | 9 tests    | PASS   |
-| Polyglot Language Matrix      | `scripts/tests/vscode-extension.test.ts` | 2 tests    | PASS   |
+| Module                        | Test Suite File                               | Test Cases | Status |
+| :---------------------------- | :-------------------------------------------- | :--------- | :----- |
+| bun-only                      | `scripts/tests/bun-only.test.ts`              | 2 tests    | PASS   |
+| Workspace Engine & Reset      | `scripts/tests/clean-reset.test.ts`           | 9 tests    | PASS   |
+| Documentation Integrity       | `scripts/tests/docs.test.ts`                  | 5 tests    | PASS   |
+| Feature Matrix Synchronizer   | `scripts/tests/feature-matrix.test.ts`        | 4 tests    | PASS   |
+| 4-Pillar Feature Parity       | `scripts/tests/feature-parity.test.ts`        | 2 tests    | PASS   |
+| File Length Cap & Modularity  | `scripts/tests/file-length.test.ts`           | 7 tests    | PASS   |
+| Zero-Emoji Policy             | `scripts/tests/no-emojis.test.ts`             | 7 tests    | PASS   |
+| VSIX Packaging Pipeline       | `scripts/tests/package-vscode.test.ts`        | 5 tests    | PASS   |
+| ui-ux-qa-verification         | `scripts/tests/ui-ux-qa-verification.test.ts` | 0 tests    | PASS   |
+| Semantic Versioning & Commits | `scripts/tests/version.test.ts`               | 9 tests    | PASS   |
+| Polyglot Language Matrix      | `scripts/tests/vscode-extension.test.ts`      | 2 tests    | PASS   |
 
 ### Model Context Protocol (MCP) 1:1 Tool Test Suites
 

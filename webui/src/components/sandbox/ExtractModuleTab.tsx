@@ -92,26 +92,37 @@ export const ExtractModuleTab: React.FC<ExtractModuleTabProps> = ({
   onPreview,
   onApply,
 }) => {
-  const [targetPath, setTargetPath] = useState<string>("crates/shared_utils");
-  const [customFnName, setCustomFnName] = useState<string>("");
-  const [strategy, setStrategy] = useState<ExtractTargetKind>("auto");
-  const [generateTests, setGenerateTests] = useState<boolean>(true);
+  const [form, setForm] = useState({
+    targetPath: "crates/shared_utils",
+    customFnName: "",
+    strategy: "auto" as ExtractTargetKind,
+    generateTests: true,
+  });
   const [activeFileTab, setActiveFileTab] = useState<number>(0);
   const [activeTestTab, setActiveTestTab] = useState<number>(0);
   const [isApplying, setIsApplying] = useState<boolean>(false);
   const [appliedSuccess, setAppliedSuccess] = useState<string | null>(null);
 
-  const handleGeneratePreview = async () => {
-    if (!sandboxRequest) return;
-    setAppliedSuccess(null);
-    const req: ExtractRequest = {
+  const updateField = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const buildExtractRequest = (dryRun: boolean): ExtractRequest | null => {
+    if (!sandboxRequest) return null;
+    return {
       occurrences: sandboxRequest.occurrences,
-      target_path: targetPath.trim() || "crates/shared_utils",
-      custom_function_name: customFnName.trim() || undefined,
-      target_kind: strategy,
-      generate_tests: generateTests,
-      dry_run: true,
+      target_path: form.targetPath.trim() || "crates/shared_utils",
+      custom_function_name: form.customFnName.trim() || undefined,
+      target_kind: form.strategy,
+      generate_tests: form.generateTests,
+      dry_run: dryRun,
     };
+  };
+
+  const handleGeneratePreview = async () => {
+    const req = buildExtractRequest(true);
+    if (!req) return;
+    setAppliedSuccess(null);
     try {
       await onPreview(req);
     } catch {
@@ -120,17 +131,10 @@ export const ExtractModuleTab: React.FC<ExtractModuleTabProps> = ({
   };
 
   const handleApplyToWorkspace = async () => {
-    if (!sandboxRequest) return;
+    const req = buildExtractRequest(false);
+    if (!req) return;
     setIsApplying(true);
     setAppliedSuccess(null);
-    const req: ExtractRequest = {
-      occurrences: sandboxRequest.occurrences,
-      target_path: targetPath.trim() || "crates/shared_utils",
-      custom_function_name: customFnName.trim() || undefined,
-      target_kind: strategy,
-      generate_tests: generateTests,
-      dry_run: false,
-    };
     try {
       const res = await onApply(req);
       setAppliedSuccess(res.message);
@@ -161,8 +165,8 @@ export const ExtractModuleTab: React.FC<ExtractModuleTabProps> = ({
             <input
               type="text"
               aria-label="Target Path"
-              value={targetPath}
-              onChange={(e) => setTargetPath(e.target.value)}
+              value={form.targetPath}
+              onChange={(e) => updateField("targetPath", e.target.value)}
               placeholder="e.g. crates/shared_utils or src/common/utils.rs"
               className="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-slate-200 text-xs focus:outline-none focus:border-cyan-500"
             />
@@ -173,8 +177,8 @@ export const ExtractModuleTab: React.FC<ExtractModuleTabProps> = ({
             <input
               type="text"
               aria-label="Function Name"
-              value={customFnName}
-              onChange={(e) => setCustomFnName(e.target.value)}
+              value={form.customFnName}
+              onChange={(e) => updateField("customFnName", e.target.value)}
               placeholder="e.g. compute_shared_total"
               className="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-slate-200 text-xs focus:outline-none focus:border-cyan-500"
             />
@@ -184,8 +188,8 @@ export const ExtractModuleTab: React.FC<ExtractModuleTabProps> = ({
             <label className="block text-[11px] text-slate-400 mb-1">Packaging Strategy</label>
             <select
               aria-label="Packaging Strategy"
-              value={strategy}
-              onChange={(e) => setStrategy(e.target.value as ExtractTargetKind)}
+              value={form.strategy}
+              onChange={(e) => updateField("strategy", e.target.value as ExtractTargetKind)}
               className="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-slate-200 text-xs focus:outline-none focus:border-cyan-500"
             >
               <option value="auto">Auto-Detect</option>
@@ -201,8 +205,8 @@ export const ExtractModuleTab: React.FC<ExtractModuleTabProps> = ({
             <input
               type="checkbox"
               aria-label="Generate Unit Tests"
-              checked={generateTests}
-              onChange={(e) => setGenerateTests(e.target.checked)}
+              checked={form.generateTests}
+              onChange={(e) => updateField("generateTests", e.target.checked)}
               className="rounded bg-slate-950 border-slate-700 text-emerald-500 focus:ring-0 focus:outline-none"
             />
             <span className="flex items-center gap-1 text-emerald-400">

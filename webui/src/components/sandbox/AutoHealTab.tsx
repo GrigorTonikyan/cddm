@@ -30,18 +30,24 @@ export const AutoHealTab: React.FC<AutoHealTabProps> = ({
   customFunctionName,
   targetModulePath,
 }) => {
-  const [provider, setProvider] = useState<AiProviderKind>("Mock");
-  const [model, setModel] = useState<string>("");
-  const [apiKey, setApiKey] = useState<string>("");
-  const [endpoint, setEndpoint] = useState<string>("");
-  const [maxIterations, setMaxIterations] = useState<number>(3);
-  const [verify, setVerify] = useState<boolean>(true);
-  const [testCmd, setTestCmd] = useState<string>("");
-  const [branch, setBranch] = useState<string>(`cddm/heal-cluster-${clusterId || 1}`);
-  const [customInstructions, setCustomInstructions] = useState<string>("");
+  const [form, setForm] = useState({
+    provider: "Mock" as AiProviderKind,
+    model: "",
+    apiKey: "",
+    endpoint: "",
+    maxIterations: 3,
+    verify: true,
+    testCmd: "",
+    branch: `cddm/heal-cluster-${clusterId || 1}`,
+    customInstructions: "",
+  });
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [healResult, setHealResult] = useState<HealRefactorResult | null>(null);
   const [healError, setHealError] = useState<string | null>(null);
+
+  const updateField = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  };
 
   const handleStartHealing = async () => {
     setIsRunning(true);
@@ -53,17 +59,17 @@ export const AutoHealTab: React.FC<AutoHealTabProps> = ({
       occurrences,
       function_name: customFunctionName?.trim() || undefined,
       target_module: targetModulePath?.trim() || undefined,
-      custom_instructions: customInstructions.trim() || undefined,
+      custom_instructions: form.customInstructions.trim() || undefined,
       provider_config: {
-        provider,
-        model: model.trim() || undefined,
-        api_key: apiKey.trim() || undefined,
-        endpoint: endpoint.trim() || undefined,
+        provider: form.provider,
+        model: form.model.trim() || undefined,
+        api_key: form.apiKey.trim() || undefined,
+        endpoint: form.endpoint.trim() || undefined,
       },
-      max_iterations: maxIterations,
-      apply_branch: branch.trim() || undefined,
-      verify,
-      test_cmd: testCmd.trim() || undefined,
+      max_iterations: form.maxIterations,
+      apply_branch: form.branch.trim() || undefined,
+      verify: form.verify,
+      test_cmd: form.testCmd.trim() || undefined,
     };
 
     try {
@@ -102,8 +108,8 @@ export const AutoHealTab: React.FC<AutoHealTabProps> = ({
           <div>
             <label className="text-zinc-400 block mb-1">Provider</label>
             <select
-              value={provider}
-              onChange={(e) => setProvider(e.target.value as AiProviderKind)}
+              value={form.provider}
+              onChange={(e) => updateField("provider", e.target.value as AiProviderKind)}
               className="w-full bg-zinc-950 border border-zinc-800 rounded px-2 py-1 text-zinc-200"
             >
               <option value="Mock">Mock / Deterministic</option>
@@ -118,9 +124,9 @@ export const AutoHealTab: React.FC<AutoHealTabProps> = ({
             <label className="text-zinc-400 block mb-1">Model ID</label>
             <input
               type="text"
-              placeholder={provider === "Ollama" ? "codellama" : "gemini-1.5-pro"}
-              value={model}
-              onChange={(e) => setModel(e.target.value)}
+              placeholder={form.provider === "Ollama" ? "codellama" : "gemini-1.5-pro"}
+              value={form.model}
+              onChange={(e) => updateField("model", e.target.value)}
               className="w-full bg-zinc-950 border border-zinc-800 rounded px-2 py-1 text-zinc-200"
             />
           </div>
@@ -130,8 +136,8 @@ export const AutoHealTab: React.FC<AutoHealTabProps> = ({
             <input
               type="password"
               placeholder="env var or key"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
+              value={form.apiKey}
+              onChange={(e) => updateField("apiKey", e.target.value)}
               className="w-full bg-zinc-950 border border-zinc-800 rounded px-2 py-1 text-zinc-200"
             />
           </div>
@@ -142,8 +148,8 @@ export const AutoHealTab: React.FC<AutoHealTabProps> = ({
               type="number"
               min={1}
               max={10}
-              value={maxIterations}
-              onChange={(e) => setMaxIterations(Number(e.target.value))}
+              value={form.maxIterations}
+              onChange={(e) => updateField("maxIterations", Number(e.target.value))}
               className="w-full bg-zinc-950 border border-zinc-800 rounded px-2 py-1 text-zinc-200"
             />
           </div>
@@ -155,8 +161,8 @@ export const AutoHealTab: React.FC<AutoHealTabProps> = ({
             <input
               type="text"
               placeholder="e.g. http://localhost:11434"
-              value={endpoint}
-              onChange={(e) => setEndpoint(e.target.value)}
+              value={form.endpoint}
+              onChange={(e) => updateField("endpoint", e.target.value)}
               className="w-full bg-zinc-950 border border-zinc-800 rounded px-2 py-1 text-zinc-200"
             />
           </div>
@@ -165,8 +171,8 @@ export const AutoHealTab: React.FC<AutoHealTabProps> = ({
             <input
               type="text"
               placeholder="e.g. cargo test, bun test"
-              value={testCmd}
-              onChange={(e) => setTestCmd(e.target.value)}
+              value={form.testCmd}
+              onChange={(e) => updateField("testCmd", e.target.value)}
               className="w-full bg-zinc-950 border border-zinc-800 rounded px-2 py-1 text-zinc-200"
             />
           </div>
@@ -174,8 +180,8 @@ export const AutoHealTab: React.FC<AutoHealTabProps> = ({
             <label className="text-zinc-400 block mb-1">Target Branch</label>
             <input
               type="text"
-              value={branch}
-              onChange={(e) => setBranch(e.target.value)}
+              value={form.branch}
+              onChange={(e) => updateField("branch", e.target.value)}
               className="w-full bg-zinc-950 border border-zinc-800 rounded px-2 py-1 text-zinc-200"
             />
           </div>
@@ -185,8 +191,8 @@ export const AutoHealTab: React.FC<AutoHealTabProps> = ({
           <label className="flex items-center gap-2 text-zinc-300 text-xs cursor-pointer">
             <input
               type="checkbox"
-              checked={verify}
-              onChange={(e) => setVerify(e.target.checked)}
+              checked={form.verify}
+              onChange={(e) => updateField("verify", e.target.checked)}
               className="rounded bg-zinc-950 border-zinc-800 text-emerald-500 focus:ring-0"
             />
             Run closed-loop test suite verification on each iteration
@@ -198,8 +204,8 @@ export const AutoHealTab: React.FC<AutoHealTabProps> = ({
           <input
             type="text"
             placeholder="e.g. Use async functions, prefer immutable data structures"
-            value={customInstructions}
-            onChange={(e) => setCustomInstructions(e.target.value)}
+            value={form.customInstructions}
+            onChange={(e) => updateField("customInstructions", e.target.value)}
             className="w-full bg-zinc-950 border border-zinc-800 rounded px-2 py-1 text-zinc-200"
           />
         </div>
