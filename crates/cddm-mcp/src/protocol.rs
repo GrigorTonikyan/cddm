@@ -62,6 +62,7 @@ pub mod mcp_tools {
     pub const COMPARE_SEMANTIC_GRAPHS: &str = "cddm_compare_semantic_graphs";
     pub const SCAN_CROSS_LANGUAGE: &str = "cddm_scan_cross_language";
     pub const EXTRACT_SHARED_MODULE: &str = "cddm_extract_shared_module";
+    pub const DETECT_OVERLAP: &str = "cddm_detect_overlap";
 
     pub const PARAM_DIRECTORY: &str = "directory";
     pub const PARAM_MIN_TOKENS: &str = "min_tokens";
@@ -100,6 +101,7 @@ pub mod mcp_resources {
     pub const URI_WORKSPACE_SEMANTIC_GRAPH: &str = "cddm://workspace/semantic_graph";
     pub const URI_WORKSPACE_CROSS_LANGUAGE_CLONES: &str = "cddm://workspace/cross_language_clones";
     pub const URI_WORKSPACE_WATCH_STATUS: &str = "cddm://workspace/watch_status";
+    pub const URI_WORKSPACE_OVERLAP: &str = "cddm://workspace/overlap";
     pub const MIME_APPLICATION_JSON: &str = "application/json";
 }
 

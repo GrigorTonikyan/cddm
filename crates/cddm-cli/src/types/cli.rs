@@ -3,7 +3,7 @@
 use super::actions::{
     CacheAction, HookAction, IgnoreAction, OutputFormat, PlatformChoice, RulesAction,
 };
-use super::commands::{ExtractArgs, HealArgs};
+use super::commands::{ExtractArgs, HealArgs, OverlapArgs};
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
@@ -466,4 +466,7 @@ pub enum Commands {
         #[arg(short, long)]
         ignore: Vec<String>,
     },
+
+    /// Detect reimplemented ecosystem library algorithms and suggest standard packages
+    Overlap(OverlapArgs),
 }

@@ -292,6 +292,7 @@ async fn test_refactor_ai_prompt_handler() {
         }],
         invariant_body: "let x = 1;".to_string(),
         parameters: vec!["x".to_string()],
+        context_slices: None,
         custom_instructions: None,
     };
 

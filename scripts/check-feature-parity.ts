@@ -111,6 +111,14 @@ export const MANDATORY_PARITY_FEATURES: FeatureParityCheck[] = (
       /\/api\/workflow\/hooks/,
       "workflow.rs",
     ],
+    [
+      "overlap",
+      "Ecosystem Library Overlap",
+      "commands/overlap.rs",
+      /cddm_detect_overlap/,
+      /\/api\/overlap/,
+      "overlap.rs",
+    ],
   ] as const
 ).map(([id, name, cliRel, mcpToolPattern, axumRoutePattern, tuiRel]) => ({
   id,

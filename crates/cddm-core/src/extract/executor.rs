@@ -40,6 +40,23 @@ pub fn apply_extraction_to_workspace(
         total_files_written += 1;
     }
 
+    // 1c. Write synthesized performance micro-benchmark files
+    for bench_file in &result.benchmark_files {
+        let abs_path = workspace_root.join(&bench_file.file_path);
+        if let Some(parent) = abs_path.parent() {
+            fs::create_dir_all(parent)
+                .map_err(|e| format!("Failed to create directory '{}': {}", parent.display(), e))?;
+        }
+        fs::write(&abs_path, &bench_file.content).map_err(|e| {
+            format!(
+                "Failed to write benchmark file '{}': {}",
+                abs_path.display(),
+                e
+            )
+        })?;
+        total_files_written += 1;
+    }
+
     // 2. Apply manifest updates
     for update in &result.manifest_updates {
         let abs_path = workspace_root.join(&update.manifest_path);

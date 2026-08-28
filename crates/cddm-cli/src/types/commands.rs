@@ -42,6 +42,10 @@ pub struct ExtractArgs {
     #[arg(long, default_value_t = false)]
     pub generate_tests: bool,
 
+    /// Automatically synthesize performance micro-benchmarks for the extracted helper
+    #[arg(long, visible_alias = "bench", default_value_t = false)]
+    pub generate_benchmarks: bool,
+
     /// Minimum token count for clone detection
     #[arg(short, long, default_value_t = cddm_core::DEFAULT_MIN_TOKENS)]
     pub min_tokens: usize,
@@ -109,4 +113,20 @@ pub struct HealArgs {
     /// Minimum token count for clone detection
     #[arg(short, long, default_value_t = cddm_core::DEFAULT_MIN_TOKENS)]
     pub min_tokens: usize,
+}
+
+/// CLI Arguments for `cddm overlap`
+#[derive(Args, Debug, Clone)]
+pub struct OverlapArgs {
+    /// Directory path to scan (default: current directory)
+    #[arg(default_value = cddm_core::DEFAULT_DIRECTORY)]
+    pub directory: PathBuf,
+
+    /// Confidence threshold for library overlap detection (0.0 to 1.0)
+    #[arg(short, long, default_value_t = 0.3)]
+    pub threshold: f64,
+
+    /// Output format (console, json, markdown)
+    #[arg(short, long, default_value = "console")]
+    pub format: String,
 }

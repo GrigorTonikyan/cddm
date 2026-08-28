@@ -1,0 +1,63 @@
+name: "CDDM Automated Deduplication & Fix-Bot"
+description: "High-performance code clone detection, automated PR commentary, and AI-driven refactoring fixer for CDDM."
+author: "Grigor Tonikyan"
+
+inputs:
+  fail_threshold:
+    description: "Maximum allowable code duplication percentage before failing (0.0 - 100.0)"
+    required: false
+    default: "15.0"
+  min_tokens:
+    description: "Minimum token count to consider as a duplicate clone"
+    required: false
+    default: "50"
+  auto_extract:
+    description: "Whether to automatically extract and refactor the highest-density clone cluster"
+    required: false
+    default: "false"
+  target_module:
+    description: "Target module or shared crate path for auto-extracted code"
+    required: false
+    default: "crates/shared_extracted"
+  generate_benchmarks:
+    description: "Whether to automatically synthesize micro-benchmarks for extracted shared code"
+    required: false
+    default: "true"
+  github_token:
+    description: "GitHub Token for posting PR comments and check runs"
+    required: false
+    default: "${{ github.token }}"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Run CDDM Duplication Scan & Comment Generator
+      shell: bash
+      run: |
+        echo "--> Running CDDM Duplication Analysis..."
+        cargo run -p cddm-cli -- scan . --min-tokens ${{ inputs.min_tokens }} --fail-threshold ${{ inputs.fail_threshold }} || true
+        cargo run -p cddm-cli -- comment . --platform github --fail-threshold ${{ inputs.fail_threshold }} --output cddm_pr_summary.md
+
+    - name: Optional Auto-Extraction
+      if: ${{ inputs.auto_extract == 'true' }}
+      shell: bash
+      run: |
+        echo "--> Executing Automated Extraction Fixer on Cluster 1..."
+        cargo run -p cddm-cli -- extract --cluster 1 --target "${{ inputs.target_module }}" --apply --bench
+
+    - name: Post PR Comment
+      if: ${{ github.event_name == 'pull_request' && inputs.github_token != '' }}
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ inputs.github_token }}
+        script: |
+          const fs = require('fs');
+          if (fs.existsSync('cddm_pr_summary.md')) {
+            const body = fs.readFileSync('cddm_pr_summary.md', 'utf8');
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: body
+            });
+          }

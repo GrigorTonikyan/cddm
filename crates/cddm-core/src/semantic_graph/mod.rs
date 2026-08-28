@@ -5,6 +5,7 @@ pub mod cross_language;
 pub mod embedding;
 pub mod isomorphism;
 pub mod pdg;
+pub mod slicing;
 pub mod types;
 
 pub use cfg::extract_cfgs_from_source;
@@ -15,10 +16,11 @@ pub use embedding::{
 };
 pub use isomorphism::{calculate_graph_similarity, compute_weisfeiler_lehman_hash};
 pub use pdg::build_pdg_from_cfg;
+pub use slicing::{compute_backward_slice, compute_forward_slice, extract_context_slice};
 pub use types::{
-    CfgEdge, CfgEdgeType, CfgNode, CfgNodeType, ControlFlowGraph, CrossLanguageClonePair,
-    HybridSimilarity, PdgEdge, PdgEdgeKind, ProgramDependenceGraph, SemanticCloneMatch,
-    SemanticComparisonResponse,
+    CfgEdge, CfgEdgeType, CfgNode, CfgNodeType, ContextSlice, ControlFlowGraph,
+    CrossLanguageClonePair, HybridSimilarity, PdgEdge, PdgEdgeKind, ProgramDependenceGraph,
+    ProgramSlice, SemanticCloneMatch, SemanticComparisonResponse,
 };
 
 #[cfg(test)]

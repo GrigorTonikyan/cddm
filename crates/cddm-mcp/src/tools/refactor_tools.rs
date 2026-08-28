@@ -220,6 +220,7 @@ pub fn handle_generate_ai_prompt(
             occurrences,
             invariant_body: inv_body.to_string(),
             parameters: params,
+            context_slices: None,
             custom_instructions: custom_inst,
         };
 

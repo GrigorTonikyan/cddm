@@ -11,6 +11,7 @@ pub mod fingerprint;
 pub mod grammar;
 pub mod io;
 pub mod monorepo;
+pub mod overlap;
 pub mod policy;
 pub mod pr_comment;
 pub mod refactor;
@@ -44,6 +45,10 @@ pub use extract::{
 pub use io::{FileSource, MMAP_THRESHOLD_BYTES, read_file_source};
 pub use monorepo::{
     MonorepoScanSummary, MonorepoWorkspace, discover_workspaces, run_monorepo_scan,
+};
+pub use overlap::{
+    EcosystemAlgorithm, OverlapMatch, OverlapScanResult, RecommendedLibrary,
+    get_canonical_algorithms, scan_workspace_overlap,
 };
 pub use policy::PolicyEngine;
 pub use pr_comment::generate_pr_markdown_comment;

@@ -33,6 +33,9 @@ pub struct AiRefactorPromptRequest {
     pub invariant_body: String,
     /// Identified parameter names / variable identifiers
     pub parameters: Vec<String>,
+    /// Program Dependence Graph context slices capturing data dependencies
+    #[serde(default)]
+    pub context_slices: Option<Vec<crate::semantic_graph::ContextSlice>>,
     /// Optional custom user guidelines or architectural constraints
     pub custom_instructions: Option<String>,
 }
@@ -103,10 +106,44 @@ pub fn generate_ai_refactor_prompt(req: &AiRefactorPromptRequest) -> String {
         prompt.push_str("\n```\n\n");
     }
 
+    if let Some(slices) = &req.context_slices
+        && !slices.is_empty()
+    {
+        prompt.push_str("## 5. Sliced Context & Data Dependencies (PDG Static Program Slices)\n\n");
+        for (i, slice) in slices.iter().enumerate() {
+            prompt.push_str(&format!(
+                "### Context Slice {} - Enclosing Function `{}` (Lines {}-{})\n\n",
+                i + 1,
+                slice.enclosing_function,
+                slice.line_span.0,
+                slice.line_span.1
+            ));
+            if !slice.required_variables.is_empty() {
+                prompt.push_str(&format!(
+                    "- **Required Upstream Variables**: `{}`\n",
+                    slice.required_variables.join("`, `")
+                ));
+            }
+            if !slice.defined_variables.is_empty() {
+                prompt.push_str(&format!(
+                    "- **Exported Downstream Variables**: `{}`\n",
+                    slice.defined_variables.join("`, `")
+                ));
+            }
+            if !slice.upstream_statements.is_empty() {
+                prompt.push_str("- **Preceding Definitions**:\n");
+                for stmt in &slice.upstream_statements {
+                    prompt.push_str(&format!("  - `{}`\n", stmt));
+                }
+            }
+            prompt.push('\n');
+        }
+    }
+
     if let Some(custom) = &req.custom_instructions
         && !custom.trim().is_empty()
     {
-        prompt.push_str("## 5. Architectural Constraints\n\n");
+        prompt.push_str("## 6. Architectural Constraints\n\n");
         prompt.push_str(custom.trim());
         prompt.push_str("\n\n");
     }
@@ -172,6 +209,7 @@ mod tests {
             ],
             invariant_body: "let result = target.trim().to_lowercase();".to_string(),
             parameters: vec!["target".to_string()],
+            context_slices: None,
             custom_instructions: Some("Do not introduce external dependencies.".to_string()),
         };
 
@@ -182,5 +220,34 @@ mod tests {
         assert!(prompt.contains("src/auth/register.rs:30-45"));
         assert!(prompt.contains("Do not introduce external dependencies."));
         assert!(prompt.contains("95.0%"));
+    }
+
+    #[test]
+    fn test_generate_ai_refactor_prompt_with_context_slices() {
+        let req = AiRefactorPromptRequest {
+            clone_type: CloneType::NearMiss,
+            similarity: 0.88,
+            token_count: 90,
+            lines_saved_est: 18,
+            function_name: "calc_metrics".to_string(),
+            target_module: "src/stats.rs".to_string(),
+            occurrences: vec![],
+            invariant_body: "let res = a * b;".to_string(),
+            parameters: vec!["a".to_string(), "b".to_string()],
+            context_slices: Some(vec![crate::semantic_graph::ContextSlice {
+                enclosing_function: "process_handler".to_string(),
+                line_span: (15, 20),
+                defined_variables: vec!["res".to_string()],
+                required_variables: vec!["a".to_string(), "b".to_string()],
+                upstream_statements: vec!["let a = 10;".to_string()],
+                downstream_statements: vec!["println!(\"{}\", res);".to_string()],
+            }]),
+            custom_instructions: None,
+        };
+
+        let prompt = generate_ai_refactor_prompt(&req);
+        assert!(prompt.contains("PDG Static Program Slices"));
+        assert!(prompt.contains("process_handler"));
+        assert!(prompt.contains("Required Upstream Variables"));
     }
 }

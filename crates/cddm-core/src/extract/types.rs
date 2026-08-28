@@ -35,6 +35,9 @@ pub struct ExtractRequest {
     /// Whether to generate unit tests for the extracted helper.
     #[serde(default)]
     pub generate_tests: bool,
+    /// Whether to generate performance benchmarks for the extracted helper.
+    #[serde(default)]
+    pub generate_benchmarks: bool,
     /// Whether to perform a dry-run without writing to disk.
     #[serde(default)]
     pub dry_run: bool,
@@ -95,6 +98,9 @@ pub struct ExtractResult {
     /// Synthesized unit test files verifying extracted functionality.
     #[serde(default)]
     pub test_files: Vec<ExtractedFile>,
+    /// Synthesized micro-benchmark files verifying extracted performance.
+    #[serde(default)]
+    pub benchmark_files: Vec<ExtractedFile>,
     /// Manifest modifications across workspace root and caller packages.
     pub manifest_updates: Vec<ManifestUpdate>,
     /// Occurrence file rewrites and injected imports.

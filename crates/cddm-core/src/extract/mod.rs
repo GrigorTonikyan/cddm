@@ -1,5 +1,6 @@
 #![forbid(unsafe_code)]
 
+pub mod bench_generator;
 pub mod executor;
 pub mod generator;
 pub mod manifest;
@@ -7,6 +8,7 @@ pub mod rewriter;
 pub mod test_generator;
 pub mod types;
 
+pub use bench_generator::generate_benchmark_files;
 pub use executor::apply_extraction_to_workspace;
 pub use generator::generate_extracted_target_files;
 pub use manifest::update_workspace_manifests;
@@ -139,14 +141,29 @@ pub fn generate_shared_extraction(
         Vec::new()
     };
 
+    // 9. Synthesize performance micro-benchmarks if requested
+    let benchmark_files = if request.generate_benchmarks {
+        generate_benchmark_files(
+            &request.target_path,
+            target_kind,
+            fn_name,
+            &inferred_parameters,
+            ext,
+        )
+    } else {
+        Vec::new()
+    };
+
     let total_lines_saved = cluster_refactor.total_lines_saved;
     let message = format!(
         "Successfully planned shared extraction of '{}' to '{}' ({} files generated, {} tests \
-         synthesized, {} manifests updated, {} callers rewritten, {} lines saved)",
+         synthesized, {} benchmarks synthesized, {} manifests updated, {} callers rewritten, {} \
+         lines saved)",
         fn_name,
         request.target_path,
         generated_files.len(),
         test_files.len(),
+        benchmark_files.len(),
         manifest_updates.len(),
         caller_rewrites.len(),
         total_lines_saved
@@ -160,6 +177,7 @@ pub fn generate_shared_extraction(
         inferred_parameters,
         generated_files,
         test_files,
+        benchmark_files,
         manifest_updates,
         caller_rewrites,
         total_lines_saved,

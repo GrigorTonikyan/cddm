@@ -1125,6 +1125,35 @@ When extracting duplicate code across codebases into shared helper modules or cr
 - [x] Implement WebUI Studio Synthesize Unit Tests checkbox and test preview viewer in `ExtractModuleTab.tsx` [EP-34]
 - [x] Add `[t] Synthesize Unit Tests` badge in TUI Studio Extract view in `cddm-cli::tui` [EP-34]
 - [x] Verify complete cross-interface feature parity across CLI, WebUI, MCP, and TUI surfaces [EP-34]
+
+### Milestone v2.8.0 (Automated Micro-Benchmark & Performance Regression Synthesizer)
+
+- [x] Implement polyglot micro-benchmark generator across Rust (Criterion), TypeScript (tinybench), Python (timeit), Go (testing.B), Java (JMH), and C# (BenchmarkDotNet) in `cddm-core::extract::bench_generator` [EP-36]
+- [x] Add `--generate-benchmarks` / `--bench` CLI flag to `cddm extract` in `cddm-cli` [EP-36]
+- [x] Expose `generate_benchmarks` parameter on `cddm_extract_shared_module` tool in `cddm-mcp` [EP-36]
+- [x] Implement WebUI Studio Synthesize Micro-Benchmarks checkbox and benchmark preview viewer in `ExtractModuleTab.tsx` [EP-36]
+- [x] Add `[b] Synthesize Benchmarks` badge in TUI Studio Extract view in `cddm-cli::tui` [EP-36]
+
+### Milestone v2.9.0 (Context-Aware Program Slicing for AI Refactor Surgeon)
+
+- [x] Implement backward and forward static program slicing over Program Dependence Graphs in `cddm-core::semantic_graph::slicing` [EP-37]
+- [x] Implement context boundary slice extraction (`extract_context_slice`) capturing data definitions and dependencies [EP-37]
+- [x] Integrate context slices into AI prompt generation (`cddm-core::ai_prompt`) and closed-loop healer (`cddm-core::ai::heal`) [EP-37]
+
+### Milestone v3.0.0 (Ecosystem Library Reimplementation & Overlap Detector)
+
+- [x] Implement built-in canonical open-source algorithm catalog and keyword matching engine in `cddm-core::overlap` [EP-38]
+- [x] Implement workspace overlap scanner (`scan_workspace_overlap`) with language package recommendations in `cddm-core` [EP-38]
+- [x] Add `cddm overlap [DIR]` CLI command with console, JSON, and Markdown report formatters in `cddm-cli` [EP-38]
+- [x] Expose Axum REST endpoints `GET /api/overlap/catalog` and `POST /api/overlap/scan` in `cddm-cli::serve` [EP-38]
+- [x] Expose MCP tool `cddm_detect_overlap` and resource `cddm://workspace/overlap` in `cddm-mcp` [EP-38]
+- [x] Implement Tab 9 (Ecosystem Overlap) in interactive TUI Studio (`cddm-cli::tui`) [EP-38]
+- [x] Implement WebUI Studio `OverlapDetectorModal.tsx` and algorithm catalog viewer in `webui/` [EP-38]
+- [x] Verify complete 4-pillar cross-interface feature parity across CLI, WebUI, MCP, and TUI surfaces [EP-38]
+
+### Milestone v3.1.0 (Automated GitHub PR Fix-Bot Action)
+
+- [x] Create turnkey composite GitHub Action in `.github/actions/cddm-fix-bot/action.yml` for automated scanning, PR comment generation, and auto-extraction [EP-39]
 ```
 
 ---

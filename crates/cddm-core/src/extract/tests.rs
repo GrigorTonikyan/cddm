@@ -59,6 +59,7 @@ fn test_generate_shared_extraction_new_crate_rust() {
         target_kind: ExtractTargetKind::NewCrate,
         custom_parameter_names: None,
         generate_tests: false,
+        generate_benchmarks: false,
         dry_run: false,
     };
 
@@ -115,6 +116,7 @@ fn test_generate_shared_extraction_module_typescript() {
         target_kind: ExtractTargetKind::NewModule,
         custom_parameter_names: None,
         generate_tests: false,
+        generate_benchmarks: false,
         dry_run: false,
     };
 
@@ -180,6 +182,7 @@ fn test_generate_shared_extraction_python_package() {
         target_kind: ExtractTargetKind::NewCrate,
         custom_parameter_names: None,
         generate_tests: false,
+        generate_benchmarks: false,
         dry_run: false,
     };
 
@@ -236,6 +239,7 @@ fn test_generate_shared_extraction_with_unit_tests() {
         target_kind: ExtractTargetKind::NewCrate,
         custom_parameter_names: None,
         generate_tests: true,
+        generate_benchmarks: false,
         dry_run: false,
     };
 
@@ -330,4 +334,63 @@ fn test_generate_python_unit_tests() {
     );
     assert!(t.content.contains("import pytest"));
     assert!(t.content.contains("def test_calculate_total_execution():"));
+}
+
+#[test]
+fn test_generate_shared_extraction_with_benchmarks() {
+    let dir = tempdir().unwrap();
+    let root = dir.path();
+
+    fs::write(
+        root.join("Cargo.toml"),
+        "[workspace]\nmembers = [\"crates/app_a\"]\n",
+    )
+    .unwrap();
+
+    let app_a = root.join("crates/app_a/src");
+    fs::create_dir_all(&app_a).unwrap();
+    fs::write(
+        root.join("crates/app_a/Cargo.toml"),
+        "[package]\nname = \"app_a\"\nversion = \"0.1.0\"\n",
+    )
+    .unwrap();
+    fs::write(
+        app_a.join("main.rs"),
+        "fn main() {\n    let val = 10;\n    println!(\"{}\", val);\n}\n",
+    )
+    .unwrap();
+
+    let req = ExtractRequest {
+        occurrences: vec![
+            CloneLocation {
+                file: "crates/app_a/src/main.rs".to_string(),
+                start_line: 2,
+                end_line: 3,
+                author: None,
+            },
+            CloneLocation {
+                file: "crates/app_a/src/main.rs".to_string(),
+                start_line: 2,
+                end_line: 3,
+                author: None,
+            },
+        ],
+        target_path: "crates/shared_tools".to_string(),
+        custom_function_name: Some("process_val".to_string()),
+        target_kind: ExtractTargetKind::NewCrate,
+        custom_parameter_names: None,
+        generate_tests: true,
+        generate_benchmarks: true,
+        dry_run: false,
+    };
+
+    let res = apply_shared_extraction(root, &req);
+    assert!(res.is_ok(), "{:?}", res.err());
+    let result = res.unwrap();
+
+    assert_eq!(result.benchmark_files.len(), 1);
+    assert!(
+        root.join("crates/shared_tools/benches/process_val_bench.rs")
+            .exists()
+    );
 }

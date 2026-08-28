@@ -51,7 +51,7 @@ async fn test_mcp_ping() {
 #[tokio::test]
 async fn test_mcp_tools_list() {
     let tools = list_mcp_items(mcp_methods::TOOLS_LIST, "tools").await;
-    assert_eq!(tools.len(), 22);
+    assert_eq!(tools.len(), 23);
     let tool_names: Vec<&str> = tools.iter().map(|t| t["name"].as_str().unwrap()).collect();
     for expected in [
         mcp_tools::SCAN_CODEBASE,
@@ -76,6 +76,7 @@ async fn test_mcp_tools_list() {
         mcp_tools::COMPARE_SEMANTIC_GRAPHS,
         mcp_tools::SCAN_CROSS_LANGUAGE,
         mcp_tools::EXTRACT_SHARED_MODULE,
+        mcp_tools::DETECT_OVERLAP,
     ] {
         assert!(tool_names.contains(&expected));
     }
@@ -84,7 +85,7 @@ async fn test_mcp_tools_list() {
 #[tokio::test]
 async fn test_mcp_resources_list() {
     let resources = list_mcp_items(mcp_methods::RESOURCES_LIST, "resources").await;
-    assert_eq!(resources.len(), 9);
+    assert_eq!(resources.len(), 10);
 }
 
 #[tokio::test]

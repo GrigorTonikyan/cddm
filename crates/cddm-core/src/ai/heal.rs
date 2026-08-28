@@ -60,6 +60,26 @@ pub async fn heal_cluster_refactor(
         .clone()
         .unwrap_or_else(|| "src/utils.rs".to_string());
 
+    let mut context_slices = Vec::new();
+    for occ in &req.occurrences {
+        let abs_path = workspace_root.join(&occ.file);
+        if let Ok(src) = std::fs::read_to_string(&abs_path) {
+            let cfgs = crate::semantic_graph::extract_cfgs_from_source(&occ.file, &src, "rust");
+            for cfg in cfgs {
+                if occ.start_line >= cfg.line_start && occ.end_line <= cfg.line_end {
+                    let pdg = crate::semantic_graph::build_pdg_from_cfg(cfg);
+                    let slice = crate::semantic_graph::extract_context_slice(
+                        &pdg,
+                        occ.start_line,
+                        occ.end_line,
+                    );
+                    context_slices.push(slice);
+                    break;
+                }
+            }
+        }
+    }
+
     let initial_prompt_req = AiRefactorPromptRequest {
         clone_type: CloneType::Renamed,
         similarity: 0.95,
@@ -70,6 +90,11 @@ pub async fn heal_cluster_refactor(
         occurrences: occurrences_ctx.clone(),
         invariant_body: String::new(),
         parameters: Vec::new(),
+        context_slices: if context_slices.is_empty() {
+            None
+        } else {
+            Some(context_slices)
+        },
         custom_instructions: req.custom_instructions.clone(),
     };
 

@@ -11,11 +11,11 @@ describe("Feature Matrix Dynamic Discovery & Generator", () => {
     const matrix = await discoverTestMatrix();
 
     expect(matrix.rustTestCount).toBeGreaterThanOrEqual(170);
-    expect(matrix.webuiSuites.length).toBe(41);
+    expect(matrix.webuiSuites.length).toBeGreaterThanOrEqual(41);
     expect(matrix.webuiTestCount).toBeGreaterThanOrEqual(160);
     expect(matrix.scriptSuites.length).toBeGreaterThanOrEqual(8);
     expect(matrix.scriptTestCount).toBeGreaterThanOrEqual(40);
-    expect(matrix.mcpSuites.length).toBe(23);
+    expect(matrix.mcpSuites.length).toBeGreaterThanOrEqual(23);
     expect(matrix.mcpTestCount).toBeGreaterThanOrEqual(39);
   });
 

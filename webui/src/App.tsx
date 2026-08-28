@@ -10,6 +10,7 @@ import { SuppressionRulesModal } from "./components/SuppressionRulesModal";
 import { RefactorSandboxModal } from "./components/RefactorSandboxModal";
 import { PolicyRulesModal } from "./components/PolicyRulesModal";
 import { SemanticGraphModal } from "./components/SemanticGraphModal";
+import { OverlapDetectorModal } from "./components/OverlapDetectorModal";
 import { LiveWatchBar } from "./components/watch/LiveWatchBar";
 import { LiveEventInspectorModal } from "./components/watch/LiveEventInspectorModal";
 import {
@@ -26,6 +27,7 @@ import {
   X,
   History,
   Network,
+  Layers,
 } from "lucide-react";
 
 export const App: React.FC = () => {
@@ -48,6 +50,8 @@ export const App: React.FC = () => {
     setIsPolicyRulesModalOpen,
     isSemanticGraphModalOpen,
     setIsSemanticGraphModalOpen,
+    isOverlapDetectorOpen,
+    setIsOverlapDetectorOpen,
     isLiveEventInspectorOpen,
     setIsLiveEventInspectorOpen,
   } = useCDDMStore();
@@ -123,6 +127,15 @@ export const App: React.FC = () => {
           >
             <Network className="w-3.5 h-3.5 text-cyan-400" />
             <span>Semantic Graph</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsOverlapDetectorOpen(true)}
+            className="px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 hover:bg-slate-800 text-slate-300 flex items-center gap-1.5 transition-colors shadow-sm"
+          >
+            <Layers className="w-3.5 h-3.5 text-amber-400" />
+            <span>Overlap Detector</span>
           </button>
 
           {results && (
@@ -218,6 +231,12 @@ export const App: React.FC = () => {
       <SemanticGraphModal
         isOpen={isSemanticGraphModalOpen}
         onClose={() => setIsSemanticGraphModalOpen(false)}
+      />
+
+      {/* Ecosystem Library Overlap Detector Modal */}
+      <OverlapDetectorModal
+        isOpen={isOverlapDetectorOpen}
+        onClose={() => setIsOverlapDetectorOpen(false)}
       />
 
       {/* Live Watch & Sync Event Inspector Modal */}

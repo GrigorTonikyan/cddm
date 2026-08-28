@@ -122,6 +122,26 @@ pub struct CrossLanguageClonePair {
     pub clone_type: CloneType,
 }
 
+/// Result of program slicing on a PDG.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ProgramSlice {
+    pub criterion_node_id: usize,
+    pub is_backward: bool,
+    pub sliced_node_ids: Vec<usize>,
+    pub sliced_variables: Vec<String>,
+}
+
+/// Sliced context extracted from surrounding code for AI refactoring.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+pub struct ContextSlice {
+    pub enclosing_function: String,
+    pub line_span: (usize, usize),
+    pub defined_variables: Vec<String>,
+    pub required_variables: Vec<String>,
+    pub upstream_statements: Vec<String>,
+    pub downstream_statements: Vec<String>,
+}
+
 /// Full comparison response between two code fragments or functions.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct SemanticComparisonResponse {

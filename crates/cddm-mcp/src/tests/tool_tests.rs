@@ -224,3 +224,21 @@ async fn test_mcp_extract_shared_module_tool() {
     .expect("Expected response");
     assert!(resp.error.is_none());
 }
+
+#[tokio::test]
+async fn test_mcp_detect_overlap_tool() {
+    let resp = handle_mcp_request(make_test_req(
+        74,
+        mcp_methods::TOOLS_CALL,
+        Some(json!({
+            "name": mcp_tools::DETECT_OVERLAP,
+            "arguments": {
+                "directory": ".",
+                "threshold": 0.1
+            }
+        })),
+    ))
+    .await
+    .expect("Expected response");
+    assert!(resp.error.is_none());
+}

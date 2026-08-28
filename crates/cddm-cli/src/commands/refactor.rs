@@ -145,6 +145,7 @@ pub async fn run_refactor_command(
                     .iter()
                     .map(|p| format!("{}: {}", p.name, p.inferred_type))
                     .collect(),
+                context_slices: None,
                 custom_instructions: None,
             };
             let prompt_text = generate_ai_refactor_prompt(&prompt_req);
@@ -232,6 +233,7 @@ pub async fn run_refactor_command(
                             .map(|p| p.fragment_a_code.clone())
                     })
                     .collect(),
+                context_slices: None,
                 custom_instructions: None,
             };
             let prompt_text = generate_ai_refactor_prompt(&prompt_req);
@@ -331,6 +333,7 @@ pub async fn run_refactor_command(
                     .iter()
                     .map(|p| p.fragment_a_code.clone())
                     .collect(),
+                context_slices: None,
                 custom_instructions: None,
             };
             let prompt_text = generate_ai_refactor_prompt(&prompt_req);

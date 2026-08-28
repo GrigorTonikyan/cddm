@@ -68,6 +68,7 @@ export interface CDDMStoreState {
   isRefactorSandboxOpen: boolean;
   isPolicyRulesModalOpen: boolean;
   isSemanticGraphModalOpen: boolean;
+  isOverlapDetectorOpen: boolean;
 
   /** Live watch sync counter and last sync events */
   liveSyncCount: number;
@@ -182,6 +183,7 @@ export interface CDDMStoreState {
   setIsRefactorSandboxOpen: (open: boolean) => void;
   setIsPolicyRulesModalOpen: (open: boolean) => void;
   setIsSemanticGraphModalOpen: (open: boolean) => void;
+  setIsOverlapDetectorOpen: (open: boolean) => void;
   setIsLiveEventInspectorOpen: (open: boolean) => void;
 
   /** Live Watch Daemon state and actions */

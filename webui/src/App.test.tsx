@@ -71,4 +71,16 @@ describe("App Component", () => {
     fireEvent.click(reportsBtns[0]!);
     expect(screen.getByText("Report Center & SARIF Exporter")).toBeDefined();
   });
+
+  it("should open OverlapDetectorModal when clicking Overlap Detector in header", () => {
+    render(
+      <Win2xManagerProvider>
+        <App />
+      </Win2xManagerProvider>,
+    );
+
+    const overlapBtn = screen.getByText("Overlap Detector");
+    fireEvent.click(overlapBtn);
+    expect(screen.getByText("Ecosystem Library Reimplementation & Overlap Detector")).toBeDefined();
+  });
 });

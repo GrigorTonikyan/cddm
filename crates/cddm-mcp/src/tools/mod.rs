@@ -3,6 +3,7 @@
 pub mod clone_tools;
 pub mod extract_tools;
 pub mod helpers;
+pub mod overlap_tools;
 pub mod policy_tools;
 pub mod refactor_tools;
 pub mod scan_tools;
@@ -68,6 +69,7 @@ pub async fn dispatch_tool_call(
         mcp_tools::EXTRACT_SHARED_MODULE => {
             extract_tools::handle_extract_shared_module(id, args).await
         }
+        mcp_tools::DETECT_OVERLAP => overlap_tools::handle_detect_overlap(id, args).await,
         _ => make_error_response(
             id,
             rpc_errors::METHOD_NOT_FOUND,

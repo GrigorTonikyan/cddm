@@ -157,6 +157,7 @@ export interface AiRefactorPromptRequest {
   occurrences: AiOccurrenceContext[];
   invariant_body: string;
   parameters: string[];
+  context_slices?: unknown[];
   custom_instructions?: string;
 }
 
@@ -303,6 +304,7 @@ export interface ExtractRequest {
   target_kind?: ExtractTargetKind;
   custom_parameter_names?: string[];
   generate_tests?: boolean;
+  generate_benchmarks?: boolean;
   dry_run?: boolean;
 }
 
@@ -346,6 +348,7 @@ export interface ExtractResult {
   inferred_parameters: InferredParameter[];
   generated_files: ExtractedFile[];
   test_files?: ExtractedFile[];
+  benchmark_files?: ExtractedFile[];
   manifest_updates: ManifestUpdate[];
   caller_rewrites: CallerRewrite[];
   total_lines_saved: number;

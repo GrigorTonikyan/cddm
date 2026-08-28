@@ -316,6 +316,10 @@ async fn run_app() -> Result<(), Box<dyn std::error::Error>> {
             )
             .await?;
         }
+
+        Commands::Overlap(args) => {
+            run_overlap_command(args)?;
+        }
     }
 
     Ok(())

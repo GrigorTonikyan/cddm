@@ -71,6 +71,12 @@ pub fn resources_list_response(id: Option<serde_json::Value>) -> JsonRpcResponse
                     "name": "Workspace Live Watch Status",
                     "description": "Real-time status of directory watcher daemon, debounce settings, and incremental delta metrics.",
                     "mimeType": mcp_resources::MIME_APPLICATION_JSON
+                },
+                {
+                    "uri": mcp_resources::URI_WORKSPACE_OVERLAP,
+                    "name": "Workspace Ecosystem Library Overlap",
+                    "description": "Reimplemented standard and community package utilities detected across workspace files.",
+                    "mimeType": mcp_resources::MIME_APPLICATION_JSON
                 }
             ]
         })),
@@ -332,6 +338,26 @@ pub async fn handle_resource_read(
                     ]
                 })),
                 error: None,
+            }
+        }
+
+        mcp_resources::URI_WORKSPACE_OVERLAP => {
+            match cddm_core::scan_workspace_overlap(Path::new("."), 0.3) {
+                Ok(result) => JsonRpcResponse {
+                    jsonrpc: JSONRPC_VERSION.to_string(),
+                    id,
+                    result: Some(json!({
+                        "contents": [
+                            {
+                                "uri": mcp_resources::URI_WORKSPACE_OVERLAP,
+                                "mimeType": mcp_resources::MIME_APPLICATION_JSON,
+                                "text": serde_json::to_string_pretty(&result).unwrap_or_default()
+                            }
+                        ]
+                    })),
+                    error: None,
+                },
+                Err(e) => make_error_response(id, rpc_errors::INTERNAL_ERROR, e),
             }
         }
 

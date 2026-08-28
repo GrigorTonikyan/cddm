@@ -403,6 +403,7 @@ pub fn get_tool_definitions() -> Vec<serde_json::Value> {
                     "crate_type": { "type": "string", "description": "Packaging strategy: auto, crate, module, existing" },
                     "dry_run": { "type": "boolean", "description": "Preview extraction without writing to disk (default: false)" },
                     "generate_tests": { "type": "boolean", "description": "Automatically synthesize unit tests for the extracted helper" },
+                    "generate_benchmarks": { "type": "boolean", "description": "Automatically synthesize performance micro-benchmarks for the extracted helper" },
                     mcp_tools::PARAM_CLUSTER_ID: { "type": "number", "description": "1-based cluster index" },
                     mcp_tools::PARAM_DIRECTORY: { "type": "string", "description": "Target directory path" },
                     mcp_tools::PARAM_MIN_TOKENS: { "type": "number", "description": "Minimum token threshold" },
@@ -419,6 +420,17 @@ pub fn get_tool_definitions() -> Vec<serde_json::Value> {
                             "required": ["file", "start_line", "end_line"]
                         }
                     }
+                }
+            }
+        }),
+        json!({
+            "name": mcp_tools::DETECT_OVERLAP,
+            "description": "Detect reimplemented ecosystem library algorithms and suggest standard packages.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    mcp_tools::PARAM_DIRECTORY: { "type": "string", "description": "Target workspace directory path (default: .)" },
+                    "threshold": { "type": "number", "description": "Confidence threshold from 0.0 to 1.0 (default: 0.3)" }
                 }
             }
         }),

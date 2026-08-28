@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-27 | Rust: 244 #[test] units | WebUI: 162 tests across 41 suites | Scripts & MCP: 93 tests across 34 suites | CI Workflows: PASS
+> Last verified: 2026-08-27 | Rust: 253 #[test] units | WebUI: 166 tests across 42 suites | Scripts & MCP: 97 tests across 35 suites | CI Workflows: PASS
 
 ---
 
@@ -358,11 +358,11 @@
 
 ---
 
-## 2. WebUI Frontend — React 19 + TypeScript + Vitest (162 unit tests across 41 suites)
+## 2. WebUI Frontend — React 19 + TypeScript + Vitest (166 unit tests across 42 suites)
 
 | Module                   | Test Suite File                                                                       | Test Cases | Status |
 | :----------------------- | :------------------------------------------------------------------------------------ | :--------- | :----- |
-| App Shell                | `webui/src/App.test.tsx`                                                              | 5 tests    | PASS   |
+| App Shell                | `webui/src/App.test.tsx`                                                              | 6 tests    | PASS   |
 | Clone Cluster Card       | `webui/src/components/CloneClusterCard.test.tsx`                                      | 2 tests    | PASS   |
 | Clone Pair Card          | `webui/src/components/ClonePairCard.test.tsx`                                         | 2 tests    | PASS   |
 | Clone Pair Diff Modal    | `webui/src/components/ClonePairDiffModal.test.tsx`                                    | 3 tests    | PASS   |
@@ -371,6 +371,7 @@
 | Export Report Modal      | `webui/src/components/ExportReportModal.test.tsx`                                     | 3 tests    | PASS   |
 | Health Audit Modal       | `webui/src/components/HealthAuditModal.test.tsx`                                      | 3 tests    | PASS   |
 | Language Analytics Modal | `webui/src/components/LanguageAnalyticsModal.test.tsx`                                | 2 tests    | PASS   |
+| Overlap Detector Modal   | `webui/src/components/OverlapDetectorModal.test.tsx`                                  | 3 tests    | PASS   |
 | Policy Rules Modal       | `webui/src/components/PolicyRulesModal.test.tsx`                                      | 4 tests    | PASS   |
 | Refactor Patch Modal     | `webui/src/components/RefactorPatchModal.test.tsx`                                    | 3 tests    | PASS   |
 | Refactor Sandbox Modal   | `webui/src/components/RefactorSandboxModal.test.tsx`                                  | 6 tests    | PASS   |
@@ -406,7 +407,7 @@
 
 ---
 
-## 3. Repository Scripts & MCP Protocol — Bun Test Suites (93 tests across 34 suites)
+## 3. Repository Scripts & MCP Protocol — Bun Test Suites (97 tests across 35 suites)
 
 ### Repository Tooling & Automation Suites
 
@@ -434,10 +435,11 @@
 | Tool: cddm_check_policies           | `tests/mcp/tools/check-policies.test.ts`           | 1 tests    | PASS   |
 | Tool: cddm_check_suppression        | `tests/mcp/tools/check-suppression.test.ts`        | 2 tests    | PASS   |
 | Tool: cddm_compare_semantic_graphs  | `tests/mcp/tools/compare-semantic-graphs.test.ts`  | 2 tests    | PASS   |
+| Tool: cddm_detect_overlap           | `tests/mcp/tools/detect-overlap.test.ts`           | 3 tests    | PASS   |
 | Tool: cddm_diff_scan                | `tests/mcp/tools/diff-scan.test.ts`                | 2 tests    | PASS   |
 | Tool: cddm_export_cache_pack        | `tests/mcp/tools/export-cache-pack.test.ts`        | 2 tests    | PASS   |
 | Tool: cddm_export_sarif             | `tests/mcp/tools/export-sarif.test.ts`             | 1 tests    | PASS   |
-| Tool: cddm_extract_shared_module    | `tests/mcp/tools/extract-shared-module.test.ts`    | 4 tests    | PASS   |
+| Tool: cddm_extract_shared_module    | `tests/mcp/tools/extract-shared-module.test.ts`    | 5 tests    | PASS   |
 | Tool: cddm_generate_ai_prompt       | `tests/mcp/tools/generate-ai-prompt.test.ts`       | 2 tests    | PASS   |
 | Tool: cddm_get_clone_cluster        | `tests/mcp/tools/get-clone-cluster.test.ts`        | 2 tests    | PASS   |
 | Tool: cddm_get_clone_pair           | `tests/mcp/tools/get-clone-pair.test.ts`           | 2 tests    | PASS   |

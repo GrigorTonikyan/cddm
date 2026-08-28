@@ -101,3 +101,41 @@ export interface SemanticGraphResponse {
   pdgs: ProgramDependenceGraph[];
   comparison?: SemanticComparisonResponse | null;
 }
+
+export interface RecommendedLibrary {
+  language: string;
+  package_name: string;
+  install_command: string;
+  replacement_snippet: string;
+}
+
+export interface EcosystemAlgorithm {
+  name: string;
+  category: string;
+  description: string;
+  canonical_keywords: string[];
+  recommendations: RecommendedLibrary[];
+}
+
+export interface OverlapMatch {
+  algorithm_name: string;
+  category: string;
+  file_path: string;
+  function_name: string;
+  line_span: [number, number];
+  confidence: number;
+  snippet: string;
+  recommended_library: RecommendedLibrary;
+}
+
+export interface OverlapScanResult {
+  matches: OverlapMatch[];
+  total_files_scanned: number;
+  scanned_functions: number;
+  summary: string;
+}
+
+export interface OverlapScanRequest {
+  directory?: string;
+  threshold?: number;
+}

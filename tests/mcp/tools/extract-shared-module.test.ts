@@ -52,6 +52,25 @@ describe("MCP Tool: cddm_extract_shared_module", () => {
     expect(res.test_files[0].file_path).toContain("test");
   });
 
+  it("should synthesize benchmark files when generate_benchmarks is true", async () => {
+    const res = await executeTool("cddm_extract_shared_module", {
+      occurrences: [
+        { file: "crates/cddm-cli/src/tui/views/extract.rs", start_line: 1, end_line: 14 },
+        { file: "crates/cddm-cli/src/tui/views/refactor.rs", start_line: 1, end_line: 14 },
+      ],
+      target_path: "crates/shared_sample",
+      crate_type: "crate",
+      fn_name: "sampleHelper",
+      generate_benchmarks: true,
+      dry_run: true,
+    });
+
+    expect(res).toBeDefined();
+    expect(Array.isArray(res.benchmark_files)).toBe(true);
+    expect(res.benchmark_files.length).toBeGreaterThan(0);
+    expect(res.benchmark_files[0].file_path).toContain("bench");
+  });
+
   it("should reject invocation when cluster_id does not exist", async () => {
     await assertToolError(
       "cddm_extract_shared_module",

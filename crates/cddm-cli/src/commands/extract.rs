@@ -103,6 +103,7 @@ pub async fn run_extract_command(args: ExtractArgs) -> Result<(), Box<dyn std::e
         target_kind,
         custom_parameter_names: None,
         generate_tests: args.generate_tests,
+        generate_benchmarks: args.generate_benchmarks,
         dry_run: !args.apply || args.dry_run,
     };
 
@@ -166,6 +167,20 @@ fn print_extraction_summary(result: &ExtractResult, applied: bool) {
                 "  [+] \x1b[32m{}\x1b[0m ({} bytes)",
                 t.file_path,
                 t.content.len()
+            );
+        }
+    }
+
+    if !result.benchmark_files.is_empty() {
+        println!(
+            "\n\x1b[36mSynthesized Micro-Benchmarks ({})\x1b[0m:",
+            result.benchmark_files.len()
+        );
+        for b in &result.benchmark_files {
+            println!(
+                "  [+] \x1b[32m{}\x1b[0m ({} bytes)",
+                b.file_path,
+                b.content.len()
             );
         }
     }

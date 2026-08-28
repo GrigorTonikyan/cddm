@@ -114,6 +114,14 @@ fn render_extraction_actions(frame: &mut Frame, _app: &TuiApp, area: Rect) {
                 .bg(Color::Yellow)
                 .add_modifier(Modifier::BOLD),
         ),
+        Span::raw("  "),
+        Span::styled(
+            " [b] Synthesize Benchmarks ",
+            Style::default()
+                .fg(Color::Black)
+                .bg(Color::Magenta)
+                .add_modifier(Modifier::BOLD),
+        ),
     ])];
 
     let block = create_titled_block(" Extraction Operations ", true);

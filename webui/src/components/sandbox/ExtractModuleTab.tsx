@@ -13,6 +13,7 @@ import {
   FilePlus,
   FlaskConical,
   FolderGit2,
+  Gauge,
   Play,
   RefreshCw,
   TrendingDown,
@@ -97,9 +98,11 @@ export const ExtractModuleTab: React.FC<ExtractModuleTabProps> = ({
     customFnName: "",
     strategy: "auto" as ExtractTargetKind,
     generateTests: true,
+    generateBenchmarks: true,
   });
   const [activeFileTab, setActiveFileTab] = useState<number>(0);
   const [activeTestTab, setActiveTestTab] = useState<number>(0);
+  const [activeBenchTab, setActiveBenchTab] = useState<number>(0);
   const [isApplying, setIsApplying] = useState<boolean>(false);
   const [appliedSuccess, setAppliedSuccess] = useState<string | null>(null);
 
@@ -115,6 +118,7 @@ export const ExtractModuleTab: React.FC<ExtractModuleTabProps> = ({
       custom_function_name: form.customFnName.trim() || undefined,
       target_kind: form.strategy,
       generate_tests: form.generateTests,
+      generate_benchmarks: form.generateBenchmarks,
       dry_run: dryRun,
     };
   };
@@ -200,7 +204,7 @@ export const ExtractModuleTab: React.FC<ExtractModuleTabProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 pt-0.5">
+        <div className="flex flex-wrap items-center gap-4 pt-0.5">
           <label className="flex items-center gap-2 text-[11px] text-slate-300 cursor-pointer select-none">
             <input
               type="checkbox"
@@ -212,6 +216,20 @@ export const ExtractModuleTab: React.FC<ExtractModuleTabProps> = ({
             <span className="flex items-center gap-1 text-emerald-400">
               <FlaskConical className="w-3.5 h-3.5" />
               Synthesize Idiomatic Unit Tests (*.test.ts, *_test.rs, test_*.py, etc.)
+            </span>
+          </label>
+
+          <label className="flex items-center gap-2 text-[11px] text-slate-300 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              aria-label="Generate Micro-Benchmarks"
+              checked={form.generateBenchmarks}
+              onChange={(e) => updateField("generateBenchmarks", e.target.checked)}
+              className="rounded bg-slate-950 border-slate-700 text-purple-500 focus:ring-0 focus:outline-none"
+            />
+            <span className="flex items-center gap-1 text-purple-400">
+              <Gauge className="w-3.5 h-3.5" />
+              Synthesize Performance Micro-Benchmarks (*.bench.ts, *_bench.rs, etc.)
             </span>
           </label>
         </div>
@@ -304,6 +322,20 @@ export const ExtractModuleTab: React.FC<ExtractModuleTabProps> = ({
             activeBtnClass="bg-emerald-900/80 text-emerald-200 border border-emerald-700/60 font-semibold"
             inactiveBtnClass="text-slate-400 hover:text-emerald-300 hover:bg-emerald-950/30"
             codeColor="text-emerald-200"
+          />
+
+          {/* Synthesized Micro-Benchmarks Tabs */}
+          <FilePreviewContainer
+            label="Synthesized Micro-Benchmarks"
+            icon={<Gauge className="w-3.5 h-3.5 text-purple-400" />}
+            files={extractResult.benchmark_files || []}
+            activeTab={activeBenchTab}
+            onSelectTab={setActiveBenchTab}
+            borderClass="border-purple-900/60"
+            headerBg="bg-purple-950/40 border-purple-900/60 text-purple-300"
+            activeBtnClass="bg-purple-900/80 text-purple-200 border border-purple-700/60 font-semibold"
+            inactiveBtnClass="text-slate-400 hover:text-purple-300 hover:bg-purple-950/30"
+            codeColor="text-purple-200"
           />
 
           {/* Manifest Updates Preview */}

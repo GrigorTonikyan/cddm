@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import { describe, it, expect, vi } from "vite-plus/test";
 import { ExtractModuleTab } from "./ExtractModuleTab";
 import type { ExtractResult, RefactorSandboxRequest } from "../../types/cddm-types";
@@ -47,6 +47,13 @@ describe("ExtractModuleTab Component", () => {
         is_new: true,
       },
     ],
+    benchmark_files: [
+      {
+        file_path: "crates/shared_utils/benches/calculate_score_bench.rs",
+        content: "use criterion::Criterion;\nfn bench_throughput(c: &mut Criterion) {}",
+        is_new: true,
+      },
+    ],
     manifest_updates: [
       {
         manifest_path: "Cargo.toml",
@@ -88,6 +95,7 @@ describe("ExtractModuleTab Component", () => {
     expect(screen.getByText("Occurrences: 2")).toBeDefined();
     expect(screen.getByText("Preview Extraction Plan")).toBeDefined();
     expect(screen.getByLabelText("Generate Unit Tests")).toBeDefined();
+    expect(screen.getByLabelText("Generate Micro-Benchmarks")).toBeDefined();
     expect(
       screen.getByText(
         'Click "Preview Extraction Plan" to synthesize shared crate and manifest updates.',
@@ -95,7 +103,7 @@ describe("ExtractModuleTab Component", () => {
     ).toBeDefined();
   });
 
-  it("should trigger onPreview when Preview button is clicked", () => {
+  it("should trigger onPreview when Preview button is clicked", async () => {
     const onPreview = vi.fn().mockResolvedValue(mockExtractResult);
     const onApply = vi.fn();
 
@@ -111,15 +119,21 @@ describe("ExtractModuleTab Component", () => {
     );
 
     const targetInput = screen.getByLabelText("Target Path") as HTMLInputElement;
-    fireEvent.change(targetInput, { target: { value: "crates/my_custom_crate" } });
+    await act(async () => {
+      fireEvent.change(targetInput, { target: { value: "crates/my_custom_crate" } });
+    });
     expect(targetInput.value).toBe("crates/my_custom_crate");
 
     const fnInput = screen.getByLabelText("Function Name") as HTMLInputElement;
-    fireEvent.change(fnInput, { target: { value: "do_computation" } });
+    await act(async () => {
+      fireEvent.change(fnInput, { target: { value: "do_computation" } });
+    });
     expect(fnInput.value).toBe("do_computation");
 
     const previewBtn = screen.getByText("Preview Extraction Plan");
-    fireEvent.click(previewBtn);
+    await act(async () => {
+      fireEvent.click(previewBtn);
+    });
 
     expect(onPreview).toHaveBeenCalledWith({
       occurrences: mockReq.occurrences,
@@ -127,11 +141,12 @@ describe("ExtractModuleTab Component", () => {
       custom_function_name: "do_computation",
       target_kind: "auto",
       generate_tests: true,
+      generate_benchmarks: true,
       dry_run: true,
     });
   });
 
-  it("should render generated files, test files, manifest updates, and apply button when result is present", () => {
+  it("should render generated files, test files, benchmark files, manifest updates, and apply button when result is present", async () => {
     const onPreview = vi.fn();
     const onApply = vi.fn().mockResolvedValue(mockExtractResult);
 
@@ -152,13 +167,17 @@ describe("ExtractModuleTab Component", () => {
     expect(screen.getByText("crates/shared_utils/Cargo.toml")).toBeDefined();
     expect(screen.getByText("Synthesized Unit Tests (1):")).toBeDefined();
     expect(screen.getByText("crates/shared_utils/tests/calculate_score_test.rs")).toBeDefined();
+    expect(screen.getByText("Synthesized Micro-Benchmarks (1):")).toBeDefined();
+    expect(screen.getByText("crates/shared_utils/benches/calculate_score_bench.rs")).toBeDefined();
     expect(screen.getByText("Manifest Updates (1)")).toBeDefined();
     expect(screen.getByText("Cargo.toml")).toBeDefined();
     expect(screen.getByText("Occurrence Caller Rewrites (1)")).toBeDefined();
     expect(screen.getByText("crates/app_a/src/main.rs")).toBeDefined();
 
     const applyBtn = screen.getByText("Apply to Workspace");
-    fireEvent.click(applyBtn);
+    await act(async () => {
+      fireEvent.click(applyBtn);
+    });
     expect(onApply).toHaveBeenCalled();
   });
 });

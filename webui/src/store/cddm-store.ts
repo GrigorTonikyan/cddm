@@ -44,6 +44,7 @@ export const useCDDMStore = create<CDDMStoreState>((set, get) => ({
   isRefactorSandboxOpen: false,
   isPolicyRulesModalOpen: false,
   isSemanticGraphModalOpen: false,
+  isOverlapDetectorOpen: false,
   semanticGraphRequest: null,
   semanticGraphResponse: null,
   isSemanticGraphLoading: false,
@@ -114,6 +115,7 @@ export const useCDDMStore = create<CDDMStoreState>((set, get) => ({
     }
   },
   setIsSemanticGraphModalOpen: (isSemanticGraphModalOpen) => set({ isSemanticGraphModalOpen }),
+  setIsOverlapDetectorOpen: (isOverlapDetectorOpen) => set({ isOverlapDetectorOpen }),
 
   ...createScanSlice(set, get),
   ...createTimelineSlice(set, get),

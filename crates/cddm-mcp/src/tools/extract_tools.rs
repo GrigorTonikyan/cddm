@@ -54,6 +54,11 @@ pub async fn handle_extract_shared_module(
         .and_then(|g| g.as_bool())
         .unwrap_or(false);
 
+    let generate_benchmarks = args
+        .and_then(|a| a.get("generate_benchmarks").or_else(|| a.get("bench")))
+        .and_then(|g| g.as_bool())
+        .unwrap_or(false);
+
     let occurrences_arr = args
         .and_then(|a| a.get(mcp_tools::PARAM_OCCURRENCES))
         .and_then(|o| o.as_array());
@@ -142,6 +147,7 @@ pub async fn handle_extract_shared_module(
         target_kind,
         custom_parameter_names: None,
         generate_tests,
+        generate_benchmarks,
         dry_run,
     };
 

@@ -95,6 +95,12 @@ pub const ROUTE_API_EXTRACT_PREVIEW: &str = "/api/extract/preview";
 /// API endpoint path for applying shared module and crate extraction to disk.
 pub const ROUTE_API_EXTRACT_APPLY: &str = "/api/extract/apply";
 
+/// API endpoint path for retrieving canonical ecosystem algorithms catalog.
+pub const ROUTE_API_OVERLAP_CATALOG: &str = "/api/overlap/catalog";
+
+/// API endpoint path for scanning workspace for library overlap matches.
+pub const ROUTE_API_OVERLAP_SCAN: &str = "/api/overlap/scan";
+
 /// Default localhost IPv4 binding.
 pub const DEFAULT_HOST_IP: [u8; 4] = [127, 0, 0, 1];
 
