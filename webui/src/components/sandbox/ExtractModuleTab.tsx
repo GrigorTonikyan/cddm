@@ -11,6 +11,7 @@ import {
   Check,
   FileCode,
   FilePlus,
+  FlaskConical,
   FolderGit2,
   Play,
   RefreshCw,
@@ -26,6 +27,63 @@ export interface ExtractModuleTabProps {
   onApply: (req: ExtractRequest) => Promise<ExtractResult>;
 }
 
+interface FilePreviewContainerProps {
+  label: string;
+  icon: React.ReactNode;
+  files: { file_path: string; content: string }[];
+  activeTab: number;
+  onSelectTab: (index: number) => void;
+  borderClass: string;
+  headerBg: string;
+  activeBtnClass: string;
+  inactiveBtnClass: string;
+  codeColor: string;
+}
+
+const FilePreviewContainer: React.FC<FilePreviewContainerProps> = ({
+  label,
+  icon,
+  files,
+  activeTab,
+  onSelectTab,
+  borderClass,
+  headerBg,
+  activeBtnClass,
+  inactiveBtnClass,
+  codeColor,
+}) => {
+  if (files.length === 0) return null;
+  return (
+    <div className={`border rounded-xl bg-slate-950 overflow-hidden ${borderClass}`}>
+      <div className={`flex items-center gap-1 px-2.5 py-1.5 border-b overflow-x-auto ${headerBg}`}>
+        <span className="text-[11px] font-bold mr-2 flex items-center gap-1">
+          {icon}
+          {label} ({files.length}):
+        </span>
+        {files.map((file, idx) => (
+          <button
+            key={idx}
+            type="button"
+            onClick={() => onSelectTab(idx)}
+            className={`px-2.5 py-1 rounded text-[11px] font-mono transition-colors ${
+              activeTab === idx ? activeBtnClass : inactiveBtnClass
+            }`}
+          >
+            {file.file_path}
+          </button>
+        ))}
+      </div>
+      {files[activeTab] && (
+        <pre
+          className={`p-3.5 text-xs font-mono overflow-x-auto max-h-[180px] leading-relaxed ${codeColor}`}
+        >
+          {files[activeTab].content}
+        </pre>
+      )}
+    </div>
+  );
+};
+
 export const ExtractModuleTab: React.FC<ExtractModuleTabProps> = ({
   sandboxRequest,
   extractResult,
@@ -37,7 +95,9 @@ export const ExtractModuleTab: React.FC<ExtractModuleTabProps> = ({
   const [targetPath, setTargetPath] = useState<string>("crates/shared_utils");
   const [customFnName, setCustomFnName] = useState<string>("");
   const [strategy, setStrategy] = useState<ExtractTargetKind>("auto");
+  const [generateTests, setGenerateTests] = useState<boolean>(true);
   const [activeFileTab, setActiveFileTab] = useState<number>(0);
+  const [activeTestTab, setActiveTestTab] = useState<number>(0);
   const [isApplying, setIsApplying] = useState<boolean>(false);
   const [appliedSuccess, setAppliedSuccess] = useState<string | null>(null);
 
@@ -49,6 +109,7 @@ export const ExtractModuleTab: React.FC<ExtractModuleTabProps> = ({
       target_path: targetPath.trim() || "crates/shared_utils",
       custom_function_name: customFnName.trim() || undefined,
       target_kind: strategy,
+      generate_tests: generateTests,
       dry_run: true,
     };
     try {
@@ -67,6 +128,7 @@ export const ExtractModuleTab: React.FC<ExtractModuleTabProps> = ({
       target_path: targetPath.trim() || "crates/shared_utils",
       custom_function_name: customFnName.trim() || undefined,
       target_kind: strategy,
+      generate_tests: generateTests,
       dry_run: false,
     };
     try {
@@ -134,6 +196,22 @@ export const ExtractModuleTab: React.FC<ExtractModuleTabProps> = ({
           </div>
         </div>
 
+        <div className="flex items-center gap-2 pt-0.5">
+          <label className="flex items-center gap-2 text-[11px] text-slate-300 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              aria-label="Generate Unit Tests"
+              checked={generateTests}
+              onChange={(e) => setGenerateTests(e.target.checked)}
+              className="rounded bg-slate-950 border-slate-700 text-emerald-500 focus:ring-0 focus:outline-none"
+            />
+            <span className="flex items-center gap-1 text-emerald-400">
+              <FlaskConical className="w-3.5 h-3.5" />
+              Synthesize Idiomatic Unit Tests (*.test.ts, *_test.rs, test_*.py, etc.)
+            </span>
+          </label>
+        </div>
+
         <div className="flex items-center justify-between pt-1 border-t border-slate-800/80">
           <div className="flex items-center gap-2">
             <button
@@ -197,36 +275,32 @@ export const ExtractModuleTab: React.FC<ExtractModuleTabProps> = ({
       ) : extractResult ? (
         <div className="space-y-3">
           {/* Target Generated Files Tabs */}
-          {extractResult.generated_files.length > 0 && (
-            <div className="border border-slate-800 rounded-xl bg-slate-950 overflow-hidden">
-              <div className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-900/80 border-b border-slate-800 overflow-x-auto">
-                <span className="text-[11px] text-slate-400 font-bold mr-2 flex items-center gap-1">
-                  <FilePlus className="w-3.5 h-3.5 text-cyan-400" />
-                  Generated Files ({extractResult.generated_files.length}):
-                </span>
-                {extractResult.generated_files.map((file, fIdx) => (
-                  <button
-                    key={fIdx}
-                    type="button"
-                    onClick={() => setActiveFileTab(fIdx)}
-                    className={`px-2.5 py-1 rounded text-[11px] font-mono transition-colors ${
-                      activeFileTab === fIdx
-                        ? "bg-cyan-950/80 text-cyan-300 border border-cyan-800/60 font-semibold"
-                        : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/40"
-                    }`}
-                  >
-                    {file.file_path}
-                  </button>
-                ))}
-              </div>
+          <FilePreviewContainer
+            label="Generated Files"
+            icon={<FilePlus className="w-3.5 h-3.5 text-cyan-400" />}
+            files={extractResult.generated_files}
+            activeTab={activeFileTab}
+            onSelectTab={setActiveFileTab}
+            borderClass="border-slate-800"
+            headerBg="bg-slate-900/80 border-slate-800 text-slate-400"
+            activeBtnClass="bg-cyan-950/80 text-cyan-300 border border-cyan-800/60 font-semibold"
+            inactiveBtnClass="text-slate-400 hover:text-slate-200 hover:bg-slate-800/40"
+            codeColor="text-slate-200"
+          />
 
-              {extractResult.generated_files[activeFileTab] && (
-                <pre className="p-3.5 text-xs font-mono text-slate-200 overflow-x-auto max-h-[180px] leading-relaxed">
-                  {extractResult.generated_files[activeFileTab].content}
-                </pre>
-              )}
-            </div>
-          )}
+          {/* Synthesized Unit Tests Tabs */}
+          <FilePreviewContainer
+            label="Synthesized Unit Tests"
+            icon={<FlaskConical className="w-3.5 h-3.5 text-emerald-400" />}
+            files={extractResult.test_files || []}
+            activeTab={activeTestTab}
+            onSelectTab={setActiveTestTab}
+            borderClass="border-emerald-900/60"
+            headerBg="bg-emerald-950/40 border-emerald-900/60 text-emerald-300"
+            activeBtnClass="bg-emerald-900/80 text-emerald-200 border border-emerald-700/60 font-semibold"
+            inactiveBtnClass="text-slate-400 hover:text-emerald-300 hover:bg-emerald-950/30"
+            codeColor="text-emerald-200"
+          />
 
           {/* Manifest Updates Preview */}
           {extractResult.manifest_updates.length > 0 && (

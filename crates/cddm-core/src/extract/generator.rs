@@ -263,7 +263,7 @@ pub fn generate_extracted_target_files(
     (helper_sig, files)
 }
 
-fn derive_target_name(path: &str) -> String {
+pub(crate) fn derive_target_name(path: &str) -> String {
     let p = Path::new(path);
     let stem = p
         .file_stem()

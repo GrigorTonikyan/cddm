@@ -40,6 +40,13 @@ describe("ExtractModuleTab Component", () => {
         is_new: true,
       },
     ],
+    test_files: [
+      {
+        file_path: "crates/shared_utils/tests/calculate_score_test.rs",
+        content: "#[test]\nfn test_calculate_score_execution() { calculate_score(); }",
+        is_new: true,
+      },
+    ],
     manifest_updates: [
       {
         manifest_path: "Cargo.toml",
@@ -80,6 +87,7 @@ describe("ExtractModuleTab Component", () => {
     expect(screen.getByText("Automated Shared Crate & Module Extraction")).toBeDefined();
     expect(screen.getByText("Occurrences: 2")).toBeDefined();
     expect(screen.getByText("Preview Extraction Plan")).toBeDefined();
+    expect(screen.getByLabelText("Generate Unit Tests")).toBeDefined();
     expect(
       screen.getByText(
         'Click "Preview Extraction Plan" to synthesize shared crate and manifest updates.',
@@ -118,11 +126,12 @@ describe("ExtractModuleTab Component", () => {
       target_path: "crates/my_custom_crate",
       custom_function_name: "do_computation",
       target_kind: "auto",
+      generate_tests: true,
       dry_run: true,
     });
   });
 
-  it("should render generated files, manifest updates, and apply button when result is present", () => {
+  it("should render generated files, test files, manifest updates, and apply button when result is present", () => {
     const onPreview = vi.fn();
     const onApply = vi.fn().mockResolvedValue(mockExtractResult);
 
@@ -141,6 +150,8 @@ describe("ExtractModuleTab Component", () => {
     expect(screen.getByText("Strategy: new_crate")).toBeDefined();
     expect(screen.getByText("Generated Files (2):")).toBeDefined();
     expect(screen.getByText("crates/shared_utils/Cargo.toml")).toBeDefined();
+    expect(screen.getByText("Synthesized Unit Tests (1):")).toBeDefined();
+    expect(screen.getByText("crates/shared_utils/tests/calculate_score_test.rs")).toBeDefined();
     expect(screen.getByText("Manifest Updates (1)")).toBeDefined();
     expect(screen.getByText("Cargo.toml")).toBeDefined();
     expect(screen.getByText("Occurrence Caller Rewrites (1)")).toBeDefined();

@@ -327,6 +327,18 @@
 
 ---
 
+### Milestone v2.7.0: Automated Polyglot Unit Test Synthesizer (High Priority)
+
+- [x] **[EP-34] Automated Polyglot Unit Test Synthesizer & Behavioral Equivalence Verifier**
+  - [x] Implement polyglot unit test generator for extracted helper functions and shared modules across Rust, TypeScript, Python, Go, Java, and C# in `crates/cddm-core/src/extract/test_generator.rs`
+  - [x] Add `--generate-tests` flag to `cddm extract` CLI command in `crates/cddm-cli/src/commands/extract.rs`
+  - [x] Expose `generate_tests` parameter on `cddm_extract_shared_module` tool in `crates/cddm-mcp/`
+  - [x] Implement WebUI Studio Synthesize Unit Tests checkbox and test preview viewer in `ExtractModuleTab.tsx`
+  - [x] Add `[t] Synthesize Unit Tests` badge in TUI Studio Extract view in `crates/cddm-cli/src/tui/views/extract.rs`
+  - [x] Verify complete cross-interface feature parity across CLI, WebUI, MCP, and TUI surfaces
+
+---
+
 ## Completed Milestones (Verified)
 
 - [x] **v0.1.0**: Initial Rust core engine, Winnowing rolling hash, CLI scanner.
@@ -352,3 +364,4 @@
 - [x] **v2.4.0**: Automated Shared Module & Crate Extraction (`cddm_core::extract`, CLI `cddm extract`, Axum `/api/extract/*`, MCP `cddm_extract_shared_module`, WebUI Extract tab).
 - [x] **v2.5.0**: Interactive Terminal UI Studio (`cddm tui`), Ratatui/Crossterm 8-tab visualizer, side-by-side split diffs, and 4-Pillar Cross-Interface Feature Parity governance policy & verification pipeline (`scripts/check-feature-parity.ts`).
 - [x] **v2.6.0**: Polyglot AST-Native Rewriters & Multi-Language Shared Module Extraction Engine across Python, Go, Java, and C# (`cddm_core::extract::manifest`, `generator`, `type_infer`, `rewriter`).
+- [x] **v2.7.0**: Automated Polyglot Unit Test Synthesizer & Behavioral Equivalence Verifier across Rust, TypeScript, Python, Go, Java, and C# (`cddm_core::extract::test_generator`, CLI `cddm extract --generate-tests`, MCP `cddm_extract_shared_module`, WebUI Extract tab test viewer).

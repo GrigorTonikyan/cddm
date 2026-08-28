@@ -4,12 +4,14 @@ pub mod executor;
 pub mod generator;
 pub mod manifest;
 pub mod rewriter;
+pub mod test_generator;
 pub mod types;
 
 pub use executor::apply_extraction_to_workspace;
 pub use generator::generate_extracted_target_files;
 pub use manifest::update_workspace_manifests;
 pub use rewriter::rewrite_caller_files;
+pub use test_generator::generate_unit_test_files;
 pub use types::*;
 
 use crate::refactor::consensus::analyze_cluster_snippets_refactoring;
@@ -153,13 +155,27 @@ pub fn generate_shared_extraction(
         ext,
     )?;
 
+    // 8. Synthesize unit tests if requested
+    let test_files = if request.generate_tests {
+        generate_unit_test_files(
+            &request.target_path,
+            target_kind,
+            fn_name,
+            &inferred_parameters,
+            ext,
+        )
+    } else {
+        Vec::new()
+    };
+
     let total_lines_saved = cluster_refactor.total_lines_saved;
     let message = format!(
-        "Successfully planned shared extraction of '{}' to '{}' ({} files generated, {} manifests \
-         updated, {} callers rewritten, {} lines saved)",
+        "Successfully planned shared extraction of '{}' to '{}' ({} files generated, {} tests \
+         synthesized, {} manifests updated, {} callers rewritten, {} lines saved)",
         fn_name,
         request.target_path,
         generated_files.len(),
+        test_files.len(),
         manifest_updates.len(),
         caller_rewrites.len(),
         total_lines_saved
@@ -172,6 +188,7 @@ pub fn generate_shared_extraction(
         helper_signature: helper_sig,
         inferred_parameters,
         generated_files,
+        test_files,
         manifest_updates,
         caller_rewrites,
         total_lines_saved,
@@ -259,6 +276,7 @@ mod tests {
             custom_function_name: Some("compute_double".to_string()),
             target_kind: ExtractTargetKind::NewCrate,
             custom_parameter_names: None,
+            generate_tests: false,
             dry_run: false,
         };
 
@@ -314,6 +332,7 @@ mod tests {
             custom_function_name: Some("doubleValue".to_string()),
             target_kind: ExtractTargetKind::NewModule,
             custom_parameter_names: None,
+            generate_tests: false,
             dry_run: false,
         };
 
@@ -378,6 +397,7 @@ mod tests {
             custom_function_name: Some("calc_multiplier".to_string()),
             target_kind: ExtractTargetKind::NewCrate,
             custom_parameter_names: None,
+            generate_tests: false,
             dry_run: false,
         };
 
@@ -388,5 +408,63 @@ mod tests {
         assert_eq!(result.function_name, "calc_multiplier");
         assert!(root.join("packages/math_utils/pyproject.toml").exists());
         assert!(root.join("packages/math_utils/__init__.py").exists());
+    }
+
+    #[test]
+    fn test_generate_shared_extraction_with_unit_tests() {
+        let dir = tempdir().unwrap();
+        let root = dir.path();
+
+        fs::write(
+            root.join("Cargo.toml"),
+            "[workspace]\nmembers = [\"crates/app_a\", \"crates/app_b\"]\n",
+        )
+        .unwrap();
+
+        let app_a = root.join("crates/app_a/src");
+        fs::create_dir_all(&app_a).unwrap();
+        fs::write(
+            root.join("crates/app_a/Cargo.toml"),
+            "[package]\nname = \"app_a\"\nversion = \"0.1.0\"\n",
+        )
+        .unwrap();
+        fs::write(
+            app_a.join("main.rs"),
+            "fn main() {\n    let val = 10;\n    println!(\"{}\", val);\n}\n",
+        )
+        .unwrap();
+
+        let req = ExtractRequest {
+            occurrences: vec![
+                CloneLocation {
+                    file: "crates/app_a/src/main.rs".to_string(),
+                    start_line: 2,
+                    end_line: 3,
+                    author: None,
+                },
+                CloneLocation {
+                    file: "crates/app_a/src/main.rs".to_string(),
+                    start_line: 2,
+                    end_line: 3,
+                    author: None,
+                },
+            ],
+            target_path: "crates/shared_tools".to_string(),
+            custom_function_name: Some("process_val".to_string()),
+            target_kind: ExtractTargetKind::NewCrate,
+            custom_parameter_names: None,
+            generate_tests: true,
+            dry_run: false,
+        };
+
+        let res = apply_shared_extraction(root, &req);
+        assert!(res.is_ok(), "{:?}", res.err());
+        let result = res.unwrap();
+
+        assert_eq!(result.test_files.len(), 1);
+        assert!(
+            root.join("crates/shared_tools/tests/process_val_test.rs")
+                .exists()
+        );
     }
 }

@@ -32,6 +32,9 @@ pub struct ExtractRequest {
     pub target_kind: ExtractTargetKind,
     /// Custom parameter names override.
     pub custom_parameter_names: Option<Vec<String>>,
+    /// Whether to generate unit tests for the extracted helper.
+    #[serde(default)]
+    pub generate_tests: bool,
     /// Whether to perform a dry-run without writing to disk.
     #[serde(default)]
     pub dry_run: bool,
@@ -89,6 +92,9 @@ pub struct ExtractResult {
     pub inferred_parameters: Vec<InferredParameter>,
     /// List of newly generated files (e.g. `Cargo.toml`, `src/lib.rs`, `index.ts`).
     pub generated_files: Vec<ExtractedFile>,
+    /// Synthesized unit test files verifying extracted functionality.
+    #[serde(default)]
+    pub test_files: Vec<ExtractedFile>,
     /// Manifest modifications across workspace root and caller packages.
     pub manifest_updates: Vec<ManifestUpdate>,
     /// Occurrence file rewrites and injected imports.

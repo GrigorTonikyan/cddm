@@ -38,6 +38,10 @@ pub struct ExtractArgs {
     #[arg(long, default_value_t = false)]
     pub apply: bool,
 
+    /// Automatically synthesize unit tests for the extracted helper
+    #[arg(long, default_value_t = false)]
+    pub generate_tests: bool,
+
     /// Minimum token count for clone detection
     #[arg(short, long, default_value_t = cddm_core::DEFAULT_MIN_TOKENS)]
     pub min_tokens: usize,

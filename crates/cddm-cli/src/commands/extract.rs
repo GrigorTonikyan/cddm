@@ -102,6 +102,7 @@ pub async fn run_extract_command(args: ExtractArgs) -> Result<(), Box<dyn std::e
         custom_function_name: args.fn_name,
         target_kind,
         custom_parameter_names: None,
+        generate_tests: args.generate_tests,
         dry_run: !args.apply || args.dry_run,
     };
 
@@ -151,6 +152,20 @@ fn print_extraction_summary(result: &ExtractResult, applied: bool) {
                 "  [+] \x1b[32m{}\x1b[0m ({} bytes)",
                 f.file_path,
                 f.content.len()
+            );
+        }
+    }
+
+    if !result.test_files.is_empty() {
+        println!(
+            "\n\x1b[36mSynthesized Unit Tests ({})\x1b[0m:",
+            result.test_files.len()
+        );
+        for t in &result.test_files {
+            println!(
+                "  [+] \x1b[32m{}\x1b[0m ({} bytes)",
+                t.file_path,
+                t.content.len()
             );
         }
     }

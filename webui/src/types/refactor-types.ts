@@ -302,6 +302,7 @@ export interface ExtractRequest {
   custom_function_name?: string;
   target_kind?: ExtractTargetKind;
   custom_parameter_names?: string[];
+  generate_tests?: boolean;
   dry_run?: boolean;
 }
 
@@ -344,6 +345,7 @@ export interface ExtractResult {
   helper_signature: string;
   inferred_parameters: InferredParameter[];
   generated_files: ExtractedFile[];
+  test_files?: ExtractedFile[];
   manifest_updates: ManifestUpdate[];
   caller_rewrites: CallerRewrite[];
   total_lines_saved: number;

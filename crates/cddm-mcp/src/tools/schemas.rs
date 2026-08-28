@@ -402,6 +402,7 @@ pub fn get_tool_definitions() -> Vec<serde_json::Value> {
                     "fn_name": { "type": "string", "description": "Custom function name for extracted helper" },
                     "crate_type": { "type": "string", "description": "Packaging strategy: auto, crate, module, existing" },
                     "dry_run": { "type": "boolean", "description": "Preview extraction without writing to disk (default: false)" },
+                    "generate_tests": { "type": "boolean", "description": "Automatically synthesize unit tests for the extracted helper" },
                     mcp_tools::PARAM_CLUSTER_ID: { "type": "number", "description": "1-based cluster index" },
                     mcp_tools::PARAM_DIRECTORY: { "type": "string", "description": "Target directory path" },
                     mcp_tools::PARAM_MIN_TOKENS: { "type": "number", "description": "Minimum token threshold" },

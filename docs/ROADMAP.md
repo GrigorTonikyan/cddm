@@ -909,6 +909,30 @@ Extraction of shared modules must support all major programming languages beyond
 
 ---
 
+### EP-34: Automated Polyglot Unit Test Synthesizer & Behavioral Equivalence Verifier
+
+- **Target Milestone**: `v2.7.0`
+- **Component**: `crates/cddm-core`, `crates/cddm-cli`, `crates/cddm-mcp`, `webui`
+- **Priority**: `High`
+- **Status**: `Completed (v2.7.0)`
+
+#### Problem Statement
+
+When extracting duplicate code across codebases into shared helper modules or crates, engineers must ensure behavioral equivalence by generating idiomatic unit tests for the extracted helpers with sample arguments extracted from duplicate occurrences.
+
+#### Specification & Architecture
+
+1. **Polyglot Test Synthesizer (`crates/cddm-core/src/extract/test_generator.rs`)**:
+   - Generates idiomatic test files for Rust (`tests/*_test.rs`), TypeScript/JavaScript (`*.test.ts`), Python (`test_*.py`), Go (`*_test.go`), Java (`*Test.java`), and C# (`*Tests.cs`).
+   - Extracts sample arguments from duplicate occurrences to instantiate realistic test invocations.
+2. **4-Pillar Cross-Interface Integration**:
+   - CLI: `--generate-tests` flag for `cddm extract`.
+   - MCP: `generate_tests` parameter on `cddm_extract_shared_module`.
+   - WebUI: "Synthesize Unit Tests" checkbox and test file preview viewer in `ExtractModuleTab.tsx`.
+   - TUI: `[t] Synthesize Unit Tests` badge in extraction operations.
+
+---
+
 ## 3. Prioritized Action Checklist
 
 ```markdown
@@ -1092,6 +1116,15 @@ Extraction of shared modules must support all major programming languages beyond
 - [x] Implement return type and multi-return inference engine in `cddm-core::ast::type_infer` [EP-33]
 - [x] Implement polyglot import statement resolution and CST replacement in `cddm-core::ast::import_resolver` and `rewriter` [EP-33]
 - [x] Verify complete cross-interface feature parity across CLI, WebUI, MCP, and TUI surfaces [EP-33]
+
+### Milestone v2.7.0 (Automated Polyglot Unit Test Synthesizer & Behavioral Equivalence Verifier)
+
+- [x] Implement polyglot unit test generator for extracted helper functions across Rust, TypeScript, Python, Go, Java, and C# in `cddm-core::extract::test_generator` [EP-34]
+- [x] Add `--generate-tests` CLI flag to `cddm extract` in `cddm-cli` [EP-34]
+- [x] Expose `generate_tests` parameter on `cddm_extract_shared_module` tool in `cddm-mcp` [EP-34]
+- [x] Implement WebUI Studio Synthesize Unit Tests checkbox and test preview viewer in `ExtractModuleTab.tsx` [EP-34]
+- [x] Add `[t] Synthesize Unit Tests` badge in TUI Studio Extract view in `cddm-cli::tui` [EP-34]
+- [x] Verify complete cross-interface feature parity across CLI, WebUI, MCP, and TUI surfaces [EP-34]
 ```
 
 ---

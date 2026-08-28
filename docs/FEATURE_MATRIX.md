@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-27 | Rust: 238 #[test] units | WebUI: 162 tests across 41 suites | Scripts & MCP: 92 tests across 33 suites | CI Workflows: PASS
+> Last verified: 2026-08-27 | Rust: 244 #[test] units | WebUI: 162 tests across 41 suites | Scripts & MCP: 93 tests across 33 suites | CI Workflows: PASS
 
 ---
 
@@ -406,7 +406,7 @@
 
 ---
 
-## 3. Repository Scripts & MCP Protocol — Bun Test Suites (92 tests across 33 suites)
+## 3. Repository Scripts & MCP Protocol — Bun Test Suites (93 tests across 33 suites)
 
 ### Repository Tooling & Automation Suites
 
@@ -436,7 +436,7 @@
 | Tool: cddm_diff_scan                | `tests/mcp/tools/diff-scan.test.ts`                | 2 tests    | PASS   |
 | Tool: cddm_export_cache_pack        | `tests/mcp/tools/export-cache-pack.test.ts`        | 2 tests    | PASS   |
 | Tool: cddm_export_sarif             | `tests/mcp/tools/export-sarif.test.ts`             | 1 tests    | PASS   |
-| Tool: cddm_extract_shared_module    | `tests/mcp/tools/extract-shared-module.test.ts`    | 3 tests    | PASS   |
+| Tool: cddm_extract_shared_module    | `tests/mcp/tools/extract-shared-module.test.ts`    | 4 tests    | PASS   |
 | Tool: cddm_generate_ai_prompt       | `tests/mcp/tools/generate-ai-prompt.test.ts`       | 2 tests    | PASS   |
 | Tool: cddm_get_clone_cluster        | `tests/mcp/tools/get-clone-cluster.test.ts`        | 2 tests    | PASS   |
 | Tool: cddm_get_clone_pair           | `tests/mcp/tools/get-clone-pair.test.ts`           | 2 tests    | PASS   |

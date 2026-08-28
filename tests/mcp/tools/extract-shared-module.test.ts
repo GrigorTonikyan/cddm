@@ -33,6 +33,25 @@ describe("MCP Tool: cddm_extract_shared_module", () => {
     expect(Array.isArray(res.generated_files)).toBe(true);
   });
 
+  it("should synthesize unit test files when generate_tests is true", async () => {
+    const res = await executeTool("cddm_extract_shared_module", {
+      occurrences: [
+        { file: "crates/cddm-cli/src/tui/views/extract.rs", start_line: 1, end_line: 14 },
+        { file: "crates/cddm-cli/src/tui/views/refactor.rs", start_line: 1, end_line: 14 },
+      ],
+      target_path: "crates/shared_sample",
+      crate_type: "crate",
+      fn_name: "sampleHelper",
+      generate_tests: true,
+      dry_run: true,
+    });
+
+    expect(res).toBeDefined();
+    expect(Array.isArray(res.test_files)).toBe(true);
+    expect(res.test_files.length).toBeGreaterThan(0);
+    expect(res.test_files[0].file_path).toContain("test");
+  });
+
   it("should reject invocation when cluster_id does not exist", async () => {
     await assertToolError(
       "cddm_extract_shared_module",
