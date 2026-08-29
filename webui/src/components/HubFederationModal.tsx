@@ -237,7 +237,7 @@ export const HubFederationModal: React.FC<HubFederationModalProps> = ({
                   </div>
                   <div className="mt-1 text-[11px] text-gray-300">
                     {extractResult.summary} • {extractResult.lines_saved} lines consolidated across{" "}
-                    {extractResult.repo_updates.length} repositories.
+                    {extractResult.repo_updates?.length ?? 0} repositories.
                   </div>
                 </div>
               )}

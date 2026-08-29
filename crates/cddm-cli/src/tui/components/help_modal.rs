@@ -7,6 +7,7 @@ use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, Clear, Paragraph, Wrap};
 
 use crate::tui::theme::TuiTheme;
+use crate::tui::views::helpers::bold_span;
 
 /// Render a centered help dialog detailing all keybindings.
 pub fn render_help_modal(frame: &mut Frame) {
@@ -27,35 +28,20 @@ pub fn render_help_modal(frame: &mut Frame) {
         .border_style(Style::default().fg(TuiTheme::BRAND));
 
     let shortcuts = vec![
-        Line::from(vec![Span::styled(
-            " Navigation & Tabs:",
-            Style::default()
-                .fg(Color::Yellow)
-                .add_modifier(Modifier::BOLD),
-        )]),
+        Line::from(vec![bold_span(" Navigation & Tabs:", Color::Yellow)]),
         Line::from("   1 - 8           Directly switch to tab 1 through 8"),
         Line::from("   Tab / l         Next tab"),
         Line::from("   Shift-Tab / h   Previous tab"),
         Line::from("   j / k (Down/Up) Navigate items / clones in list"),
         Line::from("   J / K (PgDn/Up) Scroll diff view down / up"),
         Line::from(""),
-        Line::from(vec![Span::styled(
-            " Clone & Diff Actions:",
-            Style::default()
-                .fg(Color::Yellow)
-                .add_modifier(Modifier::BOLD),
-        )]),
+        Line::from(vec![bold_span(" Clone & Diff Actions:", Color::Yellow)]),
         Line::from("   c               Toggle Pairwise vs N-Way Clusters mode"),
         Line::from("   u               Toggle Split vs Unified diff mode"),
         Line::from("   r               Open Refactoring Sandbox for selected clone"),
         Line::from("   e               Open Shared Module Extractor for selected clone"),
         Line::from(""),
-        Line::from(vec![Span::styled(
-            " Global Controls:",
-            Style::default()
-                .fg(Color::Yellow)
-                .add_modifier(Modifier::BOLD),
-        )]),
+        Line::from(vec![bold_span(" Global Controls:", Color::Yellow)]),
         Line::from("   ?               Toggle this help popup dialog"),
         Line::from("   q / Ctrl+C      Exit CDDM Studio"),
         Line::from("   Esc             Close open modal or cancel"),

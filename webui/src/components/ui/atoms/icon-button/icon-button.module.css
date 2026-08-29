@@ -1,4 +1,4 @@
-@import "../../styles/theme.css";
+@import "../../win2x-manager/styles/win2x-theme.css";
 
 .button {
   display: inline-flex;
@@ -7,21 +7,21 @@
   background: transparent;
   border: none;
   cursor: pointer;
-  border-radius: var(--cddm-ui-radius-button);
-  color: var(--cddm-ui-text-muted);
+  border-radius: var(--win2x-radius-button);
+  color: var(--win2x-text-muted);
   transition:
-    color var(--cddm-ui-transition-fast),
-    background-color var(--cddm-ui-transition-fast);
+    color var(--win2x-transition-fast),
+    background-color var(--win2x-transition-fast);
   padding: 0.25rem;
   line-height: 1;
 
   &:hover {
-    color: var(--cddm-ui-text-primary);
-    background-color: var(--cddm-ui-bg-btn-hover);
+    color: var(--win2x-text-primary);
+    background-color: var(--win2x-bg-btn-hover);
   }
 
   &:active {
-    background-color: var(--cddm-ui-bg-btn-active);
+    background-color: var(--win2x-bg-btn-active);
   }
 
   &:disabled {
@@ -31,7 +31,7 @@
 
   /* Danger variant */
   &.variantDanger:hover {
-    background-color: var(--cddm-ui-bg-danger-hover);
+    background-color: var(--win2x-bg-danger-hover);
     color: #ffffff;
   }
 

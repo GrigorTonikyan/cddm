@@ -5,6 +5,54 @@ use crate::protocol::mcp_tools;
 use cddm_core::DEFAULT_MIN_TOKENS;
 use serde_json::json;
 
+fn dir_and_tokens_schema() -> serde_json::Value {
+    json!({
+        "type": "object",
+        "properties": {
+            mcp_tools::PARAM_DIRECTORY: { "type": "string", "description": "Target directory path (default: current directory)" },
+            mcp_tools::PARAM_MIN_TOKENS: { "type": "number", "description": format!("Minimum token threshold (default: {})", DEFAULT_MIN_TOKENS) }
+        }
+    })
+}
+
+fn coverage_schema(include_extra: bool) -> serde_json::Value {
+    let mut props = serde_json::Map::new();
+    props.insert(
+        "report_path".to_string(),
+        json!({ "type": "string", "description": "Path to coverage tracefile (e.g. lcov.info, coverage.xml)" }),
+    );
+    props.insert(
+        "report_content".to_string(),
+        json!({ "type": "string", "description": "Raw coverage report file content" }),
+    );
+    props.insert(
+        "directory".to_string(),
+        json!({ "type": "string", "description": "Target workspace directory path (default: .)" }),
+    );
+    props.insert(
+        "min_tokens".to_string(),
+        json!({ "type": "number", "description": "Minimum token threshold (default: 50)" }),
+    );
+    if include_extra {
+        props.insert(
+            "format".to_string(),
+            json!({ "type": "string", "description": "Coverage format: lcov, cobertura, istanbul, auto (default: auto)" }),
+        );
+        props.insert(
+            "dead_code_only".to_string(),
+            json!({ "type": "boolean", "description": "Filter for dead code duplicates with 0 runtime executions" }),
+        );
+        props.insert(
+            "min_hits".to_string(),
+            json!({ "type": "number", "description": "Minimum combined runtime execution hits" }),
+        );
+    }
+    json!({
+        "type": "object",
+        "properties": props
+    })
+}
+
 /// Returns the complete list of available MCP tool definitions and input schemas.
 pub fn get_tool_definitions() -> Vec<serde_json::Value> {
     vec![
@@ -63,13 +111,7 @@ pub fn get_tool_definitions() -> Vec<serde_json::Value> {
         json!({
             "name": mcp_tools::EXPORT_SARIF,
             "description": "Generate a standard SARIF (Static Analysis Results Interchange Format) JSON report for CI/CD and security dashboards.",
-            "inputSchema": {
-                "type": "object",
-                "properties": {
-                    mcp_tools::PARAM_DIRECTORY: { "type": "string", "description": "Target directory path (default: current directory)" },
-                    mcp_tools::PARAM_MIN_TOKENS: { "type": "number", "description": format!("Minimum token threshold (default: {})", DEFAULT_MIN_TOKENS) }
-                }
-            }
+            "inputSchema": dir_and_tokens_schema()
         }),
         json!({
             "name": mcp_tools::DIFF_SCAN,
@@ -245,13 +287,7 @@ pub fn get_tool_definitions() -> Vec<serde_json::Value> {
         json!({
             "name": mcp_tools::SCAN_MONOREPO,
             "description": "Discover all workspaces and packages across Cargo, npm/pnpm/yarn, and Python Poetry monorepos and analyze cross-package duplicates.",
-            "inputSchema": {
-                "type": "object",
-                "properties": {
-                    mcp_tools::PARAM_DIRECTORY: { "type": "string", "description": "Root directory of monorepo workspace (default: .)" },
-                    mcp_tools::PARAM_MIN_TOKENS: { "type": "number", "description": format!("Minimum token threshold (default: {})", DEFAULT_MIN_TOKENS) }
-                }
-            }
+            "inputSchema": dir_and_tokens_schema()
         }),
         json!({
             "name": mcp_tools::GET_SEMANTIC_GRAPH,
@@ -350,31 +386,12 @@ pub fn get_tool_definitions() -> Vec<serde_json::Value> {
         json!({
             "name": mcp_tools::CORRELATE_COVERAGE,
             "description": "Correlate test and runtime execution coverage tracefiles (LCOV, Cobertura, Istanbul) with duplicate clone pairs.",
-            "inputSchema": {
-                "type": "object",
-                "properties": {
-                    "report_path": { "type": "string", "description": "Path to coverage tracefile (e.g. lcov.info, coverage.xml)" },
-                    "report_content": { "type": "string", "description": "Raw coverage report file content (optional if report_path provided)" },
-                    "format": { "type": "string", "description": "Coverage format: lcov, cobertura, istanbul, auto (default: auto)" },
-                    "directory": { "type": "string", "description": "Target workspace directory path (default: .)" },
-                    "min_tokens": { "type": "number", "description": "Minimum token threshold (default: 50)" },
-                    "dead_code_only": { "type": "boolean", "description": "Filter for dead code duplicates with 0 runtime executions" },
-                    "min_hits": { "type": "number", "description": "Minimum combined runtime execution hits" }
-                }
-            }
+            "inputSchema": coverage_schema(true)
         }),
         json!({
             "name": mcp_tools::DETECT_DEAD_CLONES,
             "description": "Find duplicate code fragments across the codebase that have zero runtime/test executions (dead code elimination candidates).",
-            "inputSchema": {
-                "type": "object",
-                "properties": {
-                    "report_path": { "type": "string", "description": "Path to coverage tracefile (e.g. lcov.info, coverage.xml)" },
-                    "report_content": { "type": "string", "description": "Raw coverage report file content" },
-                    "directory": { "type": "string", "description": "Target workspace directory path (default: .)" },
-                    "min_tokens": { "type": "number", "description": "Minimum token threshold (default: 50)" }
-                }
-            }
+            "inputSchema": coverage_schema(false)
         }),
         json!({
             "name": mcp_tools::SEMANTIC_NEURAL_SCAN,

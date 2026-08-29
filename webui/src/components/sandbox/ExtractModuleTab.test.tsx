@@ -1,6 +1,7 @@
 import { render, screen, fireEvent, act } from "@testing-library/react";
 import { describe, it, expect, vi } from "vite-plus/test";
 import { ExtractModuleTab } from "./ExtractModuleTab";
+import { expectDefinedTexts } from "../../test/test-helpers";
 import type { ExtractResult, RefactorSandboxRequest } from "../../types/cddm-types";
 
 describe("ExtractModuleTab Component", () => {
@@ -161,18 +162,20 @@ describe("ExtractModuleTab Component", () => {
       />,
     );
 
-    expect(screen.getByText("~28 lines saved")).toBeDefined();
-    expect(screen.getByText("Strategy: new_crate")).toBeDefined();
-    expect(screen.getByText("Generated Files (2):")).toBeDefined();
-    expect(screen.getByText("crates/shared_utils/Cargo.toml")).toBeDefined();
-    expect(screen.getByText("Synthesized Unit Tests (1):")).toBeDefined();
-    expect(screen.getByText("crates/shared_utils/tests/calculate_score_test.rs")).toBeDefined();
-    expect(screen.getByText("Synthesized Micro-Benchmarks (1):")).toBeDefined();
-    expect(screen.getByText("crates/shared_utils/benches/calculate_score_bench.rs")).toBeDefined();
-    expect(screen.getByText("Manifest Updates (1)")).toBeDefined();
-    expect(screen.getByText("Cargo.toml")).toBeDefined();
-    expect(screen.getByText("Occurrence Caller Rewrites (1)")).toBeDefined();
-    expect(screen.getByText("crates/app_a/src/main.rs")).toBeDefined();
+    expectDefinedTexts([
+      "~28 lines saved",
+      "Strategy: new_crate",
+      "Generated Files (2):",
+      "crates/shared_utils/Cargo.toml",
+      "Synthesized Unit Tests (1):",
+      "crates/shared_utils/tests/calculate_score_test.rs",
+      "Synthesized Micro-Benchmarks (1):",
+      "crates/shared_utils/benches/calculate_score_bench.rs",
+      "Manifest Updates (1)",
+      "Cargo.toml",
+      "Occurrence Caller Rewrites (1)",
+      "crates/app_a/src/main.rs",
+    ]);
 
     const applyBtn = screen.getByText("Apply to Workspace");
     await act(async () => {

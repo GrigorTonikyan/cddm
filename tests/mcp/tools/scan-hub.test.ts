@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { assertToolError, executeTool, RPC_ERRORS } from "../helpers";
+import { assertPropertyTypes, assertToolError, executeTool, RPC_ERRORS } from "../helpers";
 
 describe("MCP Tool: cddm_scan_hub", () => {
   it("should scan organization repositories in federation hub", async () => {
@@ -8,13 +8,14 @@ describe("MCP Tool: cddm_scan_hub", () => {
       min_tokens: 50,
     });
 
-    expect(res).toBeDefined();
-    expect(typeof res.hub_name).toBe("string");
-    expect(typeof res.total_repos).toBe("number");
-    expect(typeof res.total_files).toBe("number");
-    expect(typeof res.organization_dry_score).toBe("number");
-    expect(Array.isArray(res.clusters)).toBe(true);
-    expect(Array.isArray(res.duplication_matrix)).toBe(true);
+    assertPropertyTypes(res, {
+      hub_name: "string",
+      total_repos: "number",
+      total_files: "number",
+      organization_dry_score: "number",
+      clusters: "array",
+      duplication_matrix: "array",
+    });
   });
 
   it("should scan with default arguments", async () => {

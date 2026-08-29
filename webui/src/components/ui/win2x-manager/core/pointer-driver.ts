@@ -40,6 +40,26 @@ export interface ResizeSessionOptions {
   onResizeChange?: (rect: Win2xRect) => void;
 }
 
+function setupPointerMotion(
+  captureElement: HTMLElement,
+  containerElement: HTMLElement,
+  pointerId: number,
+  willChange: string,
+): void {
+  if (typeof captureElement.setPointerCapture === "function") {
+    try {
+      captureElement.setPointerCapture(pointerId);
+    } catch {
+      // Safe fallback in unsupported environments
+    }
+  }
+  containerElement.setAttribute(WIN2X_DATA_ATTRS.MOVING, "true");
+  containerElement.style.willChange = willChange;
+  if (typeof document !== "undefined") {
+    document.body.style.userSelect = "none";
+  }
+}
+
 function teardownPointerCapture(
   containerElement: HTMLElement,
   captureElement: HTMLElement,
@@ -99,21 +119,7 @@ export function startPointerDrag(
   let rafId: number | null = null;
   let isMoving = true;
 
-  // Set hardware pointer capture
-  if (typeof captureElement.setPointerCapture === "function") {
-    try {
-      captureElement.setPointerCapture(pointerId);
-    } catch {
-      // Ignore if pointer capture fails in unsupported test environments
-    }
-  }
-
-  // Set visual motion state
-  containerElement.setAttribute(WIN2X_DATA_ATTRS.MOVING, "true");
-  containerElement.style.willChange = "transform";
-  if (typeof document !== "undefined") {
-    document.body.style.userSelect = "none";
-  }
+  setupPointerMotion(captureElement, containerElement, pointerId, "transform");
 
   const handlePointerMove = (moveEvent: PointerEvent) => {
     if (!isMoving) return;
@@ -237,19 +243,7 @@ export function startPointerResize(
   let rafId: number | null = null;
   let isResizing = true;
 
-  if (typeof captureElement.setPointerCapture === "function") {
-    try {
-      captureElement.setPointerCapture(pointerId);
-    } catch {
-      // Ignore in test environments
-    }
-  }
-
-  containerElement.setAttribute(WIN2X_DATA_ATTRS.MOVING, "true");
-  containerElement.style.willChange = "transform, width, height";
-  if (typeof document !== "undefined") {
-    document.body.style.userSelect = "none";
-  }
+  setupPointerMotion(captureElement, containerElement, pointerId, "transform, width, height");
 
   const handlePointerMove = (moveEvent: PointerEvent) => {
     if (!isResizing) return;

@@ -228,40 +228,33 @@ fn cluster_cross_repo_pairs(pairs: &[CrossRepoClonePair]) -> Vec<CrossRepoCluste
     let mut occ_list: Vec<CrossRepoOccurrence> = Vec::new();
     let mut occ_indices: HashMap<(String, String, usize, usize), usize> = HashMap::new();
 
-    for p in pairs {
-        let occ_a = (p.repo_a.clone(), p.file_a.clone(), p.lines_a.0, p.lines_a.1);
-        if !occ_indices.contains_key(&occ_a) {
-            occ_indices.insert(occ_a.clone(), occ_list.len());
+    let mut get_or_insert = |repo: &str, file: &str, start_line: usize, end_line: usize| -> usize {
+        let key = (repo.to_string(), file.to_string(), start_line, end_line);
+        if let Some(&idx) = occ_indices.get(&key) {
+            idx
+        } else {
+            let idx = occ_list.len();
+            occ_indices.insert(key, idx);
             occ_list.push(CrossRepoOccurrence {
-                repo_name: p.repo_a.clone(),
-                file_path: p.file_a.clone(),
-                start_line: p.lines_a.0,
-                end_line: p.lines_a.1,
+                repo_name: repo.to_string(),
+                file_path: file.to_string(),
+                start_line,
+                end_line,
                 snippet: None,
             });
+            idx
         }
+    };
 
-        let occ_b = (p.repo_b.clone(), p.file_b.clone(), p.lines_b.0, p.lines_b.1);
-        if !occ_indices.contains_key(&occ_b) {
-            occ_indices.insert(occ_b.clone(), occ_list.len());
-            occ_list.push(CrossRepoOccurrence {
-                repo_name: p.repo_b.clone(),
-                file_path: p.file_b.clone(),
-                start_line: p.lines_b.0,
-                end_line: p.lines_b.1,
-                snippet: None,
-            });
-        }
+    let mut edges = Vec::with_capacity(pairs.len());
+    for p in pairs {
+        let idx_a = get_or_insert(&p.repo_a, &p.file_a, p.lines_a.0, p.lines_a.1);
+        let idx_b = get_or_insert(&p.repo_b, &p.file_b, p.lines_b.0, p.lines_b.1);
+        edges.push((idx_a, idx_b));
     }
 
     let mut dsu = Dsu::new(occ_list.len());
-    for p in pairs {
-        let idx_a = *occ_indices
-            .get(&(p.repo_a.clone(), p.file_a.clone(), p.lines_a.0, p.lines_a.1))
-            .unwrap();
-        let idx_b = *occ_indices
-            .get(&(p.repo_b.clone(), p.file_b.clone(), p.lines_b.0, p.lines_b.1))
-            .unwrap();
+    for (idx_a, idx_b) in edges {
         dsu.union(idx_a, idx_b);
     }
 

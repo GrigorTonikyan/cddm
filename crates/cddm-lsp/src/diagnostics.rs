@@ -43,86 +43,88 @@ pub fn clone_pair_to_diagnostics(
         norm_b == target_norm || target_norm.ends_with(&norm_b) || norm_b.ends_with(&target_norm);
 
     if is_a {
-        let range = line_range_to_lsp_range(clone.start_line_a, clone.end_line_a);
-        let counterpart_path = workspace_root.join(&clone.file_b);
-        let counterpart_url = path_to_url(&counterpart_path).unwrap_or_else(|| target_url.clone());
-        let counterpart_range = line_range_to_lsp_range(clone.start_line_b, clone.end_line_b);
-
-        let code_str = format_diagnostic_code(&clone.clone_type);
-        let sim_pct = (clone.similarity * 100.0).round();
-        let message = format!(
-            "Code duplication: {} lines ({} tokens, {}% match) duplicate of {}:{}-{} ({:?})",
-            clone.end_line_a.saturating_sub(clone.start_line_a) + 1,
-            clone.token_count,
-            sim_pct,
-            clone.file_b,
+        diagnostics.push(build_clone_diagnostic(
+            clone.start_line_a,
+            clone.end_line_a,
+            &clone.file_b,
             clone.start_line_b,
             clone.end_line_b,
-            clone.clone_type
-        );
-
-        let related = vec![DiagnosticRelatedInformation {
-            location: Location {
-                uri: counterpart_url,
-                range: counterpart_range,
-            },
-            message: format!("Duplicate clone counterpart in {}", clone.file_b),
-        }];
-
-        diagnostics.push(Diagnostic {
-            range,
-            severity: Some(DiagnosticSeverity::WARNING),
-            code: Some(NumberOrString::String(code_str)),
-            code_description: None,
-            source: Some("CDDM".to_string()),
-            message,
-            related_information: Some(related),
-            tags: None,
-            data: None,
-        });
+            clone.token_count,
+            clone.similarity,
+            &clone.clone_type,
+            workspace_root,
+            target_url,
+        ));
     }
 
     if is_b && norm_a != norm_b {
-        let range = line_range_to_lsp_range(clone.start_line_b, clone.end_line_b);
-        let counterpart_path = workspace_root.join(&clone.file_a);
-        let counterpart_url = path_to_url(&counterpart_path).unwrap_or_else(|| target_url.clone());
-        let counterpart_range = line_range_to_lsp_range(clone.start_line_a, clone.end_line_a);
-
-        let code_str = format_diagnostic_code(&clone.clone_type);
-        let sim_pct = (clone.similarity * 100.0).round();
-        let message = format!(
-            "Code duplication: {} lines ({} tokens, {}% match) duplicate of {}:{}-{} ({:?})",
-            clone.end_line_b.saturating_sub(clone.start_line_b) + 1,
-            clone.token_count,
-            sim_pct,
-            clone.file_a,
+        diagnostics.push(build_clone_diagnostic(
+            clone.start_line_b,
+            clone.end_line_b,
+            &clone.file_a,
             clone.start_line_a,
             clone.end_line_a,
-            clone.clone_type
-        );
-
-        let related = vec![DiagnosticRelatedInformation {
-            location: Location {
-                uri: counterpart_url,
-                range: counterpart_range,
-            },
-            message: format!("Duplicate clone counterpart in {}", clone.file_a),
-        }];
-
-        diagnostics.push(Diagnostic {
-            range,
-            severity: Some(DiagnosticSeverity::WARNING),
-            code: Some(NumberOrString::String(code_str)),
-            code_description: None,
-            source: Some("CDDM".to_string()),
-            message,
-            related_information: Some(related),
-            tags: None,
-            data: None,
-        });
+            clone.token_count,
+            clone.similarity,
+            &clone.clone_type,
+            workspace_root,
+            target_url,
+        ));
     }
 
     diagnostics
+}
+
+#[allow(clippy::too_many_arguments)]
+fn build_clone_diagnostic(
+    start_line: usize,
+    end_line: usize,
+    other_file: &str,
+    other_start: usize,
+    other_end: usize,
+    token_count: usize,
+    similarity: f64,
+    clone_type: &CloneType,
+    workspace_root: &Path,
+    target_url: &Url,
+) -> Diagnostic {
+    let range = line_range_to_lsp_range(start_line, end_line);
+    let counterpart_path = workspace_root.join(other_file);
+    let counterpart_url = path_to_url(&counterpart_path).unwrap_or_else(|| target_url.clone());
+    let counterpart_range = line_range_to_lsp_range(other_start, other_end);
+
+    let code_str = format_diagnostic_code(clone_type);
+    let sim_pct = (similarity * 100.0).round();
+    let message = format!(
+        "Code duplication: {} lines ({} tokens, {}% match) duplicate of {}:{}-{} ({:?})",
+        end_line.saturating_sub(start_line) + 1,
+        token_count,
+        sim_pct,
+        other_file,
+        other_start,
+        other_end,
+        clone_type
+    );
+
+    let related = vec![DiagnosticRelatedInformation {
+        location: Location {
+            uri: counterpart_url,
+            range: counterpart_range,
+        },
+        message: format!("Duplicate clone counterpart in {}", other_file),
+    }];
+
+    Diagnostic {
+        range,
+        severity: Some(DiagnosticSeverity::WARNING),
+        code: Some(NumberOrString::String(code_str)),
+        code_description: None,
+        source: Some("CDDM".to_string()),
+        message,
+        related_information: Some(related),
+        tags: None,
+        data: None,
+    }
 }
 
 /// Generates diagnostics across all files for a full `ScanResult`.

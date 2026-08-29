@@ -173,12 +173,23 @@ mod tests {
         ];
 
         let report = generate_sarif_report(&scan_result);
+        assert_rule_ids(
+            &report,
+            &[
+                sarif_rules::RULE_ID_EXACT,
+                sarif_rules::RULE_ID_RENAMED,
+                sarif_rules::RULE_ID_NEAR_MISS,
+                sarif_rules::RULE_ID_SEMANTIC,
+            ],
+        );
+    }
+
+    fn assert_rule_ids(report: &SarifReport, expected: &[&str]) {
         let results = &report.runs[0].results;
-        assert_eq!(results.len(), 4);
-        assert_eq!(results[0].rule_id, sarif_rules::RULE_ID_EXACT);
-        assert_eq!(results[1].rule_id, sarif_rules::RULE_ID_RENAMED);
-        assert_eq!(results[2].rule_id, sarif_rules::RULE_ID_NEAR_MISS);
-        assert_eq!(results[3].rule_id, sarif_rules::RULE_ID_SEMANTIC);
+        assert_eq!(results.len(), expected.len());
+        for (res, &exp) in results.iter().zip(expected) {
+            assert_eq!(res.rule_id, exp);
+        }
     }
 
     #[test]
@@ -217,11 +228,12 @@ mod tests {
         ];
 
         let report = generate_sarif_report(&scan_result);
+        assert_rule_ids(
+            &report,
+            &[sarif_rules::RULE_ID_BOUNDARY, sarif_rules::RULE_ID_ZERO_DUP],
+        );
         let results = &report.runs[0].results;
-        assert_eq!(results.len(), 2);
-        assert_eq!(results[0].rule_id, sarif_rules::RULE_ID_BOUNDARY);
         assert_eq!(results[0].level, sarif_severity::ERROR);
-        assert_eq!(results[1].rule_id, sarif_rules::RULE_ID_ZERO_DUP);
         assert_eq!(results[1].level, sarif_severity::WARNING);
     }
 

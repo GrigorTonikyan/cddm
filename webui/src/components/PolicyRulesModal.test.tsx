@@ -1,7 +1,7 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vite-plus/test";
 import { PolicyRulesModal } from "./PolicyRulesModal";
-import { Win2xManagerProvider } from "./ui/win2x-manager/context/win2x-manager-context";
+import { expectDefinedTexts, renderWithWin2x } from "../test/test-helpers";
 import { useCDDMStore } from "./../store/cddm-store";
 import { PolicyConfig, ScanResult } from "./../types/cddm-types";
 
@@ -76,11 +76,7 @@ describe("PolicyRulesModal Component", () => {
   });
 
   const renderPolicyModal = (isOpen = true, onClose = () => {}) =>
-    render(
-      <Win2xManagerProvider>
-        <PolicyRulesModal isOpen={isOpen} onClose={onClose} />
-      </Win2xManagerProvider>,
-    );
+    renderWithWin2x(<PolicyRulesModal isOpen={isOpen} onClose={onClose} />);
 
   it("should return null when closed", () => {
     const { container } = renderPolicyModal(false);
@@ -91,21 +87,19 @@ describe("PolicyRulesModal Component", () => {
     const onClose = vi.fn();
     renderPolicyModal(true, onClose);
 
-    expect(
-      screen.getByText("Architectural Boundary & Anti-Duplication Policy Studio"),
-    ).toBeDefined();
-    expect(screen.getByText("Active Policies (3)")).toBeDefined();
-    expect(screen.getByText("Violations Inspector (1)")).toBeDefined();
-    expect(screen.getByText(".cddmrules.toml Editor")).toBeDefined();
-
-    // Verify rules content
-    expect(screen.getByText("domain-isolation")).toBeDefined();
-    expect(screen.getByText("src/domain/**")).toBeDefined();
-    expect(screen.getByText("src/presentation/**")).toBeDefined();
-    expect(screen.getByText("auth-clean")).toBeDefined();
-    expect(screen.getByText("src/auth/**")).toBeDefined();
-    expect(screen.getByText("api-cluster-limit")).toBeDefined();
-    expect(screen.getByText("src/api/**")).toBeDefined();
+    expectDefinedTexts([
+      "Architectural Boundary & Anti-Duplication Policy Studio",
+      "Active Policies (3)",
+      "Violations Inspector (1)",
+      ".cddmrules.toml Editor",
+      "domain-isolation",
+      "src/domain/**",
+      "src/presentation/**",
+      "auth-clean",
+      "src/auth/**",
+      "api-cluster-limit",
+      "src/api/**",
+    ]);
   });
 
   it("should switch to violations tab and display violation cards", () => {

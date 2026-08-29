@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-27 | Rust: 268 #[test] units | WebUI: 190 tests across 49 suites | Scripts & MCP: 111 tests across 40 suites | CI Workflows: PASS
+> Last verified: 2026-08-27 | Rust: 267 #[test] units | WebUI: 191 tests across 50 suites | Scripts & MCP: 112 tests across 40 suites | CI Workflows: PASS
 
 ---
 
@@ -358,7 +358,7 @@
 
 ---
 
-## 2. WebUI Frontend — React 19 + TypeScript + Vitest (190 unit tests across 49 suites)
+## 2. WebUI Frontend — React 19 + TypeScript + Vitest (191 unit tests across 50 suites)
 
 | Module                      | Test Suite File                                                                       | Test Cases | Status |
 | :-------------------------- | :------------------------------------------------------------------------------------ | :--------- | :----- |
@@ -398,6 +398,7 @@
 | Win2x Geometry              | `webui/src/components/ui/win2x-manager/core/geometry-engine.test.ts`                  | 7 tests    | PASS   |
 | Win2x Driver                | `webui/src/components/ui/win2x-manager/core/pointer-driver.test.ts`                   | 2 tests    | PASS   |
 | Win2x Storage               | `webui/src/components/ui/win2x-manager/core/storage-adapter.test.ts`                  | 5 tests    | PASS   |
+| use-active-cleanup          | `webui/src/components/ui/win2x-manager/hooks/use-active-cleanup.test.ts`              | 1 tests    | PASS   |
 | Win2x ScrollLock            | `webui/src/components/ui/win2x-manager/hooks/use-body-scroll-lock.test.ts`            | 3 tests    | PASS   |
 | Win2x Drag Hook             | `webui/src/components/ui/win2x-manager/hooks/use-pointer-drag.test.ts`                | 2 tests    | PASS   |
 | Win2x Resize Hook           | `webui/src/components/ui/win2x-manager/hooks/use-pointer-resize.test.ts`              | 2 tests    | PASS   |
@@ -414,7 +415,7 @@
 
 ---
 
-## 3. Repository Scripts & MCP Protocol — Bun Test Suites (111 tests across 40 suites)
+## 3. Repository Scripts & MCP Protocol — Bun Test Suites (112 tests across 40 suites)
 
 ### Repository Tooling & Automation Suites
 
@@ -458,7 +459,7 @@
 | Tool: cddm_heal_refactor            | `tests/mcp/tools/heal-refactor.test.ts`            | 1 tests    | PASS   |
 | Tool: cddm_import_cache_pack        | `tests/mcp/tools/import-cache-pack.test.ts`        | 2 tests    | PASS   |
 | Tool: cddm_scan_codebase            | `tests/mcp/tools/scan-codebase.test.ts`            | 2 tests    | PASS   |
-| Tool: cddm_scan_cross_language      | `tests/mcp/tools/scan-cross-language.test.ts`      | 1 tests    | PASS   |
+| Tool: cddm_scan_cross_language      | `tests/mcp/tools/scan-cross-language.test.ts`      | 2 tests    | PASS   |
 | Tool: cddm_scan_hub                 | `tests/mcp/tools/scan-hub.test.ts`                 | 3 tests    | PASS   |
 | Tool: cddm_scan_monorepo            | `tests/mcp/tools/scan-monorepo.test.ts`            | 1 tests    | PASS   |
 | Tool: cddm_semantic_neural_scan     | `tests/mcp/tools/semantic-neural-scan.test.ts`     | 3 tests    | PASS   |

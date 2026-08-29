@@ -1,7 +1,13 @@
-import { render, screen, fireEvent, act } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vite-plus/test";
 import { HubFederationModal } from "./HubFederationModal";
-import { Win2xManagerProvider } from "./ui/win2x-manager/context/win2x-manager-context";
+import {
+  clickElementAsync,
+  expectDefinedTexts,
+  expectNullWhenClosed,
+  mockSuccessResponse,
+  renderAsyncWithWin2x,
+} from "../test/test-helpers";
 import type { HubScanSummary } from "../types/cddm-types";
 
 describe("HubFederationModal Component", () => {
@@ -68,84 +74,60 @@ describe("HubFederationModal Component", () => {
 
   beforeEach(() => {
     vi.restoreAllMocks();
-    global.fetch = vi.fn().mockImplementation((url: string) => {
-      if (url.includes("/api/hub/scan")) {
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve(mockSummary),
+    globalThis.fetch = vi.fn().mockImplementation((url: string) => {
+      if (url.includes("/api/hub/extract")) {
+        return mockSuccessResponse({
+          package_name: "@acme/shared-utils",
+          generated_files: [
+            {
+              file_path: "packages/@acme/shared-utils/package.json",
+              content: "{}",
+              is_new: true,
+            },
+          ],
+          repo_updates: [],
         });
       }
-      return Promise.resolve({
-        ok: true,
-        json: () =>
-          Promise.resolve({
-            package_name: "@acme/shared-utils",
-            package_type: "npm",
-            package_dir: "./packages/shared-extracted",
-            generated_files: [],
-            repo_updates: [],
-            lines_saved: 40,
-            summary: "Extraction complete",
-          }),
-      });
+      return mockSuccessResponse(mockSummary);
     });
   });
 
   it("should not render when isOpen is false", () => {
-    const { container } = render(
-      <Win2xManagerProvider>
-        <HubFederationModal isOpen={false} onClose={vi.fn()} initialSummary={null} />
-      </Win2xManagerProvider>,
+    expectNullWhenClosed(
+      <HubFederationModal isOpen={false} onClose={vi.fn()} initialSummary={null} />,
     );
-    expect(container.firstChild).toBeNull();
   });
 
   it("should render modal with hub summary when open", async () => {
-    await act(async () => {
-      render(
-        <Win2xManagerProvider>
-          <HubFederationModal isOpen={true} onClose={vi.fn()} initialSummary={mockSummary} />
-        </Win2xManagerProvider>,
-      );
-    });
+    await renderAsyncWithWin2x(
+      <HubFederationModal isOpen={true} onClose={vi.fn()} initialSummary={mockSummary} />,
+    );
 
-    expect(screen.getByText("Acme Federation Hub")).toBeDefined();
-    expect(screen.getByText(/2 Connected Repositories/)).toBeDefined();
-    expect(screen.getByText("97.2 / 100.0")).toBeDefined();
-    expect(screen.getByText("core-backend")).toBeDefined();
-    expect(screen.getByText("web-frontend")).toBeDefined();
+    expectDefinedTexts([
+      "Acme Federation Hub",
+      /2 Connected Repositories/,
+      "97.2 / 100.0",
+      "core-backend",
+      "web-frontend",
+    ]);
   });
 
   it("should switch between tabs and allow shared package extraction", async () => {
-    await act(async () => {
-      render(
-        <Win2xManagerProvider>
-          <HubFederationModal isOpen={true} onClose={vi.fn()} initialSummary={mockSummary} />
-        </Win2xManagerProvider>,
-      );
-    });
+    await renderAsyncWithWin2x(
+      <HubFederationModal isOpen={true} onClose={vi.fn()} initialSummary={mockSummary} />,
+    );
 
     // 1. Matrix tab
-    const matrixTab = screen.getByText(/Duplication Matrix/);
-    await act(async () => {
-      fireEvent.click(matrixTab);
-    });
+    await clickElementAsync(/Duplication Matrix/);
     expect(screen.getByText("1 Shared Clusters")).toBeDefined();
     expect(screen.getByText("65 Duplicate Tokens")).toBeDefined();
 
     // 2. Clusters tab
-    const clustersTab = screen.getByText(/Cross-Repo Extraction/);
-    await act(async () => {
-      fireEvent.click(clustersTab);
-    });
+    await clickElementAsync(/Cross-Repo Extraction/);
     expect(screen.getByText("@acme/shared-utils")).toBeDefined();
 
     // 3. Trigger extraction
-    const extractBtn = screen.getByText("Extract Shared Package");
-    await act(async () => {
-      fireEvent.click(extractBtn);
-    });
-
+    await clickElementAsync("Extract Shared Package");
     expect(screen.getByText(/Package Extraction Synthesized/)).toBeDefined();
   });
 });

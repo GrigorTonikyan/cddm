@@ -1,49 +1,22 @@
 #![forbid(unsafe_code)]
 
 use super::common::{
-    create_manifest_update, insert_member_into_toml_array, resolve_caller_manifest_and_rel_path,
+    create_manifest_update, resolve_caller_manifest_and_rel_path, update_root_workspace_manifest,
 };
 use crate::extract::types::ManifestUpdate;
-use std::fs;
 use std::path::Path;
 
 pub fn update_cargo_workspace_root(
     workspace_root: &Path,
     new_crate_path: &str,
 ) -> Option<ManifestUpdate> {
-    let root_cargo = workspace_root.join("Cargo.toml");
-    if !root_cargo.exists() {
-        return None;
-    }
-    let content = fs::read_to_string(&root_cargo).ok()?;
-    if !content.contains("[workspace]") {
-        return None;
-    }
-
-    let rel_path = new_crate_path.replace('\\', "/");
-    let member_entry = format!("\"{}\"", rel_path);
-
-    if content.contains(&member_entry)
-        || (rel_path.starts_with("crates/") && content.contains("\"crates/*\""))
-        || (rel_path.starts_with("packages/") && content.contains("\"packages/*\""))
-    {
-        return None;
-    }
-
-    let updated_content = insert_member_into_toml_array(&content, "members = [", &member_entry)?;
-
-    let diff = format!(
-        "--- a/Cargo.toml\n+++ b/Cargo.toml\n@@ workspace.members @@\n+    {}",
-        member_entry
-    );
-
-    Some(create_manifest_update(
-        &root_cargo,
+    update_root_workspace_manifest(
         workspace_root,
+        "Cargo.toml",
+        "[workspace]",
+        "members = [",
         new_crate_path,
-        diff,
-        updated_content,
-    ))
+    )
 }
 
 pub fn update_caller_cargo_toml(

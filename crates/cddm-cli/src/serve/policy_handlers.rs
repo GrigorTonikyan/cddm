@@ -87,12 +87,7 @@ pub async fn policy_evaluate_handler(
     };
 
     let latest_lock = state.latest_result.read().await;
-    if let Some(ref scan_result) = *latest_lock {
-        Ok(Json(engine.evaluate(scan_result)))
-    } else {
-        Err((
-            StatusCode::NOT_FOUND,
-            "No active scan results available to evaluate".to_string(),
-        ))
-    }
+    let fallback = cddm_core::ScanResult::default();
+    let scan_result = latest_lock.as_ref().unwrap_or(&fallback);
+    Ok(Json(engine.evaluate(scan_result)))
 }

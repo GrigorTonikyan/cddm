@@ -25,38 +25,38 @@
 
   /* Color Variant Modifiers */
   &.variantIndigo {
-    background-color: var(--cddm-ui-badge-indigo-bg);
-    border-color: var(--cddm-ui-border-badge-indigo);
-    color: var(--cddm-ui-badge-indigo-text);
+    background-color: var(--win2x-badge-indigo-bg);
+    border-color: var(--win2x-border-badge-indigo);
+    color: var(--win2x-badge-indigo-text);
   }
 
   &.variantEmerald {
-    background-color: var(--cddm-ui-badge-emerald-bg);
-    border-color: var(--cddm-ui-border-badge-emerald);
-    color: var(--cddm-ui-badge-emerald-text);
+    background-color: var(--win2x-badge-emerald-bg);
+    border-color: var(--win2x-border-badge-emerald);
+    color: var(--win2x-badge-emerald-text);
   }
 
   &.variantRose {
-    background-color: var(--cddm-ui-badge-rose-bg);
-    border-color: var(--cddm-ui-border-badge-rose);
-    color: var(--cddm-ui-badge-rose-text);
+    background-color: var(--win2x-badge-rose-bg);
+    border-color: var(--win2x-border-badge-rose);
+    color: var(--win2x-badge-rose-text);
   }
 
   &.variantAmber {
-    background-color: var(--cddm-ui-badge-amber-bg);
-    border-color: var(--cddm-ui-border-badge-amber);
-    color: var(--cddm-ui-badge-amber-text);
+    background-color: var(--win2x-badge-amber-bg);
+    border-color: var(--win2x-border-badge-amber);
+    color: var(--win2x-badge-amber-text);
   }
 
   &.variantSlate {
-    background-color: var(--cddm-ui-badge-slate-bg);
-    border-color: var(--cddm-ui-border-badge-slate);
-    color: var(--cddm-ui-badge-slate-text);
+    background-color: var(--win2x-badge-slate-bg);
+    border-color: var(--win2x-border-badge-slate);
+    color: var(--win2x-badge-slate-text);
   }
 
   &.variantCyan {
-    background-color: var(--cddm-ui-badge-cyan-bg);
-    border-color: var(--cddm-ui-border-badge-cyan);
-    color: var(--cddm-ui-badge-cyan-text);
+    background-color: var(--win2x-badge-cyan-bg);
+    border-color: var(--win2x-border-badge-cyan);
+    color: var(--win2x-badge-cyan-text);
   }
 }

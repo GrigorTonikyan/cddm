@@ -106,6 +106,21 @@ impl AiProvider for OllamaProvider {
     }
 }
 
+fn post_and_extract(
+    url: &str,
+    headers: &[(&str, &str)],
+    payload: &serde_json::Value,
+    extract: impl FnOnce(&serde_json::Value) -> Option<&str>,
+) -> Result<String, String> {
+    let resp_str = execute_curl_post(url, headers, payload)?;
+    if let Ok(val) = serde_json::from_str::<serde_json::Value>(&resp_str)
+        && let Some(text) = extract(&val)
+    {
+        return Ok(text.to_string());
+    }
+    Ok(resp_str)
+}
+
 /// Google Gemini provider.
 #[derive(Debug, Clone)]
 pub struct GeminiProvider {
@@ -147,20 +162,15 @@ impl AiProvider for GeminiProvider {
             self.model, self.api_key
         );
 
-        let resp_str = execute_curl_post(&url, &[], &payload)?;
-        if let Ok(val) = serde_json::from_str::<serde_json::Value>(&resp_str)
-            && let Some(text) = val
-                .get("candidates")
-                .and_then(|c| c.get(0))
-                .and_then(|c0| c0.get("content"))
-                .and_then(|cnt| cnt.get("parts"))
-                .and_then(|p| p.get(0))
-                .and_then(|p0| p0.get("text"))
-                .and_then(|t| t.as_str())
-        {
-            return Ok(text.to_string());
-        }
-        Ok(resp_str)
+        post_and_extract(&url, &[], &payload, |val| {
+            val.get("candidates")?
+                .get(0)?
+                .get("content")?
+                .get("parts")?
+                .get(0)?
+                .get("text")?
+                .as_str()
+        })
     }
 }
 
@@ -206,17 +216,9 @@ impl AiProvider for ClaudeProvider {
             ("anthropic-version", "2023-06-01"),
         ];
 
-        let resp_str = execute_curl_post(url, &headers, &payload)?;
-        if let Ok(val) = serde_json::from_str::<serde_json::Value>(&resp_str)
-            && let Some(text) = val
-                .get("content")
-                .and_then(|c| c.get(0))
-                .and_then(|c0| c0.get("text"))
-                .and_then(|t| t.as_str())
-        {
-            return Ok(text.to_string());
-        }
-        Ok(resp_str)
+        post_and_extract(url, &headers, &payload, |val| {
+            val.get("content")?.get(0)?.get("text")?.as_str()
+        })
     }
 }
 
@@ -259,18 +261,13 @@ impl AiProvider for OpenAiProvider {
         let auth_hdr = format!("Bearer {}", self.api_key);
         let headers = [("Authorization", auth_hdr.as_str())];
 
-        let resp_str = execute_curl_post(url, &headers, &payload)?;
-        if let Ok(val) = serde_json::from_str::<serde_json::Value>(&resp_str)
-            && let Some(text) = val
-                .get("choices")
-                .and_then(|c| c.get(0))
-                .and_then(|c0| c0.get("message"))
-                .and_then(|m| m.get("content"))
-                .and_then(|cnt| cnt.as_str())
-        {
-            return Ok(text.to_string());
-        }
-        Ok(resp_str)
+        post_and_extract(url, &headers, &payload, |val| {
+            val.get("choices")?
+                .get(0)?
+                .get("message")?
+                .get("content")?
+                .as_str()
+        })
     }
 }
 

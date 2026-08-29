@@ -1,13 +1,10 @@
 #![forbid(unsafe_code)]
 
-use ratatui::layout::{Constraint, Direction, Layout};
-use ratatui::widgets::{Block, Borders};
-
 pub use ratatui::Frame;
-pub use ratatui::layout::Rect;
+pub use ratatui::layout::{Constraint, Direction, Layout, Rect};
 pub use ratatui::style::{Color, Modifier, Style};
 pub use ratatui::text::{Line, Span};
-pub use ratatui::widgets::{Paragraph, Wrap};
+pub use ratatui::widgets::{Block, Borders, Paragraph, Wrap};
 
 use crate::tui::theme::TuiTheme;
 
@@ -63,6 +60,41 @@ pub fn split_vertical_header_body(area: Rect, header_height: u16) -> (Rect, Rect
 pub fn styled_kv_line(label: &str, value: &str, label_color: Color) -> Line<'static> {
     Line::from(vec![
         Span::styled(label.to_string(), Style::default().fg(label_color)),
-        Span::raw(value.to_string()),
+        Span::styled(value.to_string(), Style::default().fg(Color::White)),
     ])
+}
+
+/// Helper to build a styled action button badge for TUI footers.
+pub fn styled_action_badge(label: &'static str, bg: Color) -> Span<'static> {
+    Span::styled(
+        label,
+        Style::default()
+            .fg(Color::Black)
+            .bg(bg)
+            .add_modifier(Modifier::BOLD),
+    )
+}
+
+/// Helper to build a bold colored span.
+pub fn bold_span(text: impl Into<String>, fg: Color) -> Span<'static> {
+    Span::styled(
+        text.into(),
+        Style::default().fg(fg).add_modifier(Modifier::BOLD),
+    )
+}
+
+/// Helper for a green diff addition line.
+pub fn diff_add_line(text: impl Into<String>) -> Line<'static> {
+    Line::from(vec![Span::styled(
+        text.into(),
+        Style::default().fg(Color::Green),
+    )])
+}
+
+/// Helper for a red diff deletion line.
+pub fn diff_del_line(text: impl Into<String>) -> Line<'static> {
+    Line::from(vec![Span::styled(
+        text.into(),
+        Style::default().fg(Color::Red),
+    )])
 }

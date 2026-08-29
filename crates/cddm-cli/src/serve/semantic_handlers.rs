@@ -87,10 +87,56 @@ pub async fn semantic_graph_handler(
             pdgs.push(build_pdg_from_cfg(cfg_b.clone()));
         }
 
-        if let (Some(first_a), Some(first_b)) = (cfgs.first(), cfgs_b.first()) {
+        let target_a = req
+            .function_a
+            .as_ref()
+            .and_then(|name| cfgs.iter().find(|c| c.function_name == *name))
+            .or_else(|| {
+                req.lines_a
+                    .as_ref()
+                    .and_then(|(s, _)| cfgs.iter().find(|c| c.line_start == *s))
+            })
+            .or_else(|| cfgs.first());
+
+        let target_b = req
+            .function_b
+            .as_ref()
+            .and_then(|name| cfgs_b.iter().find(|c| c.function_name == *name))
+            .or_else(|| {
+                req.lines_b
+                    .as_ref()
+                    .and_then(|(s, _)| cfgs_b.iter().find(|c| c.line_start == *s))
+            })
+            .or_else(|| cfgs_b.first());
+
+        if let (Some(selected_a), Some(selected_b)) = (target_a, target_b) {
             let is_cross_lang = lang_a != lang_b;
-            let hybrid =
-                compute_hybrid_similarity(first_a, &code_a, first_b, &code_b, is_cross_lang);
+
+            let lines_a: Vec<&str> = code_a.lines().collect();
+            let start_a = selected_a.line_start.saturating_sub(1);
+            let end_a = selected_a.line_end.min(lines_a.len());
+            let snippet_a = if start_a < end_a && start_a < lines_a.len() {
+                lines_a[start_a..end_a].join("\n")
+            } else {
+                code_a.clone()
+            };
+
+            let lines_b: Vec<&str> = code_b.lines().collect();
+            let start_b = selected_b.line_start.saturating_sub(1);
+            let end_b = selected_b.line_end.min(lines_b.len());
+            let snippet_b = if start_b < end_b && start_b < lines_b.len() {
+                lines_b[start_b..end_b].join("\n")
+            } else {
+                code_b.clone()
+            };
+
+            let hybrid = compute_hybrid_similarity(
+                selected_a,
+                &snippet_a,
+                selected_b,
+                &snippet_b,
+                is_cross_lang,
+            );
             let is_semantic_clone = hybrid.hybrid_score >= 0.70;
             comparison = Some(SemanticComparisonResponse {
                 similarity: hybrid.hybrid_score,
@@ -99,8 +145,8 @@ pub async fn semantic_graph_handler(
                 hybrid_score: hybrid.hybrid_score,
                 is_semantic_clone,
                 is_cross_language: is_cross_lang,
-                wl_hash_a: first_a.wl_hash,
-                wl_hash_b: first_b.wl_hash,
+                wl_hash_a: selected_a.wl_hash,
+                wl_hash_b: selected_b.wl_hash,
             });
         }
 

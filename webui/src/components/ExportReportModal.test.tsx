@@ -1,8 +1,12 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vite-plus/test";
 import { ExportReportModal } from "./ExportReportModal";
-import { createMockScanResult } from "../test/test-helpers";
-import { Win2xManagerProvider } from "./ui/win2x-manager/context/win2x-manager-context";
+import {
+  createMockScanResult,
+  expectDefinedTexts,
+  expectNullWhenClosed,
+  renderWithWin2x,
+} from "../test/test-helpers";
 
 describe("ExportReportModal Component", () => {
   const mockResult = createMockScanResult();
@@ -12,32 +16,25 @@ describe("ExportReportModal Component", () => {
   });
 
   it("should return null when not open", () => {
-    const { container } = render(
-      <Win2xManagerProvider>
-        <ExportReportModal isOpen={false} onClose={() => {}} results={mockResult} />
-      </Win2xManagerProvider>,
+    expectNullWhenClosed(
+      <ExportReportModal isOpen={false} onClose={() => {}} results={mockResult} />,
     );
-    expect(container.firstChild).toBeNull();
   });
 
   it("should render SARIF, JSON, Markdown, and CI tabs when open", () => {
     const onClose = vi.fn();
 
-    render(
-      <Win2xManagerProvider>
-        <ExportReportModal isOpen={true} onClose={onClose} results={mockResult} />
-      </Win2xManagerProvider>,
-    );
+    renderWithWin2x(<ExportReportModal isOpen={true} onClose={onClose} results={mockResult} />);
 
-    expect(screen.getByText("Report Center & SARIF Exporter")).toBeDefined();
-    expect(screen.getByText("OASIS SARIF v2.1.0")).toBeDefined();
-    expect(screen.getByText("Scan JSON")).toBeDefined();
-    expect(screen.getByText("Markdown Summary")).toBeDefined();
-    expect(screen.getByText("CI / GitHub Actions")).toBeDefined();
-
-    // Verify SARIF tab is default
-    expect(screen.getByText("Copy SARIF")).toBeDefined();
-    expect(screen.getByText("Download .sarif")).toBeDefined();
+    expectDefinedTexts([
+      "Report Center & SARIF Exporter",
+      "OASIS SARIF v2.1.0",
+      "Scan JSON",
+      "Markdown Summary",
+      "CI / GitHub Actions",
+      "Copy SARIF",
+      "Download .sarif",
+    ]);
 
     // Switch to JSON tab
     fireEvent.click(screen.getByText("Scan JSON"));
@@ -66,11 +63,7 @@ describe("ExportReportModal Component", () => {
       },
     });
 
-    render(
-      <Win2xManagerProvider>
-        <ExportReportModal isOpen={true} onClose={() => {}} results={mockResult} />
-      </Win2xManagerProvider>,
-    );
+    renderWithWin2x(<ExportReportModal isOpen={true} onClose={() => {}} results={mockResult} />);
 
     const copyBtn = screen.getByText("Copy SARIF");
     fireEvent.click(copyBtn);

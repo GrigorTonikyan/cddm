@@ -239,12 +239,19 @@ async fn test_suppression_rules_handlers() {
     assert!(post_res.is_ok());
 }
 
-#[tokio::test]
-async fn test_refactor_sandbox_handlers() {
-    let mut file_a = NamedTempFile::new().unwrap();
-    let mut file_b = NamedTempFile::new().unwrap();
-    writeln!(file_a, "fn foo() {{\n    let a = 1;\n    let b = 2;\n}}").unwrap();
-    writeln!(file_b, "fn bar() {{\n    let a = 1;\n    let b = 2;\n}}").unwrap();
+fn create_test_sandbox_request(
+    fn_name: &str,
+) -> (
+    NamedTempFile,
+    NamedTempFile,
+    cddm_core::RefactorSandboxRequest,
+) {
+    let mut file_a = NamedTempFile::with_suffix(".rs").unwrap();
+    let mut file_b = NamedTempFile::with_suffix(".rs").unwrap();
+    writeln!(file_a, "fn a() {{\n    let x = 1;\n    let y = 2;\n}}").unwrap();
+    writeln!(file_b, "fn b() {{\n    let x = 1;\n    let y = 2;\n}}").unwrap();
+    file_a.flush().unwrap();
+    file_b.flush().unwrap();
 
     let req = cddm_core::RefactorSandboxRequest {
         cluster_id: Some(1),
@@ -262,11 +269,16 @@ async fn test_refactor_sandbox_handlers() {
                 author: None,
             },
         ],
-        custom_function_name: Some("custom_compute".to_string()),
+        custom_function_name: Some(fn_name.to_string()),
         target_module_path: None,
         custom_parameter_names: None,
     };
+    (file_a, file_b, req)
+}
 
+#[tokio::test]
+async fn test_refactor_sandbox_handlers() {
+    let (_fa, _fb, req) = create_test_sandbox_request("custom_compute");
     let res = refactor_sandbox_handler(axum::Json(req)).await;
     assert!(res.is_ok());
     let axum::Json(sandbox_res) = res.unwrap();
@@ -307,34 +319,7 @@ async fn test_refactor_ai_prompt_handler() {
 
 #[tokio::test]
 async fn test_refactor_ast_handler() {
-    let mut file_a = NamedTempFile::with_suffix(".rs").unwrap();
-    let mut file_b = NamedTempFile::with_suffix(".rs").unwrap();
-    writeln!(file_a, "fn a() {{\n    let x = 1;\n    let y = 2;\n}}").unwrap();
-    writeln!(file_b, "fn b() {{\n    let x = 1;\n    let y = 2;\n}}").unwrap();
-    file_a.flush().unwrap();
-    file_b.flush().unwrap();
-
-    let req = cddm_core::RefactorSandboxRequest {
-        cluster_id: Some(1),
-        occurrences: vec![
-            CloneLocation {
-                file: file_a.path().to_str().unwrap().to_string(),
-                start_line: 2,
-                end_line: 3,
-                author: None,
-            },
-            CloneLocation {
-                file: file_b.path().to_str().unwrap().to_string(),
-                start_line: 2,
-                end_line: 3,
-                author: None,
-            },
-        ],
-        custom_function_name: Some("ast_shared_compute".to_string()),
-        target_module_path: None,
-        custom_parameter_names: None,
-    };
-
+    let (_fa, _fb, req) = create_test_sandbox_request("ast_shared_compute");
     let res = refactor_ast_handler(axum::Json(req)).await;
     assert!(res.is_ok());
     let axum::Json(body) = res.unwrap();
@@ -365,33 +350,7 @@ async fn test_policy_rules_get_and_post_handlers() {
     let post_res = policy_rules_post_handler(axum::Json(new_cfg.clone())).await;
     assert!(post_res.is_ok());
 
-    let scan_result = ScanResult {
-        scan_id: "test-eval".to_string(),
-        total_files: 2,
-        total_tokens: 100,
-        total_clones: 1,
-        total_clusters: 0,
-        duplication_percentage: 10.0,
-        dry_health_score: 90.0,
-        clone_pairs: vec![cddm_core::ClonePair {
-            file_a: "src/domain/entity.rs".to_string(),
-            start_line_a: 1,
-            end_line_a: 10,
-            file_b: "src/web/controller.rs".to_string(),
-            start_line_b: 1,
-            end_line_b: 10,
-            token_count: 50,
-            similarity: 1.0,
-            fragment_hash: "hash123".to_string(),
-            clone_type: cddm_core::CloneType::Exact,
-            author_a: None,
-            author_b: None,
-        }],
-        clone_clusters: vec![],
-        duration_ms: 50,
-        language_breakdown: vec![],
-        policy_violations: vec![],
-    };
+    let scan_result = create_dummy_scan_result("src/domain/entity.rs", "src/web/controller.rs");
 
     {
         let mut latest = state.latest_result.write().await;
@@ -420,6 +379,7 @@ async fn test_semantic_graph_handler() {
                 .to_string(),
         ),
         language_b: Some("Rust".to_string()),
+        ..Default::default()
     };
 
     let res = semantic_graph_handler(axum::Json(req)).await;
@@ -445,4 +405,34 @@ async fn test_semantic_scan_handler() {
 
     let res = semantic_scan_handler(axum::Json(req)).await;
     assert!(res.is_ok());
+}
+
+pub(crate) fn create_dummy_scan_result(file_a: &str, file_b: &str) -> ScanResult {
+    ScanResult {
+        scan_id: "test-scan".to_string(),
+        total_files: 2,
+        total_tokens: 100,
+        total_clones: 1,
+        total_clusters: 0,
+        duplication_percentage: 10.0,
+        dry_health_score: 90.0,
+        clone_pairs: vec![cddm_core::ClonePair {
+            file_a: file_a.to_string(),
+            start_line_a: 1,
+            end_line_a: 10,
+            file_b: file_b.to_string(),
+            start_line_b: 1,
+            end_line_b: 10,
+            token_count: 50,
+            similarity: 1.0,
+            fragment_hash: "hash123".to_string(),
+            clone_type: cddm_core::CloneType::Exact,
+            author_a: None,
+            author_b: None,
+        }],
+        clone_clusters: vec![],
+        duration_ms: 50,
+        language_breakdown: vec![],
+        policy_violations: vec![],
+    }
 }

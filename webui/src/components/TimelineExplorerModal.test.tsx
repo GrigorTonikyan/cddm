@@ -1,7 +1,7 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vite-plus/test";
 import { TimelineExplorerModal } from "./TimelineExplorerModal";
-import { Win2xManagerProvider } from "./ui/win2x-manager/context/win2x-manager-context";
+import { renderWithWin2x } from "../test/test-helpers";
 import { useCDDMStore } from "./../store/cddm-store";
 import { TimelineTrend } from "./../types/cddm-types";
 
@@ -60,21 +60,15 @@ describe("TimelineExplorerModal Component", () => {
   });
 
   it("should return null when not open", () => {
-    const { container } = render(
-      <Win2xManagerProvider>
-        <TimelineExplorerModal isOpen={false} onClose={() => {}} />
-      </Win2xManagerProvider>,
+    const { container } = renderWithWin2x(
+      <TimelineExplorerModal isOpen={false} onClose={() => {}} />,
     );
     expect(container.firstChild).toBeNull();
   });
 
   it("should render timeline trends, trajectory chart, and snapshots table when open", () => {
     const onClose = vi.fn();
-    render(
-      <Win2xManagerProvider>
-        <TimelineExplorerModal isOpen={true} onClose={onClose} />
-      </Win2xManagerProvider>,
-    );
+    renderWithWin2x(<TimelineExplorerModal isOpen={true} onClose={onClose} />);
 
     expect(screen.getByText("Historical Duplication & Git Timeline Evolution")).toBeDefined();
     expect(screen.getByText("2 Snapshots (+8.5 DRY)")).toBeDefined();
@@ -92,11 +86,7 @@ describe("TimelineExplorerModal Component", () => {
   });
 
   it("should render git hook status and install button", async () => {
-    render(
-      <Win2xManagerProvider>
-        <TimelineExplorerModal isOpen={true} onClose={() => {}} />
-      </Win2xManagerProvider>,
-    );
+    renderWithWin2x(<TimelineExplorerModal isOpen={true} onClose={() => {}} />);
 
     expect(screen.getByText("Automated Git Hook Quality Gate")).toBeDefined();
     expect(screen.getByText("[INACTIVE]")).toBeDefined();

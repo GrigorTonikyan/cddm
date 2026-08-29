@@ -29,11 +29,19 @@ pub fn extract_workspace_cfgs(
 
         let path_str = path.to_string_lossy().to_string();
         let cfgs = extract_cfgs_from_source(&path_str, &content, grammar.name);
+        let lines: Vec<&str> = content.lines().collect();
 
         for cfg in cfgs {
             // Only consider non-trivial functions (>= 3 statements/nodes)
             if cfg.nodes.len() >= 3 {
-                results.push((cfg, content.clone(), grammar.name.to_string()));
+                let start_idx = cfg.line_start.saturating_sub(1);
+                let end_idx = cfg.line_end.min(lines.len());
+                let snippet = if start_idx < end_idx && start_idx < lines.len() {
+                    lines[start_idx..end_idx].join("\n")
+                } else {
+                    content.clone()
+                };
+                results.push((cfg, snippet, grammar.name.to_string()));
             }
         }
     }
@@ -56,8 +64,8 @@ pub fn scan_cross_language_workspace(
 
     for i in 0..extracted.len() {
         for j in (i + 1)..extracted.len() {
-            let (cfg_a, content_a, lang_a) = &extracted[i];
-            let (cfg_b, content_b, lang_b) = &extracted[j];
+            let (cfg_a, snippet_a, lang_a) = &extracted[i];
+            let (cfg_b, snippet_b, lang_b) = &extracted[j];
 
             // Only compare across different programming languages
             if lang_a == lang_b {
@@ -69,11 +77,11 @@ pub fn scan_cross_language_workspace(
             let len_b = cfg_b.nodes.len();
             let max_len = len_a.max(len_b);
             let min_len = len_a.min(len_b);
-            if (min_len as f64) / (max_len as f64) < 0.40 {
+            if (min_len as f64) / (max_len as f64) < 0.25 {
                 continue;
             }
 
-            let hybrid = compute_hybrid_similarity(cfg_a, content_a, cfg_b, content_b, true);
+            let hybrid = compute_hybrid_similarity(cfg_a, snippet_a, cfg_b, snippet_b, true);
 
             if hybrid.hybrid_score >= similarity_threshold {
                 clone_pairs.push(CrossLanguageClonePair {

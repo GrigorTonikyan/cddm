@@ -1,7 +1,12 @@
-import { render, screen, fireEvent, act } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { describe, expect, it, vi, beforeEach } from "vite-plus/test";
 import { CoverageCorrelationModal } from "./CoverageCorrelationModal";
-import { Win2xManagerProvider } from "./ui/win2x-manager/context/win2x-manager-context";
+import {
+  clickElementAsync,
+  expectDefinedTexts,
+  renderAsyncWithWin2x,
+  renderWithWin2x,
+} from "../test/test-helpers";
 import type { CoverageCorrelationSummary } from "../types/cddm-types";
 
 describe("CoverageCorrelationModal", () => {
@@ -18,20 +23,20 @@ describe("CoverageCorrelationModal", () => {
         file_a: "src/auth.ts",
         start_line_a: 10,
         end_line_a: 20,
-        hits_a: 15000,
+        hits_a: 5000,
         covered_lines_a: 10,
         total_lines_a: 10,
         coverage_pct_a: 100.0,
-        file_b: "src/auth_alt.ts",
+        file_b: "src/session.ts",
         start_line_b: 10,
         end_line_b: 20,
-        hits_b: 400,
-        covered_lines_b: 5,
+        hits_b: 10400,
+        covered_lines_b: 10,
         total_lines_b: 10,
-        coverage_pct_b: 50.0,
+        coverage_pct_b: 100.0,
         total_combined_hits: 15400,
         execution_tier: "HotPath",
-        has_test_gap: true,
+        has_test_gap: false,
         is_dead_code: false,
         risk_score: 95.0,
       },
@@ -44,7 +49,7 @@ describe("CoverageCorrelationModal", () => {
         covered_lines_a: 0,
         total_lines_a: 15,
         coverage_pct_a: 0.0,
-        file_b: "src/legacy_old.ts",
+        file_b: "src/unused.ts",
         start_line_b: 1,
         end_line_b: 15,
         hits_b: 0,
@@ -61,46 +66,35 @@ describe("CoverageCorrelationModal", () => {
   };
 
   beforeEach(() => {
-    vi.restoreAllMocks();
+    vi.clearAllMocks();
   });
 
-  it("should not render when isOpen is false", () => {
-    const { container } = render(
-      <Win2xManagerProvider>
-        <CoverageCorrelationModal isOpen={false} onClose={vi.fn()} initialSummary={mockSummary} />
-      </Win2xManagerProvider>,
+  it("should return null when not open", () => {
+    const { container } = renderWithWin2x(
+      <CoverageCorrelationModal isOpen={false} onClose={vi.fn()} initialSummary={null} />,
     );
     expect(container.firstChild).toBeNull();
   });
 
   it("should render overview statistics when open", async () => {
-    await act(async () => {
-      render(
-        <Win2xManagerProvider>
-          <CoverageCorrelationModal isOpen={true} onClose={vi.fn()} initialSummary={mockSummary} />
-        </Win2xManagerProvider>,
-      );
-    });
+    await renderAsyncWithWin2x(
+      <CoverageCorrelationModal isOpen={true} onClose={vi.fn()} initialSummary={mockSummary} />,
+    );
 
-    expect(screen.getByText("Runtime Execution & Coverage-Aware De-duplication")).toBeDefined();
-    expect(screen.getByText("75.5%")).toBeDefined();
-    expect(screen.getByText("src/auth.ts:10-20")).toBeDefined();
-    expect(screen.getByText("src/legacy.ts:1-15")).toBeDefined();
+    expectDefinedTexts([
+      "Runtime Execution & Coverage-Aware De-duplication",
+      "75.5%",
+      "src/auth.ts:10-20",
+      "src/legacy.ts:1-15",
+    ]);
   });
 
   it("should filter by dead code only", async () => {
-    await act(async () => {
-      render(
-        <Win2xManagerProvider>
-          <CoverageCorrelationModal isOpen={true} onClose={vi.fn()} initialSummary={mockSummary} />
-        </Win2xManagerProvider>,
-      );
-    });
+    await renderAsyncWithWin2x(
+      <CoverageCorrelationModal isOpen={true} onClose={vi.fn()} initialSummary={mockSummary} />,
+    );
 
-    const deadButton = screen.getByText(/Dead Code \(1\)/);
-    await act(async () => {
-      fireEvent.click(deadButton);
-    });
+    await clickElementAsync(/Dead Code \(1\)/);
 
     expect(screen.getByText("src/legacy.ts:1-15")).toBeDefined();
     expect(screen.queryByText("src/auth.ts:10-20")).toBeNull();

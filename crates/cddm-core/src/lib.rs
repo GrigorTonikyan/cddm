@@ -32,7 +32,10 @@ pub use ai::{
     AiProvider, AiProviderConfig, AiProviderKind, HealIterationLog, HealRefactorRequest,
     HealRefactorResult, create_ai_provider, heal_cluster_refactor,
 };
-pub use ai_prompt::{AiOccurrenceContext, AiRefactorPromptRequest, generate_ai_refactor_prompt};
+pub use ai_prompt::{
+    AiOccurrenceContext, AiRefactorPromptRequest, generate_ai_refactor_prompt,
+    occurrences_to_ai_context,
+};
 pub use cache::pack::{
     CACHE_PACK_VERSION, CachePackManifest, CachePackSummary, export_cache_pack, import_cache_pack,
 };
@@ -88,17 +91,7 @@ pub use semantic_graph::{
 pub use simd::compute_kgram_rolling_hashes;
 pub use suppression::SuppressionEngine;
 pub use timeline::collect_git_timeline;
-pub use types::{
-    ApplyRefactorBranchRequest, ApplyRefactorBranchResult, AstRewriteResult, AstRewrittenFile,
-    BoundaryRule, CloneCluster, CloneLocation, ClonePair, CloneStatus, CloneType,
-    DEFAULT_CACHE_FILE, DEFAULT_DIRECTORY, DEFAULT_IGNORE_PATTERNS, DEFAULT_MIN_TOKENS,
-    DEFAULT_RULES_FILE, DiffClonePair, DiffScanResult, DiffSummary, FileChurnMetric, HookStatus,
-    InferredParameter, LanguageStats, LimitRule, LineSpan, MAX_HEALTH_SCORE, MIN_HEALTH_SCORE,
-    NormalizedToken, PolicyConfig, PolicyEvaluationResult, PolicySeverity, PolicyViolation,
-    RefactorSandboxRequest, RefactorSandboxResult, ScanConfig, ScanPhase, ScanProgress, ScanResult,
-    SuppressionConfig, SuppressionDirective, SuppressionRule, TimelineSnapshot, TimelineTrend,
-    VerifyRefactorRequest, VerifyRefactorResult, WorkflowPlatform, ZeroDuplicationRule,
-};
+pub use types::*;
 pub use watcher::{CddmWatcher, WatchDeltaReport, WatchFileEvent};
 pub use workflow::{
     generate_azure_pipelines, generate_github_workflow, generate_gitlab_ci, get_hook_status,

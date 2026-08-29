@@ -102,15 +102,15 @@ fn print_console_summary(summary: &CoverageCorrelationSummary) {
     if !summary.metrics.is_empty() {
         println!("\n\x1b[33m=== Clones Correlated with Runtime Execution ===\x1b[0m\n");
         let mut table = Table::new();
-        table.set_header(vec![
-            Cell::new("Pair ID").fg(Color::Cyan),
-            Cell::new("Clone Location A").fg(Color::Cyan),
-            Cell::new("Hits A").fg(Color::Yellow),
-            Cell::new("Clone Location B").fg(Color::Cyan),
-            Cell::new("Hits B").fg(Color::Yellow),
-            Cell::new("Tier").fg(Color::Magenta),
-            Cell::new("Risk Score").fg(Color::Red),
-        ]);
+        table.set_header(super::make_colored_header(&[
+            ("Pair ID", Color::Cyan),
+            ("Clone Location A", Color::Cyan),
+            ("Hits A", Color::Yellow),
+            ("Clone Location B", Color::Cyan),
+            ("Hits B", Color::Yellow),
+            ("Tier", Color::Magenta),
+            ("Risk Score", Color::Red),
+        ]));
 
         for m in summary.metrics.iter().take(25) {
             let tier_str = format!("{:?}", m.execution_tier);

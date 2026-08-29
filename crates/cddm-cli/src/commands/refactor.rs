@@ -5,15 +5,26 @@ use crate::formatters::{
     print_refactor_recommendation,
 };
 use cddm_core::{
-    AiOccurrenceContext, AiRefactorPromptRequest, CloneLocation, CloneType, LineSpan, ScanConfig,
-    analyze_clone_refactoring, analyze_cluster_refactoring, apply_cluster_refactor_branch,
-    generate_ai_refactor_prompt, generate_ast_cluster_refactor, run_scan,
-    verify_refactor_test_suite,
+    AiRefactorPromptRequest, CloneLocation, CloneType, ScanConfig, analyze_clone_refactoring,
+    analyze_cluster_refactoring, apply_cluster_refactor_branch, generate_ai_refactor_prompt,
+    generate_ast_cluster_refactor, run_scan, verify_refactor_test_suite,
 };
 use std::fs;
 use std::path::PathBuf;
 use std::sync::{Arc, atomic::AtomicBool};
 use tokio::sync::mpsc;
+
+fn write_output_file(
+    output: Option<&PathBuf>,
+    content: &str,
+    label: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
+    if let Some(out_path) = output {
+        fs::write(out_path, content)?;
+        println!("\n{label} written to '{}'.", out_path.display());
+    }
+    Ok(())
+}
 
 #[allow(clippy::too_many_arguments)]
 pub async fn run_refactor_command(
@@ -117,28 +128,7 @@ pub async fn run_refactor_command(
                 lines_saved_est: ast_res.total_lines_saved,
                 function_name: ast_res.function_name.clone(),
                 target_module: ast_res.target_module_path.clone(),
-                occurrences: occurrences
-                    .iter()
-                    .map(|occ| {
-                        let snippet = fs::read_to_string(&occ.file).unwrap_or_default();
-                        let lines: Vec<&str> = snippet.lines().collect();
-                        let sub = if occ.start_line > 0 && occ.start_line <= lines.len() {
-                            let end = occ.end_line.min(lines.len());
-                            lines[occ.start_line - 1..end].join("\n")
-                        } else {
-                            String::new()
-                        };
-                        AiOccurrenceContext {
-                            path: occ.file.clone(),
-                            span: LineSpan {
-                                line_start: occ.start_line,
-                                line_end: occ.end_line,
-                                byte_offset: 0,
-                            },
-                            snippet: sub,
-                        }
-                    })
-                    .collect(),
+                occurrences: cddm_core::occurrences_to_ai_context(&occurrences),
                 invariant_body: ast_res.helper_function_code.clone(),
                 parameters: ast_res
                     .inferred_parameters
@@ -150,23 +140,14 @@ pub async fn run_refactor_command(
             };
             let prompt_text = generate_ai_refactor_prompt(&prompt_req);
             println!("{}", prompt_text);
-            if let Some(out_path) = output {
-                fs::write(&out_path, &prompt_text)?;
-                println!(
-                    "\nAI refactoring prompt written to '{}'.",
-                    out_path.display()
-                );
-            }
+            write_output_file(output.as_ref(), &prompt_text, "AI refactoring prompt")?;
         } else {
             print_ast_refactor_recommendation(cluster, &ast_res);
-
-            if let Some(out_path) = output {
-                fs::write(&out_path, &ast_res.unified_patch)?;
-                println!(
-                    "\nAST-native unified patch written to '{}'.",
-                    out_path.display()
-                );
-            }
+            write_output_file(
+                output.as_ref(),
+                &ast_res.unified_patch,
+                "AST-native unified patch",
+            )?;
         }
     } else if let Some(c_idx) = cluster {
         if result.clone_clusters.is_empty() {
@@ -177,12 +158,12 @@ pub async fn run_refactor_command(
         let target_idx = if c_idx > 0 && c_idx <= result.clone_clusters.len() {
             c_idx - 1
         } else {
-            eprintln!(
-                "Warning: Specified cluster index {} out of range (total: {}); defaulting to 1.",
+            println!(
+                "Error: Cluster index {} out of bounds (1..{})",
                 c_idx,
                 result.clone_clusters.len()
             );
-            0
+            return Ok(());
         };
 
         let selected_cluster = &result.clone_clusters[target_idx];
@@ -200,29 +181,7 @@ pub async fn run_refactor_command(
                 lines_saved_est: suggestion.total_lines_saved,
                 function_name: suggestion.suggested_function_name.clone(),
                 target_module: suggestion.target_module_hint.clone(),
-                occurrences: selected_cluster
-                    .occurrences
-                    .iter()
-                    .map(|occ| {
-                        let snippet = fs::read_to_string(&occ.file).unwrap_or_default();
-                        let lines: Vec<&str> = snippet.lines().collect();
-                        let sub = if occ.start_line > 0 && occ.start_line <= lines.len() {
-                            let end = occ.end_line.min(lines.len());
-                            lines[occ.start_line - 1..end].join("\n")
-                        } else {
-                            String::new()
-                        };
-                        AiOccurrenceContext {
-                            path: occ.file.clone(),
-                            span: LineSpan {
-                                line_start: occ.start_line,
-                                line_end: occ.end_line,
-                                byte_offset: 0,
-                            },
-                            snippet: sub,
-                        }
-                    })
-                    .collect(),
+                occurrences: cddm_core::occurrences_to_ai_context(&selected_cluster.occurrences),
                 invariant_body: suggestion.common_body_lines.join("\n"),
                 parameters: suggestion
                     .sites
@@ -238,23 +197,14 @@ pub async fn run_refactor_command(
             };
             let prompt_text = generate_ai_refactor_prompt(&prompt_req);
             println!("{}", prompt_text);
-            if let Some(out_path) = output {
-                fs::write(&out_path, &prompt_text)?;
-                println!(
-                    "\nAI refactoring prompt written to '{}'.",
-                    out_path.display()
-                );
-            }
+            write_output_file(output.as_ref(), &prompt_text, "AI refactoring prompt")?;
         } else {
             print_cluster_refactor_recommendation(selected_cluster, &suggestion);
-
-            if let Some(out_path) = output {
-                fs::write(&out_path, &suggestion.unified_patch)?;
-                println!(
-                    "\nMulti-site unified patch written to '{}'.",
-                    out_path.display()
-                );
-            }
+            write_output_file(
+                output.as_ref(),
+                &suggestion.unified_patch,
+                "Multi-site unified patch",
+            )?;
         }
     } else {
         if result.clone_pairs.is_empty() {
@@ -283,22 +233,20 @@ pub async fn run_refactor_command(
         patch_to_apply = suggestion.unified_patch.clone();
 
         if prompt {
-            let snippet_a = fs::read_to_string(&selected.file_a).unwrap_or_default();
-            let lines_a: Vec<&str> = snippet_a.lines().collect();
-            let sub_a = if selected.start_line_a > 0 && selected.start_line_a <= lines_a.len() {
-                let end = selected.end_line_a.min(lines_a.len());
-                lines_a[selected.start_line_a - 1..end].join("\n")
-            } else {
-                String::new()
-            };
-            let snippet_b = fs::read_to_string(&selected.file_b).unwrap_or_default();
-            let lines_b: Vec<&str> = snippet_b.lines().collect();
-            let sub_b = if selected.start_line_b > 0 && selected.start_line_b <= lines_b.len() {
-                let end = selected.end_line_b.min(lines_b.len());
-                lines_b[selected.start_line_b - 1..end].join("\n")
-            } else {
-                String::new()
-            };
+            let locs = vec![
+                CloneLocation {
+                    file: selected.file_a.clone(),
+                    start_line: selected.start_line_a,
+                    end_line: selected.end_line_a,
+                    author: selected.author_a.clone(),
+                },
+                CloneLocation {
+                    file: selected.file_b.clone(),
+                    start_line: selected.start_line_b,
+                    end_line: selected.end_line_b,
+                    author: selected.author_b.clone(),
+                },
+            ];
 
             let prompt_req = AiRefactorPromptRequest {
                 clone_type: selected.clone_type.clone(),
@@ -307,26 +255,7 @@ pub async fn run_refactor_command(
                 lines_saved_est: suggestion.lines_saved,
                 function_name: suggestion.suggested_function_name.clone(),
                 target_module: suggestion.target_module_hint.clone(),
-                occurrences: vec![
-                    AiOccurrenceContext {
-                        path: selected.file_a.clone(),
-                        span: LineSpan {
-                            line_start: selected.start_line_a,
-                            line_end: selected.end_line_a,
-                            byte_offset: 0,
-                        },
-                        snippet: sub_a,
-                    },
-                    AiOccurrenceContext {
-                        path: selected.file_b.clone(),
-                        span: LineSpan {
-                            line_start: selected.start_line_b,
-                            line_end: selected.end_line_b,
-                            byte_offset: 0,
-                        },
-                        snippet: sub_b,
-                    },
-                ],
+                occurrences: cddm_core::occurrences_to_ai_context(&locs),
                 invariant_body: suggestion.common_body_lines.join("\n"),
                 parameters: suggestion
                     .parameter_differences
@@ -338,20 +267,10 @@ pub async fn run_refactor_command(
             };
             let prompt_text = generate_ai_refactor_prompt(&prompt_req);
             println!("{}", prompt_text);
-            if let Some(out_path) = output {
-                fs::write(&out_path, &prompt_text)?;
-                println!(
-                    "\nAI refactoring prompt written to '{}'.",
-                    out_path.display()
-                );
-            }
+            write_output_file(output.as_ref(), &prompt_text, "AI refactoring prompt")?;
         } else {
             print_refactor_recommendation(selected, &suggestion);
-
-            if let Some(out_path) = output {
-                fs::write(&out_path, &suggestion.unified_patch)?;
-                println!("\nUnified patch written to '{}'.", out_path.display());
-            }
+            write_output_file(output.as_ref(), &suggestion.unified_patch, "Unified patch")?;
         }
     }
 

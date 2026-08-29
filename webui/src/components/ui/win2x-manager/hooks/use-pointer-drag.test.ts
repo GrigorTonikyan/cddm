@@ -3,41 +3,25 @@ import { renderHook, act } from "@testing-library/react";
 import { usePointerDrag } from "./use-pointer-drag";
 
 describe("usePointerDrag Hook (win2x-manager)", () => {
+  const defaultOpts = {
+    containerRef: { current: document.createElement("div") },
+    x: 100,
+    y: 100,
+    width: 500,
+    height: 400,
+    isMaximized: false,
+    onDragEnd: vi.fn(),
+  };
+
   it("initializes handlePointerDown function", () => {
-    const containerRef = { current: document.createElement("div") };
-    const onDragEnd = vi.fn();
-
-    const { result } = renderHook(() =>
-      usePointerDrag({
-        containerRef,
-        x: 100,
-        y: 100,
-        width: 500,
-        height: 400,
-        isMaximized: false,
-        onDragEnd,
-      }),
-    );
-
+    const { result } = renderHook(() => usePointerDrag(defaultOpts));
     expect(typeof result.current.handlePointerDown).toBe("function");
     expect(result.current.isDragging).toBe(false);
   });
 
   it("does not drag when maximized or disabled", () => {
-    const containerRef = { current: document.createElement("div") };
-    const onDragEnd = vi.fn();
-
     const { result } = renderHook(() =>
-      usePointerDrag({
-        containerRef,
-        x: 100,
-        y: 100,
-        width: 500,
-        height: 400,
-        isMaximized: true,
-        disabled: true,
-        onDragEnd,
-      }),
+      usePointerDrag({ ...defaultOpts, isMaximized: true, disabled: true }),
     );
 
     const mockEvent = {
@@ -53,7 +37,7 @@ describe("usePointerDrag Hook (win2x-manager)", () => {
       result.current.handlePointerDown(mockEvent);
     });
 
-    expect(onDragEnd).not.toHaveBeenCalled();
+    expect(defaultOpts.onDragEnd).not.toHaveBeenCalled();
     expect(result.current.isDragging).toBe(false);
   });
 });

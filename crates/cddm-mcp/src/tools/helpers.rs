@@ -95,3 +95,19 @@ pub async fn run_scan_from_mcp_args(
 
     run_scan(config, tx, cancel_flag).await
 }
+
+pub fn get_str_arg<'a>(args: Option<&'a serde_json::Value>, key: &str) -> Option<&'a str> {
+    args.and_then(|a| a.get(key)).and_then(|v| v.as_str())
+}
+
+pub fn get_bool_arg(args: Option<&serde_json::Value>, key: &str, default: bool) -> bool {
+    args.and_then(|a| a.get(key))
+        .and_then(|v| v.as_bool())
+        .unwrap_or(default)
+}
+
+pub fn get_usize_arg(args: Option<&serde_json::Value>, key: &str) -> Option<usize> {
+    args.and_then(|a| a.get(key))
+        .and_then(|v| v.as_u64())
+        .map(|v| v as usize)
+}

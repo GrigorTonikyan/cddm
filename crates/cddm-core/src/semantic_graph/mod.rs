@@ -150,4 +150,87 @@ mod tests {
             sim
         );
     }
+
+    #[test]
+    fn test_subword_camel_snake_case_alignment() {
+        let tokens_snake =
+            extract_semantic_tokens("let discount_rate = calculate_user_discount(price);");
+        let tokens_camel =
+            extract_semantic_tokens("const discountRate = calculateUserDiscount(price);");
+
+        let tf_snake = compute_tf_vector(&tokens_snake);
+        let tf_camel = compute_tf_vector(&tokens_camel);
+
+        let sim = cosine_similarity(&tf_snake, &tf_camel);
+        assert!(
+            sim >= 0.90,
+            "CamelCase and snake_case tokens should have very high similarity, got: {}",
+            sim
+        );
+    }
+
+    #[test]
+    fn test_multi_function_cross_language_isolation() {
+        let rust_multi = r#"
+        pub fn format_greeting(name: &str) -> String {
+            let msg = format!("Hello, {}", name);
+            return msg;
+        }
+
+        pub fn compute_tax(income: f64, is_resident: bool) -> f64 {
+            let mut rate = 0.15;
+            if is_resident {
+                rate = 0.25;
+            }
+            let tax = income * rate;
+            return tax;
+        }
+
+        pub fn log_event(event_type: &str, code: i32) {
+            println!("Event: {} code: {}", event_type, code);
+        }
+        "#;
+
+        let python_multi = r#"
+def parse_header(header: str) -> list[str]:
+    parts = header.split(":")
+    return parts
+
+def compute_tax(income: float, is_resident: bool) -> float:
+    rate = 0.15
+    if is_resident:
+        rate = 0.25
+    tax = income * rate
+    return tax
+
+def render_badge(role: str) -> bool:
+    if role == "admin":
+        return True
+    return False
+        "#;
+
+        let cfgs_rust = extract_cfgs_from_source("calc.rs", rust_multi, "Rust");
+        let cfgs_py = extract_cfgs_from_source("calc.py", python_multi, "Python");
+
+        assert_eq!(cfgs_rust.len(), 3);
+        assert_eq!(cfgs_py.len(), 3);
+
+        assert_eq!(cfgs_rust[1].function_name, "compute_tax");
+        assert_eq!(cfgs_py[1].function_name, "compute_tax");
+
+        let lines_rust: Vec<&str> = rust_multi.lines().collect();
+        let lines_py: Vec<&str> = python_multi.lines().collect();
+
+        let snippet_rust =
+            lines_rust[(cfgs_rust[1].line_start - 1)..cfgs_rust[1].line_end].join("\n");
+        let snippet_py = lines_py[(cfgs_py[1].line_start - 1)..cfgs_py[1].line_end].join("\n");
+
+        let hybrid =
+            compute_hybrid_similarity(&cfgs_rust[1], &snippet_rust, &cfgs_py[1], &snippet_py, true);
+        assert!(
+            hybrid.hybrid_score >= 0.70,
+            "Isolated function matching should succeed across Rust and Python, got: {:?}",
+            hybrid
+        );
+    }
 }

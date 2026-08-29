@@ -100,6 +100,10 @@ pub async fn run_hub_command(args: HubArgs) -> Result<(), Box<dyn std::error::Er
     Ok(())
 }
 
+fn colored_header(cols: &[(&str, Color)]) -> Vec<Cell> {
+    cols.iter().map(|(t, c)| Cell::new(t).fg(*c)).collect()
+}
+
 fn print_hub_console(summary: &HubScanSummary) {
     println!(
         "\n\x1b[32m=== CDDM Organization Federation Hub: {} ===\x1b[0m\n",
@@ -107,10 +111,10 @@ fn print_hub_console(summary: &HubScanSummary) {
     );
 
     let mut overview = Table::new();
-    overview.set_header(vec![
-        Cell::new("Metric").fg(Color::Cyan),
-        Cell::new("Value").fg(Color::Green),
-    ]);
+    overview.set_header(colored_header(&[
+        ("Metric", Color::Cyan),
+        ("Value", Color::Green),
+    ]));
     overview.add_row(Row::from(vec![
         Cell::new("Total Member Repositories"),
         Cell::new(summary.total_repos.to_string()),
@@ -144,12 +148,12 @@ fn print_hub_console(summary: &HubScanSummary) {
     if !summary.duplication_matrix.is_empty() {
         println!("\n\x1b[33m=== Inter-Repository Duplication Matrix ===\x1b[0m\n");
         let mut matrix_table = Table::new();
-        matrix_table.set_header(vec![
-            Cell::new("Repository A").fg(Color::Cyan),
-            Cell::new("Repository B").fg(Color::Cyan),
-            Cell::new("Shared Clones").fg(Color::Yellow),
-            Cell::new("Shared Tokens").fg(Color::Magenta),
-        ]);
+        matrix_table.set_header(colored_header(&[
+            ("Repository A", Color::Cyan),
+            ("Repository B", Color::Cyan),
+            ("Shared Clones", Color::Yellow),
+            ("Shared Tokens", Color::Magenta),
+        ]));
         for row in &summary.duplication_matrix {
             matrix_table.add_row(Row::from(vec![
                 Cell::new(&row.repo_a),
@@ -164,13 +168,13 @@ fn print_hub_console(summary: &HubScanSummary) {
     if !summary.clusters.is_empty() {
         println!("\n\x1b[33m=== Cross-Repository Extraction Candidates ===\x1b[0m\n");
         let mut cluster_table = Table::new();
-        cluster_table.set_header(vec![
-            Cell::new("Cluster ID").fg(Color::Cyan),
-            Cell::new("Member Repositories").fg(Color::DarkCyan),
-            Cell::new("Occurrences").fg(Color::Yellow),
-            Cell::new("Tokens").fg(Color::Magenta),
-            Cell::new("Suggested Shared Package").fg(Color::Green),
-        ]);
+        cluster_table.set_header(colored_header(&[
+            ("Cluster ID", Color::Cyan),
+            ("Member Repositories", Color::DarkCyan),
+            ("Occurrences", Color::Yellow),
+            ("Tokens", Color::Magenta),
+            ("Suggested Shared Package", Color::Green),
+        ]));
         for c in &summary.clusters {
             cluster_table.add_row(Row::from(vec![
                 Cell::new(format!("#{}", c.id)),

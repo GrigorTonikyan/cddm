@@ -50,22 +50,15 @@ describe("Geometry Engine", () => {
 
     // Bottom-right expansion
     const brRes = computeResize(initialRect, "bottom-right", 50, 60, 460, 340);
-    expect(brRes.width).toBe(550);
-    expect(brRes.height).toBe(460);
-    expect(brRes.x).toBe(100);
-    expect(brRes.y).toBe(100);
+    expect(brRes).toEqual({ x: 100, y: 100, width: 550, height: 460 });
 
     // Top-left contraction past minWidth
     const tlRes = computeResize(initialRect, "top-left", 200, 200, 460, 340);
-    expect(tlRes.width).toBe(460);
-    expect(tlRes.height).toBe(340);
-    expect(tlRes.x).toBe(140); // 100 + (500 - 460)
-    expect(tlRes.y).toBe(160); // 100 + (400 - 340)
+    expect(tlRes).toEqual({ x: 140, y: 160, width: 460, height: 340 });
 
     // Right edge expansion
     const rRes = computeResize(initialRect, "right", 80, 0, 460, 340);
-    expect(rRes.width).toBe(580);
-    expect(rRes.height).toBe(400);
+    expect(rRes).toMatchObject({ width: 580, height: 400 });
 
     // Bottom edge expansion
     const bRes = computeResize(initialRect, "bottom", 0, 70, 460, 340);

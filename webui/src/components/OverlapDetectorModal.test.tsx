@@ -1,7 +1,13 @@
-import { render, screen, fireEvent, act } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vite-plus/test";
 import { OverlapDetectorModal } from "./OverlapDetectorModal";
-import { Win2xManagerProvider } from "./ui/win2x-manager/context/win2x-manager-context";
+import {
+  clickElementAsync,
+  expectDefinedTexts,
+  expectNullWhenClosed,
+  mockSuccessResponse,
+  renderAsyncWithWin2x,
+} from "../test/test-helpers";
 import type { OverlapScanResult } from "../types/cddm-types";
 
 describe("OverlapDetectorModal Component", () => {
@@ -30,68 +36,49 @@ describe("OverlapDetectorModal Component", () => {
 
   beforeEach(() => {
     vi.restoreAllMocks();
-    global.fetch = vi.fn().mockImplementation((url: string) => {
+    globalThis.fetch = vi.fn().mockImplementation((url: string) => {
       if (url.includes("/api/overlap/catalog")) {
-        return Promise.resolve({
-          ok: true,
-          json: () =>
-            Promise.resolve([
-              {
-                name: "Array Chunking",
-                category: "Collections",
-                description: "Chunking helper",
-                canonical_keywords: ["chunk", "batch"],
-                recommendations: [],
-              },
-            ]),
-        });
+        return mockSuccessResponse([
+          {
+            name: "Array Chunking",
+            category: "Collections",
+            description: "Chunking helper",
+            canonical_keywords: ["chunk", "batch"],
+            recommendations: [],
+          },
+        ]);
       }
-      return Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve(mockResult),
-      });
+      return mockSuccessResponse(mockResult);
     });
   });
 
   it("should not render when isOpen is false", () => {
-    const { container } = render(
-      <Win2xManagerProvider>
-        <OverlapDetectorModal isOpen={false} onClose={vi.fn()} initialScanResult={null} />
-      </Win2xManagerProvider>,
+    expectNullWhenClosed(
+      <OverlapDetectorModal isOpen={false} onClose={vi.fn()} initialScanResult={null} />,
     );
-    expect(container.firstChild).toBeNull();
   });
 
-  it("should render modal with matches when open", async () => {
-    await act(async () => {
-      render(
-        <Win2xManagerProvider>
-          <OverlapDetectorModal isOpen={true} onClose={vi.fn()} initialScanResult={mockResult} />
-        </Win2xManagerProvider>,
-      );
-    });
+  it("should render modal with scan results when open", async () => {
+    await renderAsyncWithWin2x(
+      <OverlapDetectorModal isOpen={true} onClose={vi.fn()} initialScanResult={mockResult} />,
+    );
 
-    expect(screen.getByText("Ecosystem Library Reimplementation & Overlap Detector")).toBeDefined();
-    expect(screen.getByText("Detected Matches (1)")).toBeDefined();
-    expect(screen.getByText("Array Chunking")).toBeDefined();
-    expect(screen.getByText("Collections")).toBeDefined();
-    expect(screen.getByText("95% Confidence")).toBeDefined();
-    expect(screen.getByText("cargo add itertools")).toBeDefined();
+    expectDefinedTexts([
+      "Ecosystem Library Reimplementation & Overlap Detector",
+      "Detected Matches (1)",
+      "Array Chunking",
+      "Collections",
+      "95% Confidence",
+      "cargo add itertools",
+    ]);
   });
 
   it("should switch tabs to algorithm catalog", async () => {
-    await act(async () => {
-      render(
-        <Win2xManagerProvider>
-          <OverlapDetectorModal isOpen={true} onClose={vi.fn()} initialScanResult={mockResult} />
-        </Win2xManagerProvider>,
-      );
-    });
+    await renderAsyncWithWin2x(
+      <OverlapDetectorModal isOpen={true} onClose={vi.fn()} initialScanResult={mockResult} />,
+    );
 
-    const catalogBtn = screen.getByText(/Algorithm Catalog/);
-    await act(async () => {
-      fireEvent.click(catalogBtn);
-    });
+    await clickElementAsync(/Algorithm Catalog/);
 
     expect(screen.getByText("Chunking helper")).toBeDefined();
     expect(screen.getByText("Keywords: chunk, batch")).toBeDefined();

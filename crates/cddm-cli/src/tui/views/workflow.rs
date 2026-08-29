@@ -34,34 +34,29 @@ fn render_hook_status(frame: &mut Frame, area: Rect) {
     frame.render_widget(Paragraph::new(lines).block(block), area);
 }
 
-fn render_ci_preview(frame: &mut Frame, area: Rect) {
-    let ci_yaml_lines = vec![
-        Line::from(vec![Span::styled(
-            "# .github/workflows/cddm.yml — Turnkey Quality Gate",
-            Style::default().fg(Color::DarkGray),
-        )]),
-        Line::from("name: CDDM Code Duplication Analysis"),
-        Line::from("on: [push, pull_request]"),
-        Line::from("jobs:"),
-        Line::from("  cddm-scan:"),
-        Line::from("    runs-on: ubuntu-latest"),
-        Line::from("    steps:"),
-        Line::from("      - uses: actions/checkout@v4"),
-        Line::from("      - uses: GrigorTonikyan/cddm-action@v2"),
-        Line::from("        with:"),
-        Line::from("          fail-threshold: 15.0"),
-        Line::from("          format: sarif"),
-        Line::from("          output: cddm-results.sarif"),
-        Line::from("      - uses: github/codeql-action/upload-sarif@v3"),
-        Line::from("        with:"),
-        Line::from("          sarif_file: cddm-results.sarif"),
-    ];
+const CI_WORKFLOW_YAML: &str = r#"# .github/workflows/cddm.yml — Turnkey Quality Gate
+name: CDDM Code Duplication Analysis
+on: [push, pull_request]
+jobs:
+  cddm-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: GrigorTonikyan/cddm-action@v2
+        with:
+          fail-threshold: 15.0
+          format: sarif
+          output: cddm-results.sarif
+      - uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: cddm-results.sarif"#;
 
+fn render_ci_preview(frame: &mut Frame, area: Rect) {
     let block = create_titled_block(
         " Generated CI/CD Workflow Specification (.github/workflows/cddm.yml) ",
         false,
     );
-    let p = Paragraph::new(ci_yaml_lines)
+    let p = Paragraph::new(CI_WORKFLOW_YAML)
         .block(block)
         .wrap(Wrap { trim: false });
     frame.render_widget(p, area);

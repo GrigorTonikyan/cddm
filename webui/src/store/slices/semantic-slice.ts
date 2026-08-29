@@ -39,13 +39,14 @@ export const createSemanticSlice = (set: SetStoreState, get: GetStoreState) => (
 
   scanCrossLanguageClones: async (
     threshold = 0.7,
-    directory = ".",
+    directory?: string,
   ): Promise<CrossLanguageClonePair[]> => {
+    const dir = directory || get().config?.directory || ".";
     set({ isCrossLanguageLoading: true });
     try {
       const pairs = await postJson<CrossLanguageClonePair[]>(
         API_ROUTES.SEMANTIC_SCAN,
-        { directory, threshold },
+        { directory: dir, threshold },
         "Cross-language scan failed",
       );
       set({
@@ -60,13 +61,15 @@ export const createSemanticSlice = (set: SetStoreState, get: GetStoreState) => (
   },
 
   scanNeuralClones: async (
-    req: SemanticNeuralRequest = { directory: ".", threshold: 0.85 },
+    req: SemanticNeuralRequest = { threshold: 0.85 },
   ): Promise<NeuralScanResult> => {
+    const dir = req.directory || get().config?.directory || ".";
+    const fullReq = { ...req, directory: dir };
     set({ isNeuralLoading: true });
     try {
       const result = await postJson<NeuralScanResult>(
         API_ROUTES.SEMANTIC_NEURAL,
-        req,
+        fullReq,
         "Neural scan failed",
       );
       set({

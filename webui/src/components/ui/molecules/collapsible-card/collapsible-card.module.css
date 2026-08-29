@@ -1,26 +1,26 @@
-@import "../../styles/theme.css";
+@import "../../win2x-manager/styles/win2x-theme.css";
 
 .card {
-  background-color: var(--cddm-ui-bg-card);
-  border-radius: var(--cddm-ui-radius-card);
-  border: 1px solid var(--cddm-ui-border-card);
+  background-color: var(--win2x-bg-card);
+  border-radius: var(--win2x-radius-card);
+  border: 1px solid var(--win2x-border-card);
   overflow: hidden;
-  transition: border-color var(--cddm-ui-transition-normal);
+  transition: border-color var(--win2x-transition-normal);
 }
 
 .header {
   padding: 0.625rem 1rem;
-  background-color: var(--cddm-ui-bg-card-header);
-  border-bottom: 1px solid var(--cddm-ui-border-card);
+  background-color: var(--win2x-bg-card-header);
+  border-bottom: 1px solid var(--win2x-border-card);
   display: flex;
   align-items: center;
   justify-content: space-between;
   cursor: pointer;
   user-select: none;
-  transition: background-color var(--cddm-ui-transition-fast);
+  transition: background-color var(--win2x-transition-fast);
 
   &:hover {
-    background-color: var(--cddm-ui-bg-card-header-hover);
+    background-color: var(--win2x-bg-card-header-hover);
   }
 
   &.headerClosed {
@@ -38,8 +38,8 @@
 .chevron {
   width: 1rem;
   height: 1rem;
-  color: var(--cddm-ui-text-muted);
-  transition: transform var(--cddm-ui-transition-normal);
+  color: var(--win2x-text-muted);
+  transition: transform var(--win2x-transition-normal);
   flex-shrink: 0;
 
   &.chevronExpanded {
@@ -52,7 +52,7 @@
 }
 
 .iconWrapper {
-  color: var(--cddm-ui-accent-primary);
+  color: var(--win2x-accent-primary);
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -62,7 +62,7 @@
   font-size: 0.75rem;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-weight: 700;
-  color: var(--cddm-ui-text-primary);
+  color: var(--win2x-text-primary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   white-space: nowrap;
@@ -80,7 +80,7 @@
 
 .body {
   padding: 1rem;
-  animation: fadeIn var(--cddm-ui-transition-fast) ease-out;
+  animation: fadeIn var(--win2x-transition-fast) ease-out;
 }
 
 @keyframes fadeIn {

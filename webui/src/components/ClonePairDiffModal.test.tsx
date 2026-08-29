@@ -1,7 +1,12 @@
 import { screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vite-plus/test";
 import { ClonePairDiffModal } from "./ClonePairDiffModal";
-import { createMockClonePair, mockFetchSnippets, renderWithWin2x } from "../test/test-helpers";
+import {
+  createMockClonePair,
+  expectNullWhenClosed,
+  mockFetchSnippets,
+  renderWithWin2x,
+} from "../test/test-helpers";
 
 describe("ClonePairDiffModal Component", () => {
   const mockPair = createMockClonePair();
@@ -11,10 +16,7 @@ describe("ClonePairDiffModal Component", () => {
   });
 
   it("should return null when not open", () => {
-    const { container } = renderWithWin2x(
-      <ClonePairDiffModal isOpen={false} onClose={() => {}} pair={mockPair} />,
-    );
-    expect(container.firstChild).toBeNull();
+    expectNullWhenClosed(<ClonePairDiffModal isOpen={false} onClose={() => {}} pair={mockPair} />);
   });
 
   it("should render Diff Inspector window with metadata when open", async () => {

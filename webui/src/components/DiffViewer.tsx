@@ -90,6 +90,59 @@ const renderHighlightedLine = (text: string) => {
   return <>{parts}</>;
 };
 
+interface FragmentHeaderProps {
+  filePath: string;
+  parsed: { directory: string; filename: string };
+  startLine: number;
+  endLine: number;
+  ideLink: string;
+  editorName: string;
+  copied: boolean;
+  onCopy: () => void;
+}
+
+const FragmentHeader: React.FC<FragmentHeaderProps> = ({
+  filePath,
+  parsed,
+  startLine,
+  endLine,
+  ideLink,
+  editorName,
+  copied,
+  onCopy,
+}) => (
+  <div className="px-3 py-1.5 bg-slate-900/60 border-b border-slate-800/60 flex items-center justify-between text-xs font-mono">
+    <span className="text-slate-300 truncate" title={filePath}>
+      <span className="text-slate-500">{parsed.directory}</span>
+      <span className="font-bold text-indigo-300">{parsed.filename}</span>
+      <span className="text-slate-500 ml-1.5">
+        (L{startLine}–{endLine})
+      </span>
+    </span>
+    <div className="flex items-center gap-1">
+      <a
+        href={ideLink}
+        title={`Open in ${editorName} at line ${startLine}`}
+        className="p-1 hover:bg-slate-800 text-slate-400 hover:text-indigo-300 rounded transition-colors"
+      >
+        <ExternalLink className="w-3.5 h-3.5" />
+      </a>
+      <button
+        type="button"
+        onClick={onCopy}
+        className="p-1 hover:bg-slate-800 text-slate-400 hover:text-slate-200 rounded transition-colors"
+        title="Copy duplicate code"
+      >
+        {copied ? (
+          <Check className="w-3.5 h-3.5 text-emerald-400" />
+        ) : (
+          <Copy className="w-3.5 h-3.5" />
+        )}
+      </button>
+    </div>
+  </div>
+);
+
 export const DiffViewer: React.FC<DiffViewerProps> = ({
   fileA,
   startLineA,
@@ -275,36 +328,16 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
         <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-slate-800">
           {/* Panel Fragment A */}
           <div className="flex flex-col min-w-0">
-            <div className="px-3 py-1.5 bg-slate-900/60 border-b border-slate-800/60 flex items-center justify-between text-xs font-mono">
-              <span className="text-slate-300 truncate" title={fileA}>
-                <span className="text-slate-500">{parsedA.directory}</span>
-                <span className="font-bold text-indigo-300">{parsedA.filename}</span>
-                <span className="text-slate-500 ml-1.5">
-                  (L{startLineA}–{endLineA})
-                </span>
-              </span>
-              <div className="flex items-center gap-1">
-                <a
-                  href={ideLinkA}
-                  title={`Open in ${getEditorDisplayName(preferredEditor)} at line ${startLineA}`}
-                  className="p-1 hover:bg-slate-800 text-slate-400 hover:text-indigo-300 rounded transition-colors"
-                >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </a>
-                <button
-                  type="button"
-                  onClick={() => handleCopyCode(snippetA, true)}
-                  className="p-1 hover:bg-slate-800 text-slate-400 hover:text-slate-200 rounded transition-colors"
-                  title="Copy duplicate code"
-                >
-                  {copiedA ? (
-                    <Check className="w-3.5 h-3.5 text-emerald-400" />
-                  ) : (
-                    <Copy className="w-3.5 h-3.5" />
-                  )}
-                </button>
-              </div>
-            </div>
+            <FragmentHeader
+              filePath={fileA}
+              parsed={parsedA}
+              startLine={startLineA}
+              endLine={endLineA}
+              ideLink={ideLinkA}
+              editorName={getEditorDisplayName(preferredEditor)}
+              copied={copiedA}
+              onCopy={() => handleCopyCode(snippetA, true)}
+            />
             <div
               ref={scrollRefA}
               onScroll={handleScrollA}
@@ -332,36 +365,16 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
 
           {/* Panel Fragment B */}
           <div className="flex flex-col min-w-0">
-            <div className="px-3 py-1.5 bg-slate-900/60 border-b border-slate-800/60 flex items-center justify-between text-xs font-mono">
-              <span className="text-slate-300 truncate" title={fileB}>
-                <span className="text-slate-500">{parsedB.directory}</span>
-                <span className="font-bold text-indigo-300">{parsedB.filename}</span>
-                <span className="text-slate-500 ml-1.5">
-                  (L{startLineB}–{endLineB})
-                </span>
-              </span>
-              <div className="flex items-center gap-1">
-                <a
-                  href={ideLinkB}
-                  title={`Open in ${getEditorDisplayName(preferredEditor)} at line ${startLineB}`}
-                  className="p-1 hover:bg-slate-800 text-slate-400 hover:text-indigo-300 rounded transition-colors"
-                >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </a>
-                <button
-                  type="button"
-                  onClick={() => handleCopyCode(snippetB, false)}
-                  className="p-1 hover:bg-slate-800 text-slate-400 hover:text-slate-200 rounded transition-colors"
-                  title="Copy duplicate code"
-                >
-                  {copiedB ? (
-                    <Check className="w-3.5 h-3.5 text-emerald-400" />
-                  ) : (
-                    <Copy className="w-3.5 h-3.5" />
-                  )}
-                </button>
-              </div>
-            </div>
+            <FragmentHeader
+              filePath={fileB}
+              parsed={parsedB}
+              startLine={startLineB}
+              endLine={endLineB}
+              ideLink={ideLinkB}
+              editorName={getEditorDisplayName(preferredEditor)}
+              copied={copiedB}
+              onCopy={() => handleCopyCode(snippetB, false)}
+            />
             <div
               ref={scrollRefB}
               onScroll={handleScrollB}

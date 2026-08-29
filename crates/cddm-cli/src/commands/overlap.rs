@@ -44,14 +44,14 @@ fn print_overlap_console(result: &OverlapScanResult) {
     );
 
     let mut table = Table::new();
-    table.set_header(vec![
-        Cell::new("Algorithm").fg(Color::Cyan),
-        Cell::new("Category").fg(Color::DarkCyan),
-        Cell::new("Location").fg(Color::Yellow),
-        Cell::new("Confidence").fg(Color::Magenta),
-        Cell::new("Recommended Replacement").fg(Color::Green),
-        Cell::new("Install Command").fg(Color::DarkGreen),
-    ]);
+    table.set_header(super::make_colored_header(&[
+        ("Algorithm", Color::Cyan),
+        ("Category", Color::DarkCyan),
+        ("Location", Color::Yellow),
+        ("Confidence", Color::Magenta),
+        ("Recommended Replacement", Color::Green),
+        ("Install Command", Color::DarkGreen),
+    ]));
 
     for m in &result.matches {
         let loc = format!("{}:{}-{}", m.file_path, m.line_span.0, m.line_span.1);

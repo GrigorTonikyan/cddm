@@ -1,7 +1,7 @@
 import { screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vite-plus/test";
 import { LanguageAnalyticsModal } from "./LanguageAnalyticsModal";
-import { renderWithWin2x } from "../test/test-helpers";
+import { expectDefinedTexts, renderWithWin2x } from "../test/test-helpers";
 
 describe("LanguageAnalyticsModal Component", () => {
   const mockLanguages = [
@@ -35,15 +35,17 @@ describe("LanguageAnalyticsModal Component", () => {
       />,
     );
 
-    expect(screen.getByText("Language & Architectural Composition")).toBeDefined();
-    expect(screen.getByText("2 Languages")).toBeDefined();
-    expect(screen.getByText("2 ecosystems")).toBeDefined();
-    expect(screen.getByText("15 files")).toBeDefined();
-    expect(screen.getByText("7,500 tokens")).toBeDefined();
-    expect(screen.getByText("TypeScript")).toBeDefined();
-    expect(screen.getByText("Rust")).toBeDefined();
-    expect(screen.getByText("66.7%")).toBeDefined();
-    expect(screen.getByText("33.3%")).toBeDefined();
+    expectDefinedTexts([
+      "Language & Architectural Composition",
+      "2 Languages",
+      "2 ecosystems",
+      "15 files",
+      "7,500 tokens",
+      "TypeScript",
+      "Rust",
+      "66.7%",
+      "33.3%",
+    ]);
 
     // Test close button
     const closeBtn = screen.getByText("Close");

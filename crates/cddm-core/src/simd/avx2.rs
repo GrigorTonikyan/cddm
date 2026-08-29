@@ -1,4 +1,4 @@
-use crate::simd::scalar::{compute_initial_kgram_hash, roll_dual_hash_step};
+use crate::simd::scalar::roll_dual_hash_step;
 use crate::types::{LineSpan, NormalizedToken};
 
 #[cfg(all(target_arch = "x86_64", target_feature = "avx2"))]
@@ -52,21 +52,11 @@ unsafe fn compute_kgram_rolling_hashes_avx2_inner(
     b1_k_minus_1: u64,
     b2_k_minus_1: u64,
 ) -> Vec<((u64, u64), usize, usize, usize)> {
-    if tokens.len() < k {
-        return Vec::new();
-    }
-
-    let mut kgram_hashes = Vec::with_capacity(tokens.len() - k + 1);
-
-    // Initial window
-    let (mut h1, mut h2) = compute_initial_kgram_hash(tokens, k, b1, b2);
-
-    kgram_hashes.push((
-        (h1, h2),
-        tokens[0].1.line_start,
-        tokens[k - 1].1.line_end,
-        tokens[0].1.byte_offset,
-    ));
+    let (mut kgram_hashes, (mut h1, mut h2)) =
+        match super::init_kgram_rolling_state(tokens, k, b1, b2) {
+            Some(state) => state,
+            None => return Vec::new(),
+        };
 
     let bases = (b1, b2);
     let bases_k = (b1_k_minus_1, b2_k_minus_1);

@@ -249,6 +249,14 @@ pub async fn run_scan(
                     crate::semantic_graph::scan_cross_language_workspace(&config_clone, 0.70);
                 if let Ok(cross_pairs) = scan_res {
                     for cp in cross_pairs {
+                        let fragment_hash = format!(
+                            "cross-lang-{}:{}-{}:{}-{}",
+                            cp.file_a,
+                            cp.lines_a.0,
+                            cp.file_b,
+                            cp.lines_b.0,
+                            (cp.hybrid_score * 10000.0) as u64
+                        );
                         pairs.push(crate::types::ClonePair {
                             file_a: cp.file_a,
                             start_line_a: cp.lines_a.0,
@@ -258,10 +266,7 @@ pub async fn run_scan(
                             end_line_b: cp.lines_b.1,
                             token_count: config_clone.min_tokens,
                             similarity: cp.hybrid_score,
-                            fragment_hash: format!(
-                                "cross-lang-{:x}",
-                                (cp.hybrid_score * 10000.0) as u64
-                            ),
+                            fragment_hash,
                             clone_type: crate::types::CloneType::Semantic,
                             author_a: Some(format!("Language: {}", cp.language_a)),
                             author_b: Some(format!("Language: {}", cp.language_b)),

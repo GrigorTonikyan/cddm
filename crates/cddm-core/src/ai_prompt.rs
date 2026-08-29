@@ -164,6 +164,34 @@ pub fn generate_ai_refactor_prompt(req: &AiRefactorPromptRequest) -> String {
     prompt
 }
 
+/// Helper to convert clone locations into AI occurrence contexts by extracting file line ranges.
+pub fn occurrences_to_ai_context(
+    occurrences: &[crate::types::CloneLocation],
+) -> Vec<AiOccurrenceContext> {
+    occurrences
+        .iter()
+        .map(|occ| {
+            let snippet = std::fs::read_to_string(&occ.file).unwrap_or_default();
+            let lines: Vec<&str> = snippet.lines().collect();
+            let sub = if occ.start_line > 0 && occ.start_line <= lines.len() {
+                let end = occ.end_line.min(lines.len());
+                lines[occ.start_line - 1..end].join("\n")
+            } else {
+                String::new()
+            };
+            AiOccurrenceContext {
+                path: occ.file.clone(),
+                span: LineSpan {
+                    line_start: occ.start_line,
+                    line_end: occ.end_line,
+                    byte_offset: 0,
+                },
+                snippet: sub,
+            }
+        })
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

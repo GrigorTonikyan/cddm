@@ -1,5 +1,6 @@
 #![forbid(unsafe_code)]
 
+use super::helpers::{get_bool_arg, get_str_arg, get_usize_arg};
 use crate::protocol::{
     JsonRpcResponse, make_error_response, make_text_response, mcp_tools, rpc_errors,
 };
@@ -13,30 +14,12 @@ pub fn handle_check_suppression(
     id: Option<serde_json::Value>,
     args: Option<&serde_json::Value>,
 ) -> JsonRpcResponse {
-    let path_str = args
-        .and_then(|a| a.get(mcp_tools::PARAM_PATH))
-        .and_then(|p| p.as_str());
-
-    if let Some(path) = path_str {
-        let line_opt = args
-            .and_then(|a| a.get(mcp_tools::PARAM_LINE))
-            .and_then(|l| l.as_u64())
-            .map(|l| l as usize);
-        let custom_ignore = args
-            .and_then(|a| a.get(mcp_tools::PARAM_CDDMIGNORE))
-            .and_then(|i| i.as_str());
-        let ignore_tests = args
-            .and_then(|a| a.get(mcp_tools::PARAM_IGNORE_TESTS))
-            .and_then(|b| b.as_bool())
-            .unwrap_or(false);
-        let ignore_mocks = args
-            .and_then(|a| a.get(mcp_tools::PARAM_IGNORE_MOCKS))
-            .and_then(|b| b.as_bool())
-            .unwrap_or(false);
-        let ignore_generated = args
-            .and_then(|a| a.get(mcp_tools::PARAM_IGNORE_GENERATED))
-            .and_then(|b| b.as_bool())
-            .unwrap_or(true);
+    if let Some(path) = get_str_arg(args, mcp_tools::PARAM_PATH) {
+        let line_opt = get_usize_arg(args, mcp_tools::PARAM_LINE);
+        let custom_ignore = get_str_arg(args, mcp_tools::PARAM_CDDMIGNORE);
+        let ignore_tests = get_bool_arg(args, mcp_tools::PARAM_IGNORE_TESTS, false);
+        let ignore_mocks = get_bool_arg(args, mcp_tools::PARAM_IGNORE_MOCKS, false);
+        let ignore_generated = get_bool_arg(args, mcp_tools::PARAM_IGNORE_GENERATED, true);
 
         let engine = if let Some(custom_p) = custom_ignore {
             match SuppressionEngine::from_file(

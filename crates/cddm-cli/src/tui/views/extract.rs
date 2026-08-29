@@ -33,19 +33,10 @@ fn render_extraction_diffs(frame: &mut Frame, app: &TuiApp, area: Rect) {
     let (left_col, right_col) = split_horizontal_2(area, 50, 50);
 
     let manifest_lines = vec![
-        Line::from(vec![Span::styled(
-            "--- a/Cargo.toml (Workspace Root)",
-            Style::default().fg(Color::Red),
-        )]),
-        Line::from(vec![Span::styled(
-            "+++ b/Cargo.toml",
-            Style::default().fg(Color::Green),
-        )]),
+        diff_del_line("--- a/Cargo.toml (Workspace Root)"),
+        diff_add_line("+++ b/Cargo.toml"),
         Line::from("@@ -3,3 +3,4 @@ members = ["),
-        Line::from(vec![Span::styled(
-            "+    \"crates/cddm-shared-helpers\",",
-            Style::default().fg(Color::Green),
-        )]),
+        diff_add_line("+    \"crates/cddm-shared-helpers\","),
         Line::from(" ]"),
     ];
 
@@ -57,28 +48,13 @@ fn render_extraction_diffs(frame: &mut Frame, app: &TuiApp, area: Rect) {
     frame.render_widget(p_manifest, left_col);
 
     let caller_lines = vec![
-        Line::from(vec![Span::styled(
-            "--- a/crates/cddm-cli/src/main.rs",
-            Style::default().fg(Color::Red),
-        )]),
-        Line::from(vec![Span::styled(
-            "+++ b/crates/cddm-cli/src/main.rs",
-            Style::default().fg(Color::Green),
-        )]),
+        diff_del_line("--- a/crates/cddm-cli/src/main.rs"),
+        diff_add_line("+++ b/crates/cddm-cli/src/main.rs"),
         Line::from("@@ -1,4 +1,5 @@"),
-        Line::from(vec![Span::styled(
-            "+use cddm_shared_helpers::deduplicated_tokens_validator;",
-            Style::default().fg(Color::Green),
-        )]),
+        diff_add_line("+use cddm_shared_helpers::deduplicated_tokens_validator;"),
         Line::from(" "),
-        Line::from(vec![Span::styled(
-            "-    let ok = local_raw_validator(&data);",
-            Style::default().fg(Color::Red),
-        )]),
-        Line::from(vec![Span::styled(
-            "+    let ok = deduplicated_tokens_validator(&data);",
-            Style::default().fg(Color::Green),
-        )]),
+        diff_del_line("-    let ok = local_raw_validator(&data);"),
+        diff_add_line("+    let ok = deduplicated_tokens_validator(&data);"),
     ];
 
     let block_caller = create_titled_block(" Caller Injected Imports & Callsite Diff ", false);
@@ -91,37 +67,13 @@ fn render_extraction_diffs(frame: &mut Frame, app: &TuiApp, area: Rect) {
 
 fn render_extraction_actions(frame: &mut Frame, _app: &TuiApp, area: Rect) {
     let action_lines = vec![Line::from(vec![
-        Span::styled(
-            " [x] Apply Shared Crate Extraction ",
-            Style::default()
-                .fg(Color::Black)
-                .bg(Color::Green)
-                .add_modifier(Modifier::BOLD),
-        ),
+        styled_action_badge(" [x] Apply Shared Crate Extraction ", Color::Green),
         Span::raw("  "),
-        Span::styled(
-            " [d] Dry-Run Simulation ",
-            Style::default()
-                .fg(Color::Black)
-                .bg(Color::Cyan)
-                .add_modifier(Modifier::BOLD),
-        ),
+        styled_action_badge(" [d] Dry-Run Simulation ", Color::Cyan),
         Span::raw("  "),
-        Span::styled(
-            " [t] Synthesize Unit Tests ",
-            Style::default()
-                .fg(Color::Black)
-                .bg(Color::Yellow)
-                .add_modifier(Modifier::BOLD),
-        ),
+        styled_action_badge(" [t] Synthesize Unit Tests ", Color::Yellow),
         Span::raw("  "),
-        Span::styled(
-            " [b] Synthesize Benchmarks ",
-            Style::default()
-                .fg(Color::Black)
-                .bg(Color::Magenta)
-                .add_modifier(Modifier::BOLD),
-        ),
+        styled_action_badge(" [b] Synthesize Benchmarks ", Color::Magenta),
     ])];
 
     let block = create_titled_block(" Extraction Operations ", true);

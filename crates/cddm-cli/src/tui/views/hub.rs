@@ -1,13 +1,6 @@
-#![forbid(unsafe_code)]
-
-use ratatui::Frame;
-use ratatui::layout::{Constraint, Direction, Layout, Rect};
-use ratatui::style::{Color, Modifier, Style};
-use ratatui::text::{Line, Span};
-use ratatui::widgets::{Block, Borders, Paragraph, Row, Table};
-
-use super::helpers::{create_titled_block, split_horizontal_2};
+use super::helpers::*;
 use crate::tui::app::TuiApp;
+use ratatui::widgets::{Row, Table};
 
 /// Render Tab 10: Organization Federation Hub (.cddmhub.toml).
 pub fn render_hub_view(frame: &mut Frame, _app: &TuiApp, area: Rect) {

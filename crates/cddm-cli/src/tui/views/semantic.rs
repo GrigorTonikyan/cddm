@@ -1,11 +1,6 @@
-use ratatui::Frame;
-use ratatui::layout::{Constraint, Direction, Layout, Rect};
-use ratatui::style::{Color, Modifier, Style};
-use ratatui::text::{Line, Span};
-use ratatui::widgets::{Gauge, List, ListItem, Paragraph};
-
-use super::helpers::{create_titled_block, split_horizontal_2, split_vertical_header_body};
+use super::helpers::*;
 use crate::tui::app::TuiApp;
+use ratatui::widgets::{Gauge, List, ListItem};
 
 /// Render Tab 3: Cross-Language Semantic Matching & Hybrid Neural Embeddings Explorer.
 pub fn render_semantic_view(frame: &mut Frame, app: &TuiApp, area: Rect) {

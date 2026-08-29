@@ -1,7 +1,12 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vite-plus/test";
 import { RefactorSandboxModal } from "./RefactorSandboxModal";
-import { Win2xManagerProvider } from "./ui/win2x-manager/context/win2x-manager-context";
+import {
+  assertModalClosesOnButtonClick,
+  expectDefinedTexts,
+  expectNullWhenClosed,
+  renderWithWin2x,
+} from "../test/test-helpers";
 import { useCDDMStore } from "./../store/cddm-store";
 import { RefactorSandboxRequest, RefactorSandboxResult } from "./../types/cddm-types";
 
@@ -45,41 +50,27 @@ describe("RefactorSandboxModal Component", () => {
   });
 
   it("should return null when closed", () => {
-    const { container } = render(
-      <Win2xManagerProvider>
-        <RefactorSandboxModal isOpen={false} onClose={() => {}} />
-      </Win2xManagerProvider>,
-    );
-    expect(container.firstChild).toBeNull();
+    expectNullWhenClosed(<RefactorSandboxModal isOpen={false} onClose={() => {}} />);
   });
 
   it("should render sandbox controls, metrics, diff preview, and actions when open", () => {
     const onClose = vi.fn();
-    render(
-      <Win2xManagerProvider>
-        <RefactorSandboxModal isOpen={true} onClose={onClose} />
-      </Win2xManagerProvider>,
-    );
+    renderWithWin2x(<RefactorSandboxModal isOpen={true} onClose={onClose} />);
 
-    expect(screen.getByText("Interactive Auto-Refactor Sandbox & Visual Studio")).toBeDefined();
-    expect(screen.getByText("Parameterized Refactoring Studio Controls")).toBeDefined();
-    expect(screen.getByText("+24 lines")).toBeDefined();
-    expect(screen.getByText("2 files")).toBeDefined();
-    expect(screen.getByText("Live Synthesized Unified Diff Patch")).toBeDefined();
-    expect(screen.getByText("Apply to Git Branch")).toBeDefined();
+    expectDefinedTexts([
+      "Interactive Auto-Refactor Sandbox & Visual Studio",
+      "Parameterized Refactoring Studio Controls",
+      "+24 lines",
+      "2 files",
+      "Live Synthesized Unified Diff Patch",
+      "Apply to Git Branch",
+    ]);
 
-    // Test close button
-    const closeBtn = screen.getByText("Close");
-    fireEvent.click(closeBtn);
-    expect(onClose).toHaveBeenCalled();
+    assertModalClosesOnButtonClick(onClose);
   });
 
   it("should allow changing custom function name and branch inputs", () => {
-    render(
-      <Win2xManagerProvider>
-        <RefactorSandboxModal isOpen={true} onClose={() => {}} />
-      </Win2xManagerProvider>,
-    );
+    renderWithWin2x(<RefactorSandboxModal isOpen={true} onClose={() => {}} />);
 
     const funcInput = screen.getByPlaceholderText("extracted_shared_helper") as HTMLInputElement;
     fireEvent.change(funcInput, { target: { value: "my_new_helper" } });
@@ -102,11 +93,7 @@ describe("RefactorSandboxModal Component", () => {
       generateAiPrompt: mockGenerateAiPrompt,
     });
 
-    render(
-      <Win2xManagerProvider>
-        <RefactorSandboxModal isOpen={true} onClose={() => {}} />
-      </Win2xManagerProvider>,
-    );
+    renderWithWin2x(<RefactorSandboxModal isOpen={true} onClose={() => {}} />);
 
     const copyPromptBtn = screen.getByText("Copy AI Prompt");
     expect(copyPromptBtn).toBeDefined();
@@ -175,11 +162,7 @@ describe("RefactorSandboxModal Component", () => {
       },
     });
 
-    render(
-      <Win2xManagerProvider>
-        <RefactorSandboxModal isOpen={true} onClose={() => {}} />
-      </Win2xManagerProvider>,
-    );
+    renderWithWin2x(<RefactorSandboxModal isOpen={true} onClose={() => {}} />);
 
     const astTabBtn = screen.getByText(/AST-Native Rewrite/);
     expect(astTabBtn).toBeDefined();
@@ -215,11 +198,7 @@ describe("RefactorSandboxModal Component", () => {
       },
     });
 
-    render(
-      <Win2xManagerProvider>
-        <RefactorSandboxModal isOpen={true} onClose={() => {}} />
-      </Win2xManagerProvider>,
-    );
+    renderWithWin2x(<RefactorSandboxModal isOpen={true} onClose={() => {}} />);
 
     const verifyBtn = screen.getByText("Run Test Verification");
     expect(verifyBtn).toBeDefined();

@@ -1,7 +1,7 @@
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vite-plus/test";
 import { DiffViewer } from "./DiffViewer";
-import { mockFetchSnippets } from "../test/test-helpers";
+import { DEFAULT_TEST_CLONE_PAIR_PROPS, mockFetchSnippets } from "../test/test-helpers";
 
 describe("DiffViewer Component", () => {
   beforeEach(() => {
@@ -11,16 +11,7 @@ describe("DiffViewer Component", () => {
   it("should display loading state initially and then render snippets", async () => {
     mockFetchSnippets();
 
-    render(
-      <DiffViewer
-        fileA="src/a.ts"
-        startLineA={10}
-        endLineA={12}
-        fileB="src/b.ts"
-        startLineB={20}
-        endLineB={22}
-      />,
-    );
+    render(<DiffViewer {...DEFAULT_TEST_CLONE_PAIR_PROPS} />);
 
     expect(screen.getByText("Loading synchronized code diff...")).toBeDefined();
 
@@ -36,16 +27,7 @@ describe("DiffViewer Component", () => {
   it("should switch between split and unified view modes", async () => {
     mockFetchSnippets();
 
-    render(
-      <DiffViewer
-        fileA="src/a.ts"
-        startLineA={10}
-        endLineA={12}
-        fileB="src/b.ts"
-        startLineB={20}
-        endLineB={22}
-      />,
-    );
+    render(<DiffViewer {...DEFAULT_TEST_CLONE_PAIR_PROPS} />);
 
     await waitFor(() => {
       expect(screen.getByText("Interactive Code Diff Visualizer")).toBeDefined();

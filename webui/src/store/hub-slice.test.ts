@@ -14,12 +14,13 @@ describe("useCDDMStore - Hub Slice", () => {
   });
 
   it("should initialize with default hub state", () => {
-    const state = useCDDMStore.getState();
-    expect(state.isHubModalOpen).toBe(false);
-    expect(state.hubConfig).toBeNull();
-    expect(state.hubSummary).toBeNull();
-    expect(state.isHubLoading).toBe(false);
-    expect(state.hubError).toBeNull();
+    expect(useCDDMStore.getState()).toMatchObject({
+      isHubModalOpen: false,
+      hubConfig: null,
+      hubSummary: null,
+      isHubLoading: false,
+      hubError: null,
+    });
   });
 
   it("should toggle modal open state", () => {

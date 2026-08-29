@@ -1,6 +1,7 @@
-import { useCallback, useRef, useState, useEffect } from "react";
+import { useCallback } from "react";
 import { startPointerResize } from "../core/pointer-driver";
 import { ResizeDirection, Win2xRect } from "../core/types";
+import { useActiveStateWithCleanup } from "./use-active-cleanup";
 
 export interface UsePointerResizeOptions {
   containerRef: React.RefObject<HTMLElement | null>;
@@ -37,17 +38,11 @@ export function usePointerResize({
   onResizeEnd,
   onResizeChange,
 }: UsePointerResizeOptions): UsePointerResizeResult {
-  const [isResizing, setIsResizing] = useState(false);
-  const cleanupRef = useRef<(() => void) | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (cleanupRef.current) {
-        cleanupRef.current();
-        cleanupRef.current = null;
-      }
-    };
-  }, []);
+  const {
+    isActive: isResizing,
+    setIsActive: setIsResizing,
+    cleanupRef,
+  } = useActiveStateWithCleanup();
 
   const handleResizePointerDown = useCallback(
     (direction: ResizeDirection, e: React.PointerEvent<HTMLElement>) => {

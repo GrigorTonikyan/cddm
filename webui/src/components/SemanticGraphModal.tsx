@@ -60,6 +60,10 @@ export const SemanticGraphModal: React.FC<SemanticGraphModalProps> = ({ isOpen, 
       file_b: pair.file_b,
       language: pair.language_a,
       language_b: pair.language_b,
+      function_a: pair.function_a,
+      function_b: pair.function_b,
+      lines_a: pair.lines_a,
+      lines_b: pair.lines_b,
     });
     setActiveTab("visualizer");
   };

@@ -214,17 +214,19 @@ mod tests {
         assert_eq!(suggestion.strategy, refactor_strategies::EXTRACT_FUNCTION);
     }
 
+    fn create_temp_file_with_content(content: &str) -> (NamedTempFile, String) {
+        let mut file = NamedTempFile::new().unwrap();
+        let path_str = file.path().to_str().unwrap().to_string();
+        file.write_all(content.as_bytes()).unwrap();
+        file.flush().unwrap();
+        (file, path_str)
+    }
+
     #[test]
     fn test_apply_patch_single_file_success() {
-        let mut file_a = NamedTempFile::new().unwrap();
-        let path_str = file_a.path().to_str().unwrap().to_string();
-
-        writeln!(
-            file_a,
-            "fn compute() {{\n    let a = 10;\n    let b = 20;\n    println!(\"{{}}\", a + b);\n}}"
-        )
-        .unwrap();
-        file_a.flush().unwrap();
+        let (file_a, path_str) = create_temp_file_with_content(
+            "fn compute() {\n    let a = 10;\n    let b = 20;\n    println!(\"{}\", a + b);\n}\n",
+        );
 
         let patch = format!(
             "--- a/{}\n+++ b/{}\n@@ -2,3 +2,1 @@\n-    let a = 10;\n-    let b = 20;\n-    \
@@ -246,13 +248,9 @@ mod tests {
 
     #[test]
     fn test_apply_patch_dry_run_preserves_file() {
-        let mut file_a = NamedTempFile::new().unwrap();
-        let path_str = file_a.path().to_str().unwrap().to_string();
-
         let original_code =
             "fn compute() {\n    let a = 10;\n    let b = 20;\n    println!(\"{}\", a + b);\n}\n";
-        file_a.write_all(original_code.as_bytes()).unwrap();
-        file_a.flush().unwrap();
+        let (file_a, path_str) = create_temp_file_with_content(original_code);
 
         let patch = format!(
             "--- a/{}\n+++ b/{}\n@@ -2,3 +2,1 @@\n-    let a = 10;\n-    let b = 20;\n-    \
@@ -272,15 +270,8 @@ mod tests {
 
     #[test]
     fn test_apply_patch_multi_file_cluster() {
-        let mut file_a = NamedTempFile::new().unwrap();
-        let mut file_b = NamedTempFile::new().unwrap();
-        let path_a = file_a.path().to_str().unwrap().to_string();
-        let path_b = file_b.path().to_str().unwrap().to_string();
-
-        writeln!(file_a, "fn one() {{\n    let v = 42;\n}}").unwrap();
-        writeln!(file_b, "fn two() {{\n    let v = 42;\n}}").unwrap();
-        file_a.flush().unwrap();
-        file_b.flush().unwrap();
+        let (file_a, path_a) = create_temp_file_with_content("fn one() {\n    let v = 42;\n}\n");
+        let (file_b, path_b) = create_temp_file_with_content("fn two() {\n    let v = 42;\n}\n");
 
         let patch = format!(
             "--- a/{}\n+++ b/{}\n@@ -2,1 +2,1 @@\n-    let v = 42;\n+    helper();\n--- a/{}\n+++ \
@@ -302,11 +293,8 @@ mod tests {
 
     #[test]
     fn test_apply_patch_mismatch_fails() {
-        let mut file_a = NamedTempFile::new().unwrap();
-        let path_str = file_a.path().to_str().unwrap().to_string();
-
-        writeln!(file_a, "fn compute() {{\n    let x = 999;\n}}").unwrap();
-        file_a.flush().unwrap();
+        let (_file_a, path_str) =
+            create_temp_file_with_content("fn compute() {\n    let x = 999;\n}\n");
 
         let patch = format!(
             "--- a/{}\n+++ b/{}\n@@ -2,1 +2,1 @@\n-    let a = 10;\n+    helper();\n",

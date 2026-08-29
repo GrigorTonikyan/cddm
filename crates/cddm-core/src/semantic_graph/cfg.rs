@@ -7,37 +7,104 @@ use super::types::{CfgEdge, CfgEdgeType, CfgNode, CfgNodeType, ControlFlowGraph}
 pub fn extract_cfgs_from_source(
     file_path: &str,
     content: &str,
-    _language: &str,
+    language: &str,
 ) -> Vec<ControlFlowGraph> {
     let mut cfgs = Vec::new();
     let lines: Vec<&str> = content.lines().collect();
 
-    let mut current_fn: Option<(String, usize)> = None;
+    let is_python = language.eq_ignore_ascii_case("python")
+        || file_path.ends_with(".py")
+        || file_path.ends_with(".pyi");
+
+    let mut current_fn: Option<(String, usize, usize)> = None; // (name, start_line, indent)
     let mut fn_lines = Vec::new();
+    let mut brace_depth: isize = 0;
+    let mut opened_brace = false;
 
     for (idx, line) in lines.iter().enumerate() {
-        let trimmed = line.trim();
         let line_num = idx + 1;
+        let trimmed = line.trim();
+        let current_indent = line.len() - line.trim_start().len();
 
-        if is_function_header(trimmed) {
-            if let Some((fn_name, start_line)) = current_fn.take() {
+        if is_python {
+            let should_finish = current_fn
+                .as_ref()
+                .map(|(_, _, base_indent)| {
+                    !trimmed.is_empty()
+                        && !trimmed.starts_with('#')
+                        && current_indent <= *base_indent
+                })
+                .unwrap_or(false);
+
+            if should_finish {
+                let (fn_name, start_line, _) = current_fn.take().expect("current_fn present");
+                let end_line = fn_lines
+                    .last()
+                    .map(|(l, _): &(usize, &str)| *l)
+                    .unwrap_or(start_line);
                 let cfg =
-                    build_cfg_from_lines(file_path, &fn_name, start_line, line_num - 1, &fn_lines);
+                    build_cfg_from_lines(file_path, &fn_name, start_line, end_line, &fn_lines);
                 cfgs.push(cfg);
                 fn_lines.clear();
             }
 
-            let name = extract_fn_name(trimmed);
-            current_fn = Some((name, line_num));
-        }
+            if current_fn.is_none() && is_function_header(trimmed) {
+                let name = extract_fn_name(trimmed);
+                current_fn = Some((name, line_num, current_indent));
+            }
 
-        if current_fn.is_some() {
-            fn_lines.push((line_num, trimmed));
+            if current_fn.is_some() {
+                fn_lines.push((line_num, trimmed));
+            }
+        } else {
+            // Brace-delimited / C-style languages
+            if current_fn.is_none() && is_function_header(trimmed) {
+                let name = extract_fn_name(trimmed);
+                current_fn = Some((name, line_num, current_indent));
+                brace_depth = 0;
+                opened_brace = false;
+            }
+
+            if current_fn.is_some() {
+                fn_lines.push((line_num, trimmed));
+
+                // Track braces on this line (ignoring comments)
+                let code_part = if let Some(pos) = trimmed.find("//") {
+                    &trimmed[..pos]
+                } else {
+                    trimmed
+                };
+
+                let open_count = code_part.chars().filter(|&c| c == '{').count() as isize;
+                let close_count = code_part.chars().filter(|&c| c == '}').count() as isize;
+
+                if open_count > 0 {
+                    opened_brace = true;
+                }
+                brace_depth += open_count - close_count;
+
+                if opened_brace && brace_depth <= 0 {
+                    // Function finished
+                    if let Some((fn_name, start_line, _)) = current_fn.take() {
+                        let cfg = build_cfg_from_lines(
+                            file_path, &fn_name, start_line, line_num, &fn_lines,
+                        );
+                        cfgs.push(cfg);
+                        fn_lines.clear();
+                        opened_brace = false;
+                        brace_depth = 0;
+                    }
+                }
+            }
         }
     }
 
-    if let Some((fn_name, start_line)) = current_fn {
-        let cfg = build_cfg_from_lines(file_path, &fn_name, start_line, lines.len(), &fn_lines);
+    if let Some((fn_name, start_line, _)) = current_fn {
+        let end_line = fn_lines
+            .last()
+            .map(|(l, _): &(usize, &str)| *l)
+            .unwrap_or(lines.len());
+        let cfg = build_cfg_from_lines(file_path, &fn_name, start_line, end_line, &fn_lines);
         cfgs.push(cfg);
     }
 
@@ -50,55 +117,158 @@ fn is_function_header(line: &str) -> bool {
         return false;
     }
 
-    (trimmed.starts_with("fn ")
+    // Direct keyword starts
+    if trimmed.starts_with("fn ")
         || trimmed.starts_with("pub fn ")
         || trimmed.starts_with("pub(crate) fn ")
+        || trimmed.starts_with("pub async fn ")
+        || trimmed.starts_with("pub(crate) async fn ")
+        || trimmed.starts_with("async fn ")
+        || trimmed.starts_with("unsafe fn ")
+        || trimmed.starts_with("pub unsafe fn ")
         || trimmed.starts_with("def ")
+        || trimmed.starts_with("async def ")
         || trimmed.starts_with("defp ")
         || trimmed.starts_with("function ")
         || trimmed.starts_with("export function ")
+        || trimmed.starts_with("export default function ")
         || trimmed.starts_with("export async function ")
-        || trimmed.starts_with("public ")
+        || trimmed.starts_with("export default async function ")
+        || trimmed.starts_with("async function ")
+        || trimmed.starts_with("func ")
+        || trimmed.starts_with("fun ")
+        || trimmed.starts_with("suspend fun ")
+    {
+        return true;
+    }
+
+    // Arrow functions and assignments
+    if (trimmed.starts_with("const ")
+        || trimmed.starts_with("let ")
+        || trimmed.starts_with("var ")
+        || trimmed.starts_with("export const ")
+        || trimmed.starts_with("export let ")
+        || trimmed.starts_with("export var "))
+        && (trimmed.contains(" = (")
+            || trimmed.contains(" = async (")
+            || trimmed.contains(" = function")
+            || trimmed.contains("=>"))
+    {
+        return true;
+    }
+
+    // Class / Object methods and OOP function headers (Java, C#, C++, Go receivers, TS)
+    if (trimmed.starts_with("public ")
         || trimmed.starts_with("private ")
         || trimmed.starts_with("protected ")
         || trimmed.starts_with("static ")
-        || trimmed.starts_with("func ")
-        || trimmed.starts_with("fun ")
-        || (trimmed.starts_with("const ") && trimmed.contains(" = (") && trimmed.contains("=>"))
-        || (trimmed.starts_with("let ") && trimmed.contains(" = (") && trimmed.contains("=>")))
-        && (trimmed.contains('(') || trimmed.contains("=>"))
+        || trimmed.starts_with("override ")
+        || trimmed.starts_with("virtual ")
+        || trimmed.starts_with("inline ")
+        || trimmed.starts_with("func (")
+        || trimmed.starts_with("void ")
+        || trimmed.starts_with("int ")
+        || trimmed.starts_with("bool ")
+        || trimmed.starts_with("boolean ")
+        || trimmed.starts_with("double ")
+        || trimmed.starts_with("float ")
+        || trimmed.starts_with("auto ")
+        || trimmed.starts_with("String ")
+        || trimmed.starts_with("string "))
+        && trimmed.contains('(')
+        && (trimmed.ends_with('{')
+            || trimmed.ends_with(')')
+            || trimmed.ends_with(':')
+            || trimmed.contains(") {"))
+    {
+        return true;
+    }
+
+    false
 }
 
 fn extract_fn_name(line: &str) -> String {
-    let without_modifiers = line
-        .trim_start_matches("pub ")
-        .trim_start_matches("pub(crate) ")
-        .trim_start_matches("export ")
-        .trim_start_matches("public ")
-        .trim_start_matches("private ")
-        .trim_start_matches("protected ")
-        .trim_start_matches("static ")
-        .trim_start_matches("async ")
-        .trim_start_matches("fn ")
-        .trim_start_matches("def ")
-        .trim_start_matches("defp ")
-        .trim_start_matches("function ")
-        .trim_start_matches("func ")
-        .trim_start_matches("fun ")
-        .trim_start_matches("const ")
-        .trim_start_matches("let ");
+    let mut text = line.trim();
 
-    if let Some(eq_pos) = without_modifiers.find('=') {
-        let candidate = without_modifiers[..eq_pos].trim();
-        if !candidate.is_empty() {
+    // Strip common leading modifiers
+    let modifiers = [
+        "export default async function ",
+        "export default function ",
+        "export async function ",
+        "export function ",
+        "async function ",
+        "function ",
+        "pub(crate) async fn ",
+        "pub async fn ",
+        "pub(crate) fn ",
+        "pub unsafe fn ",
+        "pub fn ",
+        "async fn ",
+        "unsafe fn ",
+        "fn ",
+        "async def ",
+        "def ",
+        "defp ",
+        "suspend fun ",
+        "fun ",
+        "func ",
+        "export const ",
+        "export let ",
+        "export var ",
+        "const ",
+        "let ",
+        "var ",
+        "public static ",
+        "private static ",
+        "protected static ",
+        "public override ",
+        "protected override ",
+        "private override ",
+        "public virtual ",
+        "public ",
+        "private ",
+        "protected ",
+        "static ",
+        "override ",
+        "virtual ",
+        "inline ",
+        "void ",
+        "int ",
+        "bool ",
+        "boolean ",
+        "double ",
+        "float ",
+        "auto ",
+        "String ",
+        "string ",
+    ];
+
+    for m in &modifiers {
+        if text.starts_with(m) {
+            text = text[m.len()..].trim();
+        }
+    }
+
+    // Go method receiver handling e.g. `(r *Receiver) MethodName(...)`
+    if let Some(close_paren) = text.strip_prefix('(').and_then(|r| r.find(')')) {
+        text = text[(close_paren + 2)..].trim();
+    }
+
+    // Arrow assignment `foo = (...) =>`
+    if let Some(eq_pos) = text.find('=') {
+        let candidate = text[..eq_pos].trim();
+        if !candidate.is_empty() && !candidate.contains(' ') {
             return candidate.to_string();
         }
     }
 
-    if let Some(open_paren) = without_modifiers.find('(') {
-        let name = without_modifiers[..open_paren].trim();
-        if !name.is_empty() {
-            return name.to_string();
+    // Standard `foo(...)`
+    if let Some(open_paren) = text.find('(') {
+        let candidate = text[..open_paren].trim();
+        // If candidate contains spaces (e.g. return type + name), take the last word
+        let last_word = candidate.split_whitespace().last().unwrap_or("");
+        if !last_word.is_empty() {
+            return last_word.to_string();
         }
     }
 

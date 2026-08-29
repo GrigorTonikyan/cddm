@@ -1,15 +1,12 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vite-plus/test";
 import { HealthAuditModal } from "./HealthAuditModal";
-import { createMockScanResult } from "../test/test-helpers";
-import { Win2xManagerProvider } from "./ui/win2x-manager/context/win2x-manager-context";
+import { createMockScanResult, renderWithWin2x } from "../test/test-helpers";
 
 describe("HealthAuditModal Component", () => {
   it("should return null when not open", () => {
-    const { container } = render(
-      <Win2xManagerProvider>
-        <HealthAuditModal isOpen={false} onClose={() => {}} results={createMockScanResult()} />
-      </Win2xManagerProvider>,
+    const { container } = renderWithWin2x(
+      <HealthAuditModal isOpen={false} onClose={() => {}} results={createMockScanResult()} />,
     );
     expect(container.firstChild).toBeNull();
   });
@@ -21,11 +18,7 @@ describe("HealthAuditModal Component", () => {
       duplication_percentage: 5.5,
     });
 
-    render(
-      <Win2xManagerProvider>
-        <HealthAuditModal isOpen={true} onClose={onClose} results={mockResult} />
-      </Win2xManagerProvider>,
-    );
+    renderWithWin2x(<HealthAuditModal isOpen={true} onClose={onClose} results={mockResult} />);
 
     expect(screen.getByText("DRY Health Score Audit & Diagnostics")).toBeDefined();
     expect(screen.getByText("Score: 94.5/100")).toBeDefined();
@@ -45,11 +38,7 @@ describe("HealthAuditModal Component", () => {
       duplication_percentage: 22.4,
     });
 
-    render(
-      <Win2xManagerProvider>
-        <HealthAuditModal isOpen={true} onClose={() => {}} results={mockResult} />
-      </Win2xManagerProvider>,
-    );
+    renderWithWin2x(<HealthAuditModal isOpen={true} onClose={() => {}} results={mockResult} />);
 
     expect(screen.getByText("[FAIL] Threshold")).toBeDefined();
     expect(screen.getByText(/22\.40% Duplication/i)).toBeDefined();

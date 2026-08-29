@@ -3,39 +3,63 @@
 use super::*;
 use crate::types::InferredParameter;
 
+fn assert_inferred_types(vals: &[&str], expected: &[(&str, &str)]) {
+    let vals_vec: Vec<String> = vals.iter().map(|s| s.to_string()).collect();
+    for &(lang, exp) in expected {
+        assert_eq!(
+            infer_parameter_type(lang, &vals_vec),
+            exp,
+            "Failed inference for lang {}",
+            lang
+        );
+    }
+}
+
 #[test]
 fn test_infer_string_type() {
-    let vals = vec!["\"hello\"".to_string(), "\"world\"".to_string()];
-    assert_eq!(infer_parameter_type("rs", &vals), "&str");
-    assert_eq!(infer_parameter_type("ts", &vals), "string");
-    assert_eq!(infer_parameter_type("py", &vals), "str");
-    assert_eq!(infer_parameter_type("go", &vals), "string");
-    assert_eq!(infer_parameter_type("java", &vals), "String");
-    assert_eq!(infer_parameter_type("kt", &vals), "String");
-    assert_eq!(infer_parameter_type("zig", &vals), "[]const u8");
-    assert_eq!(infer_parameter_type("c", &vals), "const char*");
+    assert_inferred_types(
+        &["\"hello\"", "\"world\""],
+        &[
+            ("rs", "&str"),
+            ("ts", "string"),
+            ("py", "str"),
+            ("go", "string"),
+            ("java", "String"),
+            ("kt", "String"),
+            ("zig", "[]const u8"),
+            ("c", "const char*"),
+        ],
+    );
 }
 
 #[test]
 fn test_infer_integer_type() {
-    let vals = vec!["42".to_string(), "100".to_string()];
-    assert_eq!(infer_parameter_type("rs", &vals), "i64");
-    assert_eq!(infer_parameter_type("ts", &vals), "number");
-    assert_eq!(infer_parameter_type("py", &vals), "int");
-    assert_eq!(infer_parameter_type("go", &vals), "int");
-    assert_eq!(infer_parameter_type("kt", &vals), "Int");
-    assert_eq!(infer_parameter_type("zig", &vals), "i64");
-    assert_eq!(infer_parameter_type("swift", &vals), "Int");
+    assert_inferred_types(
+        &["42", "100"],
+        &[
+            ("rs", "i64"),
+            ("ts", "number"),
+            ("py", "int"),
+            ("go", "int"),
+            ("kt", "Int"),
+            ("zig", "i64"),
+            ("swift", "Int"),
+        ],
+    );
 }
 
 #[test]
 fn test_infer_boolean_type() {
-    let vals = vec!["true".to_string(), "false".to_string()];
-    assert_eq!(infer_parameter_type("rs", &vals), "bool");
-    assert_eq!(infer_parameter_type("ts", &vals), "boolean");
-    assert_eq!(infer_parameter_type("py", &vals), "bool");
-    assert_eq!(infer_parameter_type("kt", &vals), "Boolean");
-    assert_eq!(infer_parameter_type("swift", &vals), "Bool");
+    assert_inferred_types(
+        &["true", "false"],
+        &[
+            ("rs", "bool"),
+            ("ts", "boolean"),
+            ("py", "bool"),
+            ("kt", "Boolean"),
+            ("swift", "Bool"),
+        ],
+    );
 }
 
 #[test]

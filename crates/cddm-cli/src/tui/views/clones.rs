@@ -8,7 +8,10 @@ use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, List, ListItem, Paragraph, Wrap};
 
-use super::helpers::{create_titled_block, split_horizontal_2, split_vertical_header_body};
+use super::helpers::{
+    bold_span, create_titled_block, diff_add_line, diff_del_line, split_horizontal_2,
+    split_vertical_header_body,
+};
 use crate::tui::app::{CloneViewMode, DiffMode, TuiApp};
 use crate::tui::theme::TuiTheme;
 
@@ -195,24 +198,13 @@ fn render_diff_viewer(frame: &mut Frame, app: &TuiApp, area: Rect) {
             }
             DiffMode::Unified => {
                 let unified_lines = vec![
-                    Line::from(vec![Span::styled(
+                    Line::from(vec![bold_span(
                         "@@ Unified Deduplication Refactoring Patch @@",
-                        Style::default()
-                            .fg(Color::Magenta)
-                            .add_modifier(Modifier::BOLD),
+                        Color::Magenta,
                     )]),
-                    Line::from(vec![Span::styled(
-                        "- pub fn process_data(input: &str) -> bool {",
-                        Style::default().fg(Color::Red),
-                    )]),
-                    Line::from(vec![Span::styled(
-                        "- pub fn process_items(text: &str) -> bool {",
-                        Style::default().fg(Color::Red),
-                    )]),
-                    Line::from(vec![Span::styled(
-                        "+ pub fn process_text(input: &str) -> bool {",
-                        Style::default().fg(Color::Green),
-                    )]),
+                    diff_del_line("- pub fn process_data(input: &str) -> bool {"),
+                    diff_del_line("- pub fn process_items(text: &str) -> bool {"),
+                    diff_add_line("+ pub fn process_text(input: &str) -> bool {"),
                     Line::from("      if input.is_empty() { return false; }"),
                     Line::from("      let tokens = input.split_whitespace();"),
                     Line::from("      tokens.count() > 0"),

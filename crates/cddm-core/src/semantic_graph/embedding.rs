@@ -18,21 +18,35 @@ pub fn extract_semantic_tokens(code: &str) -> Vec<String> {
             continue;
         }
 
-        // Tokenize words and operators
         let mut current_word = String::new();
-        for ch in trimmed.chars() {
+        let chars: Vec<char> = trimmed.chars().collect();
+
+        for &ch in &chars {
             if ch.is_alphanumeric() || ch == '_' {
-                current_word.push(ch.to_ascii_lowercase());
+                // Check for camelCase split: lowercase followed by uppercase
+                if ch.is_uppercase()
+                    && !current_word.is_empty()
+                    && current_word
+                        .chars()
+                        .last()
+                        .map(|c| c.is_lowercase())
+                        .unwrap_or(false)
+                {
+                    process_word_token(&current_word, &mut tokens);
+                    current_word.clear();
+                }
+
+                if ch == '_' {
+                    if !current_word.is_empty() {
+                        process_word_token(&current_word, &mut tokens);
+                        current_word.clear();
+                    }
+                } else {
+                    current_word.push(ch.to_ascii_lowercase());
+                }
             } else {
                 if !current_word.is_empty() {
-                    if current_word.chars().all(|c| c.is_ascii_digit()) {
-                        tokens.push("lit_num".to_string());
-                    } else {
-                        let canonical = canonicalize_token(&current_word);
-                        if !canonical.is_empty() {
-                            tokens.push(canonical.to_string());
-                        }
-                    }
+                    process_word_token(&current_word, &mut tokens);
                     current_word.clear();
                 }
                 match ch {
@@ -52,38 +66,61 @@ pub fn extract_semantic_tokens(code: &str) -> Vec<String> {
             }
         }
         if !current_word.is_empty() {
-            if current_word.chars().all(|c| c.is_ascii_digit()) {
-                tokens.push("lit_num".to_string());
-            } else {
-                let canonical = canonicalize_token(&current_word);
-                if !canonical.is_empty() {
-                    tokens.push(canonical.to_string());
-                }
-            }
+            process_word_token(&current_word, &mut tokens);
         }
     }
     tokens
 }
 
+fn process_word_token(word: &str, tokens: &mut Vec<String>) {
+    if word.is_empty() {
+        return;
+    }
+    if word.chars().all(|c| c.is_ascii_digit()) {
+        tokens.push("lit_num".to_string());
+    } else {
+        let canonical = canonicalize_token(word);
+        if !canonical.is_empty() {
+            tokens.push(canonical.to_string());
+        }
+    }
+}
+
 fn canonicalize_token(word: &str) -> &str {
     match word {
-        "fn" | "def" | "function" | "func" | "fun" | "public" | "private" | "protected"
-        | "export" | "async" => "def_fn",
+        // Function declarations
+        "fn" | "def" | "defp" | "function" | "func" | "fun" | "lambda" => "def_fn",
+        // Variable declarations
         "let" | "var" | "const" | "val" | "auto" | "mut" => "decl_var",
+        // Control flow
         "if" => "ctrl_if",
-        "else" | "elif" => "ctrl_else",
-        "for" | "while" | "loop" | "do" | "each" => "ctrl_loop",
+        "else" | "elif" | "elsif" => "ctrl_else",
+        "for" | "while" | "loop" | "do" | "each" | "repeat" => "ctrl_loop",
         "return" | "yield" => "ctrl_return",
         "break" => "ctrl_break",
         "continue" => "ctrl_continue",
-        "match" | "switch" | "case" => "ctrl_branch",
-        "println" | "print" | "console" | "log" | "fmt" | "printf" => "io_print",
+        "match" | "switch" | "case" | "when" | "select" => "ctrl_branch",
+        "try" | "catch" | "except" | "finally" | "rescue" | "throw" | "raise" => "ctrl_except",
+        // IO
+        "println" | "print" | "console" | "log" | "fmt" | "printf" | "puts" | "echo" => "io_print",
+        // Literals
         "true" | "false" => "lit_bool",
-        "null" | "none" | "nil" | "undefined" => "lit_null",
+        "null" | "none" | "nil" | "undefined" | "nullptr" => "lit_null",
         "self" | "this" => "ref_self",
-        // Skip common syntax noise
-        "in" | "of" | "to" | "as" | "is" | "use" | "import" | "from" | "package" | "crate" => "",
-        // Preserve identifier roots
+        // Primitive types normalization for cross-language parity
+        "int" | "i8" | "i16" | "i32" | "i64" | "i128" | "isize" | "u8" | "u16" | "u32" | "u64"
+        | "u128" | "usize" | "uint" | "long" | "short" | "byte" | "bigint" => "type_int",
+        "float" | "double" | "f32" | "f64" | "number" | "decimal" => "type_num",
+        "bool" | "boolean" => "type_bool",
+        "str" | "string" | "char" | "text" => "type_str",
+        "void" | "unit" | "never" => "type_void",
+        "vec" | "vector" | "list" | "array" | "slice" => "type_list",
+        "map" | "dict" | "dictionary" | "hashmap" | "table" => "type_map",
+        // Common syntax noise to skip
+        "in" | "of" | "to" | "as" | "is" | "use" | "import" | "from" | "package" | "crate"
+        | "namespace" | "module" | "require" | "include" | "public" | "private" | "protected"
+        | "static" | "async" | "await" | "export" | "override" | "virtual" | "final" => "",
+        // Preserve other domain identifiers
         other => other,
     }
 }

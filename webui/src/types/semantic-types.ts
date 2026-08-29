@@ -91,9 +91,13 @@ export interface SemanticGraphRequest {
   file?: string;
   code?: string;
   language?: string;
+  function_a?: string;
+  lines_a?: [number, number];
   file_b?: string;
   code_b?: string;
   language_b?: string;
+  function_b?: string;
+  lines_b?: [number, number];
 }
 
 export interface SemanticGraphResponse {

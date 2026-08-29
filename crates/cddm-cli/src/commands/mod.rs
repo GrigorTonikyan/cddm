@@ -41,3 +41,10 @@ pub use semantic::run_semantic_command;
 pub use trend::run_trend_command;
 pub use tui::run_tui_command;
 pub use watch::run_watch_command;
+
+#[inline]
+pub(crate) fn make_colored_header(cols: &[(&str, comfy_table::Color)]) -> Vec<comfy_table::Cell> {
+    cols.iter()
+        .map(|(title, color)| comfy_table::Cell::new(*title).fg(*color))
+        .collect()
+}

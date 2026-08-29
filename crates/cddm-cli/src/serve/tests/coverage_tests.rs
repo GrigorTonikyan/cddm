@@ -1,7 +1,6 @@
 #![forbid(unsafe_code)]
 
 use axum::extract::State;
-use cddm_core::{ClonePair, CloneType, ScanResult};
 
 use crate::serve::build_app;
 use crate::serve::coverage_handlers::{coverage_correlate_handler, coverage_ingest_handler};
@@ -30,33 +29,7 @@ end_of_record
 async fn test_coverage_correlate_handler() {
     let (state, _) = build_app();
 
-    let scan_result = ScanResult {
-        scan_id: "test-cov-scan".to_string(),
-        total_files: 2,
-        total_tokens: 100,
-        total_clones: 1,
-        total_clusters: 0,
-        duplication_percentage: 10.0,
-        dry_health_score: 90.0,
-        clone_pairs: vec![ClonePair {
-            file_a: "src/auth.ts".to_string(),
-            start_line_a: 10,
-            end_line_a: 11,
-            file_b: "src/helpers.ts".to_string(),
-            start_line_b: 1,
-            end_line_b: 2,
-            token_count: 50,
-            similarity: 1.0,
-            fragment_hash: "hash123".to_string(),
-            clone_type: CloneType::Exact,
-            author_a: None,
-            author_b: None,
-        }],
-        clone_clusters: vec![],
-        duration_ms: 50,
-        language_breakdown: vec![],
-        policy_violations: vec![],
-    };
+    let scan_result = super::create_dummy_scan_result("src/auth.ts", "src/helpers.ts");
 
     {
         let mut latest = state.latest_result.write().await;

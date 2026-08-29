@@ -1,8 +1,12 @@
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { screen, waitFor, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vite-plus/test";
 import { RefactorPatchModal } from "./RefactorPatchModal";
 import { RefactorSuggestion } from "./../types/cddm-types";
-import { Win2xManagerProvider } from "./ui/win2x-manager/context/win2x-manager-context";
+import {
+  DEFAULT_TEST_CLONE_PAIR_PROPS,
+  expectDefinedTexts,
+  renderWithWin2x,
+} from "../test/test-helpers";
 
 describe("RefactorPatchModal Component", () => {
   const mockSuggestion: RefactorSuggestion = {
@@ -20,25 +24,14 @@ describe("RefactorPatchModal Component", () => {
     vi.restoreAllMocks();
   });
 
-  it("should return null when not open", () => {
-    const { container } = render(
-      <Win2xManagerProvider>
-        <RefactorPatchModal
-          isOpen={false}
-          onClose={() => {}}
-          fileA="src/a.ts"
-          startLineA={10}
-          endLineA={12}
-          fileB="src/b.ts"
-          startLineB={20}
-          endLineB={22}
-        />
-      </Win2xManagerProvider>,
+  it("should not render when isOpen is false", () => {
+    const { container } = renderWithWin2x(
+      <RefactorPatchModal isOpen={false} onClose={() => {}} {...DEFAULT_TEST_CLONE_PAIR_PROPS} />,
     );
     expect(container.firstChild).toBeNull();
   });
 
-  it("should fetch refactoring suggestions and render patch preview", async () => {
+  it("should render refactoring suggestion details when open", async () => {
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: () => Promise.resolve(mockSuggestion),
@@ -46,19 +39,8 @@ describe("RefactorPatchModal Component", () => {
 
     const onClose = vi.fn();
 
-    render(
-      <Win2xManagerProvider>
-        <RefactorPatchModal
-          isOpen={true}
-          onClose={onClose}
-          fileA="src/a.ts"
-          startLineA={10}
-          endLineA={12}
-          fileB="src/b.ts"
-          startLineB={20}
-          endLineB={22}
-        />
-      </Win2xManagerProvider>,
+    renderWithWin2x(
+      <RefactorPatchModal isOpen={true} onClose={onClose} {...DEFAULT_TEST_CLONE_PAIR_PROPS} />,
     );
 
     expect(screen.getByText("Automated Refactoring Advisor")).toBeDefined();
@@ -67,11 +49,13 @@ describe("RefactorPatchModal Component", () => {
       expect(screen.getByText("Extract Function")).toBeDefined();
     });
 
-    expect(screen.getByText("~5 lines eliminated")).toBeDefined();
-    expect(screen.getByText("extracted_shared_helper()")).toBeDefined();
-    expect(screen.getByText("Shared utility module")).toBeDefined();
-    expect(screen.getByText("Copy Patch")).toBeDefined();
-    expect(screen.getByText("Download .patch")).toBeDefined();
+    expectDefinedTexts([
+      "~5 lines eliminated",
+      "extracted_shared_helper()",
+      "Shared utility module",
+      "Copy Patch",
+      "Download .patch",
+    ]);
   });
 
   it("should close on Close button click", async () => {
@@ -82,19 +66,8 @@ describe("RefactorPatchModal Component", () => {
 
     const onClose = vi.fn();
 
-    render(
-      <Win2xManagerProvider>
-        <RefactorPatchModal
-          isOpen={true}
-          onClose={onClose}
-          fileA="src/a.ts"
-          startLineA={10}
-          endLineA={12}
-          fileB="src/b.ts"
-          startLineB={20}
-          endLineB={22}
-        />
-      </Win2xManagerProvider>,
+    renderWithWin2x(
+      <RefactorPatchModal isOpen={true} onClose={onClose} {...DEFAULT_TEST_CLONE_PAIR_PROPS} />,
     );
 
     await waitFor(() => {

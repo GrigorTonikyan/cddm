@@ -9,12 +9,6 @@ build/**
 .cddm/**
 .vite-hooks/**
 packaging/**
-**/__tests__/**
-**/*.test.*
-**/*.spec.*
-**/tests/**
-**/tests.rs
-**/*_test.rs
 
 # Generated code files:
 *.generated.*

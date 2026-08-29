@@ -1,5 +1,6 @@
 #![forbid(unsafe_code)]
 
+use crate::ast::type_infer::to_pascal_case;
 use std::path::Path;
 
 /// Generates an import statement for a caller file importing a helper from target_module.
@@ -101,26 +102,6 @@ pub fn generate_import_statement(
 pub fn is_import_already_present(source_lines: &[String], import_statement: &str) -> bool {
     let clean_import = import_statement.trim();
     source_lines.iter().any(|line| line.trim() == clean_import)
-}
-
-fn to_pascal_case(s: &str) -> String {
-    let mut res = String::new();
-    let mut capitalize_next = true;
-    for c in s.chars() {
-        if c == '_' || c == '-' || c == ' ' {
-            capitalize_next = true;
-        } else if capitalize_next {
-            res.extend(c.to_uppercase());
-            capitalize_next = false;
-        } else {
-            res.push(c);
-        }
-    }
-    if res.is_empty() {
-        "Helper".to_string()
-    } else {
-        res
-    }
 }
 
 #[cfg(test)]

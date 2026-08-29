@@ -14,6 +14,11 @@ async function closeWindow(windowLocator: Locator) {
   await closeBtn.first().click();
 }
 
+async function clickBtnAndPause(locator: Locator, name: string | RegExp, pauseMs = 300) {
+  await locator.getByRole("button", { name }).click();
+  await locator.page().waitForTimeout(pauseMs);
+}
+
 async function testHeaderModals(page: Page, results: StepResult[]) {
   // 1. Initial Page Load & Header
   const title = await page.textContent("h1");
@@ -163,9 +168,9 @@ async function testScanAndResults(page: Page, results: StepResult[]) {
   await page.getByRole("button", { name: "Reports" }).first().click();
   await page.waitForTimeout(300);
   const exportModal = page.locator("#cddm-export-reports-window");
-  await exportModal.getByRole("button", { name: "OASIS SARIF v2.1.0" }).click();
-  await exportModal.getByRole("button", { name: "Scan JSON" }).click();
-  await exportModal.getByRole("button", { name: "Markdown Summary" }).click();
+  for (const fmt of ["OASIS SARIF v2.1.0", "Scan JSON", "Markdown Summary"]) {
+    await exportModal.getByRole("button", { name: fmt }).click();
+  }
   await closeWindow(exportModal);
   results.push({
     step: "10. Health Audit & Export Report Modals",
@@ -200,11 +205,10 @@ async function testDiffAndSandbox(page: Page, results: StepResult[]) {
     .first();
   await firstCloneCard.locator("div.cursor-pointer").first().click();
   await page.waitForTimeout(300);
-  await firstCloneCard.getByRole("button", { name: "Diff Inspector" }).click();
-  await page.waitForTimeout(400);
+  await clickBtnAndPause(firstCloneCard, "Diff Inspector", 400);
   const diffModal = page.locator("div[id^='clone-diff-inspector-']");
-  await diffModal.getByRole("button", { name: "Unified" }).click();
-  await diffModal.getByRole("button", { name: "Side-by-Side" }).click();
+  await clickBtnAndPause(diffModal, "Unified", 200);
+  await clickBtnAndPause(diffModal, "Side-by-Side", 200);
   await closeWindow(diffModal);
   results.push({
     step: "12. Clone Pair Card & Diff Inspector Modal",
@@ -222,22 +226,17 @@ async function testDiffAndSandbox(page: Page, results: StepResult[]) {
   }
   const simBtn = sandboxModal.getByRole("button", { name: /Simulate/i });
   if (await simBtn.isVisible()) {
-    await simBtn.click();
-    await page.waitForTimeout(400);
+    await clickBtnAndPause(sandboxModal, /Simulate/i, 400);
   }
-  await sandboxModal.getByRole("button", { name: /AST-Native Rewrite/i }).click();
-  await page.waitForTimeout(300);
-  await sandboxModal.getByRole("button", { name: /Auto-Heal/i }).click();
-  await page.waitForTimeout(300);
+  await clickBtnAndPause(sandboxModal, /AST-Native Rewrite/i, 300);
+  await clickBtnAndPause(sandboxModal, /Auto-Heal/i, 300);
 
   // Tab 4: Extract Shared Crate/Module
-  await sandboxModal.getByRole("button", { name: /Extract Shared Crate/i }).click();
-  await page.waitForTimeout(400);
+  await clickBtnAndPause(sandboxModal, /Extract Shared Crate/i, 400);
   const synthesizeCheckbox = sandboxModal.locator("input[aria-label='Generate Unit Tests']");
   const testChecked = await synthesizeCheckbox.isChecked();
   await sandboxModal.locator("select[aria-label='Packaging Strategy']").selectOption("new_crate");
-  await sandboxModal.getByRole("button", { name: "Preview Extraction Plan" }).click();
-  await page.waitForTimeout(1000);
+  await clickBtnAndPause(sandboxModal, "Preview Extraction Plan", 1000);
   const genFiles = await sandboxModal.getByText("Generated Files").isVisible();
   const unitTests = await sandboxModal.getByText("Synthesized Unit Tests").isVisible();
   const rewrites = await sandboxModal.getByText("Occurrence Caller Rewrites").isVisible();
@@ -264,11 +263,47 @@ async function testDiffAndSandbox(page: Page, results: StepResult[]) {
   });
 }
 
+async function ensureServerRunning(): Promise<{ kill: () => void }> {
+  try {
+    const res = await fetch("http://127.0.0.1:3001/api/health");
+    if (res.ok) {
+      return { kill: () => {} };
+    }
+  } catch {}
+
+  const binary = process.platform === "win32" ? "target/debug/cddm.exe" : "target/debug/cddm";
+  const proc = Bun.spawn([binary, "serve", "--port", "3001"], {
+    stdout: "ignore",
+    stderr: "ignore",
+  });
+
+  for (let i = 0; i < 40; i++) {
+    await new Promise((r) => setTimeout(r, 250));
+    try {
+      const res = await fetch("http://127.0.0.1:3001/api/health");
+      if (res.ok) {
+        console.log("Backend server active on http://127.0.0.1:3001");
+        break;
+      }
+    } catch {}
+  }
+
+  return {
+    kill: () => {
+      try {
+        proc.kill();
+      } catch {}
+    },
+  };
+}
+
 async function runQaSuite() {
   const results: StepResult[] = [];
   const consoleErrors: string[] = [];
   const pageErrors: string[] = [];
   const failedRequests: string[] = [];
+
+  const serverHandle = await ensureServerRunning();
 
   const browser = await chromium.launch({
     headless: true,
@@ -279,6 +314,11 @@ async function runQaSuite() {
 
   page.on("console", (msg) => {
     if (msg.type() === "error") consoleErrors.push(msg.text());
+  });
+  page.on("response", (res) => {
+    if (res.status() >= 400) {
+      console.log(`[HTTP ${res.status()}] ${res.url()}`);
+    }
   });
   page.on("pageerror", (err) => {
     pageErrors.push(err.message || String(err));
@@ -298,6 +338,7 @@ async function runQaSuite() {
     results.push({ step: "Execution Error", status: "FAIL", details: String(err) });
   } finally {
     await browser.close();
+    serverHandle.kill();
   }
 
   console.log("\n=== QA VERIFICATION RESULTS SUMMARY ===");

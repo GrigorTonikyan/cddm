@@ -1,6 +1,7 @@
-import { useCallback, useRef, useState, useEffect } from "react";
+import { useCallback } from "react";
 import { startPointerDrag } from "../core/pointer-driver";
 import { SnapZone, Win2xRect } from "../core/types";
+import { useActiveStateWithCleanup } from "./use-active-cleanup";
 
 export interface UsePointerDragOptions {
   containerRef: React.RefObject<HTMLElement | null>;
@@ -39,17 +40,11 @@ export function usePointerDrag({
   onDragChange,
   onSnapZoneChange,
 }: UsePointerDragOptions): UsePointerDragResult {
-  const [isDragging, setIsDragging] = useState(false);
-  const cleanupRef = useRef<(() => void) | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (cleanupRef.current) {
-        cleanupRef.current();
-        cleanupRef.current = null;
-      }
-    };
-  }, []);
+  const {
+    isActive: isDragging,
+    setIsActive: setIsDragging,
+    cleanupRef,
+  } = useActiveStateWithCleanup();
 
   const handlePointerDown = useCallback(
     (e: React.PointerEvent<HTMLElement>) => {

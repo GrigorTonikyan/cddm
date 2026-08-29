@@ -2,7 +2,7 @@
 
 use crate::formatters::{print_diff_console_report, print_diff_markdown_report};
 use crate::types::OutputFormat;
-use cddm_core::{ScanConfig, run_diff_scan};
+use cddm_core::run_diff_scan;
 use std::path::PathBuf;
 use std::sync::{Arc, atomic::AtomicBool};
 use tokio::sync::mpsc;
@@ -30,43 +30,28 @@ pub async fn run_diff_command(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let cache_path = cache_dir.as_ref().map(|p| p.to_string_lossy().to_string());
 
-    let config = ScanConfig {
-        directory: directory.to_string_lossy().to_string(),
+    let config = super::scan::build_cli_scan_config(
+        &directory,
         min_tokens,
         languages,
-        ignore_patterns: if ignore.is_empty() {
-            ScanConfig::default().ignore_patterns
-        } else {
-            ignore
-        },
-        detect_type2: true,
-        scan_self: true,
-        enable_git_blame: git_blame,
-        cache_dir: cache_path,
-        enable_cache: !no_cache,
-        cddmignore_path: cddmignore.map(|p| p.to_string_lossy().to_string()),
+        ignore,
+        git_blame,
+        cache_path,
+        !no_cache,
+        cddmignore,
         ignore_tests,
         ignore_mocks,
         ignore_generated,
-        rules_path: rules.map(|p| p.to_string_lossy().to_string()),
+        rules,
         enforce_policies,
         cross_language,
-    };
+    );
 
-    let (tx, mut rx) = mpsc::channel::<cddm_core::ScanProgress>(100);
+    let (tx, rx) = mpsc::channel::<cddm_core::ScanProgress>(100);
     let cancel_flag = Arc::new(AtomicBool::new(false));
 
     if format == OutputFormat::Console {
-        tokio::spawn(async move {
-            while let Some(progress) = rx.recv().await {
-                eprintln!(
-                    "[{}] {}% - {}",
-                    progress.phase,
-                    (progress.progress * 100.0) as u32,
-                    progress.message
-                );
-            }
-        });
+        super::scan::spawn_console_progress_printer(rx);
     }
 
     let diff_result =

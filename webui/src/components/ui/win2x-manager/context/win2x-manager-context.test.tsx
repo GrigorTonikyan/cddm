@@ -195,14 +195,15 @@ describe("Win2xManagerContext & Provider", () => {
 
     expect(screen.getByTestId("current-theme").textContent).toBe("dark");
 
-    fireEvent.click(screen.getByText("Set Light"));
-    expect(screen.getByTestId("current-theme").textContent).toBe("light");
-
-    fireEvent.click(screen.getByText("Set High Contrast"));
-    expect(screen.getByTestId("current-theme").textContent).toBe("high-contrast");
-
-    fireEvent.click(screen.getByText("Set Dark"));
-    expect(screen.getByTestId("current-theme").textContent).toBe("dark");
+    const themeTransitions: [string, string][] = [
+      ["Set Light", "light"],
+      ["Set High Contrast", "high-contrast"],
+      ["Set Dark", "dark"],
+    ];
+    for (const [btnText, expectedTheme] of themeTransitions) {
+      fireEvent.click(screen.getByText(btnText));
+      expect(screen.getByTestId("current-theme").textContent).toBe(expectedTheme);
+    }
   });
 
   it("handles global keyboard shortcuts for cascade, tile, and minimization", () => {

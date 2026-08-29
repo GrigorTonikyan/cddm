@@ -14,11 +14,12 @@ describe("useCDDMStore - Semantic Slice", () => {
   });
 
   it("should initialize with default semantic state", () => {
-    const state = useCDDMStore.getState();
-    expect(state.isSemanticGraphModalOpen).toBe(false);
-    expect(state.semanticGraphResponse).toBeNull();
-    expect(state.isSemanticGraphLoading).toBe(false);
-    expect(state.semanticGraphError).toBeNull();
+    expect(useCDDMStore.getState()).toMatchObject({
+      isSemanticGraphModalOpen: false,
+      semanticGraphResponse: null,
+      isSemanticGraphLoading: false,
+      semanticGraphError: null,
+    });
   });
 
   it("should successfully fetch semantic graph data", async () => {

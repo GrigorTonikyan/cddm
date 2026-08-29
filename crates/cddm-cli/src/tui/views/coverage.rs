@@ -6,7 +6,7 @@ use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Gauge, List, ListItem, Paragraph};
 
-use super::helpers::create_titled_block;
+use super::helpers::{bold_span, create_titled_block};
 use crate::tui::app::TuiApp;
 
 /// Render Tab 11: Dynamic Runtime Execution & Coverage-Aware De-duplication.
@@ -159,12 +159,7 @@ pub fn render_coverage_view(frame: &mut Frame, _app: &TuiApp, area: Rect) {
     frame.render_widget(action_list, bottom_split[0]);
 
     let recommendation_text = vec![
-        Line::from(vec![Span::styled(
-            "Coverage Guidance & Rules:",
-            Style::default()
-                .fg(Color::Cyan)
-                .add_modifier(Modifier::BOLD),
-        )]),
+        Line::from(vec![bold_span("Coverage Guidance & Rules:", Color::Cyan)]),
         Line::from(""),
         Line::from("1. Hot Path Priority:"),
         Line::from("   Refactor clones with >1,000 hits first to"),

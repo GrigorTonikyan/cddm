@@ -40,43 +40,28 @@ pub async fn run_scan_command(
         }
     }
 
-    let config = ScanConfig {
-        directory: directory.to_string_lossy().to_string(),
+    let config = build_cli_scan_config(
+        &directory,
         min_tokens,
         languages,
-        ignore_patterns: if ignore.is_empty() {
-            ScanConfig::default().ignore_patterns
-        } else {
-            ignore
-        },
-        detect_type2: true,
-        scan_self: true,
-        enable_git_blame: git_blame,
-        cache_dir: cache_path,
-        enable_cache: !no_cache,
-        cddmignore_path: cddmignore.map(|p| p.to_string_lossy().to_string()),
+        ignore,
+        git_blame,
+        cache_path,
+        !no_cache,
+        cddmignore,
         ignore_tests,
         ignore_mocks,
         ignore_generated,
-        rules_path: rules.map(|p| p.to_string_lossy().to_string()),
+        rules,
         enforce_policies,
         cross_language,
-    };
+    );
 
-    let (tx, mut rx) = mpsc::channel::<cddm_core::ScanProgress>(100);
+    let (tx, rx) = mpsc::channel::<cddm_core::ScanProgress>(100);
     let cancel_flag = Arc::new(AtomicBool::new(false));
 
     if format == OutputFormat::Console {
-        tokio::spawn(async move {
-            while let Some(progress) = rx.recv().await {
-                eprintln!(
-                    "[{}] {}% - {}",
-                    progress.phase,
-                    (progress.progress * 100.0) as u32,
-                    progress.message
-                );
-            }
-        });
+        spawn_console_progress_printer(rx);
     }
 
     let result = run_scan(config, tx, cancel_flag).await?;
@@ -115,4 +100,60 @@ pub async fn run_scan_command(
     }
 
     Ok(())
+}
+
+/// Constructs a standardized ScanConfig from CLI flag inputs.
+#[allow(clippy::too_many_arguments)]
+pub fn build_cli_scan_config(
+    directory: &std::path::Path,
+    min_tokens: usize,
+    languages: Vec<String>,
+    ignore: Vec<String>,
+    git_blame: bool,
+    cache_path: Option<String>,
+    enable_cache: bool,
+    cddmignore: Option<PathBuf>,
+    ignore_tests: bool,
+    ignore_mocks: bool,
+    ignore_generated: bool,
+    rules: Option<PathBuf>,
+    enforce_policies: bool,
+    cross_language: bool,
+) -> ScanConfig {
+    ScanConfig {
+        directory: directory.to_string_lossy().to_string(),
+        min_tokens,
+        languages,
+        ignore_patterns: if ignore.is_empty() {
+            ScanConfig::default().ignore_patterns
+        } else {
+            ignore
+        },
+        detect_type2: true,
+        scan_self: true,
+        enable_git_blame: git_blame,
+        cache_dir: cache_path,
+        enable_cache,
+        cddmignore_path: cddmignore.map(|p| p.to_string_lossy().to_string()),
+        ignore_tests,
+        ignore_mocks,
+        ignore_generated,
+        rules_path: rules.map(|p| p.to_string_lossy().to_string()),
+        enforce_policies,
+        cross_language,
+    }
+}
+
+/// Spawns a background task to print real-time scan progress to stderr in console mode.
+pub fn spawn_console_progress_printer(mut rx: mpsc::Receiver<cddm_core::ScanProgress>) {
+    tokio::spawn(async move {
+        while let Some(progress) = rx.recv().await {
+            eprintln!(
+                "[{}] {}% - {}",
+                progress.phase,
+                (progress.progress * 100.0) as u32,
+                progress.message
+            );
+        }
+    });
 }

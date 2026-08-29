@@ -94,7 +94,7 @@ export async function executeTool<T = any>(
 
 export async function assertToolError(
   name: string,
-  args: Record<string, unknown>,
+  args?: Record<string, unknown>,
   expectedCode: number = RPC_ERRORS.INVALID_PARAMS,
 ): Promise<void> {
   const res = await callMcpStdio({
@@ -106,4 +106,18 @@ export async function assertToolError(
 
   expect(res.error).toBeDefined();
   expect(res.error?.code).toBe(expectedCode);
+}
+
+export function assertPropertyTypes(
+  obj: Record<string, unknown>,
+  schema: Record<string, "string" | "number" | "boolean" | "array" | "object">,
+): void {
+  expect(obj).toBeDefined();
+  for (const [key, type] of Object.entries(schema)) {
+    if (type === "array") {
+      expect(Array.isArray(obj[key])).toBe(true);
+    } else {
+      expect(typeof obj[key]).toBe(type);
+    }
+  }
 }

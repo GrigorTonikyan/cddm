@@ -1,45 +1,9 @@
 import { describe, it, expect } from "vite-plus/test";
 import { computeGraphLayout, generateEdgePath, generateDataEdgePath } from "./graph-layout";
-import type { ControlFlowGraph } from "./../types/cddm-types";
+import { createMockControlFlowGraph } from "../test/test-helpers";
 
 describe("graph-layout utility", () => {
-  const mockCfg: ControlFlowGraph = {
-    file_path: "src/calc.rs",
-    function_name: "test_fn",
-    line_start: 1,
-    line_end: 10,
-    nodes: [
-      {
-        id: 0,
-        node_type: "Entry",
-        label: "entry",
-        statement_count: 1,
-        line_start: 1,
-        line_end: 1,
-      },
-      {
-        id: 1,
-        node_type: "Branch",
-        label: "if x > 0",
-        statement_count: 1,
-        line_start: 2,
-        line_end: 2,
-      },
-      {
-        id: 2,
-        node_type: "Return",
-        label: "return x",
-        statement_count: 1,
-        line_start: 3,
-        line_end: 3,
-      },
-    ],
-    edges: [
-      { from: 0, to: 1, edge_type: "Sequential" },
-      { from: 1, to: 2, edge_type: "TrueBranch" },
-    ],
-    wl_hash: 123456789,
-  };
+  const mockCfg = createMockControlFlowGraph();
 
   it("should compute layout with valid coordinates for all nodes", () => {
     const layout = computeGraphLayout(mockCfg, 400);

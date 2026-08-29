@@ -5,118 +5,44 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::sync::{RwLock, broadcast};
 
-/// API endpoint path for health checks.
+/// Core REST API endpoint routes.
 pub const ROUTE_API_HEALTH: &str = "/api/health";
-
-/// API endpoint path for asynchronous code duplication scans.
 pub const ROUTE_API_SCAN: &str = "/api/scan";
-
-/// API endpoint path for differential code duplication scans comparing git refs.
 pub const ROUTE_API_DIFF: &str = "/api/diff";
-
-/// API endpoint path for snippet source line retrieval.
 pub const ROUTE_API_SNIPPET: &str = "/api/snippet";
-
-/// API endpoint path for on-demand refactoring patch synthesis.
 pub const ROUTE_API_REFACTOR: &str = "/api/refactor";
-
-/// API endpoint path for on-demand multi-site cluster refactoring patch synthesis.
 pub const ROUTE_API_REFACTOR_CLUSTER: &str = "/api/refactor-cluster";
-
-/// API endpoint path for applying synthesized refactoring patches directly to workspace files.
 pub const ROUTE_API_APPLY_PATCH: &str = "/api/apply-patch";
-
-/// API endpoint path for Server-Sent Events (SSE) live updates.
 pub const ROUTE_API_EVENTS: &str = "/api/events";
-
-/// API endpoint path for Git timeline historical trends.
 pub const ROUTE_API_TIMELINE: &str = "/api/timeline";
-
-/// API endpoint path for Git hook status inspection.
 pub const ROUTE_API_HOOKS: &str = "/api/workflow/hooks";
-
-/// API endpoint path for Git hook installation.
 pub const ROUTE_API_HOOKS_INSTALL: &str = "/api/workflow/hooks/install";
-
-/// API endpoint path for suppression rules retrieval and inspection.
 pub const ROUTE_API_SUPPRESSION_RULES: &str = "/api/suppression/rules";
-
-/// API endpoint path for interactive refactoring preview sandbox.
 pub const ROUTE_API_REFACTOR_SANDBOX: &str = "/api/refactor/sandbox";
-
-/// API endpoint path for applying refactoring patch directly to a dedicated Git branch.
 pub const ROUTE_API_REFACTOR_APPLY_BRANCH: &str = "/api/refactor/apply-branch";
-
-/// API endpoint path for synthesizing an LLM AI refactoring prompt specification.
 pub const ROUTE_API_REFACTOR_AI_PROMPT: &str = "/api/refactor/ai-prompt";
-
-/// API endpoint path for AST-native tree-sitter refactoring preview.
 pub const ROUTE_API_REFACTOR_AST: &str = "/api/refactor/ast";
-
-/// API endpoint path for closed-loop test suite verification.
 pub const ROUTE_API_REFACTOR_VERIFY: &str = "/api/refactor/verify";
-
-/// API endpoint path for architectural policy rules retrieval and configuration.
 pub const ROUTE_API_POLICY_RULES: &str = "/api/policy/rules";
-
-/// API endpoint path for on-demand policy evaluation against scan results.
 pub const ROUTE_API_POLICY_EVALUATE: &str = "/api/policy/evaluate";
-
-/// API endpoint path for AI Code Surgeon autonomous healing.
 pub const ROUTE_API_REFACTOR_HEAL: &str = "/api/refactor/heal";
-
-/// API endpoint path for cache pack export.
 pub const ROUTE_API_CACHE_EXPORT: &str = "/api/cache/export";
-
-/// API endpoint path for cache pack import.
 pub const ROUTE_API_CACHE_IMPORT: &str = "/api/cache/import";
-
-/// API endpoint path for monorepo workspace discovery and scan.
 pub const ROUTE_API_MONOREPO: &str = "/api/monorepo";
-
-/// API endpoint path for semantic graph extraction and comparison.
 pub const ROUTE_API_SEMANTIC_GRAPH: &str = "/api/semantic-graph";
-
-/// API endpoint path for workspace cross-language semantic clone scans.
 pub const ROUTE_API_SEMANTIC_SCAN: &str = "/api/semantic/scan";
-
-/// API endpoint path for in-process neural code embedding equivalence scans.
 pub const ROUTE_API_SEMANTIC_NEURAL: &str = "/api/semantic/neural";
-
-/// API endpoint path for watch daemon status and metrics.
 pub const ROUTE_API_WATCH_STATUS: &str = "/api/watch/status";
-
-/// API endpoint path for toggling watch pause/resume.
 pub const ROUTE_API_WATCH_TOGGLE: &str = "/api/watch/toggle";
-
-/// API endpoint path for triggering an immediate manual watch rescan.
 pub const ROUTE_API_WATCH_RESCAN: &str = "/api/watch/rescan";
-
-/// API endpoint path for shared module and crate extraction preview.
 pub const ROUTE_API_EXTRACT_PREVIEW: &str = "/api/extract/preview";
-
-/// API endpoint path for applying shared module and crate extraction to disk.
 pub const ROUTE_API_EXTRACT_APPLY: &str = "/api/extract/apply";
-
-/// API endpoint path for retrieving canonical ecosystem algorithms catalog.
 pub const ROUTE_API_OVERLAP_CATALOG: &str = "/api/overlap/catalog";
-
-/// API endpoint path for scanning workspace for library overlap matches.
 pub const ROUTE_API_OVERLAP_SCAN: &str = "/api/overlap/scan";
-
-/// API endpoint path for organization federation hub configuration.
 pub const ROUTE_API_HUB_CONFIG: &str = "/api/hub/config";
-
-/// API endpoint path for organization federation hub scanning.
 pub const ROUTE_API_HUB_SCAN: &str = "/api/hub/scan";
-
-/// API endpoint path for organization federation hub shared package extraction.
 pub const ROUTE_API_HUB_EXTRACT: &str = "/api/hub/extract";
-
-/// API endpoint path for ingesting raw coverage tracefile content.
 pub const ROUTE_API_COVERAGE_INGEST: &str = "/api/coverage/ingest";
-
-/// API endpoint path for correlating coverage reports with duplicate clones.
 pub const ROUTE_API_COVERAGE_CORRELATE: &str = "/api/coverage/correlate";
 
 /// Default localhost IPv4 binding.
@@ -322,9 +248,13 @@ pub struct SemanticGraphRequest {
     pub file: Option<String>,
     pub code: Option<String>,
     pub language: Option<String>,
+    pub function_a: Option<String>,
+    pub lines_a: Option<(usize, usize)>,
     pub file_b: Option<String>,
     pub code_b: Option<String>,
     pub language_b: Option<String>,
+    pub function_b: Option<String>,
+    pub lines_b: Option<(usize, usize)>,
 }
 
 /// Request payload for on-demand workspace cross-language clone scans.

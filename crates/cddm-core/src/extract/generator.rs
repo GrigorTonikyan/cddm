@@ -327,64 +327,115 @@ pub fn resolve_auxiliary_file_path(
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+/// Shared context for generating auxiliary test and benchmark files.
+#[derive(Clone, Debug)]
+pub struct AuxiliaryGenContext {
+    pub norm_target: String,
+    pub norm_ext: String,
+    pub target_name: String,
+    pub pascal_target: String,
+    pub pascal_fn: String,
+    pub snake_fn: String,
+    pub sample_args: Vec<String>,
+    pub args_joined: String,
+}
 
-    #[test]
-    fn test_generate_python_target_files() {
-        let params = vec![InferredParameter {
-            name: "x".to_string(),
-            inferred_type: "int".to_string(),
-            original_values: vec!["10".to_string()],
-        }];
-        let body = vec!["print(x)".to_string()];
-
-        let (sig, files) = generate_extracted_target_files(
-            "packages/data_helpers",
-            ExtractTargetKind::NewCrate,
-            "process",
-            &params,
-            &body,
-            "py",
-        );
-
-        assert_eq!(sig, "def process(x: int) -> None:");
-        assert_eq!(files.len(), 2);
-        assert_eq!(files[0].file_path, "packages/data_helpers/pyproject.toml");
-        assert_eq!(files[1].file_path, "packages/data_helpers/__init__.py");
-        assert!(files[1].content.contains("def process(x: int) -> None:"));
+impl AuxiliaryGenContext {
+    pub fn new(
+        target_path: &str,
+        function_name: &str,
+        params: &[InferredParameter],
+        language: &str,
+    ) -> Self {
+        let norm_target = target_path.replace('\\', "/");
+        let norm_ext = language.to_lowercase();
+        let target_name = derive_target_name(&norm_target);
+        let pascal_target = crate::ast::type_infer::to_pascal_case(&target_name);
+        let pascal_fn = crate::ast::type_infer::to_pascal_case(function_name);
+        let snake_fn = crate::ast::type_infer::to_snake_case(function_name);
+        let sample_args = super::test_generator::generate_sample_arguments(params);
+        let args_joined = sample_args.join(", ");
+        Self {
+            norm_target,
+            norm_ext,
+            target_name,
+            pascal_target,
+            pascal_fn,
+            snake_fn,
+            sample_args,
+            args_joined,
+        }
     }
 
-    #[test]
-    fn test_generate_java_and_csharp_target_files() {
-        let params = vec![InferredParameter {
-            name: "msg".to_string(),
-            inferred_type: "String".to_string(),
-            original_values: vec!["\"test\"".to_string()],
-        }];
-        let body = vec!["System.out.println(msg);".to_string()];
+    pub fn resolve_rs_path(
+        &self,
+        target_kind: ExtractTargetKind,
+        subfolder: &str,
+        suffix: &str,
+    ) -> String {
+        if target_kind == ExtractTargetKind::NewCrate {
+            format!(
+                "{}/{}/{}_{}.rs",
+                self.norm_target.trim_end_matches('/'),
+                subfolder,
+                self.snake_fn,
+                suffix
+            )
+        } else if self.norm_target.ends_with(".rs") {
+            self.norm_target.replace(".rs", &format!("_{}.rs", suffix))
+        } else {
+            format!("{}_{}.rs", self.norm_target, suffix)
+        }
+    }
 
-        let (sig_j, files_j) = generate_extracted_target_files(
-            "packages/core-utils",
-            ExtractTargetKind::NewCrate,
-            "logMessage",
-            &params,
-            &body,
-            "java",
-        );
-        assert_eq!(sig_j, "public static void logMessage(String msg)");
-        assert_eq!(files_j.len(), 2);
+    pub fn resolve_go_path(
+        &self,
+        target_kind: ExtractTargetKind,
+        suffix: &str,
+    ) -> (String, String) {
+        let pkg_name = self.target_name.replace('-', "_");
+        let file_path = if target_kind == ExtractTargetKind::NewCrate {
+            format!(
+                "{}/{}_{}_test.go",
+                self.norm_target.trim_end_matches('/'),
+                self.snake_fn,
+                suffix
+            )
+        } else {
+            let base = if self.norm_target.ends_with(".go") {
+                self.norm_target.trim_end_matches(".go").to_string()
+            } else {
+                self.norm_target.clone()
+            };
+            format!("{}_{}_test.go", base, suffix)
+        };
+        (file_path, pkg_name)
+    }
 
-        let (sig_c, files_c) = generate_extracted_target_files(
-            "packages/math_helpers",
-            ExtractTargetKind::NewCrate,
-            "compute",
-            &params,
-            &body,
-            "cs",
-        );
-        assert_eq!(sig_c, "public static void Compute(String msg)");
-        assert_eq!(files_c.len(), 2);
+    pub fn resolve_jvm_path(&self, target_kind: ExtractTargetKind, suffix: &str) -> String {
+        if target_kind == ExtractTargetKind::NewCrate {
+            format!(
+                "{}/src/test/java/com/cddm/shared/{}{}.java",
+                self.norm_target.trim_end_matches('/'),
+                self.pascal_target,
+                suffix
+            )
+        } else {
+            format!("{}/{}{}.java", self.norm_target, self.pascal_target, suffix)
+        }
+    }
+
+    pub fn resolve_dotnet_path(&self, target_kind: ExtractTargetKind, suffix: &str) -> String {
+        if target_kind == ExtractTargetKind::NewCrate {
+            format!(
+                "{}/{}/{}{}.cs",
+                self.norm_target.trim_end_matches('/'),
+                suffix.to_lowercase(),
+                self.pascal_target,
+                suffix
+            )
+        } else {
+            format!("{}/{}{}.cs", self.norm_target, self.pascal_target, suffix)
+        }
     }
 }

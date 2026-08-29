@@ -10,26 +10,26 @@
 
   /* Color Variant Modifiers */
   &.variantNeutral {
-    background-color: var(--cddm-ui-code-neutral-bg);
-    color: var(--cddm-ui-code-neutral-text);
+    background-color: var(--win2x-code-neutral-bg);
+    color: var(--win2x-code-neutral-text);
   }
 
   &.variantAdded {
-    background-color: var(--cddm-ui-code-added-bg);
-    border-color: var(--cddm-ui-code-added-border);
-    color: var(--cddm-ui-code-added-text);
+    background-color: var(--win2x-code-added-bg);
+    border-color: var(--win2x-code-added-border);
+    color: var(--win2x-code-added-text);
   }
 
   &.variantRemoved {
-    background-color: var(--cddm-ui-code-removed-bg);
-    border-color: var(--cddm-ui-code-removed-border);
-    color: var(--cddm-ui-code-removed-text);
+    background-color: var(--win2x-code-removed-bg);
+    border-color: var(--win2x-code-removed-border);
+    color: var(--win2x-code-removed-text);
   }
 
   &.variantHighlight {
-    background-color: var(--cddm-ui-code-highlight-bg);
-    border-color: var(--cddm-ui-code-highlight-border);
-    color: var(--cddm-ui-code-highlight-text);
+    background-color: var(--win2x-code-highlight-bg);
+    border-color: var(--win2x-code-highlight-border);
+    color: var(--win2x-code-highlight-text);
   }
 }
 

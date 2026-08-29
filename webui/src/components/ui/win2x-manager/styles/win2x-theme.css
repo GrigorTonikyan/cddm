@@ -84,6 +84,7 @@
   /* Elevation Shadows & Blurs */
   --win2x-shadow-window: 0 25px 50px -12px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.05);
   --win2x-shadow-pill: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 8px 10px -6px rgba(0, 0, 0, 0.6);
+  --win2x-shadow-flyout: 0 16px 36px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.08);
   --win2x-blur-acrylic: 24px;
   --win2x-blur-backdrop: 8px;
 
@@ -143,7 +144,6 @@
   --win2x-accent-active: #4338ca;
   --win2x-accent-glow: rgba(99, 102, 241, 0.15);
 
-  /* cddm:ignore-start */
   /* Badge Color Variants */
   --win2x-badge-indigo-bg: rgba(224, 231, 255, 0.85);
   --win2x-badge-indigo-text: #4338ca;
@@ -163,21 +163,19 @@
   --win2x-code-neutral-text: #1e293b;
   --win2x-code-added-bg: rgba(209, 250, 229, 0.5);
   --win2x-code-added-border: rgba(16, 185, 129, 0.5);
-  --win2x-code-added-text: #065f46;
+  --win2x-code-added-text: var(--win2x-badge-emerald-text);
   --win2x-code-removed-bg: rgba(255, 228, 230, 0.5);
   --win2x-code-removed-border: rgba(244, 63, 94, 0.5);
-  --win2x-code-removed-text: #9f1239;
+  --win2x-code-removed-text: var(--win2x-badge-rose-text);
   --win2x-code-highlight-bg: rgba(224, 231, 255, 0.5);
   --win2x-code-highlight-border: rgba(99, 102, 241, 0.5);
   --win2x-code-highlight-text: #3730a3;
-  /* cddm:ignore-end */
 
   /* Elevation Shadows */
   --win2x-shadow-window: 0 20px 40px -10px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.08);
   --win2x-shadow-pill: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
 }
 
-/* cddm:ignore-start */
 [data-win2x-theme="high-contrast"] {
   /* High-Contrast WCAG AAA Solid Surfaces */
   --win2x-bg-base: #000000;
@@ -221,7 +219,6 @@
   --win2x-accent-hover: #ffffff;
   --win2x-accent-active: #00ffff;
   --win2x-accent-glow: rgba(255, 255, 0, 0.4);
-  /* cddm:ignore-end */
 
   /* High-Contrast Badges */
   --win2x-badge-indigo-bg: #000000;
@@ -241,18 +238,26 @@
   --win2x-code-neutral-bg: #000000;
   --win2x-code-neutral-text: #ffffff;
   --win2x-code-added-bg: #000000;
-  --win2x-code-added-border: #00ff00;
-  --win2x-code-added-text: #00ff00;
+  --win2x-code-added-border: var(--win2x-border-badge-emerald);
+  --win2x-code-added-text: var(--win2x-border-badge-emerald);
   --win2x-code-removed-bg: #000000;
-  --win2x-code-removed-border: #ff0055;
-  --win2x-code-removed-text: #ff0055;
+  --win2x-code-removed-border: var(--win2x-border-badge-rose);
+  --win2x-code-removed-text: var(--win2x-border-badge-rose);
   --win2x-code-highlight-bg: #000000;
-  --win2x-code-highlight-border: #ffff00;
-  --win2x-code-highlight-text: #ffff00;
+  --win2x-code-highlight-border: var(--win2x-accent-primary);
+  --win2x-code-highlight-text: var(--win2x-accent-primary);
 
   /* Crisp Shadows & Disables Blur Overhead */
   --win2x-shadow-window: 0 0 0 2px #ffffff;
   --win2x-shadow-pill: 0 0 0 2px #ffffff;
   --win2x-blur-acrylic: 0px;
   --win2x-blur-backdrop: 0px;
+}
+
+:global(.win2x-acrylic-flyout),
+.win2x-acrylic-flyout {
+  background-color: var(--win2x-bg-acrylic, rgba(15, 23, 42, 0.9));
+  box-shadow: var(--win2x-shadow-flyout);
+  backdrop-filter: blur(var(--win2x-blur-acrylic, 24px));
+  -webkit-backdrop-filter: blur(var(--win2x-blur-acrylic, 24px));
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { assertToolError, executeTool, RPC_ERRORS } from "../helpers";
+import { assertPropertyTypes, assertToolError, executeTool, RPC_ERRORS } from "../helpers";
 
 describe("MCP Tool: cddm_correlate_coverage", () => {
   const sampleLcov = `
@@ -21,13 +21,14 @@ end_of_record
       min_tokens: 50,
     });
 
-    expect(res).toBeDefined();
-    expect(typeof res.total_clone_pairs).toBe("number");
-    expect(typeof res.dead_code_clones).toBe("number");
-    expect(typeof res.test_gap_clones).toBe("number");
-    expect(typeof res.hot_path_clones).toBe("number");
-    expect(typeof res.total_runtime_hits).toBe("number");
-    expect(Array.isArray(res.metrics)).toBe(true);
+    assertPropertyTypes(res, {
+      total_clone_pairs: "number",
+      dead_code_clones: "number",
+      test_gap_clones: "number",
+      hot_path_clones: "number",
+      total_runtime_hits: "number",
+      metrics: "array",
+    });
   });
 
   it("should filter by min_hits and dead_code_only", async () => {

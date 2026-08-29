@@ -1,7 +1,12 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vite-plus/test";
 import { SemanticGraphModal } from "./SemanticGraphModal";
-import { Win2xManagerProvider } from "./ui/win2x-manager/context/win2x-manager-context";
+import {
+  assertModalClosesOnButtonClick,
+  createMockControlFlowGraph,
+  expectDefinedTexts,
+  renderWithWin2x,
+} from "../test/test-helpers";
 import { useCDDMStore } from "./../store/cddm-store";
 import type { SemanticGraphResponse } from "./../types/cddm-types";
 
@@ -9,41 +14,9 @@ describe("SemanticGraphModal Component", () => {
   const mockResponse: SemanticGraphResponse = {
     cfgs: [
       {
-        file_path: "src/calc.rs",
+        ...createMockControlFlowGraph(),
         function_name: "compute_a",
-        line_start: 1,
         line_end: 8,
-        nodes: [
-          {
-            id: 0,
-            node_type: "Entry",
-            label: "entry",
-            statement_count: 1,
-            line_start: 1,
-            line_end: 1,
-          },
-          {
-            id: 1,
-            node_type: "Branch",
-            label: "if x > 0",
-            statement_count: 1,
-            line_start: 2,
-            line_end: 2,
-          },
-          {
-            id: 2,
-            node_type: "Return",
-            label: "return x",
-            statement_count: 1,
-            line_start: 3,
-            line_end: 3,
-          },
-        ],
-        edges: [
-          { from: 0, to: 1, edge_type: "Sequential" },
-          { from: 1, to: 2, edge_type: "TrueBranch" },
-        ],
-        wl_hash: 0x12345678,
       },
     ],
     pdgs: [
@@ -84,51 +57,38 @@ describe("SemanticGraphModal Component", () => {
   });
 
   it("should return null when not open", () => {
-    const { container } = render(
-      <Win2xManagerProvider>
-        <SemanticGraphModal isOpen={false} onClose={() => {}} />
-      </Win2xManagerProvider>,
-    );
+    const { container } = renderWithWin2x(<SemanticGraphModal isOpen={false} onClose={() => {}} />);
     expect(container.firstChild).toBeNull();
   });
 
   it("should render semantic graph modal with CFG nodes, similarity badge, and controls", () => {
     const onClose = vi.fn();
-    render(
-      <Win2xManagerProvider>
-        <SemanticGraphModal isOpen={true} onClose={onClose} />
-      </Win2xManagerProvider>,
-    );
+    renderWithWin2x(<SemanticGraphModal isOpen={true} onClose={onClose} />);
 
-    expect(screen.getByText("Deep Semantic Graph & Polyglot Isomorphism Engine")).toBeDefined();
-    expect(screen.getByText("95.0% Isomorphic")).toBeDefined();
-    expect(screen.getByText("Type-4 Similarity: 95.0%")).toBeDefined();
-    expect(screen.getByText("Fragment A: compute_a")).toBeDefined();
+    expectDefinedTexts([
+      "Deep Semantic Graph & Polyglot Isomorphism Engine",
+      "95.0% Isomorphic",
+      "Type-4 Similarity: 95.0%",
+      "Fragment A: compute_a",
+      "Entry",
+      "Branch",
+      "Return",
+    ]);
 
-    // Node types inside SVG text
-    expect(screen.getByText("Entry")).toBeDefined();
-    expect(screen.getByText("Branch")).toBeDefined();
-    expect(screen.getByText("Return")).toBeDefined();
-
-    // Close button
-    const closeBtn = screen.getByText("Close");
-    fireEvent.click(closeBtn);
-    expect(onClose).toHaveBeenCalled();
+    assertModalClosesOnButtonClick(onClose);
   });
 
   it("should switch between visualizer, sandbox, and cross-language explorer tabs", () => {
-    render(
-      <Win2xManagerProvider>
-        <SemanticGraphModal isOpen={true} onClose={() => {}} />
-      </Win2xManagerProvider>,
-    );
+    renderWithWin2x(<SemanticGraphModal isOpen={true} onClose={() => {}} />);
 
     const sandboxTab = screen.getByText("Polyglot Sandbox");
     fireEvent.click(sandboxTab);
 
-    expect(screen.getByText("Implementation A:")).toBeDefined();
-    expect(screen.getByText("Implementation B:")).toBeDefined();
-    expect(screen.getByText("Extract CFGs & Compare Isomorphism")).toBeDefined();
+    expectDefinedTexts([
+      "Implementation A:",
+      "Implementation B:",
+      "Extract CFGs & Compare Isomorphism",
+    ]);
 
     const crossLangTab = screen.getByText("Cross-Language Explorer");
     fireEvent.click(crossLangTab);

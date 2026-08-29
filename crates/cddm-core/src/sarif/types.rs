@@ -27,21 +27,18 @@ pub mod sarif_rules {
     pub const RULE_ID_LIMIT: &str = "CDDM_LIMIT";
 }
 
-/// SARIF taxonomy tags for static analysis categorizations.
 pub mod sarif_tags {
     pub const MAINTAINABILITY: &str = "maintainability";
     pub const QUALITY: &str = "quality";
     pub const DUPLICATION: &str = "duplication";
 }
 
-/// SARIF problem severity descriptors for GitHub Code Scanning.
 pub mod sarif_severity {
     pub const WARNING: &str = "warning";
     pub const ERROR: &str = "error";
     pub const RECOMMENDATION: &str = "recommendation";
 }
 
-/// SARIF precision descriptors for GitHub Code Scanning.
 pub mod sarif_precision {
     pub const VERY_HIGH: &str = "very-high";
 }

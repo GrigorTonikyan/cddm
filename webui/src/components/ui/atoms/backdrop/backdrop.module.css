@@ -1,13 +1,13 @@
-@import "../../styles/theme.css";
+@import "../../win2x-manager/styles/win2x-theme.css";
 
 .backdrop {
   position: fixed;
   inset: 0;
-  z-index: var(--cddm-ui-z-backdrop);
-  background-color: var(--cddm-ui-bg-backdrop);
-  backdrop-filter: blur(var(--cddm-ui-blur-backdrop));
-  -webkit-backdrop-filter: blur(var(--cddm-ui-blur-backdrop));
-  transition: opacity var(--cddm-ui-transition-normal);
+  z-index: var(--win2x-z-backdrop);
+  background-color: var(--win2x-bg-backdrop);
+  backdrop-filter: blur(var(--win2x-blur-backdrop));
+  -webkit-backdrop-filter: blur(var(--win2x-blur-backdrop));
+  transition: opacity var(--win2x-transition-normal);
   pointer-events: auto;
 
   &.transparent {

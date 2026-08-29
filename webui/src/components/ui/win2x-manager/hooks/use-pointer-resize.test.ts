@@ -3,41 +3,25 @@ import { renderHook, act } from "@testing-library/react";
 import { usePointerResize } from "./use-pointer-resize";
 
 describe("usePointerResize Hook (win2x-manager)", () => {
+  const defaultOpts = {
+    containerRef: { current: document.createElement("div") },
+    x: 100,
+    y: 100,
+    width: 500,
+    height: 400,
+    isMaximized: false,
+    onResizeEnd: vi.fn(),
+  };
+
   it("initializes handleResizePointerDown function", () => {
-    const containerRef = { current: document.createElement("div") };
-    const onResizeEnd = vi.fn();
-
-    const { result } = renderHook(() =>
-      usePointerResize({
-        containerRef,
-        x: 100,
-        y: 100,
-        width: 500,
-        height: 400,
-        isMaximized: false,
-        onResizeEnd,
-      }),
-    );
-
+    const { result } = renderHook(() => usePointerResize(defaultOpts));
     expect(typeof result.current.handleResizePointerDown).toBe("function");
     expect(result.current.isResizing).toBe(false);
   });
 
   it("does not resize when maximized or disabled", () => {
-    const containerRef = { current: document.createElement("div") };
-    const onResizeEnd = vi.fn();
-
     const { result } = renderHook(() =>
-      usePointerResize({
-        containerRef,
-        x: 100,
-        y: 100,
-        width: 500,
-        height: 400,
-        isMaximized: true,
-        disabled: true,
-        onResizeEnd,
-      }),
+      usePointerResize({ ...defaultOpts, isMaximized: true, disabled: true }),
     );
 
     const mockEvent = {
@@ -55,7 +39,7 @@ describe("usePointerResize Hook (win2x-manager)", () => {
       result.current.handleResizePointerDown("bottom-right", mockEvent);
     });
 
-    expect(onResizeEnd).not.toHaveBeenCalled();
+    expect(defaultOpts.onResizeEnd).not.toHaveBeenCalled();
     expect(result.current.isResizing).toBe(false);
   });
 });

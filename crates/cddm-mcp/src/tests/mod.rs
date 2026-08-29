@@ -93,12 +93,11 @@ async fn test_mcp_resources_list() {
     assert_eq!(resources.len(), 13);
 }
 
-#[tokio::test]
-async fn test_mcp_resources_read_watch_status() {
+async fn assert_resource_readable(uri: &str) {
     let resp = handle_mcp_request(make_test_req(
-        99,
+        1,
         mcp_methods::RESOURCES_READ,
-        Some(json!({ "uri": mcp_resources::URI_WORKSPACE_WATCH_STATUS })),
+        Some(json!({ "uri": uri })),
     ))
     .await
     .expect("Expected response");
@@ -106,39 +105,15 @@ async fn test_mcp_resources_read_watch_status() {
 }
 
 #[tokio::test]
-async fn test_mcp_resources_read_suppressions() {
-    let resp = handle_mcp_request(make_test_req(
-        36,
-        mcp_methods::RESOURCES_READ,
-        Some(json!({ "uri": mcp_resources::URI_WORKSPACE_SUPPRESSIONS })),
-    ))
-    .await
-    .expect("Expected response");
-    assert!(resp.result.is_some());
-}
-
-#[tokio::test]
-async fn test_mcp_resources_read_timeline() {
-    let resp = handle_mcp_request(make_test_req(
-        23,
-        mcp_methods::RESOURCES_READ,
-        Some(json!({ "uri": mcp_resources::URI_WORKSPACE_TIMELINE })),
-    ))
-    .await
-    .expect("Expected response");
-    assert!(resp.result.is_some());
-}
-
-#[tokio::test]
-async fn test_mcp_resources_read_clusters() {
-    let resp = handle_mcp_request(make_test_req(
-        22,
-        mcp_methods::RESOURCES_READ,
-        Some(json!({ "uri": mcp_resources::URI_WORKSPACE_CLUSTERS })),
-    ))
-    .await
-    .expect("Expected response");
-    assert!(resp.result.is_some());
+async fn test_mcp_resources_read_endpoints() {
+    for uri in [
+        mcp_resources::URI_WORKSPACE_WATCH_STATUS,
+        mcp_resources::URI_WORKSPACE_SUPPRESSIONS,
+        mcp_resources::URI_WORKSPACE_TIMELINE,
+        mcp_resources::URI_WORKSPACE_CLUSTERS,
+    ] {
+        assert_resource_readable(uri).await;
+    }
 }
 
 #[tokio::test]

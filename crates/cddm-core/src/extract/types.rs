@@ -54,6 +54,17 @@ pub struct ExtractedFile {
     pub is_new: bool,
 }
 
+impl ExtractedFile {
+    /// Creates a new newly-generated extracted file record.
+    pub fn new(file_path: impl Into<String>, content: impl Into<String>) -> Self {
+        Self {
+            file_path: file_path.into(),
+            content: content.into(),
+            is_new: true,
+        }
+    }
+}
+
 /// Represents an update to a workspace or package manifest (e.g. Cargo.toml or package.json).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ManifestUpdate {

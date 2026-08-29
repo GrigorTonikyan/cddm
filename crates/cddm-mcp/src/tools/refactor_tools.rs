@@ -1,13 +1,13 @@
 #![forbid(unsafe_code)]
 
-use super::helpers::{parse_clone_pair_args, run_scan_from_mcp_args};
+use super::helpers::{get_bool_arg, get_str_arg, parse_clone_pair_args, run_scan_from_mcp_args};
 use crate::protocol::{
     JsonRpcResponse, make_error_response, make_text_response, mcp_tools, rpc_errors,
 };
 use cddm_core::{
-    AiOccurrenceContext, AiRefactorPromptRequest, CloneLocation, CloneType, LineSpan,
-    analyze_clone_refactoring, analyze_cluster_refactoring, apply_cluster_refactor_branch,
-    generate_ai_refactor_prompt, generate_ast_cluster_refactor, verify_refactor_test_suite,
+    AiRefactorPromptRequest, CloneLocation, CloneType, analyze_clone_refactoring,
+    analyze_cluster_refactoring, apply_cluster_refactor_branch, generate_ai_refactor_prompt,
+    generate_ast_cluster_refactor, verify_refactor_test_suite,
 };
 use std::path::Path;
 
@@ -127,18 +127,9 @@ pub fn handle_apply_cluster_refactor(
     id: Option<serde_json::Value>,
     args: Option<&serde_json::Value>,
 ) -> JsonRpcResponse {
-    let patch_str = args
-        .and_then(|a| a.get(mcp_tools::PARAM_PATCH))
-        .and_then(|p| p.as_str());
-
-    if let Some(patch) = patch_str {
-        let branch_name = args
-            .and_then(|a| a.get(mcp_tools::PARAM_BRANCH_NAME))
-            .and_then(|b| b.as_str());
-        let create_branch = args
-            .and_then(|a| a.get(mcp_tools::PARAM_CREATE_BRANCH))
-            .and_then(|b| b.as_bool())
-            .unwrap_or(false);
+    if let Some(patch) = get_str_arg(args, mcp_tools::PARAM_PATCH) {
+        let branch_name = get_str_arg(args, mcp_tools::PARAM_BRANCH_NAME);
+        let create_branch = get_bool_arg(args, mcp_tools::PARAM_CREATE_BRANCH, false);
 
         match apply_cluster_refactor_branch(Path::new("."), patch, branch_name, create_branch) {
             Ok(res) => {
@@ -187,28 +178,7 @@ pub fn handle_generate_ai_prompt(
             .unwrap_or_default();
 
         let parsed_occs = parse_occurrences_locations(args_val);
-        let occurrences: Vec<AiOccurrenceContext> = parsed_occs
-            .into_iter()
-            .map(|occ| {
-                let file_content = std::fs::read_to_string(&occ.file).unwrap_or_default();
-                let lines: Vec<&str> = file_content.lines().collect();
-                let snippet = if occ.start_line > 0 && occ.start_line <= lines.len() {
-                    let end = occ.end_line.min(lines.len());
-                    lines[occ.start_line - 1..end].join("\n")
-                } else {
-                    String::new()
-                };
-                AiOccurrenceContext {
-                    path: occ.file,
-                    span: LineSpan {
-                        line_start: occ.start_line,
-                        line_end: occ.end_line,
-                        byte_offset: 0,
-                    },
-                    snippet,
-                }
-            })
-            .collect();
+        let occurrences = cddm_core::occurrences_to_ai_context(&parsed_occs);
 
         let prompt_req = AiRefactorPromptRequest {
             clone_type: CloneType::Renamed,
@@ -331,18 +301,15 @@ pub async fn handle_heal_refactor(
             .get("provider")
             .and_then(|v| v.as_str())
             .unwrap_or("mock");
-        let model = args_val
-            .get("model")
-            .and_then(|v| v.as_str())
-            .map(|s| s.to_string());
-        let api_key = args_val
-            .get("api_key")
-            .and_then(|v| v.as_str())
-            .map(|s| s.to_string());
-        let endpoint = args_val
-            .get("endpoint")
-            .and_then(|v| v.as_str())
-            .map(|s| s.to_string());
+        let get_str = |k: &str| {
+            args_val
+                .get(k)
+                .and_then(|v| v.as_str())
+                .map(|s| s.to_string())
+        };
+        let model = get_str("model");
+        let api_key = get_str("api_key");
+        let endpoint = get_str("endpoint");
         let max_iters = args_val
             .get("max_iterations")
             .and_then(|v| v.as_u64())
@@ -351,22 +318,10 @@ pub async fn handle_heal_refactor(
             .get("verify")
             .and_then(|v| v.as_bool())
             .unwrap_or(true);
-        let test_cmd = args_val
-            .get("test_command")
-            .and_then(|v| v.as_str())
-            .map(|s| s.to_string());
-        let branch = args_val
-            .get("branch_name")
-            .and_then(|v| v.as_str())
-            .map(|s| s.to_string());
-        let fn_name = args_val
-            .get("function_name")
-            .and_then(|v| v.as_str())
-            .map(|s| s.to_string());
-        let target_mod = args_val
-            .get("target_module")
-            .and_then(|v| v.as_str())
-            .map(|s| s.to_string());
+        let test_cmd = get_str("test_command");
+        let branch = get_str("branch_name");
+        let fn_name = get_str("function_name");
+        let target_mod = get_str("target_module");
 
         let provider_kind = match provider_str.to_lowercase().as_str() {
             "gemini" => cddm_core::AiProviderKind::Gemini,

@@ -125,3 +125,49 @@ pub fn create_manifest_update(
         updated_content,
     }
 }
+
+pub fn update_root_workspace_manifest(
+    workspace_root: &Path,
+    manifest_filename: &str,
+    workspace_marker: &str,
+    array_key: &str,
+    new_crate_path: &str,
+) -> Option<ManifestUpdate> {
+    let root_manifest = workspace_root.join(manifest_filename);
+    if !root_manifest.exists() {
+        return None;
+    }
+    let content = std::fs::read_to_string(&root_manifest).ok()?;
+    if !content.contains(workspace_marker) {
+        return None;
+    }
+
+    let rel_path = new_crate_path.replace('\\', "/");
+    let member_entry = format!("\"{}\"", rel_path);
+
+    if content.contains(&member_entry)
+        || (rel_path.starts_with("crates/") && content.contains("\"crates/*\""))
+        || (rel_path.starts_with("packages/") && content.contains("\"packages/*\""))
+    {
+        return None;
+    }
+
+    let updated_content = insert_member_into_toml_array(&content, array_key, &member_entry)?;
+
+    let section_name = array_key
+        .trim_end_matches(" = [")
+        .trim_end_matches(": [")
+        .trim_matches('"');
+    let diff = format!(
+        "--- a/{}\n+++ b/{}\n@@ {} @@\n+    {}",
+        manifest_filename, manifest_filename, section_name, member_entry
+    );
+
+    Some(create_manifest_update(
+        &root_manifest,
+        workspace_root,
+        new_crate_path,
+        diff,
+        updated_content,
+    ))
+}

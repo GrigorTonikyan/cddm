@@ -33,8 +33,8 @@ describe("MCP Tool: cddm_extract_shared_module", () => {
     expect(Array.isArray(res.generated_files)).toBe(true);
   });
 
-  it("should synthesize unit test files when generate_tests is true", async () => {
-    const res = await executeTool("cddm_extract_shared_module", {
+  const executeSampleExtract = (extraOptions: Record<string, unknown>) =>
+    executeTool("cddm_extract_shared_module", {
       occurrences: [
         { file: "crates/cddm-cli/src/tui/views/extract.rs", start_line: 1, end_line: 14 },
         { file: "crates/cddm-cli/src/tui/views/refactor.rs", start_line: 1, end_line: 14 },
@@ -42,9 +42,12 @@ describe("MCP Tool: cddm_extract_shared_module", () => {
       target_path: "crates/shared_sample",
       crate_type: "crate",
       fn_name: "sampleHelper",
-      generate_tests: true,
       dry_run: true,
+      ...extraOptions,
     });
+
+  it("should synthesize unit test files when generate_tests is true", async () => {
+    const res = await executeSampleExtract({ generate_tests: true });
 
     expect(res).toBeDefined();
     expect(Array.isArray(res.test_files)).toBe(true);
@@ -53,17 +56,7 @@ describe("MCP Tool: cddm_extract_shared_module", () => {
   });
 
   it("should synthesize benchmark files when generate_benchmarks is true", async () => {
-    const res = await executeTool("cddm_extract_shared_module", {
-      occurrences: [
-        { file: "crates/cddm-cli/src/tui/views/extract.rs", start_line: 1, end_line: 14 },
-        { file: "crates/cddm-cli/src/tui/views/refactor.rs", start_line: 1, end_line: 14 },
-      ],
-      target_path: "crates/shared_sample",
-      crate_type: "crate",
-      fn_name: "sampleHelper",
-      generate_benchmarks: true,
-      dry_run: true,
-    });
+    const res = await executeSampleExtract({ generate_benchmarks: true });
 
     expect(res).toBeDefined();
     expect(Array.isArray(res.benchmark_files)).toBe(true);

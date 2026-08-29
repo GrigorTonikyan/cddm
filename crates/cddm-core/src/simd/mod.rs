@@ -41,6 +41,28 @@ pub fn compute_kgram_rolling_hashes(
     }
 }
 
+pub type KgramHashEntry = ((u64, u64), usize, usize, usize);
+
+pub(crate) fn init_kgram_rolling_state(
+    tokens: &[(NormalizedToken, LineSpan)],
+    k: usize,
+    b1: u64,
+    b2: u64,
+) -> Option<(Vec<KgramHashEntry>, (u64, u64))> {
+    if tokens.len() < k {
+        return None;
+    }
+    let mut kgram_hashes = Vec::with_capacity(tokens.len() - k + 1);
+    let (h1, h2) = scalar::compute_initial_kgram_hash(tokens, k, b1, b2);
+    kgram_hashes.push((
+        (h1, h2),
+        tokens[0].1.line_start,
+        tokens[k - 1].1.line_end,
+        tokens[0].1.byte_offset,
+    ));
+    Some((kgram_hashes, (h1, h2)))
+}
+
 #[cfg(test)]
 pub(crate) mod tests {
     use super::*;

@@ -113,6 +113,34 @@ pub fn resources_templates_list_response(id: Option<serde_json::Value>) -> JsonR
     }
 }
 
+fn make_resource_json_response<T: serde::Serialize>(
+    id: Option<serde_json::Value>,
+    uri: &str,
+    payload: &T,
+) -> JsonRpcResponse {
+    JsonRpcResponse {
+        jsonrpc: JSONRPC_VERSION.to_string(),
+        id,
+        result: Some(json!({
+            "contents": [
+                {
+                    "uri": uri,
+                    "mimeType": mcp_resources::MIME_APPLICATION_JSON,
+                    "text": serde_json::to_string_pretty(payload).unwrap_or_default()
+                }
+            ]
+        })),
+        error: None,
+    }
+}
+
+async fn run_default_scan() -> Result<cddm_core::ScanResult, String> {
+    let config = ScanConfig::default();
+    let (tx, _rx) = mpsc::channel(100);
+    let cancel_flag = Arc::new(AtomicBool::new(false));
+    run_scan(config, tx, cancel_flag).await
+}
+
 pub async fn handle_resource_read(
     id: Option<serde_json::Value>,
     params: Option<&serde_json::Value>,
@@ -123,12 +151,8 @@ pub async fn handle_resource_read(
         .and_then(|u| u.as_str())
         .unwrap_or("");
 
-    let config = ScanConfig::default();
-    let (tx, _rx) = mpsc::channel(100);
-    let cancel_flag = Arc::new(AtomicBool::new(false));
-
     match uri {
-        mcp_resources::URI_WORKSPACE_HEALTH => match run_scan(config, tx, cancel_flag).await {
+        mcp_resources::URI_WORKSPACE_HEALTH => match run_default_scan().await {
             Ok(res) => {
                 let payload = json!({
                     "dry_health_score": res.dry_health_score,
@@ -139,62 +163,23 @@ pub async fn handle_resource_read(
                     "total_clusters": res.total_clusters,
                     "language_breakdown": res.language_breakdown
                 });
-                JsonRpcResponse {
-                    jsonrpc: JSONRPC_VERSION.to_string(),
-                    id,
-                    result: Some(json!({
-                        "contents": [
-                            {
-                                "uri": mcp_resources::URI_WORKSPACE_HEALTH,
-                                "mimeType": mcp_resources::MIME_APPLICATION_JSON,
-                                "text": serde_json::to_string_pretty(&payload).unwrap_or_default()
-                            }
-                        ]
-                    })),
-                    error: None,
-                }
+                make_resource_json_response(id, uri, &payload)
             }
             Err(e) => make_error_response(id, rpc_errors::INTERNAL_ERROR, e),
         },
 
-        mcp_resources::URI_WORKSPACE_CLONES => match run_scan(config, tx, cancel_flag).await {
-            Ok(res) => JsonRpcResponse {
-                jsonrpc: JSONRPC_VERSION.to_string(),
-                id,
-                result: Some(json!({
-                    "contents": [
-                        {
-                            "uri": mcp_resources::URI_WORKSPACE_CLONES,
-                            "mimeType": mcp_resources::MIME_APPLICATION_JSON,
-                            "text": serde_json::to_string_pretty(&res.clone_pairs).unwrap_or_default()
-                        }
-                    ]
-                })),
-                error: None,
-            },
+        mcp_resources::URI_WORKSPACE_CLONES => match run_default_scan().await {
+            Ok(res) => make_resource_json_response(id, uri, &res.clone_pairs),
             Err(e) => make_error_response(id, rpc_errors::INTERNAL_ERROR, e),
         },
 
-        mcp_resources::URI_WORKSPACE_CLUSTERS => match run_scan(config, tx, cancel_flag).await {
+        mcp_resources::URI_WORKSPACE_CLUSTERS => match run_default_scan().await {
             Ok(res) => {
                 let payload = json!({
                     "total_clusters": res.total_clusters,
                     "clone_clusters": res.clone_clusters
                 });
-                JsonRpcResponse {
-                    jsonrpc: JSONRPC_VERSION.to_string(),
-                    id,
-                    result: Some(json!({
-                        "contents": [
-                            {
-                                "uri": mcp_resources::URI_WORKSPACE_CLUSTERS,
-                                "mimeType": mcp_resources::MIME_APPLICATION_JSON,
-                                "text": serde_json::to_string_pretty(&payload).unwrap_or_default()
-                            }
-                        ]
-                    })),
-                    error: None,
-                }
+                make_resource_json_response(id, uri, &payload)
             }
             Err(e) => make_error_response(id, rpc_errors::INTERNAL_ERROR, e),
         },
@@ -207,20 +192,7 @@ pub async fn handle_resource_read(
                 DEFAULT_MIN_TOKENS,
                 cancel_flag,
             ) {
-                Ok(trend) => JsonRpcResponse {
-                    jsonrpc: JSONRPC_VERSION.to_string(),
-                    id,
-                    result: Some(json!({
-                        "contents": [
-                            {
-                                "uri": mcp_resources::URI_WORKSPACE_TIMELINE,
-                                "mimeType": mcp_resources::MIME_APPLICATION_JSON,
-                                "text": serde_json::to_string_pretty(&trend).unwrap_or_default()
-                            }
-                        ]
-                    })),
-                    error: None,
-                },
+                Ok(trend) => make_resource_json_response(id, uri, &trend),
                 Err(e) => make_error_response(id, rpc_errors::INTERNAL_ERROR, e),
             }
         }
@@ -233,20 +205,7 @@ pub async fn handle_resource_read(
             } else {
                 SuppressionEngine::default_engine()
             };
-            JsonRpcResponse {
-                jsonrpc: JSONRPC_VERSION.to_string(),
-                id,
-                result: Some(json!({
-                    "contents": [
-                        {
-                            "uri": mcp_resources::URI_WORKSPACE_SUPPRESSIONS,
-                            "mimeType": mcp_resources::MIME_APPLICATION_JSON,
-                            "text": serde_json::to_string_pretty(engine.config()).unwrap_or_default()
-                        }
-                    ]
-                })),
-                error: None,
-            }
+            make_resource_json_response(id, uri, engine.config())
         }
 
         mcp_resources::URI_WORKSPACE_POLICIES => {
@@ -256,20 +215,7 @@ pub async fn handle_resource_read(
             } else {
                 PolicyEngine::empty()
             };
-            JsonRpcResponse {
-                jsonrpc: JSONRPC_VERSION.to_string(),
-                id,
-                result: Some(json!({
-                    "contents": [
-                        {
-                            "uri": mcp_resources::URI_WORKSPACE_POLICIES,
-                            "mimeType": mcp_resources::MIME_APPLICATION_JSON,
-                            "text": serde_json::to_string_pretty(engine.config()).unwrap_or_default()
-                        }
-                    ]
-                })),
-                error: None,
-            }
+            make_resource_json_response(id, uri, engine.config())
         }
 
         mcp_resources::URI_WORKSPACE_SEMANTIC_GRAPH => {
@@ -288,20 +234,7 @@ pub async fn handle_resource_read(
                 "cfgs": cfgs,
                 "pdgs": pdgs,
             });
-            JsonRpcResponse {
-                jsonrpc: JSONRPC_VERSION.to_string(),
-                id,
-                result: Some(json!({
-                    "contents": [
-                        {
-                            "uri": mcp_resources::URI_WORKSPACE_SEMANTIC_GRAPH,
-                            "mimeType": mcp_resources::MIME_APPLICATION_JSON,
-                            "text": serde_json::to_string_pretty(&payload).unwrap_or_default()
-                        }
-                    ]
-                })),
-                error: None,
-            }
+            make_resource_json_response(id, uri, &payload)
         }
 
         mcp_resources::URI_WORKSPACE_CROSS_LANGUAGE_CLONES => {
@@ -316,20 +249,7 @@ pub async fn handle_resource_read(
                         "total_pairs": pairs.len(),
                         "pairs": pairs,
                     });
-                    JsonRpcResponse {
-                        jsonrpc: JSONRPC_VERSION.to_string(),
-                        id,
-                        result: Some(json!({
-                            "contents": [
-                                {
-                                    "uri": mcp_resources::URI_WORKSPACE_CROSS_LANGUAGE_CLONES,
-                                    "mimeType": mcp_resources::MIME_APPLICATION_JSON,
-                                    "text": serde_json::to_string_pretty(&payload).unwrap_or_default()
-                                }
-                            ]
-                        })),
-                        error: None,
-                    }
+                    make_resource_json_response(id, uri, &payload)
                 }
                 Err(e) => make_error_response(id, rpc_errors::INTERNAL_ERROR, e),
             }
@@ -343,38 +263,12 @@ pub async fn handle_resource_read(
                 "supported_events": ["watch_file_changed", "watch_scan_delta", "watch_status_changed"],
                 "live_sync_protocol": "Server-Sent Events (/api/events)"
             });
-            JsonRpcResponse {
-                jsonrpc: JSONRPC_VERSION.to_string(),
-                id,
-                result: Some(json!({
-                    "contents": [
-                        {
-                            "uri": mcp_resources::URI_WORKSPACE_WATCH_STATUS,
-                            "mimeType": mcp_resources::MIME_APPLICATION_JSON,
-                            "text": serde_json::to_string_pretty(&payload).unwrap_or_default()
-                        }
-                    ]
-                })),
-                error: None,
-            }
+            make_resource_json_response(id, uri, &payload)
         }
 
         mcp_resources::URI_WORKSPACE_OVERLAP => {
             match cddm_core::scan_workspace_overlap(Path::new("."), 0.3) {
-                Ok(result) => JsonRpcResponse {
-                    jsonrpc: JSONRPC_VERSION.to_string(),
-                    id,
-                    result: Some(json!({
-                        "contents": [
-                            {
-                                "uri": mcp_resources::URI_WORKSPACE_OVERLAP,
-                                "mimeType": mcp_resources::MIME_APPLICATION_JSON,
-                                "text": serde_json::to_string_pretty(&result).unwrap_or_default()
-                            }
-                        ]
-                    })),
-                    error: None,
-                },
+                Ok(result) => make_resource_json_response(id, uri, &result),
                 Err(e) => make_error_response(id, rpc_errors::INTERNAL_ERROR, e),
             }
         }
@@ -389,20 +283,7 @@ pub async fn handle_resource_read(
             };
 
             match cddm_core::run_hub_scan(&config).await {
-                Ok(summary) => JsonRpcResponse {
-                    jsonrpc: JSONRPC_VERSION.to_string(),
-                    id,
-                    result: Some(json!({
-                        "contents": [
-                             {
-                                 "uri": mcp_resources::URI_WORKSPACE_HUB,
-                                 "mimeType": mcp_resources::MIME_APPLICATION_JSON,
-                                 "text": serde_json::to_string_pretty(&summary).unwrap_or_default()
-                             }
-                        ]
-                    })),
-                    error: None,
-                },
+                Ok(summary) => make_resource_json_response(id, uri, &summary),
                 Err(e) => make_error_response(id, rpc_errors::INTERNAL_ERROR, e),
             }
         }
@@ -418,31 +299,10 @@ pub async fn handle_resource_read(
                 cddm_core::CoverageReport::default()
             };
 
-            let scan_config = cddm_core::ScanConfig {
-                directory: ".".to_string(),
-                min_tokens: 50,
-                ..Default::default()
-            };
-            let (tx, _rx) = tokio::sync::mpsc::channel(100);
-            let cancel = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
-
-            match cddm_core::run_scan(scan_config, tx, cancel).await {
+            match run_default_scan().await {
                 Ok(scan_result) => {
                     let summary = cddm_core::correlate_coverage(&scan_result, &report);
-                    JsonRpcResponse {
-                        jsonrpc: JSONRPC_VERSION.to_string(),
-                        id,
-                        result: Some(json!({
-                            "contents": [
-                                 {
-                                     "uri": mcp_resources::URI_WORKSPACE_COVERAGE,
-                                     "mimeType": mcp_resources::MIME_APPLICATION_JSON,
-                                     "text": serde_json::to_string_pretty(&summary).unwrap_or_default()
-                                 }
-                            ]
-                        })),
-                        error: None,
-                    }
+                    make_resource_json_response(id, uri, &summary)
                 }
                 Err(e) => make_error_response(id, rpc_errors::INTERNAL_ERROR, e),
             }
@@ -451,20 +311,7 @@ pub async fn handle_resource_read(
         mcp_resources::URI_WORKSPACE_NEURAL_EMBEDDINGS => {
             let config = cddm_core::NeuralEmbeddingConfig::default();
             match cddm_core::scan_neural_clones(Path::new("."), &config) {
-                Ok(result) => JsonRpcResponse {
-                    jsonrpc: JSONRPC_VERSION.to_string(),
-                    id,
-                    result: Some(json!({
-                        "contents": [
-                             {
-                                 "uri": mcp_resources::URI_WORKSPACE_NEURAL_EMBEDDINGS,
-                                 "mimeType": mcp_resources::MIME_APPLICATION_JSON,
-                                 "text": serde_json::to_string_pretty(&result).unwrap_or_default()
-                             }
-                        ]
-                    })),
-                    error: None,
-                },
+                Ok(result) => make_resource_json_response(id, uri, &result),
                 Err(e) => make_error_response(id, rpc_errors::INTERNAL_ERROR, e),
             }
         }

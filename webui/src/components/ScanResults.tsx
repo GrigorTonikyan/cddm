@@ -31,6 +31,19 @@ const LANG_EXTENSIONS: Record<string, string[]> = {
   html: ["html", "htm"],
 };
 
+function sortByMetric<T extends { similarity: number; token_count: number }>(
+  items: T[],
+  sortBy: "similarity" | "tokens" | "name",
+  nameCompare: (a: T, b: T) => number,
+): T[] {
+  return items.sort((a, b) => {
+    if (sortBy === "similarity") return b.similarity - a.similarity;
+    if (sortBy === "tokens") return b.token_count - a.token_count;
+    if (sortBy === "name") return nameCompare(a, b);
+    return 0;
+  });
+}
+
 export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
   const {
     results,
@@ -57,71 +70,62 @@ export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
   // Filter & Sort Clone Pairs
   const filteredPairs = useMemo(() => {
     if (!results) return [];
-    return results.clone_pairs
-      .filter((pair) => {
-        const matchesSim = pair.similarity * 100 >= minSimilarity;
-        if (!matchesSim) return false;
+    const filtered = results.clone_pairs.filter((pair) => {
+      const matchesSim = pair.similarity * 100 >= minSimilarity;
+      if (!matchesSim) return false;
 
-        const term = searchTerm.toLowerCase().trim();
-        if (term) {
-          const fileA = pair.file_a.toLowerCase();
-          const fileB = pair.file_b.toLowerCase();
-          if (!fileA.includes(term) && !fileB.includes(term)) return false;
+      const term = searchTerm.toLowerCase().trim();
+      if (term) {
+        const fileA = pair.file_a.toLowerCase();
+        const fileB = pair.file_b.toLowerCase();
+        if (!fileA.includes(term) && !fileB.includes(term)) return false;
+      }
+
+      if (selectedLang !== "ALL") {
+        const extA = pair.file_a.split(".").pop()?.toLowerCase() || "";
+        const extB = pair.file_b.split(".").pop()?.toLowerCase() || "";
+        const allowedExts = LANG_EXTENSIONS[selectedLang.toLowerCase()] || [];
+        if (!allowedExts.includes(extA) && !allowedExts.includes(extB)) {
+          return false;
         }
+      }
 
-        if (selectedLang !== "ALL") {
-          const extA = pair.file_a.split(".").pop()?.toLowerCase() || "";
-          const extB = pair.file_b.split(".").pop()?.toLowerCase() || "";
-          const allowedExts = LANG_EXTENSIONS[selectedLang.toLowerCase()] || [];
-          if (!allowedExts.includes(extA) && !allowedExts.includes(extB)) {
-            return false;
-          }
-        }
+      return true;
+    });
 
-        return true;
-      })
-      .sort((a, b) => {
-        if (sortBy === "similarity") return b.similarity - a.similarity;
-        if (sortBy === "tokens") return b.token_count - a.token_count;
-        if (sortBy === "name")
-          return parsePath(a.file_a).filename.localeCompare(parsePath(b.file_a).filename);
-        return 0;
-      });
+    return sortByMetric(filtered, sortBy, (a, b) =>
+      parsePath(a.file_a).filename.localeCompare(parsePath(b.file_a).filename),
+    );
   }, [results?.clone_pairs, searchTerm, minSimilarity, selectedLang, sortBy]);
 
   // Filter & Sort Clone Clusters
   const filteredClusters = useMemo(() => {
     if (!results || !results.clone_clusters) return [];
-    return results.clone_clusters
-      .filter((cluster) => {
-        const matchesSim = cluster.similarity * 100 >= minSimilarity;
-        if (!matchesSim) return false;
+    const filtered = results.clone_clusters.filter((cluster) => {
+      const matchesSim = cluster.similarity * 100 >= minSimilarity;
+      if (!matchesSim) return false;
 
-        const term = searchTerm.toLowerCase().trim();
-        if (term) {
-          const matchesAnyFile = cluster.occurrences.some((loc) =>
-            loc.file.toLowerCase().includes(term),
-          );
-          if (!matchesAnyFile) return false;
-        }
+      const term = searchTerm.toLowerCase().trim();
+      if (term) {
+        const matchesAnyFile = cluster.occurrences.some((loc) =>
+          loc.file.toLowerCase().includes(term),
+        );
+        if (!matchesAnyFile) return false;
+      }
 
-        if (selectedLang !== "ALL") {
-          const allowedExts = LANG_EXTENSIONS[selectedLang.toLowerCase()] || [];
-          const matchesAnyLang = cluster.occurrences.some((loc) => {
-            const ext = loc.file.split(".").pop()?.toLowerCase() || "";
-            return allowedExts.includes(ext);
-          });
-          if (!matchesAnyLang) return false;
-        }
+      if (selectedLang !== "ALL") {
+        const allowedExts = LANG_EXTENSIONS[selectedLang.toLowerCase()] || [];
+        const matchesAnyLang = cluster.occurrences.some((loc) => {
+          const ext = loc.file.split(".").pop()?.toLowerCase() || "";
+          return allowedExts.includes(ext);
+        });
+        if (!matchesAnyLang) return false;
+      }
 
-        return true;
-      })
-      .sort((a, b) => {
-        if (sortBy === "similarity") return b.similarity - a.similarity;
-        if (sortBy === "tokens") return b.token_count - a.token_count;
-        if (sortBy === "name") return a.id - b.id;
-        return 0;
-      });
+      return true;
+    });
+
+    return sortByMetric(filtered, sortBy, (a, b) => a.id - b.id);
   }, [results?.clone_clusters, searchTerm, minSimilarity, selectedLang, sortBy]);
 
   // Pagination Slice based on active viewMode

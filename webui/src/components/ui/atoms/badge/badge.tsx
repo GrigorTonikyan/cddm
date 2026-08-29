@@ -15,18 +15,21 @@ export interface BadgeProps {
   className?: string;
 }
 
-const variantClassMap: Record<BadgeVariant, string> = {
-  [BADGE_VARIANTS.INDIGO]: styles.variantIndigo || "",
-  [BADGE_VARIANTS.EMERALD]: styles.variantEmerald || "",
-  [BADGE_VARIANTS.ROSE]: styles.variantRose || "",
-  [BADGE_VARIANTS.AMBER]: styles.variantAmber || "",
-  [BADGE_VARIANTS.SLATE]: styles.variantSlate || "",
-  [BADGE_VARIANTS.CYAN]: styles.variantCyan || "",
-};
-
-const sizeClassMap: Record<BadgeSize, string> = {
-  [BADGE_SIZES.SM]: styles.sizeSm || "",
-  [BADGE_SIZES.MD]: styles.sizeMd || "",
+const getBadgeVariantClass = (variant: BadgeVariant): string => {
+  switch (variant) {
+    case BADGE_VARIANTS.EMERALD:
+      return styles.variantEmerald || "";
+    case BADGE_VARIANTS.ROSE:
+      return styles.variantRose || "";
+    case BADGE_VARIANTS.AMBER:
+      return styles.variantAmber || "";
+    case BADGE_VARIANTS.SLATE:
+      return styles.variantSlate || "";
+    case BADGE_VARIANTS.CYAN:
+      return styles.variantCyan || "";
+    default:
+      return styles.variantIndigo || "";
+  }
 };
 
 /**
@@ -38,8 +41,9 @@ export const Badge: React.FC<BadgeProps> = ({
   size = BADGE_SIZES.MD,
   className = "",
 }) => {
+  const sizeClass = size === BADGE_SIZES.SM ? styles.sizeSm : styles.sizeMd;
   const combinedClass =
-    `${styles.badge || ""} ${variantClassMap[variant]} ${sizeClassMap[size]} ${className}`.trim();
+    `${styles.badge || ""} ${getBadgeVariantClass(variant)} ${sizeClass || ""} ${className}`.trim();
 
   return (
     <span className={combinedClass} {...{ [UI_DATA_ATTRS.BADGE]: true }}>
