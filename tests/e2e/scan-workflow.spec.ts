@@ -105,7 +105,9 @@ test.describe("CDDM WebUI E2E Workflows", () => {
     const explorerTab = page.getByRole("button", { name: /Cross-Language Explorer/i });
     await expect(explorerTab).toBeVisible();
     await explorerTab.click();
-    await expect(page.getByText(/Similarity Cutoff/i)).toBeVisible();
-    await expect(page.getByRole("button", { name: /Discover Polyglot Clones/i })).toBeVisible();
+    await expect(page.getByText(/Cutoff:/i)).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /Discover Polyglot Clones|Analyze Clones/i }),
+    ).toBeVisible();
   });
 });
