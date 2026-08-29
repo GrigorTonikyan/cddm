@@ -131,6 +131,7 @@ pub fn run_semantic_command(
             ignore
         },
         detect_type2: true,
+        detect_type3: true,
         scan_self: true,
         enable_git_blame: false,
         cache_dir: None,

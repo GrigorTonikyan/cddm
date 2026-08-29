@@ -61,18 +61,41 @@ export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLang, setSelectedLang] = useState<string>("ALL");
+  const [selectedCloneType, setSelectedCloneType] = useState<string>("ALL");
   const [minSimilarity, setMinSimilarity] = useState<number>(0);
   const [sortBy, setSortBy] = useState<"similarity" | "tokens" | "name">("similarity");
   const [currentPage, setCurrentPage] = useState(1);
 
   const itemsPerPage = 25;
 
+  // Compute Clone Type distribution counts
+  const cloneTypeCounts = useMemo(() => {
+    if (!results || !Array.isArray(results.clone_pairs)) {
+      return { exact: 0, renamed: 0, nearMiss: 0, semantic: 0, total: 0 };
+    }
+    let exact = 0;
+    let renamed = 0;
+    let nearMiss = 0;
+    let semantic = 0;
+    for (const pair of results.clone_pairs) {
+      if (pair.clone_type === "Exact") exact++;
+      else if (pair.clone_type === "Renamed") renamed++;
+      else if (pair.clone_type === "NearMiss") nearMiss++;
+      else if (pair.clone_type === "Semantic") semantic++;
+    }
+    return { exact, renamed, nearMiss, semantic, total: results.clone_pairs.length };
+  }, [results]);
+
   // Filter & Sort Clone Pairs
   const filteredPairs = useMemo(() => {
-    if (!results) return [];
+    if (!results || !Array.isArray(results.clone_pairs)) return [];
     const filtered = results.clone_pairs.filter((pair) => {
       const matchesSim = pair.similarity * 100 >= minSimilarity;
       if (!matchesSim) return false;
+
+      if (selectedCloneType !== "ALL" && pair.clone_type !== selectedCloneType) {
+        return false;
+      }
 
       const term = searchTerm.toLowerCase().trim();
       if (term) {
@@ -96,14 +119,18 @@ export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
     return sortByMetric(filtered, sortBy, (a, b) =>
       parsePath(a.file_a).filename.localeCompare(parsePath(b.file_a).filename),
     );
-  }, [results?.clone_pairs, searchTerm, minSimilarity, selectedLang, sortBy]);
+  }, [results?.clone_pairs, searchTerm, minSimilarity, selectedLang, selectedCloneType, sortBy]);
 
   // Filter & Sort Clone Clusters
   const filteredClusters = useMemo(() => {
-    if (!results || !results.clone_clusters) return [];
+    if (!results || !Array.isArray(results.clone_clusters)) return [];
     const filtered = results.clone_clusters.filter((cluster) => {
       const matchesSim = cluster.similarity * 100 >= minSimilarity;
       if (!matchesSim) return false;
+
+      if (selectedCloneType !== "ALL" && cluster.clone_type !== selectedCloneType) {
+        return false;
+      }
 
       const term = searchTerm.toLowerCase().trim();
       if (term) {
@@ -126,7 +153,7 @@ export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
     });
 
     return sortByMetric(filtered, sortBy, (a, b) => a.id - b.id);
-  }, [results?.clone_clusters, searchTerm, minSimilarity, selectedLang, sortBy]);
+  }, [results?.clone_clusters, searchTerm, minSimilarity, selectedLang, selectedCloneType, sortBy]);
 
   // Pagination Slice based on active viewMode
   const activeItemsCount = viewMode === "pairs" ? filteredPairs.length : filteredClusters.length;
@@ -155,7 +182,10 @@ export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
 
         <div className="flex items-center gap-2 text-xs font-mono text-slate-400">
           <span className="bg-slate-900 border border-slate-800/80 px-2.5 py-1 rounded-md">
-            Scan ID: <span className="text-slate-200">{results.scan_id.slice(0, 8)}</span>
+            Scan ID:{" "}
+            <span className="text-slate-200">
+              {results.scan_id ? results.scan_id.slice(0, 8) : "latest"}
+            </span>
           </span>
         </div>
       </div>
@@ -192,9 +222,15 @@ export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
           setSelectedLang(lang);
           setCurrentPage(1);
         }}
+        selectedCloneType={selectedCloneType}
+        onSelectedCloneTypeChange={(type) => {
+          setSelectedCloneType(type);
+          setCurrentPage(1);
+        }}
+        cloneTypeCounts={cloneTypeCounts}
         sortBy={sortBy}
         onSortByChange={setSortBy}
-        languages={results.language_breakdown}
+        languages={results.language_breakdown || []}
       />
 
       {/* Duplications List Section */}

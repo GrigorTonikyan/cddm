@@ -42,6 +42,7 @@ mod tests {
         assert!(config.languages.is_empty());
         assert_eq!(config.ignore_patterns.len(), DEFAULT_IGNORE_PATTERNS.len());
         assert!(config.detect_type2);
+        assert!(config.detect_type3);
         assert!(config.scan_self);
         assert!(!config.enable_git_blame);
     }

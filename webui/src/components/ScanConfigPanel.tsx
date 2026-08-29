@@ -1,17 +1,18 @@
+import {
+  AppWindow,
+  Code,
+  Folder,
+  GitBranch,
+  Layers,
+  Play,
+  RotateCcw,
+  Shield,
+  SlidersHorizontal,
+  Sparkles,
+} from "lucide-react";
 import React from "react";
 import { useCDDMStore } from "../store/cddm-store";
 import { SUPPORTED_EDITORS, SupportedEditor } from "../utils/ide-links";
-import {
-  Play,
-  RotateCcw,
-  SlidersHorizontal,
-  Folder,
-  Shield,
-  Code,
-  GitBranch,
-  AppWindow,
-  Sparkles,
-} from "lucide-react";
 
 export interface ScanConfigPanelProps {
   className?: string;
@@ -43,7 +44,7 @@ export const ScanConfigPanel: React.FC<ScanConfigPanelProps> = ({ className = ""
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Directory Input */}
         <div>
-          <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2 flex items-center gap-2">
+          <label className="text-xs font-bold uppercase tracking-wider text-slate-300 mb-2 flex items-center gap-2">
             <Folder className="w-4 h-4 text-indigo-400" />
             Target Repository Directory
           </label>
@@ -58,7 +59,7 @@ export const ScanConfigPanel: React.FC<ScanConfigPanelProps> = ({ className = ""
 
         {/* Minimum Tokens Slider */}
         <div>
-          <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2 flex items-center justify-between">
+          <label className="text-xs font-bold uppercase tracking-wider text-slate-300 mb-2 flex items-center justify-between">
             <span className="flex items-center gap-2">
               <Code className="w-4 h-4 text-indigo-400" />
               Minimum Token Threshold
@@ -85,7 +86,7 @@ export const ScanConfigPanel: React.FC<ScanConfigPanelProps> = ({ className = ""
 
         {/* Ignore Patterns */}
         <div>
-          <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2 flex items-center gap-2">
+          <label className="text-xs font-bold uppercase tracking-wider text-slate-300 mb-2 flex items-center gap-2">
             <Shield className="w-4 h-4 text-indigo-400" />
             Ignore Patterns (comma-separated)
           </label>
@@ -107,7 +108,7 @@ export const ScanConfigPanel: React.FC<ScanConfigPanelProps> = ({ className = ""
 
         {/* Preferred IDE Editor Deeplinks */}
         <div>
-          <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2 flex items-center gap-2">
+          <label className="text-xs font-bold uppercase tracking-wider text-slate-300 mb-2 flex items-center gap-2">
             <AppWindow className="w-4 h-4 text-indigo-400" />
             Preferred IDE Deeplink Target
           </label>
@@ -134,6 +135,19 @@ export const ScanConfigPanel: React.FC<ScanConfigPanelProps> = ({ className = ""
               className="w-4 h-4 rounded border-slate-700 bg-slate-950 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-slate-900"
             />
             <span>Type-2 (Renamed Clones)</span>
+          </label>
+
+          <label className="flex items-center gap-2 text-xs font-medium text-slate-300 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={config.detect_type3 ?? true}
+              onChange={(e) => setConfig({ detect_type3: e.target.checked })}
+              className="w-4 h-4 rounded border-slate-700 bg-slate-950 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-slate-900"
+            />
+            <span className="flex items-center gap-1 text-amber-300">
+              <Layers className="w-3.5 h-3.5 text-amber-400" />
+              Type-3 (Near-Miss Clones)
+            </span>
           </label>
 
           <label className="flex items-center gap-2 text-xs font-medium text-slate-300 cursor-pointer select-none">
@@ -180,7 +194,7 @@ export const ScanConfigPanel: React.FC<ScanConfigPanelProps> = ({ className = ""
           type="button"
           onClick={() => void startScan()}
           disabled={isScanning}
-          className="flex-1 bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold py-3 px-6 rounded-lg transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.99] cursor-pointer"
+          className="flex-1 bg-linear-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold py-3 px-6 rounded-lg transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.99] cursor-pointer"
         >
           <Play className="w-4 h-4 fill-current" />
           <span>{isScanning ? "Scanning Codebase..." : "Run Duplicate Analysis"}</span>

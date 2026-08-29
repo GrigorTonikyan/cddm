@@ -81,6 +81,10 @@ pub async fn run_scan_from_mcp_args(
         .and_then(|a| a.get("cross_language"))
         .and_then(|b| b.as_bool())
         .unwrap_or(false);
+    let detect_type3 = args
+        .and_then(|a| a.get("detect_type3"))
+        .and_then(|b| b.as_bool())
+        .unwrap_or(true);
     let threads = args
         .and_then(|a| a.get("threads"))
         .and_then(|v| v.as_u64())
@@ -91,6 +95,7 @@ pub async fn run_scan_from_mcp_args(
         min_tokens,
         enable_git_blame,
         cross_language,
+        detect_type3,
         threads,
         ..Default::default()
     };

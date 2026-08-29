@@ -29,6 +29,13 @@ pub async fn health_handler() -> impl IntoResponse {
     }))
 }
 
+pub async fn scan_get_handler(
+    State(state): State<AppState>,
+) -> Result<Json<Option<ScanResult>>, (StatusCode, String)> {
+    let latest = state.latest_result.read().await;
+    Ok(Json(latest.clone()))
+}
+
 pub async fn scan_handler(
     State(state): State<AppState>,
     Json(config): Json<ScanConfig>,

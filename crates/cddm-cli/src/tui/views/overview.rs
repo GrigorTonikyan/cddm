@@ -140,6 +140,13 @@ fn render_config_summary(frame: &mut Frame, app: &TuiApp, area: Rect) {
             Span::styled("Min Tokens: ", Style::default().fg(Color::Cyan)),
             Span::raw(app.config.min_tokens.to_string()),
             Span::raw(" | "),
+            Span::styled("Type-3: ", Style::default().fg(Color::Cyan)),
+            Span::raw(if app.config.detect_type3 {
+                "Active"
+            } else {
+                "Disabled"
+            }),
+            Span::raw(" | "),
             Span::styled("Watch Mode: ", Style::default().fg(Color::Cyan)),
             Span::raw(if app.watch_mode { "Active" } else { "Disabled" }),
         ]),

@@ -32,4 +32,23 @@ describe("ScanConfigPanel Component", () => {
     render(<ScanConfigPanel />);
     expect(screen.getByText("Git Blame (Authors)")).toBeDefined();
   });
+
+  it("should render Type-3 near-miss toggle and update config state", () => {
+    render(<ScanConfigPanel />);
+    const type3Label = screen.getByText("Type-3 (Near-Miss Clones)");
+    expect(type3Label).toBeDefined();
+
+    const checkboxes = screen.getAllByRole("checkbox") as HTMLInputElement[];
+    // Find the checkbox associated with Type-3
+    const type3Checkbox = checkboxes.find((cb) =>
+      cb.parentElement?.textContent?.includes("Type-3 (Near-Miss Clones)"),
+    );
+    expect(type3Checkbox).toBeDefined();
+    expect(type3Checkbox?.checked).toBe(true);
+
+    if (type3Checkbox) {
+      fireEvent.click(type3Checkbox);
+      expect(useCDDMStore.getState().config.detect_type3).toBe(false);
+    }
+  });
 });

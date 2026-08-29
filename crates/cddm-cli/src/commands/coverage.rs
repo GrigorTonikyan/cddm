@@ -73,30 +73,35 @@ fn print_console_summary(summary: &CoverageCorrelationSummary) {
         Cell::new("Value").fg(Color::Green),
     ]);
 
-    overview.add_row(Row::from(vec![
-        Cell::new("Total Duplicate Clone Pairs"),
-        Cell::new(summary.total_clone_pairs.to_string()),
-    ]));
-    overview.add_row(Row::from(vec![
-        Cell::new("Covered Clones Percentage"),
-        Cell::new(format!("{:.1}%", summary.overall_covered_clones_pct)),
-    ]));
-    overview.add_row(Row::from(vec![
-        Cell::new("Dead Code Clones (0 Executions)"),
-        Cell::new(summary.dead_code_clones.to_string()),
-    ]));
-    overview.add_row(Row::from(vec![
-        Cell::new("Test Gap Clones (Asymmetric Coverage)"),
-        Cell::new(summary.test_gap_clones.to_string()),
-    ]));
-    overview.add_row(Row::from(vec![
-        Cell::new("Hot Path Clones (>1,000 Executions)"),
-        Cell::new(summary.hot_path_clones.to_string()),
-    ]));
-    overview.add_row(Row::from(vec![
-        Cell::new("Total Monitored Runtime Hits"),
-        Cell::new(summary.total_runtime_hits.to_string()),
-    ]));
+    super::add_kv_overview_rows(
+        &mut overview,
+        &[
+            (
+                "Total Duplicate Clone Pairs",
+                summary.total_clone_pairs.to_string(),
+            ),
+            (
+                "Covered Clones Percentage",
+                format!("{:.1}%", summary.overall_covered_clones_pct),
+            ),
+            (
+                "Dead Code Clones (0 Executions)",
+                summary.dead_code_clones.to_string(),
+            ),
+            (
+                "Test Gap Clones (Asymmetric Coverage)",
+                summary.test_gap_clones.to_string(),
+            ),
+            (
+                "Hot Path Clones (>1,000 Executions)",
+                summary.hot_path_clones.to_string(),
+            ),
+            (
+                "Total Monitored Runtime Hits",
+                summary.total_runtime_hits.to_string(),
+            ),
+        ],
+    );
     println!("{overview}");
 
     if !summary.metrics.is_empty() {

@@ -50,6 +50,7 @@ pub async fn run_heal_command(args: HealCliArgs) -> Result<(), Box<dyn std::erro
         languages: vec![],
         ignore_patterns: vec![],
         detect_type2: true,
+        detect_type3: true,
         scan_self: false,
         enable_git_blame: false,
         cache_dir: None,

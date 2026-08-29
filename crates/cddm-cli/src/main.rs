@@ -57,6 +57,7 @@ async fn run_app() -> Result<(), Box<dyn std::error::Error>> {
             rules,
             enforce_policies,
             cross_language,
+            no_type3,
             threads,
         } => {
             run_scan_command(
@@ -77,6 +78,7 @@ async fn run_app() -> Result<(), Box<dyn std::error::Error>> {
                 rules,
                 enforce_policies,
                 cross_language,
+                !no_type3,
                 threads,
             )
             .await?;

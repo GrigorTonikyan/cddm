@@ -119,4 +119,48 @@ describe("ScanResults Component", () => {
     expect(useCDDMStore.getState().viewMode).toBe("clusters");
     expect(screen.getByText("Cluster #1")).toBeDefined();
   });
+
+  it("should allow filtering by Type-3 Near-Miss clone type", () => {
+    useCDDMStore.setState({
+      results: createMockScanResult({
+        total_clones: 2,
+        clone_pairs: [
+          {
+            file_a: "src/a.ts",
+            start_line_a: 1,
+            end_line_a: 10,
+            file_b: "src/b.ts",
+            start_line_b: 1,
+            end_line_b: 10,
+            token_count: 50,
+            similarity: 0.85,
+            clone_type: "NearMiss",
+            fragment_hash: "hash_near_miss",
+          },
+          {
+            file_a: "src/c.ts",
+            start_line_a: 1,
+            end_line_a: 10,
+            file_b: "src/d.ts",
+            start_line_b: 1,
+            end_line_b: 10,
+            token_count: 50,
+            similarity: 1.0,
+            clone_type: "Exact",
+            fragment_hash: "hash_exact",
+          },
+        ],
+      }),
+    });
+    render(
+      <Win2xManagerProvider>
+        <ScanResults />
+      </Win2xManagerProvider>,
+    );
+
+    expect(screen.getByText("Type-3 Near-Miss")).toBeDefined();
+    const type3Btn = screen.getByText("Type-3 Near-Miss").closest("button");
+    fireEvent.click(type3Btn!);
+    expect(screen.getByText("Pairwise (1)")).toBeDefined();
+  });
 });

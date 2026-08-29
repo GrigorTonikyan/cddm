@@ -161,6 +161,8 @@ pub struct ScanConfig {
     pub ignore_patterns: Vec<String>,
     /// Whether to detect Type-2 clones (renamed identifiers/literals)
     pub detect_type2: bool,
+    /// Whether to detect Type-3 clones (near-miss modified statements)
+    pub detect_type3: bool,
     /// Whether to find clones within the exact same file
     pub scan_self: bool,
     /// Whether to annotate clone pairs with in-process git blame author information
@@ -198,6 +200,7 @@ impl Default for ScanConfig {
                 .map(|&s| s.to_string())
                 .collect(),
             detect_type2: true,
+            detect_type3: true,
             scan_self: true,
             enable_git_blame: false,
             cache_dir: None,

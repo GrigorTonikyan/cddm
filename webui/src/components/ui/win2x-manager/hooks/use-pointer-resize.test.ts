@@ -1,17 +1,10 @@
 import { describe, it, expect, vi } from "vite-plus/test";
 import { renderHook, act } from "@testing-library/react";
 import { usePointerResize } from "./use-pointer-resize";
+import { createDefaultHookOptions, createMockPointerEvent } from "./test-helpers";
 
 describe("usePointerResize Hook (win2x-manager)", () => {
-  const defaultOpts = {
-    containerRef: { current: document.createElement("div") },
-    x: 100,
-    y: 100,
-    width: 500,
-    height: 400,
-    isMaximized: false,
-    onResizeEnd: vi.fn(),
-  };
+  const defaultOpts = createDefaultHookOptions({ onResizeEnd: vi.fn() });
 
   it("initializes handleResizePointerDown function", () => {
     const { result } = renderHook(() => usePointerResize(defaultOpts));
@@ -24,16 +17,7 @@ describe("usePointerResize Hook (win2x-manager)", () => {
       usePointerResize({ ...defaultOpts, isMaximized: true, disabled: true }),
     );
 
-    const mockEvent = {
-      button: 0,
-      clientX: 500,
-      clientY: 400,
-      pointerId: 2,
-      target: document.createElement("div"),
-      currentTarget: document.createElement("div"),
-      preventDefault: vi.fn(),
-      stopPropagation: vi.fn(),
-    } as unknown as React.PointerEvent<HTMLElement>;
+    const mockEvent = createMockPointerEvent({ clientX: 500, clientY: 400, pointerId: 2 });
 
     act(() => {
       result.current.handleResizePointerDown("bottom-right", mockEvent);

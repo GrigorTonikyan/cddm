@@ -31,7 +31,11 @@ export const createScanSlice = (set: SetStoreState, get: GetStoreState) => ({
       }
 
       const results: ScanResult = await res.json();
-      set({ results, isScanning: false, activeScanId: results.scan_id, error: null });
+      if (results && Array.isArray(results.clone_pairs)) {
+        set({ results, isScanning: false, activeScanId: results.scan_id, error: null });
+      } else {
+        set({ isScanning: false, results: null });
+      }
     } catch (err) {
       set({
         isScanning: false,

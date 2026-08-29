@@ -30,8 +30,10 @@ export const buildTreemapHierarchy = (clonePairs: ClonePair[]): TreemapNode => {
     children: new Map(),
   };
 
+  const safePairs = Array.isArray(clonePairs) ? clonePairs : [];
+
   // Collect duplicate instances and aggregate token counts
-  for (const pair of clonePairs) {
+  for (const pair of safePairs) {
     const recordFile = (filePath: string, tokens: number) => {
       const normalized = filePath.replace(/\\/g, "/").replace(/^\.\//, "");
       const segments = normalized.split("/");
@@ -302,7 +304,7 @@ export const DuplicationTreemap: React.FC<DuplicationTreemapProps> = ({
       </div>
 
       {/* SVG Treemap Canvas */}
-      <div className="relative w-full aspect-[20/9] bg-slate-950 rounded-xl border border-slate-800/90 overflow-hidden shadow-inner">
+      <div className="relative w-full aspect-20/9 bg-slate-950 rounded-xl border border-slate-800/90 overflow-hidden shadow-inner">
         {layoutRects.length === 0 ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center text-xs font-mono text-slate-500 gap-2">
             <Info className="w-5 h-5 opacity-60" />

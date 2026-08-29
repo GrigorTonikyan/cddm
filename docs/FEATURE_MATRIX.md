@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-27 | Rust: 269 #[test] units | WebUI: 191 tests across 50 suites | Scripts & MCP: 112 tests across 40 suites | CI Workflows: PASS
+> Last verified: 2026-08-27 | Rust: 269 #[test] units | WebUI: 193 tests across 50 suites | Scripts & MCP: 113 tests across 40 suites | CI Workflows: PASS
 
 ---
 
@@ -358,7 +358,7 @@
 
 ---
 
-## 2. WebUI Frontend — React 19 + TypeScript + Vitest (191 unit tests across 50 suites)
+## 2. WebUI Frontend — React 19 + TypeScript + Vitest (193 unit tests across 50 suites)
 
 | Module                      | Test Suite File                                                                       | Test Cases | Status |
 | :-------------------------- | :------------------------------------------------------------------------------------ | :--------- | :----- |
@@ -378,9 +378,9 @@
 | Refactor Patch Modal        | `webui/src/components/RefactorPatchModal.test.tsx`                                    | 3 tests    | PASS   |
 | Refactor Sandbox Modal      | `webui/src/components/RefactorSandboxModal.test.tsx`                                  | 6 tests    | PASS   |
 | Scan Config Modal           | `webui/src/components/ScanConfigModal.test.tsx`                                       | 2 tests    | PASS   |
-| Scan Config Panel           | `webui/src/components/ScanConfigPanel.test.tsx`                                       | 4 tests    | PASS   |
+| Scan Config Panel           | `webui/src/components/ScanConfigPanel.test.tsx`                                       | 5 tests    | PASS   |
 | Scan Progress Bar           | `webui/src/components/ScanProgressBar.test.tsx`                                       | 3 tests    | PASS   |
-| Scan Results                | `webui/src/components/ScanResults.test.tsx`                                           | 6 tests    | PASS   |
+| Scan Results                | `webui/src/components/ScanResults.test.tsx`                                           | 7 tests    | PASS   |
 | Semantic Graph Modal        | `webui/src/components/SemanticGraphModal.test.tsx`                                    | 3 tests    | PASS   |
 | Suppression Rules Modal     | `webui/src/components/SuppressionRulesModal.test.tsx`                                 | 3 tests    | PASS   |
 | Timeline Explorer Modal     | `webui/src/components/TimelineExplorerModal.test.tsx`                                 | 3 tests    | PASS   |
@@ -415,7 +415,7 @@
 
 ---
 
-## 3. Repository Scripts & MCP Protocol — Bun Test Suites (112 tests across 40 suites)
+## 3. Repository Scripts & MCP Protocol — Bun Test Suites (113 tests across 40 suites)
 
 ### Repository Tooling & Automation Suites
 
@@ -458,7 +458,7 @@
 | Tool: cddm_get_timeline             | `tests/mcp/tools/get-timeline.test.ts`             | 1 tests    | PASS   |
 | Tool: cddm_heal_refactor            | `tests/mcp/tools/heal-refactor.test.ts`            | 1 tests    | PASS   |
 | Tool: cddm_import_cache_pack        | `tests/mcp/tools/import-cache-pack.test.ts`        | 2 tests    | PASS   |
-| Tool: cddm_scan_codebase            | `tests/mcp/tools/scan-codebase.test.ts`            | 2 tests    | PASS   |
+| Tool: cddm_scan_codebase            | `tests/mcp/tools/scan-codebase.test.ts`            | 3 tests    | PASS   |
 | Tool: cddm_scan_cross_language      | `tests/mcp/tools/scan-cross-language.test.ts`      | 2 tests    | PASS   |
 | Tool: cddm_scan_hub                 | `tests/mcp/tools/scan-hub.test.ts`                 | 3 tests    | PASS   |
 | Tool: cddm_scan_monorepo            | `tests/mcp/tools/scan-monorepo.test.ts`            | 1 tests    | PASS   |

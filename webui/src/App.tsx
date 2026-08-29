@@ -1,41 +1,42 @@
+import {
+  Activity,
+  Award,
+  Building2,
+  CheckCheck,
+  FileDown,
+  History,
+  Layers,
+  Network,
+  Scale,
+  Scissors,
+  ShieldAlert,
+  ShieldCheck,
+  Sliders,
+  Sparkles,
+  Terminal,
+  X,
+} from "lucide-react";
 import React from "react";
+import { CoverageCorrelationModal } from "./components/CoverageCorrelationModal";
+import { HubFederationModal } from "./components/HubFederationModal";
+import { OverlapDetectorModal } from "./components/OverlapDetectorModal";
+import { PolicyRulesModal } from "./components/PolicyRulesModal";
+import { RefactorSandboxModal } from "./components/RefactorSandboxModal";
+import { ScanConfigModal } from "./components/ScanConfigModal";
 import { ScanConfigPanel } from "./components/ScanConfigPanel";
 import { ScanProgressBar } from "./components/ScanProgressBar";
 import { ScanResults } from "./components/ScanResults";
-import { ScanConfigModal } from "./components/ScanConfigModal";
+import { SemanticGraphModal } from "./components/SemanticGraphModal";
+import { SuppressionRulesModal } from "./components/SuppressionRulesModal";
+import { TimelineExplorerModal } from "./components/TimelineExplorerModal";
+import { LiveEventInspectorModal } from "./components/watch/LiveEventInspectorModal";
+import { LiveWatchBar } from "./components/watch/LiveWatchBar";
 import { APP_VERSION } from "./constants/cddm-constants";
 import { useCDDMStore } from "./store/cddm-store";
-import { TimelineExplorerModal } from "./components/TimelineExplorerModal";
-import { SuppressionRulesModal } from "./components/SuppressionRulesModal";
-import { RefactorSandboxModal } from "./components/RefactorSandboxModal";
-import { PolicyRulesModal } from "./components/PolicyRulesModal";
-import { SemanticGraphModal } from "./components/SemanticGraphModal";
-import { OverlapDetectorModal } from "./components/OverlapDetectorModal";
-import { HubFederationModal } from "./components/HubFederationModal";
-import { CoverageCorrelationModal } from "./components/CoverageCorrelationModal";
-import { LiveWatchBar } from "./components/watch/LiveWatchBar";
-import { LiveEventInspectorModal } from "./components/watch/LiveEventInspectorModal";
-import {
-  Scissors,
-  Terminal,
-  Sparkles,
-  ShieldCheck,
-  ShieldAlert,
-  Scale,
-  Sliders,
-  Award,
-  FileDown,
-  CheckCheck,
-  X,
-  History,
-  Network,
-  Layers,
-  Building2,
-  Activity,
-} from "lucide-react";
 
 export const App: React.FC = () => {
   const {
+    startScan,
     error,
     results,
     patchStatusMessage,
@@ -64,15 +65,22 @@ export const App: React.FC = () => {
     setIsLiveEventInspectorOpen,
   } = useCDDMStore();
 
+  React.useEffect(() => {
+    const state = useCDDMStore.getState();
+    if (!state.results && !state.error && !state.isScanning) {
+      void startScan();
+    }
+  }, [startScan]);
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-indigo-500/30 selection:text-indigo-200">
       {/* Radiant Glow Background Accent */}
-      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-gradient-to-b from-indigo-950/20 via-purple-950/10 to-transparent pointer-events-none blur-3xl -z-10" />
+      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-linear-to-b from-indigo-950/20 via-purple-950/10 to-transparent pointer-events-none blur-3xl -z-10" />
 
       {/* Header Bar */}
       <header className="bg-slate-900/90 border-b border-slate-800/80 px-6 py-4 flex flex-wrap items-center justify-between gap-3 sticky top-0 z-50 backdrop-blur-md shadow-lg">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-gradient-to-tr from-indigo-600 to-purple-600 rounded-xl shadow-lg shadow-indigo-900/30">
+          <div className="p-2.5 bg-linear-to-tr from-indigo-600 to-purple-600 rounded-xl shadow-lg shadow-indigo-900/30">
             <Scissors className="w-5 h-5 text-white" />
           </div>
           <div>

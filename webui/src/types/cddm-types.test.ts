@@ -9,6 +9,7 @@ describe("cddm-types", () => {
       languages: [],
       ignore_patterns: [],
       detect_type2: true,
+      detect_type3: true,
       scan_self: true,
     };
     expect(config).toHaveProperty("directory");
@@ -16,6 +17,7 @@ describe("cddm-types", () => {
     expect(config).toHaveProperty("languages");
     expect(config).toHaveProperty("ignore_patterns");
     expect(config).toHaveProperty("detect_type2");
+    expect(config).toHaveProperty("detect_type3");
     expect(config).toHaveProperty("scan_self");
   });
 

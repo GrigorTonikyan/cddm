@@ -94,6 +94,10 @@ pub enum Commands {
         #[arg(long, default_value_t = false)]
         cross_language: bool,
 
+        /// Disable Type-3 near-miss modified statement clone detection
+        #[arg(long, default_value_t = false)]
+        no_type3: bool,
+
         /// Maximum number of parallel worker threads to utilize (default: all logical cores)
         #[arg(short = 'j', long)]
         threads: Option<usize>,

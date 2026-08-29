@@ -125,6 +125,21 @@ fn canonicalize_token(word: &str) -> &str {
     }
 }
 
+fn for_each_subword_3gram(tok: &str, mut cb: impl FnMut(&str)) {
+    if tok.len() >= 3
+        && !tok.starts_with("op_")
+        && !tok.starts_with("ctrl_")
+        && !tok.starts_with("decl_")
+        && !tok.starts_with("def_")
+    {
+        let chars: Vec<char> = tok.chars().collect();
+        for w in chars.windows(3) {
+            let gram: String = w.iter().collect();
+            cb(&gram);
+        }
+    }
+}
+
 /// Generates a normalized term-frequency sparse vector from a token list.
 pub fn compute_tf_vector(tokens: &[String]) -> HashMap<String, f64> {
     let mut counts: HashMap<String, f64> = HashMap::new();
@@ -138,18 +153,9 @@ pub fn compute_tf_vector(tokens: &[String]) -> HashMap<String, f64> {
 
     // Also add subword character n-grams (3-grams) for identifier similarity with moderate weighting
     for tok in tokens {
-        if tok.len() >= 3
-            && !tok.starts_with("op_")
-            && !tok.starts_with("ctrl_")
-            && !tok.starts_with("decl_")
-            && !tok.starts_with("def_")
-        {
-            let chars: Vec<char> = tok.chars().collect();
-            for w in chars.windows(3) {
-                let gram: String = w.iter().collect();
-                *counts.entry(format!("ng_{}", gram)).or_insert(0.0) += 0.2;
-            }
-        }
+        for_each_subword_3gram(tok, |gram| {
+            *counts.entry(format!("ng_{}", gram)).or_insert(0.0) += 0.2;
+        });
     }
 
     // Normalize L2 norm
@@ -195,17 +201,11 @@ pub fn calculate_embedding_similarity(code_a: &str, code_b: &str) -> f64 {
     cosine_similarity(&v1, &v2)
 }
 
-/// Computes unified hybrid similarity combining graph structural isomorphism and semantic token vector similarity.
-pub fn compute_hybrid_similarity(
-    cfg_a: &ControlFlowGraph,
-    code_a: &str,
-    cfg_b: &ControlFlowGraph,
-    code_b: &str,
+fn build_hybrid_similarity(
+    graph_similarity: f64,
+    token_similarity: f64,
     is_cross_language: bool,
 ) -> HybridSimilarity {
-    let graph_similarity = calculate_graph_similarity(cfg_a, cfg_b);
-    let token_similarity = calculate_embedding_similarity(code_a, code_b);
-
     let (graph_weight, token_weight) = if is_cross_language {
         (0.60, 0.40)
     } else {
@@ -221,6 +221,19 @@ pub fn compute_hybrid_similarity(
         hybrid_score: (hybrid_score * 1000.0).round() / 1000.0,
         is_cross_language,
     }
+}
+
+/// Computes unified hybrid similarity combining graph structural isomorphism and semantic token vector similarity.
+pub fn compute_hybrid_similarity(
+    cfg_a: &ControlFlowGraph,
+    code_a: &str,
+    cfg_b: &ControlFlowGraph,
+    code_b: &str,
+    is_cross_language: bool,
+) -> HybridSimilarity {
+    let graph_similarity = calculate_graph_similarity(cfg_a, cfg_b);
+    let token_similarity = calculate_embedding_similarity(code_a, code_b);
+    build_hybrid_similarity(graph_similarity, token_similarity, is_cross_language)
 }
 
 /// Compact, sorted sparse vector representation for fast linear two-pointer dot products.
@@ -255,19 +268,10 @@ impl SparseTfVector {
         }
 
         for tok in tokens {
-            if tok.len() >= 3
-                && !tok.starts_with("op_")
-                && !tok.starts_with("ctrl_")
-                && !tok.starts_with("decl_")
-                && !tok.starts_with("def_")
-            {
-                let chars: Vec<char> = tok.chars().collect();
-                for w in chars.windows(3) {
-                    let gram: String = w.iter().collect();
-                    let h = hash_token_str_fnv1a(&format!("ng_{}", gram));
-                    *map.entry(h).or_insert(0.0) += 0.2;
-                }
-            }
+            for_each_subword_3gram(tok, |gram| {
+                let h = hash_token_str_fnv1a(&format!("ng_{}", gram));
+                *map.entry(h).or_insert(0.0) += 0.2;
+            });
         }
 
         let sum_sq: f64 = map.values().map(|v| v * v).sum();
@@ -324,20 +328,5 @@ pub fn compute_hybrid_similarity_with_tf(
 ) -> HybridSimilarity {
     let graph_similarity = calculate_graph_similarity(cfg_a, cfg_b);
     let token_similarity = tf_a.cosine_similarity(tf_b);
-
-    let (graph_weight, token_weight) = if is_cross_language {
-        (0.60, 0.40)
-    } else {
-        (0.50, 0.50)
-    };
-
-    let hybrid_score =
-        (graph_weight * graph_similarity + token_weight * token_similarity).clamp(0.0, 1.0);
-
-    HybridSimilarity {
-        graph_similarity: (graph_similarity * 1000.0).round() / 1000.0,
-        token_similarity: (token_similarity * 1000.0).round() / 1000.0,
-        hybrid_score: (hybrid_score * 1000.0).round() / 1000.0,
-        is_cross_language,
-    }
+    build_hybrid_similarity(graph_similarity, token_similarity, is_cross_language)
 }

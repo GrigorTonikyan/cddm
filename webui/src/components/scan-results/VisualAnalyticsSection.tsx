@@ -22,8 +22,9 @@ export const VisualAnalyticsSection: React.FC<VisualAnalyticsSectionProps> = ({
   const [analyticsView, setAnalyticsView] = useState<"treemap" | "languages">("treemap");
 
   const totalTokensAllLangs = useMemo(() => {
+    if (!Array.isArray(results?.language_breakdown)) return 0;
     return results.language_breakdown.reduce((sum, item) => sum + item.tokens, 0);
-  }, [results.language_breakdown]);
+  }, [results?.language_breakdown]);
 
   return (
     <div className="space-y-3">

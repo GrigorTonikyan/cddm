@@ -46,6 +46,7 @@ impl ServerStateInner {
             languages: self.languages.clone(),
             ignore_patterns: self.ignore_patterns.clone(),
             detect_type2: true,
+            detect_type3: true,
             scan_self: true,
             enable_git_blame: false,
             cache_dir: None,

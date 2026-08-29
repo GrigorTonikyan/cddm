@@ -27,6 +27,7 @@ pub async fn run_extract_command(args: ExtractArgs) -> Result<(), Box<dyn std::e
         languages: vec![],
         ignore_patterns: vec![],
         detect_type2: true,
+        detect_type3: true,
         scan_self: false,
         enable_git_blame: false,
         cache_dir: None,

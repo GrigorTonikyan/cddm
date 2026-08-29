@@ -121,6 +121,22 @@ fn post_and_extract(
     Ok(resp_str)
 }
 
+fn init_provider_config(
+    model: Option<String>,
+    default_model: &str,
+    api_key: Option<String>,
+    env_var: &str,
+    temperature: Option<f64>,
+) -> (String, String, f64) {
+    (
+        model.unwrap_or_else(|| default_model.to_string()),
+        api_key
+            .or_else(|| std::env::var(env_var).ok())
+            .unwrap_or_default(),
+        temperature.unwrap_or(0.2),
+    )
+}
+
 /// Google Gemini provider.
 #[derive(Debug, Clone)]
 pub struct GeminiProvider {
@@ -131,12 +147,17 @@ pub struct GeminiProvider {
 
 impl GeminiProvider {
     pub fn new(model: Option<String>, api_key: Option<String>, temperature: Option<f64>) -> Self {
+        let (model, api_key, temperature) = init_provider_config(
+            model,
+            "gemini-1.5-pro",
+            api_key,
+            "GEMINI_API_KEY",
+            temperature,
+        );
         Self {
-            model: model.unwrap_or_else(|| "gemini-1.5-pro".to_string()),
-            api_key: api_key
-                .or_else(|| std::env::var("GEMINI_API_KEY").ok())
-                .unwrap_or_default(),
-            temperature: temperature.unwrap_or(0.2),
+            model,
+            api_key,
+            temperature,
         }
     }
 }
@@ -174,6 +195,36 @@ impl AiProvider for GeminiProvider {
     }
 }
 
+fn chat_message_payload(
+    model: &str,
+    temperature: f64,
+    prompt: &str,
+    max_tokens: Option<usize>,
+) -> serde_json::Value {
+    let mut payload = json!({
+        "model": model,
+        "temperature": temperature,
+        "messages": [
+            {"role": "user", "content": prompt}
+        ]
+    });
+    if let Some(mt) = max_tokens
+        && let Some(obj) = payload.as_object_mut()
+    {
+        obj.insert("max_tokens".to_string(), json!(mt));
+    }
+    payload
+}
+
+fn execute_http_chat(
+    url: &str,
+    headers: &[(&str, &str)],
+    payload: &serde_json::Value,
+    extract_fn: impl Fn(&serde_json::Value) -> Option<&str>,
+) -> Result<String, String> {
+    post_and_extract(url, headers, payload, extract_fn)
+}
+
 /// Anthropic Claude provider.
 #[derive(Debug, Clone)]
 pub struct ClaudeProvider {
@@ -184,12 +235,17 @@ pub struct ClaudeProvider {
 
 impl ClaudeProvider {
     pub fn new(model: Option<String>, api_key: Option<String>, temperature: Option<f64>) -> Self {
+        let (model, api_key, temperature) = init_provider_config(
+            model,
+            "claude-3-5-sonnet-20241022",
+            api_key,
+            "ANTHROPIC_API_KEY",
+            temperature,
+        );
         Self {
-            model: model.unwrap_or_else(|| "claude-3-5-sonnet-20241022".to_string()),
-            api_key: api_key
-                .or_else(|| std::env::var("ANTHROPIC_API_KEY").ok())
-                .unwrap_or_default(),
-            temperature: temperature.unwrap_or(0.2),
+            model,
+            api_key,
+            temperature,
         }
     }
 }
@@ -201,24 +257,18 @@ impl AiProvider for ClaudeProvider {
             return Err("Anthropic API key not provided or set in ANTHROPIC_API_KEY".to_string());
         }
 
-        let payload = json!({
-            "model": self.model,
-            "max_tokens": 4096,
-            "temperature": self.temperature,
-            "messages": [
-                {"role": "user", "content": prompt}
-            ]
-        });
-
-        let url = "https://api.anthropic.com/v1/messages";
+        let payload = chat_message_payload(&self.model, self.temperature, prompt, Some(4096));
         let headers = [
             ("x-api-key", self.api_key.as_str()),
             ("anthropic-version", "2023-06-01"),
         ];
 
-        post_and_extract(url, &headers, &payload, |val| {
-            val.get("content")?.get(0)?.get("text")?.as_str()
-        })
+        execute_http_chat(
+            "https://api.anthropic.com/v1/messages",
+            &headers,
+            &payload,
+            |val| val.get("content")?.get(0)?.get("text")?.as_str(),
+        )
     }
 }
 
@@ -232,12 +282,12 @@ pub struct OpenAiProvider {
 
 impl OpenAiProvider {
     pub fn new(model: Option<String>, api_key: Option<String>, temperature: Option<f64>) -> Self {
+        let (model, api_key, temperature) =
+            init_provider_config(model, "gpt-4o", api_key, "OPENAI_API_KEY", temperature);
         Self {
-            model: model.unwrap_or_else(|| "gpt-4o".to_string()),
-            api_key: api_key
-                .or_else(|| std::env::var("OPENAI_API_KEY").ok())
-                .unwrap_or_default(),
-            temperature: temperature.unwrap_or(0.2),
+            model,
+            api_key,
+            temperature,
         }
     }
 }
@@ -249,25 +299,22 @@ impl AiProvider for OpenAiProvider {
             return Err("OpenAI API key not provided or set in OPENAI_API_KEY".to_string());
         }
 
-        let payload = json!({
-            "model": self.model,
-            "temperature": self.temperature,
-            "messages": [
-                {"role": "user", "content": prompt}
-            ]
-        });
-
-        let url = "https://api.openai.com/v1/chat/completions";
+        let payload = chat_message_payload(&self.model, self.temperature, prompt, None);
         let auth_hdr = format!("Bearer {}", self.api_key);
         let headers = [("Authorization", auth_hdr.as_str())];
 
-        post_and_extract(url, &headers, &payload, |val| {
-            val.get("choices")?
-                .get(0)?
-                .get("message")?
-                .get("content")?
-                .as_str()
-        })
+        execute_http_chat(
+            "https://api.openai.com/v1/chat/completions",
+            &headers,
+            &payload,
+            |val| {
+                val.get("choices")?
+                    .get(0)?
+                    .get("message")?
+                    .get("content")?
+                    .as_str()
+            },
+        )
     }
 }
 

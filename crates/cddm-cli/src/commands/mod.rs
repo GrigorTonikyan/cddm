@@ -48,3 +48,13 @@ pub(crate) fn make_colored_header(cols: &[(&str, comfy_table::Color)]) -> Vec<co
         .map(|(title, color)| comfy_table::Cell::new(*title).fg(*color))
         .collect()
 }
+
+#[inline]
+pub(crate) fn add_kv_overview_rows(table: &mut comfy_table::Table, entries: &[(&str, String)]) {
+    for (metric, val) in entries {
+        table.add_row(comfy_table::Row::from(vec![
+            comfy_table::Cell::new(*metric),
+            comfy_table::Cell::new(val),
+        ]));
+    }
+}

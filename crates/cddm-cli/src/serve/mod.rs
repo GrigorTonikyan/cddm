@@ -58,7 +58,7 @@ pub fn build_app() -> (AppState, Router) {
 pub fn build_app_with_state(state: AppState) -> Router {
     Router::new()
         .route(ROUTE_API_HEALTH, get(health_handler))
-        .route(ROUTE_API_SCAN, post(scan_handler))
+        .route(ROUTE_API_SCAN, get(scan_get_handler).post(scan_handler))
         .route(ROUTE_API_DIFF, post(diff_handler))
         .route(ROUTE_API_SNIPPET, get(snippet_handler))
         .route(ROUTE_API_REFACTOR, post(refactor_handler))

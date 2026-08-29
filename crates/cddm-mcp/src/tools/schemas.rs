@@ -64,7 +64,8 @@ pub fn get_tool_definitions() -> Vec<serde_json::Value> {
                 "properties": {
                     mcp_tools::PARAM_DIRECTORY: { "type": "string", "description": "Target directory path to analyze (default: current directory)" },
                     mcp_tools::PARAM_MIN_TOKENS: { "type": "number", "description": format!("Minimum token threshold (default: {})", DEFAULT_MIN_TOKENS) },
-                    mcp_tools::PARAM_ENABLE_GIT_BLAME: { "type": "boolean", "description": "Annotate duplicate lines with in-process git blame author metadata" }
+                    mcp_tools::PARAM_ENABLE_GIT_BLAME: { "type": "boolean", "description": "Annotate duplicate lines with in-process git blame author metadata" },
+                    "detect_type3": { "type": "boolean", "description": "Enable Type-3 (near-miss modified statements) clone detection (default: true)" }
                 }
             }
         }),

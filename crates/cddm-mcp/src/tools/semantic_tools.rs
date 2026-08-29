@@ -231,6 +231,7 @@ pub fn handle_scan_cross_language(
         languages,
         ignore_patterns,
         detect_type2: true,
+        detect_type3: true,
         scan_self: true,
         enable_git_blame: false,
         cache_dir: None,

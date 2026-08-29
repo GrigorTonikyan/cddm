@@ -56,6 +56,7 @@ export const DEFAULT_SCAN_CONFIG: ScanConfig = {
   languages: [],
   ignore_patterns: ["node_modules", "target", ".git", "dist", "build", ".logs"],
   detect_type2: true,
+  detect_type3: true,
   scan_self: true,
   enable_git_blame: true,
   ignore_tests: false,

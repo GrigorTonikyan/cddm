@@ -115,34 +115,30 @@ fn print_hub_console(summary: &HubScanSummary) {
         ("Metric", Color::Cyan),
         ("Value", Color::Green),
     ]));
-    overview.add_row(Row::from(vec![
-        Cell::new("Total Member Repositories"),
-        Cell::new(summary.total_repos.to_string()),
-    ]));
-    overview.add_row(Row::from(vec![
-        Cell::new("Total Files Analyzed"),
-        Cell::new(summary.total_files.to_string()),
-    ]));
-    overview.add_row(Row::from(vec![
-        Cell::new("Total Scanned Tokens"),
-        Cell::new(summary.total_tokens.to_string()),
-    ]));
-    overview.add_row(Row::from(vec![
-        Cell::new("Cross-Repository Clone Pairs"),
-        Cell::new(summary.cross_repo_clones.to_string()),
-    ]));
-    overview.add_row(Row::from(vec![
-        Cell::new("Cross-Repository Clusters"),
-        Cell::new(summary.cross_repo_clusters.to_string()),
-    ]));
-    overview.add_row(Row::from(vec![
-        Cell::new("Organization DRY Health Score"),
-        Cell::new(format!("{:.2} / 100.0", summary.organization_dry_score)),
-    ]));
-    overview.add_row(Row::from(vec![
-        Cell::new("Cross-Repo Duplication Rate"),
-        Cell::new(format!("{:.2}%", summary.cross_repo_duplication_pct)),
-    ]));
+    super::add_kv_overview_rows(
+        &mut overview,
+        &[
+            ("Total Member Repositories", summary.total_repos.to_string()),
+            ("Total Files Analyzed", summary.total_files.to_string()),
+            ("Total Scanned Tokens", summary.total_tokens.to_string()),
+            (
+                "Cross-Repository Clone Pairs",
+                summary.cross_repo_clones.to_string(),
+            ),
+            (
+                "Cross-Repository Clusters",
+                summary.cross_repo_clusters.to_string(),
+            ),
+            (
+                "Organization DRY Health Score",
+                format!("{:.2} / 100.0", summary.organization_dry_score),
+            ),
+            (
+                "Cross-Repo Duplication Rate",
+                format!("{:.2}%", summary.cross_repo_duplication_pct),
+            ),
+        ],
+    );
     println!("{overview}");
 
     if !summary.duplication_matrix.is_empty() {

@@ -28,10 +28,22 @@ export interface SummaryBannerProps {
 }
 
 export const SummaryBanner: React.FC<SummaryBannerProps> = ({ results, onOpenHealthAudit }) => {
+  const dryScore = typeof results?.dry_health_score === "number" ? results.dry_health_score : 100.0;
+  const dupPct =
+    typeof results?.duplication_percentage === "number" ? results.duplication_percentage : 0.0;
+  const totalFiles = results?.total_files ?? 0;
+  const totalTokens = results?.total_tokens ?? 0;
+  const totalClones =
+    results?.total_clones ?? (Array.isArray(results?.clone_pairs) ? results.clone_pairs.length : 0);
+  const totalClusters =
+    results?.total_clusters ??
+    (Array.isArray(results?.clone_clusters) ? results.clone_clusters.length : 0);
+  const durationMs = results?.duration_ms ?? 0;
+
   const scoreColor =
-    results.dry_health_score >= 80
+    dryScore >= 80
       ? "text-emerald-400 border-emerald-500/40 bg-emerald-950/20 shadow-emerald-950/30 hover:border-emerald-400/80"
-      : results.dry_health_score >= 60
+      : dryScore >= 60
         ? "text-amber-400 border-amber-500/40 bg-amber-950/20 shadow-amber-950/30 hover:border-amber-400/80"
         : "text-rose-400 border-rose-500/40 bg-rose-950/20 shadow-rose-950/30 hover:border-rose-400/80";
 
@@ -53,20 +65,16 @@ export const SummaryBanner: React.FC<SummaryBannerProps> = ({ results, onOpenHea
         <div className="mt-3">
           <div className="flex items-baseline gap-1">
             <span className="text-3xl font-extrabold font-mono tracking-tight">
-              {results.dry_health_score.toFixed(1)}
+              {dryScore.toFixed(1)}
             </span>
             <span className="text-sm opacity-60">/ 100</span>
           </div>
           <div className="w-full bg-slate-900/60 rounded-full h-1.5 mt-2 overflow-hidden border border-slate-700/30">
             <div
               className={`h-full transition-all duration-500 ${
-                results.dry_health_score >= 80
-                  ? "bg-emerald-400"
-                  : results.dry_health_score >= 60
-                    ? "bg-amber-400"
-                    : "bg-rose-400"
+                dryScore >= 80 ? "bg-emerald-400" : dryScore >= 60 ? "bg-amber-400" : "bg-rose-400"
               }`}
-              style={{ width: `${Math.min(100, Math.max(0, results.dry_health_score))}%` }}
+              style={{ width: `${Math.min(100, Math.max(0, dryScore))}%` }}
             />
           </div>
         </div>
@@ -75,7 +83,7 @@ export const SummaryBanner: React.FC<SummaryBannerProps> = ({ results, onOpenHea
       {/* Duplication Rate */}
       <SummaryCard
         title="Duplication Rate"
-        value={`${results.duplication_percentage.toFixed(2)}%`}
+        value={`${dupPct.toFixed(2)}%`}
         subtitle="Total code redundancy"
         icon={<Copy className="w-5 h-5 text-indigo-400" />}
       />
@@ -83,15 +91,15 @@ export const SummaryBanner: React.FC<SummaryBannerProps> = ({ results, onOpenHea
       {/* Files Scanned */}
       <SummaryCard
         title="Files Scanned"
-        value={results.total_files.toLocaleString()}
-        subtitle={`${results.total_tokens.toLocaleString()} tokens indexed`}
+        value={totalFiles.toLocaleString()}
+        subtitle={`${totalTokens.toLocaleString()} tokens indexed`}
         icon={<Layers className="w-5 h-5 text-indigo-400" />}
       />
 
       {/* Clone Pairs */}
       <SummaryCard
         title="Clone Pairs"
-        value={results.total_clones.toLocaleString()}
+        value={totalClones.toLocaleString()}
         subtitle="Pairwise duplicate fragments"
         icon={<Activity className="w-5 h-5 text-indigo-400" />}
       />
@@ -99,7 +107,7 @@ export const SummaryBanner: React.FC<SummaryBannerProps> = ({ results, onOpenHea
       {/* Clone Clusters */}
       <SummaryCard
         title="Clone Clusters"
-        value={(results.total_clusters ?? results.clone_clusters?.length ?? 0).toLocaleString()}
+        value={totalClusters.toLocaleString()}
         subtitle="N-way equivalence classes"
         icon={<GitBranch className="w-5 h-5 text-purple-400" />}
       />
@@ -109,7 +117,7 @@ export const SummaryBanner: React.FC<SummaryBannerProps> = ({ results, onOpenHea
         title="Engine Speed"
         value={
           <>
-            {results.duration_ms}
+            {durationMs}
             <span className="text-xs text-slate-400 font-mono"> ms</span>
           </>
         }
