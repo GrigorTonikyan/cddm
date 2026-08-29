@@ -22,7 +22,7 @@ CDDM ensures that every engineering capability is first-class and accessible in 
 
 ---
 
-## 2. Exhaustive Feature Parity Matrix (19 Core Capabilities)
+## 2. Exhaustive Feature Parity Matrix (20 Core Capabilities)
 
 | Capability Area                                | 1. CLI Command                 | 2. WebUI Studio (REST/SSE + UI)                                                    | 3. MCP Tool & Resource                                                   | 4. TUI Studio (`cddm tui`)                                      |
 | :--------------------------------------------- | :----------------------------- | :--------------------------------------------------------------------------------- | :----------------------------------------------------------------------- | :-------------------------------------------------------------- |
@@ -45,6 +45,7 @@ CDDM ensures that every engineering capability is first-class and accessible in 
 | **17. Organization Federation Hub**            | `cddm hub [FLAGS]`             | `GET/POST /api/hub/config`<br/>`POST /api/hub/scan`<br/>`HubFederationModal`       | Tool: `cddm_scan_hub`<br/>Res: `cddm://workspace/hub`                    | **Tab 10: Organization Hub**<br/>Key `0` to open hub            |
 | **18. Runtime Execution & Coverage**           | `cddm coverage [FLAGS]`        | `POST /api/coverage/correlate`<br/>`CoverageCorrelationModal`                      | Tool: `cddm_correlate_coverage`<br/>Res: `cddm://workspace/coverage`     | **Tab 11: Runtime Coverage**<br/>Key `C` / `v` to open coverage |
 | **19. Neural Embeddings & Algorithmic Clones** | `cddm semantic --neural`       | `POST /api/semantic/neural`<br/>`CrossLanguageExplorerTab`                         | Tool: `cddm_semantic_neural_scan`<br/>Res: `workspace/neural_embeddings` | **Tab 3: Cross-Language Explorer** (Neural View)                |
+| **20. Multi-Branch & Worktree Drift Matrix**   | `cddm diff <BASE> --matrix`    | `POST /api/diff/matrix`<br/>`BranchDriftMatrixSection`                             | Tool: `cddm_diff_matrix`<br/>Res: `cddm://workspace/diff`                | **Tab 7: Git History Timeline** (Branch Matrix Table)           |
 
 ---
 

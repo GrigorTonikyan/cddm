@@ -97,3 +97,51 @@ pub fn print_diff_markdown_report(diff_result: &DiffScanResult) {
         }
     }
 }
+
+pub fn print_branch_matrix_console_report(matrix: &cddm_core::BranchMatrixReport) {
+    println!("\n=== CDDM — Multi-Branch & Worktree Clone Drift Matrix ===");
+    println!(
+        "{:<22} {}",
+        "Branches Evaluated:",
+        matrix.branches.join(", ")
+    );
+    if let Some(cleanest) = &matrix.cleanest_branch {
+        println!("{:<22} {}", "Cleanest Branch:", cleanest);
+    }
+    if let Some(drift) = &matrix.highest_drift_branch {
+        println!("{:<22} {}", "Highest Drift:", drift);
+    }
+    println!("{:<22} {}", "Summary:", matrix.summary);
+    println!();
+
+    let mut table = Table::new();
+    table.set_header(vec![
+        Cell::new("Base Branch"),
+        Cell::new("Target Branch"),
+        Cell::new("Base DRY"),
+        Cell::new("Target DRY"),
+        Cell::new("Net Delta"),
+        Cell::new("Changed Files"),
+        Cell::new("New Clones"),
+        Cell::new("Divergence %"),
+    ]);
+
+    for item in &matrix.matrix {
+        let delta_color = if item.net_dry_delta >= 0.0 {
+            Color::Green
+        } else {
+            Color::Red
+        };
+        table.add_row(vec![
+            Cell::new(&item.base_branch),
+            Cell::new(&item.target_branch),
+            Cell::new(format!("{:.1}", item.base_dry_score)),
+            Cell::new(format!("{:.1}", item.target_dry_score)),
+            Cell::new(format!("{:+.2}%", item.net_dry_delta)).fg(delta_color),
+            Cell::new(item.changed_files_count),
+            Cell::new(item.new_clones_count),
+            Cell::new(format!("{:.1}%", item.divergence_index)).fg(Color::Yellow),
+        ]);
+    }
+    println!("{}", table);
+}

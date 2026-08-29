@@ -32,13 +32,17 @@ fn render_signature_and_params(frame: &mut Frame, app: &TuiApp, area: Rect) {
         )
     };
 
-    let lines = vec![
-        styled_kv_line("Target Function:  ", &fn_sig, Color::Cyan),
-        styled_kv_line("Variance Map:     ", &variance_info, Color::Yellow),
-    ];
-
-    let block = create_titled_block(" Refactoring Target Specification ", false);
-    frame.render_widget(Paragraph::new(lines).block(block), area);
+    render_two_line_kv_box(
+        frame,
+        " Refactoring Target Specification ",
+        "Target Function:  ",
+        &fn_sig,
+        Color::Cyan,
+        "Variance Map:     ",
+        &variance_info,
+        Color::Yellow,
+        area,
+    );
 }
 
 fn render_patch_preview(frame: &mut Frame, app: &TuiApp, area: Rect) {

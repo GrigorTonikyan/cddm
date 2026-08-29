@@ -16,23 +16,54 @@ import {
   Terminal,
   X,
 } from "lucide-react";
-import React from "react";
-import { CoverageCorrelationModal } from "./components/CoverageCorrelationModal";
-import { HubFederationModal } from "./components/HubFederationModal";
-import { OverlapDetectorModal } from "./components/OverlapDetectorModal";
-import { PolicyRulesModal } from "./components/PolicyRulesModal";
-import { RefactorSandboxModal } from "./components/RefactorSandboxModal";
-import { ScanConfigModal } from "./components/ScanConfigModal";
+import React, { Suspense } from "react";
 import { ScanConfigPanel } from "./components/ScanConfigPanel";
 import { ScanProgressBar } from "./components/ScanProgressBar";
 import { ScanResults } from "./components/ScanResults";
-import { SemanticGraphModal } from "./components/SemanticGraphModal";
-import { SuppressionRulesModal } from "./components/SuppressionRulesModal";
-import { TimelineExplorerModal } from "./components/TimelineExplorerModal";
-import { LiveEventInspectorModal } from "./components/watch/LiveEventInspectorModal";
 import { LiveWatchBar } from "./components/watch/LiveWatchBar";
 import { APP_VERSION } from "./constants/cddm-constants";
 import { useCDDMStore } from "./store/cddm-store";
+
+import { lazyModal } from "./utils/lazy-modal";
+
+// Lazy-loaded modal dialogs for high-speed initial bundle delivery
+const CoverageCorrelationModal = lazyModal(
+  () => import("./components/CoverageCorrelationModal"),
+  "CoverageCorrelationModal",
+);
+const HubFederationModal = lazyModal(
+  () => import("./components/HubFederationModal"),
+  "HubFederationModal",
+);
+const OverlapDetectorModal = lazyModal(
+  () => import("./components/OverlapDetectorModal"),
+  "OverlapDetectorModal",
+);
+const PolicyRulesModal = lazyModal(
+  () => import("./components/PolicyRulesModal"),
+  "PolicyRulesModal",
+);
+const RefactorSandboxModal = lazyModal(
+  () => import("./components/RefactorSandboxModal"),
+  "RefactorSandboxModal",
+);
+const ScanConfigModal = lazyModal(() => import("./components/ScanConfigModal"), "ScanConfigModal");
+const SemanticGraphModal = lazyModal(
+  () => import("./components/SemanticGraphModal"),
+  "SemanticGraphModal",
+);
+const SuppressionRulesModal = lazyModal(
+  () => import("./components/SuppressionRulesModal"),
+  "SuppressionRulesModal",
+);
+const TimelineExplorerModal = lazyModal(
+  () => import("./components/TimelineExplorerModal"),
+  "TimelineExplorerModal",
+);
+const LiveEventInspectorModal = lazyModal(
+  () => import("./components/watch/LiveEventInspectorModal"),
+  "LiveEventInspectorModal",
+);
 
 export const App: React.FC = () => {
   const {
@@ -234,59 +265,62 @@ export const App: React.FC = () => {
         <ScanResults />
       </main>
 
-      {/* Global Config Modal */}
-      <ScanConfigModal isOpen={isScanConfigOpen} onClose={() => setIsScanConfigOpen(false)} />
+      {/* Suspended Lazy-Loaded Modals */}
+      <Suspense fallback={null}>
+        {/* Global Config Modal */}
+        <ScanConfigModal isOpen={isScanConfigOpen} onClose={() => setIsScanConfigOpen(false)} />
 
-      {/* Timeline Trends Explorer Modal */}
-      <TimelineExplorerModal
-        isOpen={isTimelineModalOpen}
-        onClose={() => setIsTimelineModalOpen(false)}
-      />
+        {/* Timeline Trends Explorer Modal */}
+        <TimelineExplorerModal
+          isOpen={isTimelineModalOpen}
+          onClose={() => setIsTimelineModalOpen(false)}
+        />
 
-      {/* Suppression Rules Modal */}
-      <SuppressionRulesModal
-        isOpen={isSuppressionModalOpen}
-        onClose={() => setIsSuppressionModalOpen(false)}
-      />
+        {/* Suppression Rules Modal */}
+        <SuppressionRulesModal
+          isOpen={isSuppressionModalOpen}
+          onClose={() => setIsSuppressionModalOpen(false)}
+        />
 
-      {/* Refactor Sandbox Studio Modal */}
-      <RefactorSandboxModal
-        isOpen={isRefactorSandboxOpen}
-        onClose={() => setIsRefactorSandboxOpen(false)}
-      />
+        {/* Refactor Sandbox Studio Modal */}
+        <RefactorSandboxModal
+          isOpen={isRefactorSandboxOpen}
+          onClose={() => setIsRefactorSandboxOpen(false)}
+        />
 
-      {/* Architectural Policy Rules Studio Modal */}
-      <PolicyRulesModal
-        isOpen={isPolicyRulesModalOpen}
-        onClose={() => setIsPolicyRulesModalOpen(false)}
-      />
+        {/* Architectural Policy Rules Studio Modal */}
+        <PolicyRulesModal
+          isOpen={isPolicyRulesModalOpen}
+          onClose={() => setIsPolicyRulesModalOpen(false)}
+        />
 
-      {/* Semantic Graph & CFG/PDG Explorer Modal */}
-      <SemanticGraphModal
-        isOpen={isSemanticGraphModalOpen}
-        onClose={() => setIsSemanticGraphModalOpen(false)}
-      />
+        {/* Semantic Graph & CFG/PDG Explorer Modal */}
+        <SemanticGraphModal
+          isOpen={isSemanticGraphModalOpen}
+          onClose={() => setIsSemanticGraphModalOpen(false)}
+        />
 
-      {/* Ecosystem Library Overlap Detector Modal */}
-      <OverlapDetectorModal
-        isOpen={isOverlapDetectorOpen}
-        onClose={() => setIsOverlapDetectorOpen(false)}
-      />
+        {/* Ecosystem Library Overlap Detector Modal */}
+        <OverlapDetectorModal
+          isOpen={isOverlapDetectorOpen}
+          onClose={() => setIsOverlapDetectorOpen(false)}
+        />
 
-      {/* Organization Federation Hub Modal */}
-      <HubFederationModal isOpen={isHubModalOpen} onClose={() => setIsHubModalOpen(false)} />
+        {/* Organization Federation Hub Modal */}
+        <HubFederationModal isOpen={isHubModalOpen} onClose={() => setIsHubModalOpen(false)} />
 
-      {/* Runtime Coverage Correlation Modal */}
-      <CoverageCorrelationModal
-        isOpen={isCoverageModalOpen}
-        onClose={() => setIsCoverageModalOpen(false)}
-      />
+        {/* Runtime Coverage Correlation Modal */}
+        <CoverageCorrelationModal
+          isOpen={isCoverageModalOpen}
+          onClose={() => setIsCoverageModalOpen(false)}
+        />
 
-      {/* Live Watch & Sync Event Inspector Modal */}
-      <LiveEventInspectorModal
-        isOpen={isLiveEventInspectorOpen}
-        onClose={() => setIsLiveEventInspectorOpen(false)}
-      />
+        {/* Live Watch & Sync Event Inspector Modal */}
+        <LiveEventInspectorModal
+          isOpen={isLiveEventInspectorOpen}
+          onClose={() => setIsLiveEventInspectorOpen(false)}
+        />
+      </Suspense>
 
       {/* Footer */}
       <footer className="border-t border-slate-900 py-6 text-center text-xs text-slate-500 font-mono bg-slate-950/80">

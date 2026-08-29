@@ -6,15 +6,17 @@ use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Paragraph, Row, Table};
 
-use super::helpers::{create_titled_block, split_vertical_header_body};
+use super::helpers::{create_titled_block, split_horizontal_2, split_vertical_header_body};
 use crate::tui::app::TuiApp;
 use crate::tui::theme::TuiTheme;
 
-/// Render Tab 7: Git History Timeline & Trend Analyzer (`cddm trend`).
+/// Render Tab 7: Git History Timeline & Trend Analyzer (`cddm trend` & `cddm diff --matrix`).
 pub fn render_timeline_view(frame: &mut Frame, _app: &TuiApp, area: Rect) {
-    let (trend_pane, table_pane) = split_vertical_header_body(area, 6);
+    let (trend_pane, rest_pane) = split_vertical_header_body(area, 6);
+    let (table_pane, matrix_pane) = split_horizontal_2(rest_pane, 55, 45);
     render_trend_trajectory(frame, trend_pane);
     render_snapshots_table(frame, table_pane);
+    render_branch_matrix_table(frame, matrix_pane);
 }
 
 fn render_trend_trajectory(frame: &mut Frame, area: Rect) {
@@ -66,7 +68,6 @@ fn render_snapshots_table(frame: &mut Frame, area: Rect) {
             "feat(extract): implement automated shared module and crate extraction",
             "96.5%",
             "1.8%",
-            "Just now",
         ])
         .style(Style::default().fg(Color::Green)),
         Row::new(vec![
@@ -74,50 +75,38 @@ fn render_snapshots_table(frame: &mut Frame, area: Rect) {
             "feat(watch): implement live watch daemon and real-time studio sync",
             "94.8%",
             "3.2%",
-            "2 hours ago",
         ]),
         Row::new(vec![
             "2093ab7",
             "feat(semantic): cross-language semantic matching, hybrid embeddings",
             "92.1%",
             "4.9%",
-            "1 day ago",
         ]),
         Row::new(vec![
             "847cfd0",
             "feat(vscode): add embedded webview studio and vsix packager",
             "89.4%",
             "6.1%",
-            "3 days ago",
         ]),
         Row::new(vec![
             "19e8c61",
             "feat(studio): add semantic graph visualizer and polyglot ast refactor",
             "86.0%",
             "8.4%",
-            "5 days ago",
         ]),
     ];
 
     let table = Table::new(
         rows,
         [
-            Constraint::Length(10),
+            Constraint::Length(9),
             Constraint::Percentage(55),
-            Constraint::Length(12),
-            Constraint::Length(12),
-            Constraint::Length(15),
+            Constraint::Length(10),
+            Constraint::Length(10),
         ],
     )
     .header(
-        Row::new(vec![
-            "Commit",
-            "Commit Message",
-            "DRY Score",
-            "Duplication",
-            "Age",
-        ])
-        .style(
+        Row::new(vec!["Commit", "Commit Message", "DRY", "Dup %"]).style(
             Style::default()
                 .fg(TuiTheme::BRAND)
                 .add_modifier(Modifier::BOLD),
@@ -125,6 +114,49 @@ fn render_snapshots_table(frame: &mut Frame, area: Rect) {
     )
     .block(create_titled_block(
         " Historical Git Commit Snapshots ",
+        false,
+    ));
+
+    frame.render_widget(table, area);
+}
+
+fn render_branch_matrix_table(frame: &mut Frame, area: Rect) {
+    let rows = vec![
+        Row::new(vec!["main", "feature/auth", "+1.50%", "3", "2.1%"])
+            .style(Style::default().fg(Color::Green)),
+        Row::new(vec!["main", "feature/cache", "-0.80%", "7", "4.2%"])
+            .style(Style::default().fg(Color::Yellow)),
+        Row::new(vec![
+            "feature/auth",
+            "feature/cache",
+            "-2.30%",
+            "12",
+            "6.5%",
+        ])
+        .style(Style::default().fg(Color::Red)),
+        Row::new(vec!["main", "HEAD", "+0.00%", "0", "0.0%"])
+            .style(Style::default().fg(Color::Cyan)),
+    ];
+
+    let table = Table::new(
+        rows,
+        [
+            Constraint::Percentage(28),
+            Constraint::Percentage(32),
+            Constraint::Length(10),
+            Constraint::Length(9),
+            Constraint::Length(9),
+        ],
+    )
+    .header(
+        Row::new(vec!["Base", "Target", "Net DRY", "Files", "Drift %"]).style(
+            Style::default()
+                .fg(TuiTheme::BRAND)
+                .add_modifier(Modifier::BOLD),
+        ),
+    )
+    .block(create_titled_block(
+        " Multi-Branch Clone Drift Matrix ",
         false,
     ));
 

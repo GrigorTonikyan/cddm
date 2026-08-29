@@ -408,6 +408,21 @@ async fn test_semantic_scan_handler() {
     assert!(res.is_ok());
 }
 
+#[tokio::test]
+async fn test_diff_matrix_handler() {
+    let req = cddm_core::BranchMatrixRequest {
+        workspace_root: Some(std::path::PathBuf::from(".")),
+        branches: vec!["HEAD".to_string(), "HEAD".to_string()],
+        min_tokens: Some(50),
+    };
+
+    let res = diff_matrix_handler(axum::Json(req)).await;
+    assert!(res.is_ok());
+    let axum::Json(report) = res.unwrap();
+    assert_eq!(report.branches.len(), 2);
+    assert_eq!(report.matrix.len(), 2);
+}
+
 pub(crate) fn create_dummy_scan_result(file_a: &str, file_b: &str) -> ScanResult {
     ScanResult {
         scan_id: "test-scan".to_string(),

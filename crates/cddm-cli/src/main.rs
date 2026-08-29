@@ -87,6 +87,7 @@ async fn run_app() -> Result<(), Box<dyn std::error::Error>> {
                 args.rules,
                 args.enforce_policies,
                 args.cross_language,
+                args.matrix,
             )
             .await?;
         }

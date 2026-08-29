@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-27 | Rust: 273 #[test] units | WebUI: 201 tests across 55 suites | Scripts & MCP: 113 tests across 40 suites | CI Workflows: PASS
+> Last verified: 2026-08-27 | Rust: 276 #[test] units | WebUI: 204 tests across 57 suites | Scripts & MCP: 116 tests across 41 suites | CI Workflows: PASS
 
 ---
 
@@ -358,7 +358,7 @@
 
 ---
 
-## 2. WebUI Frontend — React 19 + TypeScript + Vitest (201 unit tests across 55 suites)
+## 2. WebUI Frontend — React 19 + TypeScript + Vitest (204 unit tests across 57 suites)
 
 | Module                      | Test Suite File                                                                       | Test Cases | Status |
 | :-------------------------- | :------------------------------------------------------------------------------------ | :--------- | :----- |
@@ -388,6 +388,7 @@
 | Extract Module Tab          | `webui/src/components/sandbox/ExtractModuleTab.test.tsx`                              | 3 tests    | PASS   |
 | Cross Language Explorer Tab | `webui/src/components/semantic/CrossLanguageExplorerTab.test.tsx`                     | 2 tests    | PASS   |
 | Semantic Pairs Table        | `webui/src/components/semantic/SemanticPairsTable.test.tsx`                           | 2 tests    | PASS   |
+| Branch Drift Matrix Section | `webui/src/components/timeline/BranchDriftMatrixSection.test.tsx`                     | 2 tests    | PASS   |
 | Modal Footer                | `webui/src/components/ui/ModalFooter.test.tsx`                                        | 2 tests    | PASS   |
 | Modal Tabs                  | `webui/src/components/ui/ModalTabs.test.tsx`                                          | 1 tests    | PASS   |
 | UI Badge                    | `webui/src/components/ui/atoms/badge/badge.test.tsx`                                  | 2 tests    | PASS   |
@@ -417,10 +418,11 @@
 | file-download               | `webui/src/utils/file-download.test.ts`                                               | 1 tests    | PASS   |
 | Graph Layout Engine         | `webui/src/utils/graph-layout.test.ts`                                                | 3 tests    | PASS   |
 | IDE Deeplinks               | `webui/src/utils/ide-links.test.ts`                                                   | 8 tests    | PASS   |
+| lazy-modal                  | `webui/src/utils/lazy-modal.test.tsx`                                                 | 1 tests    | PASS   |
 
 ---
 
-## 3. Repository Scripts & MCP Protocol — Bun Test Suites (113 tests across 40 suites)
+## 3. Repository Scripts & MCP Protocol — Bun Test Suites (116 tests across 41 suites)
 
 ### Repository Tooling & Automation Suites
 
@@ -451,6 +453,7 @@
 | Tool: cddm_correlate_coverage       | `tests/mcp/tools/correlate-coverage.test.ts`       | 3 tests    | PASS   |
 | Tool: cddm_detect_dead_clones       | `tests/mcp/tools/detect-dead-clones.test.ts`       | 2 tests    | PASS   |
 | Tool: cddm_detect_overlap           | `tests/mcp/tools/detect-overlap.test.ts`           | 3 tests    | PASS   |
+| Tool: cddm_diff_matrix              | `tests/mcp/tools/diff-matrix.test.ts`              | 3 tests    | PASS   |
 | Tool: cddm_diff_scan                | `tests/mcp/tools/diff-scan.test.ts`                | 2 tests    | PASS   |
 | Tool: cddm_export_cache_pack        | `tests/mcp/tools/export-cache-pack.test.ts`        | 2 tests    | PASS   |
 | Tool: cddm_export_sarif             | `tests/mcp/tools/export-sarif.test.ts`             | 1 tests    | PASS   |

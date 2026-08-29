@@ -15,6 +15,7 @@ define_api_routes! {
     ROUTE_API_HEALTH => "/api/health",
     ROUTE_API_SCAN => "/api/scan",
     ROUTE_API_DIFF => "/api/diff",
+    ROUTE_API_DIFF_MATRIX => "/api/diff/matrix",
     ROUTE_API_SNIPPET => "/api/snippet",
     ROUTE_API_REFACTOR => "/api/refactor",
     ROUTE_API_REFACTOR_CLUSTER => "/api/refactor-cluster",

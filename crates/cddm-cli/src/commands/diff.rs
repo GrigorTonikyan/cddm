@@ -1,10 +1,11 @@
 #![forbid(unsafe_code)]
 
 use crate::formatters::{
-    print_diff_console_report, print_diff_markdown_report, print_structured_json_output,
+    print_branch_matrix_console_report, print_diff_console_report, print_diff_markdown_report,
+    print_structured_json_output,
 };
 use crate::types::OutputFormat;
-use cddm_core::run_diff_scan;
+use cddm_core::{calculate_branch_matrix, run_diff_scan};
 use std::path::PathBuf;
 use std::sync::{Arc, atomic::AtomicBool};
 use tokio::sync::mpsc;
@@ -29,7 +30,25 @@ pub async fn run_diff_command(
     rules: Option<PathBuf>,
     enforce_policies: bool,
     cross_language: bool,
+    matrix: Vec<String>,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    if !matrix.is_empty() {
+        let mut branches = vec![base_ref];
+        branches.extend(matrix);
+        let matrix_report = calculate_branch_matrix(&directory, &branches, Some(min_tokens))?;
+
+        match format {
+            OutputFormat::Console | OutputFormat::Markdown => {
+                print_branch_matrix_console_report(&matrix_report);
+            }
+            OutputFormat::Json | OutputFormat::Sarif => {
+                print_structured_json_output(&matrix_report, false)?;
+            }
+            OutputFormat::Ndjson => print_structured_json_output(&matrix_report, true)?,
+        }
+        return Ok(());
+    }
+
     let cache_path = cache_dir.as_ref().map(|p| p.to_string_lossy().to_string());
 
     let config = super::scan::build_cli_scan_config(

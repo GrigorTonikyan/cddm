@@ -45,7 +45,7 @@ describe("App Component", () => {
     expect(screen.getByText("Something went wrong!")).toBeDefined();
   });
 
-  it("should open ScanConfigModal when clicking Config Window in header", () => {
+  it("should open ScanConfigModal when clicking Config Window in header", async () => {
     render(
       <Win2xManagerProvider>
         <App />
@@ -54,10 +54,10 @@ describe("App Component", () => {
 
     const configBtn = screen.getByText("Config Window");
     fireEvent.click(configBtn);
-    expect(screen.getByText("Scan Parameters & Engine Configuration")).toBeDefined();
+    expect(await screen.findByText("Scan Parameters & Engine Configuration")).toBeDefined();
   });
 
-  it("should open HealthAuditModal and ExportReportModal from header when results exist", () => {
+  it("should open HealthAuditModal and ExportReportModal from header when results exist", async () => {
     useCDDMStore.setState({
       results: createMockScanResult(),
     });
@@ -71,15 +71,15 @@ describe("App Component", () => {
     // Test Health Audit modal
     const healthBtns = screen.getAllByText("Health Audit");
     fireEvent.click(healthBtns[0]!);
-    expect(screen.getByText("DRY Health Score Audit & Diagnostics")).toBeDefined();
+    expect(await screen.findByText("DRY Health Score Audit & Diagnostics")).toBeDefined();
 
     // Test Reports modal
     const reportsBtns = screen.getAllByText("Reports");
     fireEvent.click(reportsBtns[0]!);
-    expect(screen.getByText("Report Center & SARIF Exporter")).toBeDefined();
+    expect(await screen.findByText("Report Center & SARIF Exporter")).toBeDefined();
   });
 
-  it("should open OverlapDetectorModal when clicking Overlap Detector in header", () => {
+  it("should open OverlapDetectorModal when clicking Overlap Detector in header", async () => {
     render(
       <Win2xManagerProvider>
         <App />
@@ -88,10 +88,12 @@ describe("App Component", () => {
 
     const overlapBtn = screen.getByText("Overlap Detector");
     fireEvent.click(overlapBtn);
-    expect(screen.getByText("Ecosystem Library Reimplementation & Overlap Detector")).toBeDefined();
+    expect(
+      await screen.findByText("Ecosystem Library Reimplementation & Overlap Detector"),
+    ).toBeDefined();
   });
 
-  it("should open HubFederationModal when clicking Org Hub in header", () => {
+  it("should open HubFederationModal when clicking Org Hub in header", async () => {
     render(
       <Win2xManagerProvider>
         <App />
@@ -100,6 +102,6 @@ describe("App Component", () => {
 
     const hubBtn = screen.getByText("Org Hub");
     fireEvent.click(hubBtn);
-    expect(screen.getByText("Organization Federation Hub (.cddmhub.toml)")).toBeDefined();
+    expect(await screen.findByText("Organization Federation Hub (.cddmhub.toml)")).toBeDefined();
   });
 });

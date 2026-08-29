@@ -68,6 +68,7 @@ pub mod mcp_tools {
     pub const CORRELATE_COVERAGE: &str = "cddm_correlate_coverage";
     pub const DETECT_DEAD_CLONES: &str = "cddm_detect_dead_clones";
     pub const SEMANTIC_NEURAL_SCAN: &str = "cddm_semantic_neural_scan";
+    pub const DIFF_MATRIX: &str = "cddm_diff_matrix";
 
     pub const PARAM_DIRECTORY: &str = "directory";
     pub const PARAM_MIN_TOKENS: &str = "min_tokens";

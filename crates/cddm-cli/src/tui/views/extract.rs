@@ -28,13 +28,17 @@ fn render_target_config(frame: &mut Frame, app: &TuiApp, area: Rect) {
         )
     };
 
-    let lines = vec![
-        styled_kv_line("Target Crate:     ", &target_crate, Color::Cyan),
-        styled_kv_line("Inferred Export:  ", &inferred_export, Color::Yellow),
-    ];
-
-    let block = create_titled_block(" Target Shared Module Configuration ", false);
-    frame.render_widget(Paragraph::new(lines).block(block), area);
+    render_two_line_kv_box(
+        frame,
+        " Target Shared Module Configuration ",
+        "Target Crate:     ",
+        &target_crate,
+        Color::Cyan,
+        "Inferred Export:  ",
+        &inferred_export,
+        Color::Yellow,
+        area,
+    );
 }
 
 fn render_extraction_diffs(frame: &mut Frame, app: &TuiApp, area: Rect) {

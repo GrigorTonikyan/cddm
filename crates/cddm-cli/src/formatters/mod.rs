@@ -7,7 +7,9 @@ pub mod scan;
 pub mod semantic;
 pub mod trend;
 
-pub use diff::{print_diff_console_report, print_diff_markdown_report};
+pub use diff::{
+    print_branch_matrix_console_report, print_diff_console_report, print_diff_markdown_report,
+};
 pub use policy::{print_policy_violations_console, print_policy_violations_markdown};
 pub use refactor::{
     print_ast_refactor_recommendation, print_cluster_refactor_recommendation,

@@ -237,3 +237,29 @@ export interface HookStatus {
   pre_push_installed: boolean;
   hooks_dir: string;
 }
+
+/**
+ * Pairwise divergence and clone drift metrics between two Git branches.
+ */
+export interface BranchPairDrift {
+  base_branch: string;
+  target_branch: string;
+  base_dry_score: number;
+  target_dry_score: number;
+  net_dry_delta: number;
+  changed_files_count: number;
+  new_clones_count: number;
+  divergence_index: number;
+}
+
+/**
+ * Full N-way matrix report detailing clone drift across multiple Git branches.
+ */
+export interface BranchMatrixReport {
+  workspace_root: string;
+  branches: string[];
+  matrix: BranchPairDrift[];
+  cleanest_branch?: string;
+  highest_drift_branch?: string;
+  summary: string;
+}

@@ -168,6 +168,10 @@ pub struct DiffArgs {
     /// Detect cross-language semantic clones across different programming languages
     #[arg(long, default_value_t = false)]
     pub cross_language: bool,
+
+    /// Multi-branch clone drift matrix comparison across multiple revisions (comma-separated list)
+    #[arg(long, value_delimiter = ',')]
+    pub matrix: Vec<String>,
 }
 
 /// CLI Arguments for `cddm semantic`

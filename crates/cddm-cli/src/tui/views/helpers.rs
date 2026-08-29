@@ -132,3 +132,21 @@ pub fn render_action_bar(
     let block = create_titled_block(title, true);
     frame.render_widget(Paragraph::new(vec![Line::from(spans)]).block(block), area);
 }
+
+/// Helper to render a two-line key-value config block inside a titled container.
+#[allow(clippy::too_many_arguments)]
+pub fn render_two_line_kv_box(
+    frame: &mut Frame,
+    title: &str,
+    k1: &str,
+    v1: &str,
+    c1: Color,
+    k2: &str,
+    v2: &str,
+    c2: Color,
+    area: Rect,
+) {
+    let lines = vec![styled_kv_line(k1, v1, c1), styled_kv_line(k2, v2, c2)];
+    let block = create_titled_block(title, false);
+    frame.render_widget(Paragraph::new(lines).block(block), area);
+}

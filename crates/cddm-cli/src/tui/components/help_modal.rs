@@ -27,36 +27,59 @@ pub fn render_help_modal(frame: &mut Frame) {
         .borders(Borders::ALL)
         .border_style(Style::default().fg(TuiTheme::BRAND));
 
-    let shortcuts = vec![
-        Line::from(vec![bold_span(" Navigation & Tabs:", Color::Yellow)]),
-        Line::from("   1 - 8           Directly switch to tab 1 through 8"),
-        Line::from("   Tab / l         Next tab"),
-        Line::from("   Shift-Tab / h   Previous tab"),
-        Line::from("   j / k (Down/Up) Navigate items / clones in list"),
-        Line::from("   J / K (PgDn/Up) Scroll diff view down / up"),
-        Line::from(""),
-        Line::from(vec![bold_span(" Clone & Diff Actions:", Color::Yellow)]),
-        Line::from("   c               Toggle Pairwise vs N-Way Clusters mode"),
-        Line::from("   u               Toggle Split vs Unified diff mode"),
-        Line::from("   r               Open Refactoring Sandbox for selected clone"),
-        Line::from("   e               Open Shared Module Extractor for selected clone"),
-        Line::from(""),
-        Line::from(vec![bold_span(" Global Controls:", Color::Yellow)]),
-        Line::from("   ?               Toggle this help popup dialog"),
-        Line::from("   q / Ctrl+C      Exit CDDM Studio"),
-        Line::from("   Esc             Close open modal or cancel"),
-        Line::from(""),
-        Line::from(vec![Span::styled(
-            " Press Esc or ? to close this dialog.",
-            Style::default().fg(Color::DarkGray),
-        )]),
-    ];
+    let mut shortcuts = Vec::new();
+    append_shortcut_section(
+        &mut shortcuts,
+        " Navigation & Tabs:",
+        &[
+            ("1 - 9, 0, C", "Directly switch tabs (1 to 11)"),
+            ("Tab / l", "Next tab"),
+            ("Shift-Tab / h", "Previous tab"),
+            ("j / k (Down/Up)", "Navigate items / clones in list"),
+            ("J / K (PgDn/Up)", "Scroll diff view down / up"),
+        ],
+    );
+    append_shortcut_section(
+        &mut shortcuts,
+        " Clone & Diff Actions:",
+        &[
+            ("c", "Toggle Pairwise vs N-Way Clusters mode"),
+            ("u", "Toggle Split vs Unified diff mode"),
+            ("r", "Open Refactoring Sandbox for selected clone"),
+            ("e", "Open Shared Module Extractor for selected clone"),
+        ],
+    );
+    append_shortcut_section(
+        &mut shortcuts,
+        " Global Controls:",
+        &[
+            ("?", "Toggle this help popup dialog"),
+            ("q / Ctrl+C", "Exit CDDM Studio"),
+            ("Esc", "Close open modal or cancel"),
+        ],
+    );
+    shortcuts.push(Line::from(vec![Span::styled(
+        " Press Esc or ? to close this dialog.",
+        Style::default().fg(Color::DarkGray),
+    )]));
 
     let paragraph = Paragraph::new(shortcuts)
         .block(block)
         .wrap(Wrap { trim: true });
 
     frame.render_widget(paragraph, popup_area);
+}
+
+fn append_shortcut_section(
+    lines: &mut Vec<Line<'static>>,
+    header: &'static str,
+    bindings: &[(&'static str, &'static str)],
+) {
+    lines.push(Line::from(vec![bold_span(header, Color::Yellow)]));
+    for (key, desc) in bindings {
+        lines.push(Line::from(format!("   {:<16}{}", key, desc)));
+    }
+    lines.push(Line::from(""));
 }
 
 /// Helper calculating centered rectangle with percentage width and height.

@@ -50,3 +50,15 @@ pub async fn install_hook_handler(
         Err(err) => Err((StatusCode::BAD_REQUEST, err)),
     }
 }
+
+pub async fn diff_matrix_handler(
+    Json(req): Json<cddm_core::BranchMatrixRequest>,
+) -> Result<Json<cddm_core::BranchMatrixReport>, (StatusCode, String)> {
+    let root = req
+        .workspace_root
+        .unwrap_or_else(|| std::path::PathBuf::from("."));
+    match cddm_core::calculate_branch_matrix(&root, &req.branches, req.min_tokens) {
+        Ok(report) => Ok(Json(report)),
+        Err(err) => Err((StatusCode::BAD_REQUEST, err)),
+    }
+}

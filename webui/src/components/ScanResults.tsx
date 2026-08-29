@@ -1,16 +1,26 @@
-import React, { useMemo, useState } from "react";
+import React, { Suspense, useMemo, useState } from "react";
 import { useCDDMStore } from "../store/cddm-store";
 import { parsePath } from "../utils/path-utils";
 import { CloneClusterCard } from "./CloneClusterCard";
 import { ClonePairCard } from "./ClonePairCard";
-import { ExportReportModal } from "./ExportReportModal";
-import { HealthAuditModal } from "./HealthAuditModal";
-import { LanguageAnalyticsModal } from "./LanguageAnalyticsModal";
 import { FilterToolbar } from "./scan-results/FilterToolbar";
 import { SummaryBanner } from "./scan-results/SummaryBanner";
 import { VisualAnalyticsSection } from "./scan-results/VisualAnalyticsSection";
-import { TreemapExplorerModal } from "./TreemapExplorerModal";
 import { Activity, CheckCircle2, ChevronLeft, ChevronRight, Layers } from "lucide-react";
+
+import { lazyModal } from "../utils/lazy-modal";
+
+// Lazy-load heavier modal analyzers for optimal performance
+const ExportReportModal = lazyModal(() => import("./ExportReportModal"), "ExportReportModal");
+const HealthAuditModal = lazyModal(() => import("./HealthAuditModal"), "HealthAuditModal");
+const LanguageAnalyticsModal = lazyModal(
+  () => import("./LanguageAnalyticsModal"),
+  "LanguageAnalyticsModal",
+);
+const TreemapExplorerModal = lazyModal(
+  () => import("./TreemapExplorerModal"),
+  "TreemapExplorerModal",
+);
 
 export interface ScanResultsProps {
   className?: string;
@@ -385,37 +395,39 @@ export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
       </div>
 
       {/* Win2x Modals */}
-      <TreemapExplorerModal
-        isOpen={isTreemapModalOpen}
-        onClose={() => setIsTreemapModalOpen(false)}
-        clonePairs={results.clone_pairs}
-        totalTokens={results.total_tokens}
-        selectedFilterPath={searchTerm}
-        onSelectFilterPath={(p) => {
-          setSearchTerm(p);
-          setCurrentPage(1);
-        }}
-      />
+      <Suspense fallback={null}>
+        <TreemapExplorerModal
+          isOpen={isTreemapModalOpen}
+          onClose={() => setIsTreemapModalOpen(false)}
+          clonePairs={results.clone_pairs}
+          totalTokens={results.total_tokens}
+          selectedFilterPath={searchTerm}
+          onSelectFilterPath={(p: string) => {
+            setSearchTerm(p);
+            setCurrentPage(1);
+          }}
+        />
 
-      <LanguageAnalyticsModal
-        isOpen={isLanguageModalOpen}
-        onClose={() => setIsLanguageModalOpen(false)}
-        languages={results.language_breakdown}
-        totalTokens={results.total_tokens}
-        totalFiles={results.total_files}
-      />
+        <LanguageAnalyticsModal
+          isOpen={isLanguageModalOpen}
+          onClose={() => setIsLanguageModalOpen(false)}
+          languages={results.language_breakdown}
+          totalTokens={results.total_tokens}
+          totalFiles={results.total_files}
+        />
 
-      <HealthAuditModal
-        isOpen={isHealthAuditOpen}
-        onClose={() => setIsHealthAuditOpen(false)}
-        results={results}
-      />
+        <HealthAuditModal
+          isOpen={isHealthAuditOpen}
+          onClose={() => setIsHealthAuditOpen(false)}
+          results={results}
+        />
 
-      <ExportReportModal
-        isOpen={isExportReportOpen}
-        onClose={() => setIsExportReportOpen(false)}
-        results={results}
-      />
+        <ExportReportModal
+          isOpen={isExportReportOpen}
+          onClose={() => setIsExportReportOpen(false)}
+          results={results}
+        />
+      </Suspense>
     </div>
   );
 };

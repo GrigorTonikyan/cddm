@@ -162,3 +162,35 @@ pub async fn handle_scan_monorepo(
         Err(e) => make_error_response(id, rpc_errors::INTERNAL_ERROR, e),
     }
 }
+
+pub async fn handle_diff_matrix(
+    id: Option<serde_json::Value>,
+    args: Option<&serde_json::Value>,
+) -> JsonRpcResponse {
+    let branches = args
+        .and_then(|a| a.get("branches"))
+        .and_then(|b| b.as_array())
+        .map(|arr| {
+            arr.iter()
+                .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                .collect::<Vec<_>>()
+        });
+
+    let branches = match branches {
+        Some(b) if b.len() >= 2 => b,
+        _ => {
+            return make_error_response(
+                id,
+                rpc_errors::INVALID_PARAMS,
+                "Missing or invalid 'branches' parameter: must provide at least 2 branches",
+            );
+        }
+    };
+
+    let (dir_str, min_tokens) = crate::tools::helpers::parse_dir_and_tokens(args);
+
+    match cddm_core::calculate_branch_matrix(Path::new(dir_str), &branches, Some(min_tokens)) {
+        Ok(matrix_res) => make_json_payload_response(id, &matrix_res),
+        Err(e) => make_error_response(id, rpc_errors::INTERNAL_ERROR, e),
+    }
+}

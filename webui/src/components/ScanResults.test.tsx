@@ -39,7 +39,7 @@ describe("ScanResults Component", () => {
     expect(screen.getByText("1 Languages Detected")).toBeDefined();
   });
 
-  it("should open HealthAuditModal when clicking DRY health score card", () => {
+  it("should open HealthAuditModal when clicking DRY health score card", async () => {
     useCDDMStore.setState({
       results: createMockScanResult(),
     });
@@ -51,10 +51,10 @@ describe("ScanResults Component", () => {
 
     const healthCard = screen.getByText("DRY Health Score").closest("div");
     fireEvent.click(healthCard!);
-    expect(screen.getByText("DRY Health Score Audit & Diagnostics")).toBeDefined();
+    expect(await screen.findByText("DRY Health Score Audit & Diagnostics")).toBeDefined();
   });
 
-  it("should open TreemapExplorerModal when clicking Open in Window on Treemap", () => {
+  it("should open TreemapExplorerModal when clicking Open in Window on Treemap", async () => {
     useCDDMStore.setState({
       results: createMockScanResult(),
     });
@@ -66,7 +66,7 @@ describe("ScanResults Component", () => {
 
     const openInWindowBtn = screen.getByText("Open in Window");
     fireEvent.click(openInWindowBtn);
-    expect(screen.getByText("Duplication Treemap Explorer")).toBeDefined();
+    expect(await screen.findByText("Duplication Treemap Explorer")).toBeDefined();
   });
 
   it("should render clone pair count", () => {

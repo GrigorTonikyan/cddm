@@ -432,5 +432,22 @@ pub fn get_tool_definitions() -> Vec<serde_json::Value> {
                 &[],
             ),
         ),
+        tool_def(
+            mcp_tools::DIFF_MATRIX,
+            "Evaluate multi-branch and Git worktree clone drift divergence matrix across multiple \
+             branches/revisions.",
+            obj_schema(
+                json!({
+                    "branches": {
+                        "type": "array",
+                        "items": { "type": "string" },
+                        "description": "List of 2 or more Git branch names or commit hashes to compare"
+                    },
+                    "directory": { "type": "string", "description": "Target Git repository directory path (default: .)" },
+                    "min_tokens": { "type": "number", "description": "Minimum token threshold for clone identification (default: 50)" }
+                }),
+                &["branches"],
+            ),
+        ),
     ]
 }
