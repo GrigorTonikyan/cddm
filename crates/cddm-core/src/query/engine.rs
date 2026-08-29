@@ -1,0 +1,156 @@
+#![forbid(unsafe_code)]
+
+use super::memo::QueryMemoCache;
+use super::types::{
+    CachedTokenization, ContentHash, IncrementalDeltaReport, QueryCacheStats, QueryKey,
+};
+use crate::fingerprint::{Fingerprint, MIN_K_GRAM, WINDOW_OFFSET, winnow};
+use crate::grammar::get_grammar_for_path;
+use crate::tokenizer::tokenize;
+use std::collections::HashMap;
+use std::path::Path;
+use std::sync::Arc;
+
+/// Computes the 32-byte Blake3 hash for a source file's string content.
+pub fn compute_blake3_hash(content: &str) -> ContentHash {
+    *blake3::hash(content.as_bytes()).as_bytes()
+}
+
+/// Query-based incremental computation engine for tokenization, AST and fingerprint memoization.
+#[derive(Debug, Clone)]
+pub struct IncrementalQueryEngine {
+    memo: Arc<QueryMemoCache>,
+}
+
+impl Default for IncrementalQueryEngine {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl IncrementalQueryEngine {
+    /// Creates a new IncrementalQueryEngine.
+    pub fn new() -> Self {
+        Self {
+            memo: Arc::new(QueryMemoCache::new()),
+        }
+    }
+
+    /// Retrieves or computes normalized tokens for a file with automatic memoization.
+    pub async fn get_or_compute_tokens(
+        &self,
+        file_path: &str,
+        content: &str,
+    ) -> Option<CachedTokenization> {
+        let grammar = get_grammar_for_path(Path::new(file_path))?;
+        let content_hash = compute_blake3_hash(content);
+        let key = QueryKey {
+            file_path: file_path.to_string(),
+            content_hash,
+        };
+
+        if let Some(cached) = self.memo.get_tokens(&key).await {
+            return Some(cached);
+        }
+
+        let raw_tokens = tokenize(content, grammar, true);
+        let mut tokens = Vec::with_capacity(raw_tokens.len());
+        let mut spans = Vec::with_capacity(raw_tokens.len());
+
+        for (tok, span) in raw_tokens {
+            tokens.push(tok);
+            spans.push(span);
+        }
+
+        let tokenization = CachedTokenization {
+            language: grammar.name.to_string(),
+            tokens,
+            spans,
+            content_hash,
+        };
+
+        self.memo.insert_tokens(key, tokenization.clone()).await;
+        Some(tokenization)
+    }
+
+    /// Retrieves or computes winnowing fingerprints for a file with automatic memoization.
+    pub async fn get_or_compute_fingerprints(
+        &self,
+        file_path: &str,
+        content: &str,
+        min_tokens: usize,
+    ) -> Vec<Fingerprint> {
+        let content_hash = compute_blake3_hash(content);
+        let key = QueryKey {
+            file_path: file_path.to_string(),
+            content_hash,
+        };
+
+        if let Some(cached) = self.memo.get_fingerprints(&key).await {
+            return cached;
+        }
+
+        let tokenization = match self.get_or_compute_tokens(file_path, content).await {
+            Some(t) => t,
+            None => return Vec::new(),
+        };
+
+        let paired_tokens: Vec<_> = tokenization
+            .tokens
+            .into_iter()
+            .zip(tokenization.spans)
+            .collect();
+
+        let k = (min_tokens / 2).max(MIN_K_GRAM);
+        let w = k + WINDOW_OFFSET;
+
+        let fingerprints = winnow(&paired_tokens, k, w);
+        self.memo
+            .insert_fingerprints(key, fingerprints.clone())
+            .await;
+        fingerprints
+    }
+
+    /// Compares two snapshots of repository file hashes and computes an incremental delta report.
+    pub fn compute_incremental_delta(
+        &self,
+        old_manifest: &HashMap<String, ContentHash>,
+        new_manifest: &HashMap<String, ContentHash>,
+    ) -> IncrementalDeltaReport {
+        let mut report = IncrementalDeltaReport::default();
+
+        for (path, new_hash) in new_manifest {
+            match old_manifest.get(path) {
+                Some(old_hash) => {
+                    if old_hash == new_hash {
+                        report.unmodified_files += 1;
+                        report.short_circuited_count += 1;
+                    } else {
+                        report.modified_files += 1;
+                    }
+                }
+                None => {
+                    report.added_files += 1;
+                }
+            }
+        }
+
+        for path in old_manifest.keys() {
+            if !new_manifest.contains_key(path) {
+                report.removed_files += 1;
+            }
+        }
+
+        report
+    }
+
+    /// Returns cache statistics.
+    pub async fn stats(&self) -> QueryCacheStats {
+        self.memo.stats().await
+    }
+
+    /// Clears the memoization cache.
+    pub async fn clear(&self) {
+        self.memo.clear().await;
+    }
+}

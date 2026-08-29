@@ -6,10 +6,28 @@ use cddm_core::DEFAULT_MIN_TOKENS;
 use serde_json::json;
 
 fn tool_def(name: &str, description: &str, input_schema: serde_json::Value) -> serde_json::Value {
+    let category = if name.contains("scan")
+        || name.contains("diff")
+        || name.contains("timeline")
+        || name.contains("overlap")
+        || name.contains("coverage")
+        || name.contains("dead_clones")
+        || name.contains("graph")
+    {
+        "detection"
+    } else if name.contains("refactor") || name.contains("extract") || name.contains("heal") {
+        "refactoring"
+    } else if name.contains("polic") || name.contains("suppression") || name.contains("sarif") {
+        "governance"
+    } else {
+        "synchronization"
+    };
+
     json!({
         "name": name,
         "description": description,
-        "inputSchema": input_schema
+        "inputSchema": input_schema,
+        "x-cddm-category": category
     })
 }
 

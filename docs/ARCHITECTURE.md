@@ -38,6 +38,8 @@ graph TD
         CachePack["Distributed Cache Pack (.cddmpack)"]
         Cache["SHA-256 Incremental Cache (redb)"]
         Watcher["FileSystem Watcher (notify)"]
+        Service["Workspace Service & Reactive Event Bus (service/)"]
+        QueryEngine["Incremental Memoized Query Engine (query/)"]
     end
 
     CLI --> Core
@@ -45,6 +47,10 @@ graph TD
     Serve --> Core
     MCP --> Core
     LSP --> Core
+
+    Service --> Core
+    QueryEngine --> Tokenizer
+    QueryEngine --> Winnow
 
     IO --> Tokenizer
     Grammar --> Tokenizer
@@ -232,3 +238,19 @@ CDDM maintains a multi-tier, zero-orphan testing architecture across all interac
 4. **MCP Protocol & Tools**: 1:1 isolated tool test suites (`tests/mcp/tools/*.test.ts`) with dynamic runtime discovery (`tests/mcp/discovery.test.ts`).
 
 For detailed architectural guidelines and conventions, see [Testing Architecture (docs/TESTING.md)](TESTING.md) and [.agents/rules/test.md](../.agents/rules/test.md).
+
+---
+
+## 11. Domain Service & Incremental Query Architecture
+
+To ensure high-throughput execution, real-time live watch subscriptions, and clean decoupling across all interface adapters:
+
+1. **Unified Workspace Service (`cddm-core::service`)**:
+   - `WorkspaceService`: Coordinates multi-phase scans, cancellations, background session tracking, and dry health metrics.
+   - `EventBus`: High-throughput reactive broadcast channel (`tokio::sync::broadcast`) for streaming scan phase updates, file watch deltas, and refactoring lifecycle events to WebUI SSE, MCP notifications, and TUI screens.
+   - `SessionManager`: Manages execution lifecycles, atomic cancellation flags, and state snapshots.
+
+2. **Incremental Query Engine (`cddm-core::query`)**:
+   - `IncrementalQueryEngine`: Query-memoized computation engine providing sub-millisecond tokenization and Winnowing fingerprinting.
+   - `QueryMemoCache`: Thread-safe in-memory cache keyed by `QueryKey(file_path, content_blake3_hash)` with early cutoff for unmodified files.
+   - `IncrementalDeltaReport`: Fine-grained snapshot diff reporting across repository revisions.
