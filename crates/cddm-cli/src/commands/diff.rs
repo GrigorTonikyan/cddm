@@ -45,6 +45,7 @@ pub async fn run_diff_command(
         rules,
         enforce_policies,
         cross_language,
+        None,
     );
 
     let (tx, rx) = mpsc::channel::<cddm_core::ScanProgress>(100);

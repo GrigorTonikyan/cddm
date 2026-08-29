@@ -96,6 +96,39 @@ pub fn compute_kgram_rolling_hashes_scalar(
     kgram_hashes
 }
 
+/// Computes unrolled dot product of two float slices with branch-minimized 4-way accumulation.
+#[inline]
+pub fn compute_dot_product_f32_scalar(a: &[f32], b: &[f32]) -> f32 {
+    let len = a.len().min(b.len());
+    let mut sum0 = 0.0f32;
+    let mut sum1 = 0.0f32;
+    let mut sum2 = 0.0f32;
+    let mut sum3 = 0.0f32;
+
+    let mut i = 0;
+    while i + 3 < len {
+        sum0 += a[i] * b[i];
+        sum1 += a[i + 1] * b[i + 1];
+        sum2 += a[i + 2] * b[i + 2];
+        sum3 += a[i + 3] * b[i + 3];
+        i += 4;
+    }
+
+    let mut total = (sum0 + sum1) + (sum2 + sum3);
+    while i < len {
+        total += a[i] * b[i];
+        i += 1;
+    }
+
+    total
+}
+
+/// Computes unrolled L2 norm of a float slice.
+#[inline]
+pub fn compute_l2_norm_f32_scalar(vec: &[f32]) -> f32 {
+    compute_dot_product_f32_scalar(vec, vec).sqrt()
+}
+
 #[cfg(test)]
 pub(crate) mod tests {
     use super::*;

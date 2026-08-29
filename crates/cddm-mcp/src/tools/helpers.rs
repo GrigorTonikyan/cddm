@@ -81,12 +81,17 @@ pub async fn run_scan_from_mcp_args(
         .and_then(|a| a.get("cross_language"))
         .and_then(|b| b.as_bool())
         .unwrap_or(false);
+    let threads = args
+        .and_then(|a| a.get("threads"))
+        .and_then(|v| v.as_u64())
+        .map(|v| v as usize);
 
     let config = ScanConfig {
         directory: dir.to_string(),
         min_tokens,
         enable_git_blame,
         cross_language,
+        threads,
         ..Default::default()
     };
 

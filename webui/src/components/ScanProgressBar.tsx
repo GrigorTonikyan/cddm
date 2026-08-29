@@ -20,7 +20,8 @@ export const ScanProgressBar: React.FC<ScanProgressBarProps> = ({ className = ""
 
   if (!isScanning && !progress) return null;
 
-  const percentage = Math.round((progress?.progress ?? 0) * 100);
+  const percentage = Math.min(100, Math.max(0, Math.round((progress?.progress ?? 0) * 100)));
+  const progressPercent = Math.min(100, Math.max(0, (progress?.progress ?? 0) * 100));
 
   return (
     <div className={`bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-xl ${className}`}>
@@ -37,8 +38,8 @@ export const ScanProgressBar: React.FC<ScanProgressBarProps> = ({ className = ""
       {/* Progress Bar Container */}
       <div className="w-full bg-gray-950 rounded-full h-2.5 overflow-hidden border border-gray-800">
         <div
-          className="bg-gradient-to-r from-indigo-500 to-indigo-400 h-2.5 rounded-full transition-all duration-300 ease-out"
-          style={{ width: `${percentage}%` }}
+          className="bg-gradient-to-r from-indigo-500 to-indigo-400 h-2.5 rounded-full transition-all duration-150 ease-out"
+          style={{ width: `${progressPercent}%` }}
         />
       </div>
 

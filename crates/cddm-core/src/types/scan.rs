@@ -183,6 +183,8 @@ pub struct ScanConfig {
     pub enforce_policies: bool,
     /// Detect cross-language semantic clones across different programming languages (default: false)
     pub cross_language: bool,
+    /// Maximum number of parallel worker threads (default: None, utilizes all logical CPU cores)
+    pub threads: Option<usize>,
 }
 
 impl Default for ScanConfig {
@@ -207,6 +209,7 @@ impl Default for ScanConfig {
             rules_path: None,
             enforce_policies: false,
             cross_language: false,
+            threads: None,
         }
     }
 }

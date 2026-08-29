@@ -1,5 +1,6 @@
 #![forbid(unsafe_code)]
 
+use rayon::prelude::*;
 use std::fs;
 use std::path::Path;
 
@@ -23,8 +24,7 @@ impl NeuralMatcher {
         Self::collect_embeddings_recursive(workspace_root, workspace_root, config, &mut vectors)?;
 
         let total_blocks = vectors.len();
-        let mut pairs = Vec::new();
-        let mut high_count = 0;
+        let mut candidate_pairs = Vec::new();
 
         for i in 0..vectors.len() {
             for j in (i + 1)..vectors.len() {
@@ -36,11 +36,20 @@ impl NeuralMatcher {
                     continue;
                 }
 
+                candidate_pairs.push((i, j));
+            }
+        }
+
+        let mut pairs: Vec<NeuralClonePair> = candidate_pairs
+            .par_iter()
+            .filter_map(|&(i, j)| {
+                let vec_a = &vectors[i];
+                let vec_b = &vectors[j];
+
                 let similarity =
                     NeuralCodeEmbedder::cosine_similarity(&vec_a.vector, &vec_b.vector);
                 if similarity >= config.similarity_threshold {
                     let confidence = if similarity >= 0.95 {
-                        high_count += 1;
                         EquivalenceConfidence::High
                     } else if similarity >= 0.88 {
                         EquivalenceConfidence::Medium
@@ -55,7 +64,7 @@ impl NeuralMatcher {
                         vec_b.language
                     );
 
-                    pairs.push(NeuralClonePair {
+                    Some(NeuralClonePair {
                         file_a: vec_a.file_path.clone(),
                         start_line_a: vec_a.start_line,
                         end_line_a: vec_a.end_line,
@@ -67,10 +76,17 @@ impl NeuralMatcher {
                         similarity,
                         confidence,
                         semantic_rationale: rationale,
-                    });
+                    })
+                } else {
+                    None
                 }
-            }
-        }
+            })
+            .collect();
+
+        let high_count = pairs
+            .iter()
+            .filter(|p| p.confidence == EquivalenceConfidence::High)
+            .count();
 
         // Sort descending by similarity
         pairs.sort_by(|a, b| {

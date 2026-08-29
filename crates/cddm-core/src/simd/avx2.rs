@@ -138,6 +138,52 @@ unsafe fn compute_kgram_rolling_hashes_avx2_inner(
     kgram_hashes
 }
 
+/// Hardware-accelerated AVX2 dot product for float slices on x86_64 architectures.
+#[allow(unsafe_code)]
+pub fn compute_dot_product_f32_avx2(a: &[f32], b: &[f32]) -> f32 {
+    #[cfg(target_arch = "x86_64")]
+    {
+        if is_x86_feature_detected!("avx2") && is_x86_feature_detected!("fma") {
+            unsafe {
+                return compute_dot_product_f32_avx2_inner(a, b);
+            }
+        }
+    }
+
+    crate::simd::scalar::compute_dot_product_f32_scalar(a, b)
+}
+
+#[cfg(target_arch = "x86_64")]
+#[target_feature(enable = "avx2", enable = "fma")]
+#[allow(unsafe_code)]
+unsafe fn compute_dot_product_f32_avx2_inner(a: &[f32], b: &[f32]) -> f32 {
+    use core::arch::x86_64::*;
+    let len = a.len().min(b.len());
+    let mut sum: f32;
+    let mut i = 0;
+
+    unsafe {
+        let mut acc = _mm256_setzero_ps();
+        while i + 8 <= len {
+            let va = _mm256_loadu_ps(a.as_ptr().add(i));
+            let vb = _mm256_loadu_ps(b.as_ptr().add(i));
+            acc = _mm256_fmadd_ps(va, vb, acc);
+            i += 8;
+        }
+
+        let mut buf = [0.0f32; 8];
+        _mm256_storeu_ps(buf.as_mut_ptr(), acc);
+        sum = buf.iter().sum();
+    }
+
+    while i < len {
+        sum += a[i] * b[i];
+        i += 1;
+    }
+
+    sum
+}
+
 #[cfg(test)]
 pub(crate) mod tests {
     use super::*;

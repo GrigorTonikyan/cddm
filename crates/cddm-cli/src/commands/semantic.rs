@@ -18,6 +18,7 @@ pub fn run_semantic_command(
     ignore: Vec<String>,
     neural: bool,
     neural_threshold: f32,
+    threads: Option<usize>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     if neural {
         let neural_config = NeuralEmbeddingConfig {
@@ -141,6 +142,7 @@ pub fn run_semantic_command(
         rules_path: None,
         enforce_policies: false,
         cross_language: true,
+        threads,
     };
 
     let pairs = scan_cross_language_workspace(&config, threshold)

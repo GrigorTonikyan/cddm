@@ -401,6 +401,7 @@ async fn test_semantic_scan_handler() {
         min_tokens: Some(50),
         languages: None,
         ignore: None,
+        threads: None,
     };
 
     let res = semantic_scan_handler(axum::Json(req)).await;

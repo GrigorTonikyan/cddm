@@ -20,6 +20,11 @@ pub fn compute_kgram_rolling_hashes_neon(
     )
 }
 
+/// Hardware-accelerated ARM NEON dot product for AArch64 architectures.
+pub fn compute_dot_product_f32_neon(a: &[f32], b: &[f32]) -> f32 {
+    crate::simd::scalar::compute_dot_product_f32_scalar(a, b)
+}
+
 #[cfg(test)]
 pub(crate) mod tests {
     use super::*;

@@ -57,6 +57,7 @@ async fn run_app() -> Result<(), Box<dyn std::error::Error>> {
             rules,
             enforce_policies,
             cross_language,
+            threads,
         } => {
             run_scan_command(
                 directory,
@@ -76,6 +77,7 @@ async fn run_app() -> Result<(), Box<dyn std::error::Error>> {
                 rules,
                 enforce_policies,
                 cross_language,
+                threads,
             )
             .await?;
         }
@@ -132,6 +134,7 @@ async fn run_app() -> Result<(), Box<dyn std::error::Error>> {
             ignore,
             neural,
             neural_threshold,
+            threads,
         } => {
             run_semantic_command(
                 directory,
@@ -142,6 +145,7 @@ async fn run_app() -> Result<(), Box<dyn std::error::Error>> {
                 ignore,
                 neural,
                 neural_threshold,
+                threads,
             )?;
         }
 

@@ -220,6 +220,11 @@ pub fn handle_scan_cross_language(
                 .collect()
         });
 
+    let threads = args_obj
+        .get("threads")
+        .and_then(|v| v.as_u64())
+        .map(|v| v as usize);
+
     let config = cddm_core::ScanConfig {
         directory: dir.to_string(),
         min_tokens,
@@ -237,6 +242,7 @@ pub fn handle_scan_cross_language(
         rules_path: None,
         enforce_policies: false,
         cross_language: true,
+        threads,
     };
 
     match cddm_core::semantic_graph::scan_cross_language_workspace(&config, threshold) {

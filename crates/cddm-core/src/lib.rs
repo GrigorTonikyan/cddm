@@ -83,10 +83,12 @@ pub use refactor::{
 pub use sarif::{SarifReport, generate_sarif_json, generate_sarif_report};
 pub use semantic_graph::{
     CfgEdge, CfgEdgeType, CfgNode, CfgNodeType, ControlFlowGraph, CrossLanguageClonePair,
-    HybridSimilarity, PdgEdge, PdgEdgeKind, ProgramDependenceGraph, SemanticCloneMatch,
-    SemanticComparisonResponse, build_pdg_from_cfg, calculate_embedding_similarity,
-    calculate_graph_similarity, compute_hybrid_similarity, compute_weisfeiler_lehman_hash,
-    extract_cfgs_from_source, scan_cross_language_workspace,
+    ExtractedCfgItem, HybridSimilarity, PdgEdge, PdgEdgeKind, ProgramDependenceGraph,
+    SemanticCloneMatch, SemanticComparisonResponse, SparseTfVector, build_pdg_from_cfg,
+    calculate_embedding_similarity, calculate_graph_similarity, compute_hybrid_similarity,
+    compute_hybrid_similarity_with_tf, compute_weisfeiler_lehman_hash, extract_cfgs_from_source,
+    extract_workspace_cfgs, extract_workspace_cfgs_parallel, scan_cross_language_workspace,
+    scan_cross_language_workspace_with_progress,
 };
 pub use simd::compute_kgram_rolling_hashes;
 pub use suppression::SuppressionEngine;

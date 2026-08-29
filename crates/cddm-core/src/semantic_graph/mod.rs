@@ -9,10 +9,14 @@ pub mod slicing;
 pub mod types;
 
 pub use cfg::extract_cfgs_from_source;
-pub use cross_language::{extract_workspace_cfgs, scan_cross_language_workspace};
+pub use cross_language::{
+    ExtractedCfgItem, extract_workspace_cfgs, extract_workspace_cfgs_parallel,
+    scan_cross_language_workspace, scan_cross_language_workspace_with_progress,
+};
 pub use embedding::{
-    calculate_embedding_similarity, compute_hybrid_similarity, compute_tf_vector,
-    cosine_similarity, extract_semantic_tokens,
+    SparseTfVector, calculate_embedding_similarity, compute_hybrid_similarity,
+    compute_hybrid_similarity_with_tf, compute_tf_vector, cosine_similarity,
+    extract_semantic_tokens,
 };
 pub use isomorphism::{calculate_graph_similarity, compute_weisfeiler_lehman_hash};
 pub use pdg::build_pdg_from_cfg;
@@ -231,6 +235,60 @@ def render_badge(role: str) -> bool:
             hybrid.hybrid_score >= 0.70,
             "Isolated function matching should succeed across Rust and Python, got: {:?}",
             hybrid
+        );
+    }
+
+    #[test]
+    fn test_sparse_tf_vector_two_pointer_cosine() {
+        let tokens_a = extract_semantic_tokens("let discount = price * 0.15; return discount;");
+        let tokens_b = extract_semantic_tokens("const discount = price * 0.15; return discount;");
+
+        let sparse_a = SparseTfVector::from_tokens(&tokens_a);
+        let sparse_b = SparseTfVector::from_tokens(&tokens_b);
+
+        let sim = sparse_a.cosine_similarity(&sparse_b);
+        assert!(
+            sim >= 0.95,
+            "Sparse TF vector cosine similarity should be >= 0.95, got: {}",
+            sim
+        );
+    }
+
+    #[test]
+    fn test_compute_hybrid_similarity_with_tf_matches_standard() {
+        let code_a = r#"
+        pub fn add_tax(val: f64) -> f64 {
+            let tax = val * 0.20;
+            return val + tax;
+        }
+        "#;
+        let code_b = r#"
+        export function addTax(val: number): number {
+            const tax = val * 0.20;
+            return val + tax;
+        }
+        "#;
+
+        let cfgs_a = extract_cfgs_from_source("tax.rs", code_a, "Rust");
+        let cfgs_b = extract_cfgs_from_source("tax.ts", code_b, "TypeScript");
+
+        let tokens_a = extract_semantic_tokens(code_a);
+        let tokens_b = extract_semantic_tokens(code_b);
+
+        let sparse_a = SparseTfVector::from_tokens(&tokens_a);
+        let sparse_b = SparseTfVector::from_tokens(&tokens_b);
+
+        let hybrid_standard =
+            compute_hybrid_similarity(&cfgs_a[0], code_a, &cfgs_b[0], code_b, true);
+        let hybrid_sparse = embedding::compute_hybrid_similarity_with_tf(
+            &cfgs_a[0], &sparse_a, &cfgs_b[0], &sparse_b, true,
+        );
+
+        assert!(
+            (hybrid_standard.hybrid_score - hybrid_sparse.hybrid_score).abs() < 0.05,
+            "Standard ({}) and sparse TF ({}) hybrid scores should be closely matched",
+            hybrid_standard.hybrid_score,
+            hybrid_sparse.hybrid_score
         );
     }
 }

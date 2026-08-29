@@ -222,3 +222,122 @@ pub fn compute_hybrid_similarity(
         is_cross_language,
     }
 }
+
+/// Compact, sorted sparse vector representation for fast linear two-pointer dot products.
+#[derive(Clone, Debug, PartialEq)]
+pub struct SparseTfVector {
+    /// Sorted list of `(term_hash, weight)` tuples.
+    pub entries: Vec<(u64, f64)>,
+}
+
+#[inline]
+pub fn hash_token_str_fnv1a(s: &str) -> u64 {
+    let mut hash = 0xcbf29ce484222325u64;
+    for byte in s.as_bytes() {
+        hash ^= *byte as u64;
+        hash = hash.wrapping_mul(0x100000001b3u64);
+    }
+    hash
+}
+
+impl SparseTfVector {
+    pub fn from_tokens(tokens: &[String]) -> Self {
+        let mut map: HashMap<u64, f64> = HashMap::new();
+        if tokens.is_empty() {
+            return Self {
+                entries: Vec::new(),
+            };
+        }
+
+        for tok in tokens {
+            let h = hash_token_str_fnv1a(tok);
+            *map.entry(h).or_insert(0.0) += 1.0;
+        }
+
+        for tok in tokens {
+            if tok.len() >= 3
+                && !tok.starts_with("op_")
+                && !tok.starts_with("ctrl_")
+                && !tok.starts_with("decl_")
+                && !tok.starts_with("def_")
+            {
+                let chars: Vec<char> = tok.chars().collect();
+                for w in chars.windows(3) {
+                    let gram: String = w.iter().collect();
+                    let h = hash_token_str_fnv1a(&format!("ng_{}", gram));
+                    *map.entry(h).or_insert(0.0) += 0.2;
+                }
+            }
+        }
+
+        let sum_sq: f64 = map.values().map(|v| v * v).sum();
+        let norm = sum_sq.sqrt();
+        let mut entries: Vec<(u64, f64)> = if norm > 0.0 {
+            map.into_iter().map(|(k, v)| (k, v / norm)).collect()
+        } else {
+            map.into_iter().collect()
+        };
+
+        entries.sort_unstable_by_key(|e| e.0);
+        Self { entries }
+    }
+
+    #[inline]
+    pub fn cosine_similarity(&self, other: &Self) -> f64 {
+        if self.entries.is_empty() || other.entries.is_empty() {
+            return 0.0;
+        }
+
+        let mut i = 0;
+        let mut j = 0;
+        let mut dot = 0.0f64;
+
+        let a = &self.entries;
+        let b = &other.entries;
+
+        while i < a.len() && j < b.len() {
+            let (ha, va) = a[i];
+            let (hb, vb) = b[j];
+
+            if ha == hb {
+                dot += va * vb;
+                i += 1;
+                j += 1;
+            } else if ha < hb {
+                i += 1;
+            } else {
+                j += 1;
+            }
+        }
+
+        dot.clamp(0.0, 1.0)
+    }
+}
+
+/// Computes unified hybrid similarity combining graph structural isomorphism and pre-computed sparse TF vectors.
+pub fn compute_hybrid_similarity_with_tf(
+    cfg_a: &ControlFlowGraph,
+    tf_a: &SparseTfVector,
+    cfg_b: &ControlFlowGraph,
+    tf_b: &SparseTfVector,
+    is_cross_language: bool,
+) -> HybridSimilarity {
+    let graph_similarity = calculate_graph_similarity(cfg_a, cfg_b);
+    let token_similarity = tf_a.cosine_similarity(tf_b);
+
+    let (graph_weight, token_weight) = if is_cross_language {
+        (0.60, 0.40)
+    } else {
+        (0.50, 0.50)
+    };
+
+    let hybrid_score =
+        (graph_weight * graph_similarity + token_weight * token_similarity).clamp(0.0, 1.0);
+
+    HybridSimilarity {
+        graph_similarity: (graph_similarity * 1000.0).round() / 1000.0,
+        token_similarity: (token_similarity * 1000.0).round() / 1000.0,
+        hybrid_score: (hybrid_score * 1000.0).round() / 1000.0,
+        is_cross_language,
+    }
+}

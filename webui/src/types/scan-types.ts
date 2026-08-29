@@ -71,6 +71,7 @@ export interface ScanConfig {
   rules_path?: string;
   enforce_policies?: boolean;
   cross_language?: boolean;
+  threads?: number;
 }
 
 /**

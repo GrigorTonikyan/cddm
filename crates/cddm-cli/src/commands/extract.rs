@@ -38,6 +38,7 @@ pub async fn run_extract_command(args: ExtractArgs) -> Result<(), Box<dyn std::e
         rules_path: None,
         enforce_policies: false,
         cross_language: false,
+        threads: None,
     };
 
     let (progress_tx, _progress_rx) = tokio::sync::mpsc::channel(100);

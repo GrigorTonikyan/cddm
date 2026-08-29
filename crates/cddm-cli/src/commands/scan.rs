@@ -27,6 +27,7 @@ pub async fn run_scan_command(
     rules: Option<PathBuf>,
     enforce_policies: bool,
     cross_language: bool,
+    threads: Option<usize>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let cache_path = cache_dir.as_ref().map(|p| p.to_string_lossy().to_string());
 
@@ -55,6 +56,7 @@ pub async fn run_scan_command(
         rules,
         enforce_policies,
         cross_language,
+        threads,
     );
 
     let (tx, rx) = mpsc::channel::<cddm_core::ScanProgress>(100);
@@ -119,6 +121,7 @@ pub fn build_cli_scan_config(
     rules: Option<PathBuf>,
     enforce_policies: bool,
     cross_language: bool,
+    threads: Option<usize>,
 ) -> ScanConfig {
     ScanConfig {
         directory: directory.to_string_lossy().to_string(),
@@ -141,19 +144,23 @@ pub fn build_cli_scan_config(
         rules_path: rules.map(|p| p.to_string_lossy().to_string()),
         enforce_policies,
         cross_language,
+        threads,
     }
 }
 
 /// Spawns a background task to print real-time scan progress to stderr in console mode.
 pub fn spawn_console_progress_printer(mut rx: mpsc::Receiver<cddm_core::ScanProgress>) {
     tokio::spawn(async move {
+        let mut last_pct = u32::MAX;
+        let mut last_phase = cddm_core::ScanPhase::Discovery;
+
         while let Some(progress) = rx.recv().await {
-            eprintln!(
-                "[{}] {}% - {}",
-                progress.phase,
-                (progress.progress * 100.0) as u32,
-                progress.message
-            );
+            let pct = (progress.progress * 100.0) as u32;
+            if pct != last_pct || progress.phase != last_phase {
+                last_pct = pct;
+                last_phase = progress.phase;
+                eprintln!("[{}] {}% - {}", progress.phase, pct, progress.message);
+            }
         }
     });
 }

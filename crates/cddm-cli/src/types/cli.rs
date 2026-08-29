@@ -93,6 +93,10 @@ pub enum Commands {
         /// Detect cross-language semantic clones across different programming languages
         #[arg(long, default_value_t = false)]
         cross_language: bool,
+
+        /// Maximum number of parallel worker threads to utilize (default: all logical cores)
+        #[arg(short = 'j', long)]
+        threads: Option<usize>,
     },
 
     /// Differential duplication scan comparing current changes against a Git base revision
@@ -201,6 +205,10 @@ pub enum Commands {
         /// Minimum cosine similarity threshold for neural matching (default: 0.85)
         #[arg(long, default_value_t = 0.85)]
         neural_threshold: f32,
+
+        /// Maximum number of parallel worker threads to utilize (default: all logical cores)
+        #[arg(short = 'j', long)]
+        threads: Option<usize>,
     },
 
     /// Synthesize automated refactoring suggestions for duplicate clone pairs

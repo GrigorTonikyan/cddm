@@ -57,6 +57,7 @@ impl ServerStateInner {
             rules_path: None,
             enforce_policies: false,
             cross_language: false,
+            threads: None,
         }
     }
 }

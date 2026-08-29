@@ -4,6 +4,7 @@ use super::types::{Location, ParsedFile, count_tokens_in_line_span};
 use crate::fingerprint::MIN_K_GRAM;
 use crate::suppression::SuppressionEngine;
 use crate::types::{ClonePair, CloneType, ScanConfig};
+use rayon::prelude::*;
 use std::collections::HashMap;
 use std::path::Path;
 
@@ -93,7 +94,7 @@ pub fn index_and_match_clone_pairs(
             .map(|f| f.token_spans.as_slice())
     });
 
-    for pair in &mut merged_pairs {
+    merged_pairs.par_iter_mut().for_each(|pair| {
         let ext_a = Path::new(&pair.file_a)
             .extension()
             .and_then(|e| e.to_str())
@@ -124,7 +125,7 @@ pub fn index_and_match_clone_pairs(
             pair.clone_type = classified_type;
             pair.similarity = sim;
         }
-    }
+    });
 
     // Filter out clone pairs matching suppression type exclusions or custom thresholds
     merged_pairs.retain(|pair| {

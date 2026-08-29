@@ -58,24 +58,17 @@ impl NeuralCodeEmbedder {
     }
 
     /// Computes Cosine Similarity between two normalized dense code vectors.
+    #[inline]
     pub fn cosine_similarity(a: &[f32], b: &[f32]) -> f32 {
         if a.len() != b.len() || a.is_empty() {
             return 0.0;
         }
 
-        let mut dot = 0.0f32;
-        for (x, y) in a.iter().zip(b.iter()) {
-            dot += x * y;
-        }
-
-        dot.clamp(0.0, 1.0)
+        crate::simd::compute_dot_product_f32(a, b).clamp(0.0, 1.0)
     }
 
+    #[inline]
     fn compute_l2_norm(vec: &[f32]) -> f32 {
-        let mut sum_sq = 0.0f32;
-        for val in vec {
-            sum_sq += val * val;
-        }
-        sum_sq.sqrt()
+        crate::simd::compute_l2_norm_f32(vec)
     }
 }

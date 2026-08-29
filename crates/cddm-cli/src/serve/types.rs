@@ -265,6 +265,7 @@ pub struct SemanticScanRequest {
     pub min_tokens: Option<usize>,
     pub languages: Option<Vec<String>>,
     pub ignore: Option<Vec<String>>,
+    pub threads: Option<usize>,
 }
 
 /// Comparison metrics between two semantic graphs.

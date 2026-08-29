@@ -4,9 +4,11 @@ pub mod avx2;
 pub mod neon;
 pub mod scalar;
 
-pub use avx2::compute_kgram_rolling_hashes_avx2;
-pub use neon::compute_kgram_rolling_hashes_neon;
-pub use scalar::compute_kgram_rolling_hashes_scalar;
+pub use avx2::{compute_dot_product_f32_avx2, compute_kgram_rolling_hashes_avx2};
+pub use neon::{compute_dot_product_f32_neon, compute_kgram_rolling_hashes_neon};
+pub use scalar::{
+    compute_dot_product_f32_scalar, compute_kgram_rolling_hashes_scalar, compute_l2_norm_f32_scalar,
+};
 
 use crate::types::{LineSpan, NormalizedToken};
 
@@ -39,6 +41,31 @@ pub fn compute_kgram_rolling_hashes(
     {
         compute_kgram_rolling_hashes_scalar(tokens, k, b1, b2, b1_k_minus_1, b2_k_minus_1)
     }
+}
+
+/// Computes hardware vector-accelerated dot product between two float slices.
+#[inline]
+pub fn compute_dot_product_f32(a: &[f32], b: &[f32]) -> f32 {
+    #[cfg(target_arch = "x86_64")]
+    {
+        compute_dot_product_f32_avx2(a, b)
+    }
+
+    #[cfg(target_arch = "aarch64")]
+    {
+        compute_dot_product_f32_neon(a, b)
+    }
+
+    #[cfg(not(any(target_arch = "x86_64", target_arch = "aarch64")))]
+    {
+        compute_dot_product_f32_scalar(a, b)
+    }
+}
+
+/// Computes hardware vector-accelerated L2 Euclidean norm of a float slice.
+#[inline]
+pub fn compute_l2_norm_f32(vec: &[f32]) -> f32 {
+    compute_dot_product_f32(vec, vec).sqrt()
 }
 
 pub type KgramHashEntry = ((u64, u64), usize, usize, usize);

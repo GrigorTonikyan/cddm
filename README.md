@@ -148,10 +148,24 @@ cddm scan [OPTIONS] [DIRECTORY]
 - `--git-blame`: Enable `gix` in-process Git blame to attribute code clones to authors.
 - `--no-self`: Skip checking for intra-file self-overlapping duplicates.
 - `--ignore <PATTERNS>`: Glob patterns to exclude (Default: `node_modules`, `target`, `.git`, `dist`, `build`).
+- `--cross-language`: Detect cross-language Type-4 semantic clones using Tree-sitter CFG & subword embeddings.
+- `-j, --threads <INT>`: Maximum parallel worker threads to utilize (Default: all logical CPU cores).
 - `--fail-threshold <FLOAT>`: Exit with non-zero code if duplication percentage exceeds threshold (useful for CI).
 - `--cache-dir <PATH>`: Custom path for persistent `redb` cache database (Default: `.cddm/cache.db`).
 - `--no-cache`: Bypass persistent disk cache.
 - `--clear-cache`: Clear existing cache database before scanning.
+
+### `cddm semantic [OPTIONS] [DIRECTORY]`
+
+Analyzes cross-language semantic clones (Type-4) and dense neural algorithmic equivalences with SIMD acceleration.
+
+```bash
+# Cross-language CFG isomorphism & hybrid embedding scan
+cddm semantic ./src --threshold 0.75 -j 4
+
+# Dense neural code embedding equivalence scan
+cddm semantic ./src --neural --neural-threshold 0.85
+```
 
 ### `cddm diff <BASE_REF> [TARGET_REF]`
 

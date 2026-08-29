@@ -49,6 +49,8 @@ Execute a code duplication scan asynchronously.
 | `detect_type2`     | `boolean`  | No       | `true`    | Enable Type-2 (renamed) identifier normalization |
 | `scan_self`        | `boolean`  | No       | `true`    | Find intra-file self-overlapping duplicates      |
 | `enable_git_blame` | `boolean`  | No       | `false`   | Annotate clone pairs with `gix` git author       |
+| `cross_language`   | `boolean`  | No       | `false`   | Detect cross-language Type-4 semantic clones     |
+| `threads`          | `number`   | No       | `null`    | Maximum worker thread ceiling (default: all)     |
 
 **Response** (`200 OK`):
 
