@@ -1,87 +1,79 @@
 import { API_ROUTES } from "../../constants/cddm-constants";
-import type { PolicyConfig, SuppressionConfig } from "../../types/cddm-types";
+import type {
+  PolicyConfig,
+  PolicyEvaluationResult,
+  SuppressionConfig,
+} from "../../types/cddm-types";
+import { getJson, postJson } from "../../utils/api-client";
 import type { GetStoreState, SetStoreState } from "./scan-slice";
 
 export const createPolicySlice = (set: SetStoreState, get: GetStoreState) => ({
   fetchPolicyRules: async () => {
     set({ isPolicyLoading: true, policyError: null });
     try {
-      const res = await fetch(API_ROUTES.POLICY_RULES);
-      if (!res.ok) {
-        throw new Error(`Failed to fetch policy rules (${res.status})`);
-      }
-      const data = await res.json();
+      const data = await getJson<PolicyConfig>(
+        API_ROUTES.POLICY_RULES,
+        "Failed to fetch policy rules",
+      );
       set({ policyConfig: data, isPolicyLoading: false, policyError: null });
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Failed to load policy rules";
-      set({ policyError: msg, isPolicyLoading: false });
+      set({
+        policyError: err instanceof Error ? err.message : "Failed to load policy rules",
+        isPolicyLoading: false,
+      });
     }
   },
 
   savePolicyRules: async (config: PolicyConfig) => {
     set({ isPolicyLoading: true, policyError: null });
     try {
-      const res = await fetch(API_ROUTES.POLICY_RULES, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(config),
-      });
-      if (!res.ok) {
-        throw new Error(`Failed to save policy rules (${res.status})`);
-      }
+      await postJson(API_ROUTES.POLICY_RULES, config, "Failed to save policy rules");
       set({ policyConfig: config, isPolicyLoading: false, policyError: null });
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Failed to save policy rules";
-      set({ policyError: msg, isPolicyLoading: false });
+      set({
+        policyError: err instanceof Error ? err.message : "Failed to save policy rules",
+        isPolicyLoading: false,
+      });
       throw err;
     }
   },
 
-  evaluatePolicyRules: async (directory?: string) => {
+  evaluatePolicyRules: async (directory?: string): Promise<PolicyEvaluationResult> => {
     const { config } = get();
     const dir = directory ?? config.directory;
-    const res = await fetch(API_ROUTES.POLICY_EVALUATE, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ directory: dir }),
-    });
-    if (!res.ok) {
-      const errorText = await res.text().catch(() => res.statusText);
-      throw new Error(`Policy evaluation failed (${res.status}): ${errorText}`);
-    }
-    return await res.json();
+    return await postJson<PolicyEvaluationResult>(
+      API_ROUTES.POLICY_EVALUATE,
+      { directory: dir },
+      "Policy evaluation failed",
+    );
   },
 
   fetchSuppressionRules: async () => {
     set({ isSuppressionLoading: true, suppressionError: null });
     try {
-      const res = await fetch(API_ROUTES.SUPPRESSION_RULES);
-      if (!res.ok) {
-        throw new Error(`Failed to fetch suppression rules (${res.status})`);
-      }
-      const data = await res.json();
+      const data = await getJson<SuppressionConfig>(
+        API_ROUTES.SUPPRESSION_RULES,
+        "Failed to fetch suppression rules",
+      );
       set({ suppressionConfig: data, isSuppressionLoading: false, suppressionError: null });
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Failed to load suppression rules";
-      set({ suppressionError: msg, isSuppressionLoading: false });
+      set({
+        suppressionError: err instanceof Error ? err.message : "Failed to load suppression rules",
+        isSuppressionLoading: false,
+      });
     }
   },
 
   saveSuppressionRules: async (config: SuppressionConfig) => {
     set({ isSuppressionLoading: true, suppressionError: null });
     try {
-      const res = await fetch(API_ROUTES.SUPPRESSION_RULES, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(config),
-      });
-      if (!res.ok) {
-        throw new Error(`Failed to save suppression rules (${res.status})`);
-      }
+      await postJson(API_ROUTES.SUPPRESSION_RULES, config, "Failed to save suppression rules");
       set({ suppressionConfig: config, isSuppressionLoading: false, suppressionError: null });
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Failed to save suppression rules";
-      set({ suppressionError: msg, isSuppressionLoading: false });
+      set({
+        suppressionError: err instanceof Error ? err.message : "Failed to save suppression rules",
+        isSuppressionLoading: false,
+      });
       throw err;
     }
   },

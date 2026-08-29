@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useFormState } from "../../hooks/use-form-state";
 import type {
   ExtractRequest,
   ExtractResult,
@@ -85,6 +86,14 @@ const FilePreviewContainer: React.FC<FilePreviewContainerProps> = ({
   );
 };
 
+interface ExtractForm {
+  targetPath: string;
+  customFnName: string;
+  strategy: ExtractTargetKind;
+  generateTests: boolean;
+  generateBenchmarks: boolean;
+}
+
 export const ExtractModuleTab: React.FC<ExtractModuleTabProps> = ({
   sandboxRequest,
   extractResult,
@@ -93,10 +102,10 @@ export const ExtractModuleTab: React.FC<ExtractModuleTabProps> = ({
   onPreview,
   onApply,
 }) => {
-  const [form, setForm] = useState({
+  const { form, updateField } = useFormState<ExtractForm>({
     targetPath: "crates/shared_utils",
     customFnName: "",
-    strategy: "auto" as ExtractTargetKind,
+    strategy: "auto",
     generateTests: true,
     generateBenchmarks: true,
   });
@@ -105,10 +114,6 @@ export const ExtractModuleTab: React.FC<ExtractModuleTabProps> = ({
   const [activeBenchTab, setActiveBenchTab] = useState<number>(0);
   const [isApplying, setIsApplying] = useState<boolean>(false);
   const [appliedSuccess, setAppliedSuccess] = useState<string | null>(null);
-
-  const updateField = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
-  };
 
   const buildExtractRequest = (dryRun: boolean): ExtractRequest | null => {
     if (!sandboxRequest) return null;

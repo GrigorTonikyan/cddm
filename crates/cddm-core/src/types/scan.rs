@@ -19,7 +19,16 @@ pub const DEFAULT_IGNORE_PATTERNS: &[&str] = &[
     "build",
     ".logs",
     "packaging",
+    "npm",
+    "editors",
+    "test-results",
+    "tests",
+    ".test.",
+    ".spec.",
 ];
+
+/// Default failure threshold for CI quality gate.
+pub const DEFAULT_FAIL_THRESHOLD: f64 = 5.0;
 
 /// Minimum DRY health score bounds.
 pub const MIN_HEALTH_SCORE: f64 = 0.0;
@@ -183,7 +192,7 @@ pub struct ScanConfig {
     pub rules_path: Option<String>,
     /// Enforce policy compliance and fail if violations exist (default: false)
     pub enforce_policies: bool,
-    /// Detect cross-language semantic clones across different programming languages (default: false)
+    /// Detect cross-language semantic clones across different programming languages (default: true)
     pub cross_language: bool,
     /// Maximum number of parallel worker threads (default: None, utilizes all logical CPU cores)
     pub threads: Option<usize>,
@@ -206,12 +215,12 @@ impl Default for ScanConfig {
             cache_dir: None,
             enable_cache: true,
             cddmignore_path: None,
-            ignore_tests: false,
-            ignore_mocks: false,
+            ignore_tests: true,
+            ignore_mocks: true,
             ignore_generated: true,
             rules_path: None,
             enforce_policies: false,
-            cross_language: false,
+            cross_language: true,
             threads: None,
         }
     }

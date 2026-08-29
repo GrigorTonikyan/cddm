@@ -5,45 +5,52 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::sync::{RwLock, broadcast};
 
-/// Core REST API endpoint routes.
-pub const ROUTE_API_HEALTH: &str = "/api/health";
-pub const ROUTE_API_SCAN: &str = "/api/scan";
-pub const ROUTE_API_DIFF: &str = "/api/diff";
-pub const ROUTE_API_SNIPPET: &str = "/api/snippet";
-pub const ROUTE_API_REFACTOR: &str = "/api/refactor";
-pub const ROUTE_API_REFACTOR_CLUSTER: &str = "/api/refactor-cluster";
-pub const ROUTE_API_APPLY_PATCH: &str = "/api/apply-patch";
-pub const ROUTE_API_EVENTS: &str = "/api/events";
-pub const ROUTE_API_TIMELINE: &str = "/api/timeline";
-pub const ROUTE_API_HOOKS: &str = "/api/workflow/hooks";
-pub const ROUTE_API_HOOKS_INSTALL: &str = "/api/workflow/hooks/install";
-pub const ROUTE_API_SUPPRESSION_RULES: &str = "/api/suppression/rules";
-pub const ROUTE_API_REFACTOR_SANDBOX: &str = "/api/refactor/sandbox";
-pub const ROUTE_API_REFACTOR_APPLY_BRANCH: &str = "/api/refactor/apply-branch";
-pub const ROUTE_API_REFACTOR_AI_PROMPT: &str = "/api/refactor/ai-prompt";
-pub const ROUTE_API_REFACTOR_AST: &str = "/api/refactor/ast";
-pub const ROUTE_API_REFACTOR_VERIFY: &str = "/api/refactor/verify";
-pub const ROUTE_API_POLICY_RULES: &str = "/api/policy/rules";
-pub const ROUTE_API_POLICY_EVALUATE: &str = "/api/policy/evaluate";
-pub const ROUTE_API_REFACTOR_HEAL: &str = "/api/refactor/heal";
-pub const ROUTE_API_CACHE_EXPORT: &str = "/api/cache/export";
-pub const ROUTE_API_CACHE_IMPORT: &str = "/api/cache/import";
-pub const ROUTE_API_MONOREPO: &str = "/api/monorepo";
-pub const ROUTE_API_SEMANTIC_GRAPH: &str = "/api/semantic-graph";
-pub const ROUTE_API_SEMANTIC_SCAN: &str = "/api/semantic/scan";
-pub const ROUTE_API_SEMANTIC_NEURAL: &str = "/api/semantic/neural";
-pub const ROUTE_API_WATCH_STATUS: &str = "/api/watch/status";
-pub const ROUTE_API_WATCH_TOGGLE: &str = "/api/watch/toggle";
-pub const ROUTE_API_WATCH_RESCAN: &str = "/api/watch/rescan";
-pub const ROUTE_API_EXTRACT_PREVIEW: &str = "/api/extract/preview";
-pub const ROUTE_API_EXTRACT_APPLY: &str = "/api/extract/apply";
-pub const ROUTE_API_OVERLAP_CATALOG: &str = "/api/overlap/catalog";
-pub const ROUTE_API_OVERLAP_SCAN: &str = "/api/overlap/scan";
-pub const ROUTE_API_HUB_CONFIG: &str = "/api/hub/config";
-pub const ROUTE_API_HUB_SCAN: &str = "/api/hub/scan";
-pub const ROUTE_API_HUB_EXTRACT: &str = "/api/hub/extract";
-pub const ROUTE_API_COVERAGE_INGEST: &str = "/api/coverage/ingest";
-pub const ROUTE_API_COVERAGE_CORRELATE: &str = "/api/coverage/correlate";
+macro_rules! define_api_routes {
+    ($($name:ident => $path:expr),* $(,)?) => {
+        $( pub const $name: &str = $path; )*
+    };
+}
+
+define_api_routes! {
+    ROUTE_API_HEALTH => "/api/health",
+    ROUTE_API_SCAN => "/api/scan",
+    ROUTE_API_DIFF => "/api/diff",
+    ROUTE_API_SNIPPET => "/api/snippet",
+    ROUTE_API_REFACTOR => "/api/refactor",
+    ROUTE_API_REFACTOR_CLUSTER => "/api/refactor-cluster",
+    ROUTE_API_APPLY_PATCH => "/api/apply-patch",
+    ROUTE_API_EVENTS => "/api/events",
+    ROUTE_API_TIMELINE => "/api/timeline",
+    ROUTE_API_HOOKS => "/api/workflow/hooks",
+    ROUTE_API_HOOKS_INSTALL => "/api/workflow/hooks/install",
+    ROUTE_API_SUPPRESSION_RULES => "/api/suppression/rules",
+    ROUTE_API_REFACTOR_SANDBOX => "/api/refactor/sandbox",
+    ROUTE_API_REFACTOR_APPLY_BRANCH => "/api/refactor/apply-branch",
+    ROUTE_API_REFACTOR_AI_PROMPT => "/api/refactor/ai-prompt",
+    ROUTE_API_REFACTOR_AST => "/api/refactor/ast",
+    ROUTE_API_REFACTOR_VERIFY => "/api/refactor/verify",
+    ROUTE_API_POLICY_RULES => "/api/policy/rules",
+    ROUTE_API_POLICY_EVALUATE => "/api/policy/evaluate",
+    ROUTE_API_REFACTOR_HEAL => "/api/refactor/heal",
+    ROUTE_API_CACHE_EXPORT => "/api/cache/export",
+    ROUTE_API_CACHE_IMPORT => "/api/cache/import",
+    ROUTE_API_MONOREPO => "/api/monorepo",
+    ROUTE_API_SEMANTIC_GRAPH => "/api/semantic-graph",
+    ROUTE_API_SEMANTIC_SCAN => "/api/semantic/scan",
+    ROUTE_API_SEMANTIC_NEURAL => "/api/semantic/neural",
+    ROUTE_API_WATCH_STATUS => "/api/watch/status",
+    ROUTE_API_WATCH_TOGGLE => "/api/watch/toggle",
+    ROUTE_API_WATCH_RESCAN => "/api/watch/rescan",
+    ROUTE_API_EXTRACT_PREVIEW => "/api/extract/preview",
+    ROUTE_API_EXTRACT_APPLY => "/api/extract/apply",
+    ROUTE_API_OVERLAP_CATALOG => "/api/overlap/catalog",
+    ROUTE_API_OVERLAP_SCAN => "/api/overlap/scan",
+    ROUTE_API_HUB_CONFIG => "/api/hub/config",
+    ROUTE_API_HUB_SCAN => "/api/hub/scan",
+    ROUTE_API_HUB_EXTRACT => "/api/hub/extract",
+    ROUTE_API_COVERAGE_INGEST => "/api/coverage/ingest",
+    ROUTE_API_COVERAGE_CORRELATE => "/api/coverage/correlate",
+}
 
 /// Default localhost IPv4 binding.
 pub const DEFAULT_HOST_IP: [u8; 4] = [127, 0, 0, 1];

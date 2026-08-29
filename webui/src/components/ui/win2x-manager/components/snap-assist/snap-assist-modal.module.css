@@ -39,6 +39,12 @@
   align-items: center;
 }
 
+.headerIcon {
+  color: var(--win2x-accent, #818cf8);
+  margin-right: 0.5rem;
+  flex-shrink: 0;
+}
+
 .title {
   font-size: 0.875rem;
   font-weight: 600;

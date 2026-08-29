@@ -12,6 +12,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import type { OverlapMatch, OverlapScanResult, EcosystemAlgorithm } from "../types/cddm-types";
+import { ModalTabs } from "./ui/ModalTabs";
 
 export interface OverlapDetectorModalProps {
   isOpen: boolean;
@@ -94,32 +95,25 @@ export const OverlapDetectorModal: React.FC<OverlapDetectorModalProps> = ({
       <div className="space-y-6">
         {/* Navigation Tabs & Controls */}
         <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-800">
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setActiveTab("matches")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
-                activeTab === "matches"
-                  ? "bg-amber-950/80 text-amber-300 border border-amber-800/60"
-                  : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
-              }`}
-            >
-              <Layers className="w-3.5 h-3.5" />
-              Detected Matches ({matches.length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab("catalog")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
-                activeTab === "catalog"
-                  ? "bg-cyan-950/80 text-cyan-300 border border-cyan-800/60"
-                  : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
-              }`}
-            >
-              <Package className="w-3.5 h-3.5" />
-              Algorithm Catalog ({catalog.length})
-            </button>
-          </div>
+          <ModalTabs
+            tabs={[
+              {
+                id: "matches",
+                label: "Detected Matches",
+                icon: <Layers className="w-3.5 h-3.5" />,
+                count: matches.length,
+              },
+              {
+                id: "catalog",
+                label: "Algorithm Catalog",
+                icon: <Package className="w-3.5 h-3.5" />,
+                count: catalog.length,
+              },
+            ]}
+            activeTab={activeTab}
+            onTabChange={(id) => setActiveTab(id as "matches" | "catalog")}
+            activeColorClass="bg-amber-950/80 text-amber-300 border border-amber-800/60"
+          />
 
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 text-xs text-slate-400">

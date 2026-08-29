@@ -1,5 +1,6 @@
 #![forbid(unsafe_code)]
 
+use super::helpers::make_json_payload_response;
 use crate::protocol::{JsonRpcResponse, make_error_response, make_text_response, rpc_errors};
 use cddm_core::grammar::get_grammar_for_path;
 use cddm_core::semantic_graph::{build_pdg_from_cfg, extract_cfgs_from_source};
@@ -74,10 +75,7 @@ pub fn handle_get_semantic_graph(
         "pdgs": pdgs,
     });
 
-    make_text_response(
-        id,
-        serde_json::to_string_pretty(&payload).unwrap_or_default(),
-    )
+    make_json_payload_response(id, &payload)
 }
 
 /// Handler for `cddm_compare_semantic_graphs` MCP tool.
@@ -160,10 +158,7 @@ pub fn handle_compare_semantic_graphs(
         "nodes_b_count": cfgs_b[0].nodes.len(),
     });
 
-    make_text_response(
-        id,
-        serde_json::to_string_pretty(&payload).unwrap_or_default(),
-    )
+    make_json_payload_response(id, &payload)
 }
 
 /// Handler for `cddm_scan_cross_language` MCP tool.
@@ -230,20 +225,8 @@ pub fn handle_scan_cross_language(
         min_tokens,
         languages,
         ignore_patterns,
-        detect_type2: true,
-        detect_type3: true,
-        scan_self: true,
-        enable_git_blame: false,
-        cache_dir: None,
-        enable_cache: true,
-        cddmignore_path: None,
-        ignore_tests: false,
-        ignore_mocks: false,
-        ignore_generated: true,
-        rules_path: None,
-        enforce_policies: false,
-        cross_language: true,
         threads,
+        ..Default::default()
     };
 
     match cddm_core::semantic_graph::scan_cross_language_workspace(&config, threshold) {
@@ -254,10 +237,7 @@ pub fn handle_scan_cross_language(
                 "total_pairs": pairs.len(),
                 "pairs": pairs,
             });
-            make_text_response(
-                id,
-                serde_json::to_string_pretty(&payload).unwrap_or_default(),
-            )
+            make_json_payload_response(id, &payload)
         }
         Err(e) => make_error_response(id, rpc_errors::INTERNAL_ERROR, e),
     }
@@ -342,10 +322,7 @@ pub fn handle_semantic_neural_scan(
                 "high_confidence_count": result.high_confidence_count,
                 "pairs": result.pairs,
             });
-            make_text_response(
-                id,
-                serde_json::to_string_pretty(&payload).unwrap_or_default(),
-            )
+            make_json_payload_response(id, &payload)
         }
         Err(e) => make_error_response(id, rpc_errors::INTERNAL_ERROR, e),
     }

@@ -95,29 +95,39 @@ pub mod mcp_tools {
     pub const PARAM_CREATE_BRANCH: &str = "create_branch";
 }
 
+macro_rules! define_mcp_constants {
+    ($($name:ident => $val:expr),* $(,)?) => {
+        $( pub const $name: &str = $val; )*
+    };
+}
+
 /// Exposed resource identifiers and MIME types.
 pub mod mcp_resources {
-    pub const URI_WORKSPACE_HEALTH: &str = "cddm://workspace/health";
-    pub const URI_WORKSPACE_CLONES: &str = "cddm://workspace/clones";
-    pub const URI_WORKSPACE_CLUSTERS: &str = "cddm://workspace/clusters";
-    pub const URI_WORKSPACE_TIMELINE: &str = "cddm://workspace/timeline";
-    pub const URI_WORKSPACE_SUPPRESSIONS: &str = "cddm://workspace/suppressions";
-    pub const URI_WORKSPACE_POLICIES: &str = "cddm://workspace/policies";
-    pub const URI_WORKSPACE_SEMANTIC_GRAPH: &str = "cddm://workspace/semantic_graph";
-    pub const URI_WORKSPACE_CROSS_LANGUAGE_CLONES: &str = "cddm://workspace/cross_language_clones";
-    pub const URI_WORKSPACE_WATCH_STATUS: &str = "cddm://workspace/watch_status";
-    pub const URI_WORKSPACE_OVERLAP: &str = "cddm://workspace/overlap";
-    pub const URI_WORKSPACE_HUB: &str = "cddm://workspace/hub";
-    pub const URI_WORKSPACE_COVERAGE: &str = "cddm://workspace/coverage";
-    pub const URI_WORKSPACE_NEURAL_EMBEDDINGS: &str = "cddm://workspace/neural_embeddings";
-    pub const MIME_APPLICATION_JSON: &str = "application/json";
+    define_mcp_constants! {
+        URI_WORKSPACE_HEALTH => "cddm://workspace/health",
+        URI_WORKSPACE_CLONES => "cddm://workspace/clones",
+        URI_WORKSPACE_CLUSTERS => "cddm://workspace/clusters",
+        URI_WORKSPACE_TIMELINE => "cddm://workspace/timeline",
+        URI_WORKSPACE_SUPPRESSIONS => "cddm://workspace/suppressions",
+        URI_WORKSPACE_POLICIES => "cddm://workspace/policies",
+        URI_WORKSPACE_SEMANTIC_GRAPH => "cddm://workspace/semantic_graph",
+        URI_WORKSPACE_CROSS_LANGUAGE_CLONES => "cddm://workspace/cross_language_clones",
+        URI_WORKSPACE_WATCH_STATUS => "cddm://workspace/watch_status",
+        URI_WORKSPACE_OVERLAP => "cddm://workspace/overlap",
+        URI_WORKSPACE_HUB => "cddm://workspace/hub",
+        URI_WORKSPACE_COVERAGE => "cddm://workspace/coverage",
+        URI_WORKSPACE_NEURAL_EMBEDDINGS => "cddm://workspace/neural_embeddings",
+        MIME_APPLICATION_JSON => "application/json",
+    }
 }
 
 /// Exposed prompt template identifiers.
 pub mod mcp_prompts {
-    pub const AUDIT_DRY_HEALTH: &str = "audit_dry_health";
-    pub const REFACTOR_CLONE_PAIR: &str = "refactor_clone_pair";
-    pub const AUDIT_CROSS_LANGUAGE: &str = "cross_language_audit";
+    define_mcp_constants! {
+        AUDIT_DRY_HEALTH => "audit_dry_health",
+        REFACTOR_CLONE_PAIR => "refactor_clone_pair",
+        AUDIT_CROSS_LANGUAGE => "cross_language_audit",
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]

@@ -3,6 +3,7 @@
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 
+use super::constants::*;
 use super::tokenizer::SubwordTokenizer;
 use super::types::{CodeEmbeddingVector, NeuralEmbeddingConfig};
 
@@ -21,7 +22,7 @@ impl NeuralCodeEmbedder {
         config: &NeuralEmbeddingConfig,
     ) -> CodeEmbeddingVector {
         let subwords = SubwordTokenizer::tokenize(code);
-        let dim = config.dimension.max(32);
+        let dim = config.dimension.max(MIN_EMBEDDING_DIMENSION);
         let mut vector = vec![0.0f32; dim];
 
         let total_subwords = subwords.len().min(config.max_subwords);
@@ -31,17 +32,17 @@ impl NeuralCodeEmbedder {
             let h = hasher.finish();
 
             let idx = (h as usize) % dim;
-            let pos_weight = 1.0f32 / (1.0f32 + (pos as f32 * 0.01f32));
+            let pos_weight = 1.0f32 / (1.0f32 + (pos as f32 * POS_WEIGHT_FACTOR));
             vector[idx] += pos_weight;
 
             // Secondary feature mapping for dense dimensionality diffusion
             let idx2 = ((h >> 32) as usize) % dim;
-            vector[idx2] += 0.5f32 * pos_weight;
+            vector[idx2] += DIFFUSION_WEIGHT * pos_weight;
         }
 
         // Compute L2 Euclidean norm
         let norm = Self::compute_l2_norm(&vector);
-        if norm > 1e-6 {
+        if norm > NORM_EPSILON {
             for val in &mut vector {
                 *val /= norm;
             }

@@ -6,6 +6,7 @@ import {
   WIN2X_DATA_ATTRS,
   WIN2X_LAYOUT_MODES,
 } from "../../constants/win2x-constants";
+import { WindowMetaDisplay } from "../common/window-meta";
 import styles from "./dock-bar.module.css";
 
 export const DockBar: React.FC = () => {
@@ -63,7 +64,7 @@ export const DockBar: React.FC = () => {
         onPointerDown={handleDockPointerDown}
         title="Drag DockBar"
       >
-        <GripVertical className="w-3.5 h-3.5 text-slate-500 hover:text-slate-300 transition-colors" />
+        <GripVertical size={14} className={styles.dragHandleIcon} />
       </div>
 
       <div className={styles.dockGlobalControls}>
@@ -73,7 +74,7 @@ export const DockBar: React.FC = () => {
           className={styles.layoutBtn}
           onClick={() => manager.cascadeWindows()}
         >
-          <Layers className="w-4 h-4" />
+          <Layers size={16} />
         </button>
         <button
           type="button"
@@ -81,7 +82,7 @@ export const DockBar: React.FC = () => {
           className={styles.layoutBtn}
           onClick={() => manager.tileWindows(WIN2X_LAYOUT_MODES.TILE_GRID)}
         >
-          <LayoutGrid className="w-4 h-4" />
+          <LayoutGrid size={16} />
         </button>
         <div className={styles.divider} />
         <button
@@ -90,7 +91,7 @@ export const DockBar: React.FC = () => {
           className={styles.layoutBtn}
           onClick={() => manager.minimizeAllWindows()}
         >
-          <MonitorUp className="w-4 h-4 rotate-180" />
+          <MonitorUp size={16} className={styles.rotate180} />
         </button>
       </div>
 
@@ -117,12 +118,14 @@ export const DockBar: React.FC = () => {
               }
             }}
           >
-            <div className={styles.pillIconWrapper}>{win.icon}</div>
-            <div className={styles.pillTextGroup}>
-              <span className={styles.pillTitle}>{win.title}</span>
-              {win.subtitle && <span className={styles.pillSubtitle}>{win.subtitle}</span>}
-            </div>
-            {win.badge && <span className={styles.pillBadge}>{win.badge}</span>}
+            <WindowMetaDisplay
+              win={win}
+              iconWrapperClass={styles.pillIconWrapper}
+              infoClass={styles.pillTextGroup}
+              titleClass={styles.pillTitle}
+              subtitleClass={styles.pillSubtitle}
+              badgeClass={styles.pillBadge}
+            />
             <div className={styles.pillControls}>
               <button
                 type="button"
@@ -134,7 +137,7 @@ export const DockBar: React.FC = () => {
                   manager.focusWindow(win.id);
                 }}
               >
-                <Maximize2 className="w-3.5 h-3.5" />
+                <Maximize2 size={14} />
               </button>
               <button
                 type="button"
@@ -145,7 +148,7 @@ export const DockBar: React.FC = () => {
                   manager.closeWindow(win.id);
                 }}
               >
-                <X className="w-3.5 h-3.5" />
+                <X size={14} />
               </button>
             </div>
           </div>

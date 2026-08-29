@@ -2,6 +2,7 @@
 
 use crate::grammar::types::{LanguageGrammar, make_c_style_grammar};
 
+// cddm:ignore-start
 pub const GO: LanguageGrammar = make_c_style_grammar(
     "Go",
     &["go"],
@@ -235,3 +236,4 @@ pub const SWIFT: LanguageGrammar = make_c_style_grammar(
         "await",
     ],
 );
+// cddm:ignore-end

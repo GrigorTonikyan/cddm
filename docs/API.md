@@ -768,7 +768,7 @@ Scans the repository and outputs a formatted Markdown summary table with DRY hea
 
 | Flag               | Short | Type                    | Default  | Description                                    |
 | :----------------- | :---- | :---------------------- | :------- | :--------------------------------------------- |
-| `--fail-threshold` |       | `f64`                   | `15.0`   | Exit code 1 if duplication % exceeds threshold |
+| `--fail-threshold` |       | `f64`                   | `5.0`    | Exit code 1 if duplication % exceeds threshold |
 | `--platform`       |       | `github\|gitlab\|azure` | `github` | Target CI workflow platform                    |
 | `--output`         | `-o`  | `PathBuf`               | None     | Write generated Markdown comment to file       |
 | `--min-tokens`     | `-m`  | `usize`                 | `50`     | Minimum token clone threshold                  |

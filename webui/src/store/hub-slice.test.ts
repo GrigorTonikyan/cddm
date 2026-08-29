@@ -36,7 +36,7 @@ describe("useCDDMStore - Hub Slice", () => {
       name: "acme-corp",
       repositories: [{ name: "backend", path: "./backend" }],
       min_tokens: 50,
-      fail_threshold: 15.0,
+      fail_threshold: 5.0,
       ignore_patterns: [],
     };
 

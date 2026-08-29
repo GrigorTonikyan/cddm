@@ -147,3 +147,100 @@ fn test_go_mod_manifest_updates() {
             .contains("replace common => ../../packages/common")
     );
 }
+
+#[test]
+fn test_wildcard_glob_manifest_skips_root_update() {
+    let updates = execute_manifest_fixture(ManifestTestFixture {
+        root_file: "Cargo.toml",
+        root_content: "[workspace]\nmembers = [\"crates/*\", \"libs/*\"]\n",
+        caller_subpath: "crates/b",
+        caller_file: "Cargo.toml",
+        caller_content: "[package]\nname = \"b\"\nversion = \"0.1.0\"\n[dependencies]\nserde = \
+                         \"1.0\"\n",
+        caller_source: "src.rs",
+        shared_path: "libs/shared_utils",
+        shared_name: "shared_utils",
+        ext: "rs",
+    });
+
+    // Root Cargo.toml already has "libs/*", so only caller manifest should be updated (1 update total)
+    assert_eq!(updates.len(), 1);
+    assert_eq!(updates[0].manifest_path, "crates/b/Cargo.toml");
+}
+
+#[test]
+fn test_maven_pom_xml_updates() {
+    let updates = execute_manifest_fixture(ManifestTestFixture {
+        root_file: "pom.xml",
+        root_content: "<project><modules><module>services/api</module></modules></project>",
+        caller_subpath: "services/api",
+        caller_file: "pom.xml",
+        caller_content: "<project><dependencies><dependency><groupId>junit</\
+                         groupId><artifactId>junit</artifactId></dependency></dependencies></\
+                         project>",
+        caller_source: "Main.java",
+        shared_path: "shared/common",
+        shared_name: "common-helpers",
+        ext: "java",
+    });
+
+    assert_eq!(updates.len(), 1);
+    assert_eq!(updates[0].manifest_path, "services/api/pom.xml");
+    assert!(
+        updates[0]
+            .updated_content
+            .contains("<artifactId>common-helpers</artifactId>")
+    );
+}
+
+#[test]
+fn test_gradle_build_updates() {
+    let updates = execute_manifest_fixture(ManifestTestFixture {
+        root_file: "settings.gradle.kts",
+        root_content: "include(\":services:api\")",
+        caller_subpath: "services/api",
+        caller_file: "build.gradle.kts",
+        caller_content: "dependencies {\n    \
+                         implementation(\"org.jetbrains.kotlin:kotlin-stdlib\")\n}",
+        caller_source: "App.kt",
+        shared_path: "shared/utils",
+        shared_name: "shared-utils",
+        ext: "kt",
+    });
+
+    assert_eq!(updates.len(), 1);
+    assert_eq!(updates[0].manifest_path, "services/api/build.gradle.kts");
+    assert!(
+        updates[0]
+            .updated_content
+            .contains("implementation project(':shared-utils')")
+    );
+}
+
+#[test]
+fn test_csharp_csproj_updates() {
+    let updates = execute_manifest_fixture(ManifestTestFixture {
+        root_file: "Workspace.sln",
+        root_content: "Microsoft Visual Studio Solution File",
+        caller_subpath: "src/Services/Worker",
+        caller_file: "Worker.csproj",
+        caller_content: "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><TargetFramework>net8.\
+                         0</TargetFramework></PropertyGroup></Project>",
+        caller_source: "Worker.cs",
+        shared_path: "src/Shared/CommonUtils",
+        shared_name: "CommonUtils",
+        ext: "cs",
+    });
+
+    assert_eq!(updates.len(), 1);
+    assert_eq!(
+        updates[0].manifest_path,
+        "src/Services/Worker/Worker.csproj"
+    );
+    assert!(
+        updates[0]
+            .updated_content
+            .contains("<ProjectReference Include=")
+    );
+    assert!(updates[0].updated_content.contains("CommonUtils.csproj"));
+}

@@ -1,10 +1,12 @@
 #![forbid(unsafe_code)]
 
+pub mod constants;
 pub mod embedder;
 pub mod matcher;
 pub mod tokenizer;
 pub mod types;
 
+pub use constants::*;
 pub use embedder::NeuralCodeEmbedder;
 pub use matcher::NeuralMatcher;
 pub use tokenizer::SubwordTokenizer;

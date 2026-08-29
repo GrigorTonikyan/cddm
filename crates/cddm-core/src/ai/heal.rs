@@ -1,5 +1,6 @@
 #![forbid(unsafe_code)]
 
+use super::constants::*;
 use super::provider::create_ai_provider;
 use super::types::{HealIterationLog, HealRefactorRequest, HealRefactorResult};
 use crate::ai_prompt::{AiOccurrenceContext, AiRefactorPromptRequest, generate_ai_refactor_prompt};
@@ -15,7 +16,9 @@ pub async fn heal_cluster_refactor(
     req: &HealRefactorRequest,
 ) -> Result<HealRefactorResult, String> {
     let provider = create_ai_provider(&req.provider_config);
-    let max_iters = req.max_iterations.clamp(1, 10);
+    let max_iters = req
+        .max_iterations
+        .clamp(MIN_HEAL_ITERATIONS, MAX_HEAL_ITERATIONS);
 
     let mut iterations = Vec::new();
     let mut current_patch = String::new();
@@ -54,11 +57,11 @@ pub async fn heal_cluster_refactor(
     let fn_name = req
         .function_name
         .clone()
-        .unwrap_or_else(|| "extracted_shared_helper".to_string());
+        .unwrap_or_else(|| DEFAULT_EXTRACTED_FUNCTION_NAME.to_string());
     let target_mod = req
         .target_module
         .clone()
-        .unwrap_or_else(|| "src/utils.rs".to_string());
+        .unwrap_or_else(|| DEFAULT_TARGET_MODULE.to_string());
 
     let mut context_slices = Vec::new();
     for occ in &req.occurrences {
@@ -82,9 +85,9 @@ pub async fn heal_cluster_refactor(
 
     let initial_prompt_req = AiRefactorPromptRequest {
         clone_type: CloneType::Renamed,
-        similarity: 0.95,
-        token_count: 100,
-        lines_saved_est: occurrences_ctx.len() * 10,
+        similarity: DEFAULT_HEAL_SIMILARITY,
+        token_count: DEFAULT_HEAL_TOKEN_COUNT,
+        lines_saved_est: occurrences_ctx.len() * DEFAULT_HEAL_LINES_SAVED_MULTIPLIER,
         function_name: fn_name.clone(),
         target_module: target_mod.clone(),
         occurrences: occurrences_ctx.clone(),
@@ -118,8 +121,12 @@ pub async fn heal_cluster_refactor(
         }
 
         if patch_applied && req.verify {
-            let verify_res =
-                verify_refactor_test_suite(workspace_root, req.test_cmd.as_deref(), None, Some(30));
+            let verify_res = verify_refactor_test_suite(
+                workspace_root,
+                req.test_cmd.as_deref(),
+                None,
+                Some(DEFAULT_VERIFY_TIMEOUT_SECS),
+            );
 
             match verify_res {
                 Ok(v) if v.success => {

@@ -3,19 +3,23 @@
 use std::path::{Path, PathBuf};
 use tower_lsp::lsp_types::{Position, Range, Url};
 
+/// Converts 1-based line number to 0-based index.
+#[inline]
+#[must_use]
+pub fn to_0_based_line(line: usize) -> usize {
+    line.saturating_sub(1)
+}
+
 /// Converts a 1-based start and end line into a 0-based LSP `Range`.
 #[must_use]
 pub fn line_range_to_lsp_range(start_line: usize, end_line: usize) -> Range {
-    let start_0 = if start_line > 0 { start_line - 1 } else { 0 };
-    let end_0 = if end_line > 0 { end_line - 1 } else { 0 };
-
     Range {
         start: Position {
-            line: u32::try_from(start_0).unwrap_or(u32::MAX),
+            line: u32::try_from(to_0_based_line(start_line)).unwrap_or(u32::MAX),
             character: 0,
         },
         end: Position {
-            line: u32::try_from(end_0).unwrap_or(u32::MAX),
+            line: u32::try_from(to_0_based_line(end_line)).unwrap_or(u32::MAX),
             character: u32::MAX,
         },
     }

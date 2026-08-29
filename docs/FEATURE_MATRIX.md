@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-27 | Rust: 269 #[test] units | WebUI: 193 tests across 50 suites | Scripts & MCP: 113 tests across 40 suites | CI Workflows: PASS
+> Last verified: 2026-08-27 | Rust: 273 #[test] units | WebUI: 201 tests across 55 suites | Scripts & MCP: 113 tests across 40 suites | CI Workflows: PASS
 
 ---
 
@@ -358,7 +358,7 @@
 
 ---
 
-## 2. WebUI Frontend — React 19 + TypeScript + Vitest (193 unit tests across 50 suites)
+## 2. WebUI Frontend — React 19 + TypeScript + Vitest (201 unit tests across 55 suites)
 
 | Module                      | Test Suite File                                                                       | Test Cases | Status |
 | :-------------------------- | :------------------------------------------------------------------------------------ | :--------- | :----- |
@@ -388,10 +388,13 @@
 | Extract Module Tab          | `webui/src/components/sandbox/ExtractModuleTab.test.tsx`                              | 3 tests    | PASS   |
 | Cross Language Explorer Tab | `webui/src/components/semantic/CrossLanguageExplorerTab.test.tsx`                     | 2 tests    | PASS   |
 | Semantic Pairs Table        | `webui/src/components/semantic/SemanticPairsTable.test.tsx`                           | 2 tests    | PASS   |
+| Modal Footer                | `webui/src/components/ui/ModalFooter.test.tsx`                                        | 2 tests    | PASS   |
+| Modal Tabs                  | `webui/src/components/ui/ModalTabs.test.tsx`                                          | 1 tests    | PASS   |
 | UI Badge                    | `webui/src/components/ui/atoms/badge/badge.test.tsx`                                  | 2 tests    | PASS   |
 | UI Icon Button              | `webui/src/components/ui/atoms/icon-button/icon-button.test.tsx`                      | 2 tests    | PASS   |
 | UI Code Block               | `webui/src/components/ui/molecules/code-block/code-block.test.tsx`                    | 3 tests    | PASS   |
 | UI Card                     | `webui/src/components/ui/molecules/collapsible-card/collapsible-card.test.tsx`        | 2 tests    | PASS   |
+| window-meta                 | `webui/src/components/ui/win2x-manager/components/common/window-meta.test.tsx`        | 1 tests    | PASS   |
 | Win2x Tab Bar               | `webui/src/components/ui/win2x-manager/components/tab-bar/tab-bar.test.tsx`           | 4 tests    | PASS   |
 | Win2x Window                | `webui/src/components/ui/win2x-manager/components/win2x-window/win2x-window.test.tsx` | 13 tests   | PASS   |
 | Win2x Context               | `webui/src/components/ui/win2x-manager/context/win2x-manager-context.test.tsx`        | 5 tests    | PASS   |
@@ -403,6 +406,7 @@
 | Win2x Drag Hook             | `webui/src/components/ui/win2x-manager/hooks/use-pointer-drag.test.ts`                | 2 tests    | PASS   |
 | Win2x Resize Hook           | `webui/src/components/ui/win2x-manager/hooks/use-pointer-resize.test.ts`              | 2 tests    | PASS   |
 | Live Watch Studio           | `webui/src/components/watch/LiveWatch.test.tsx`                                       | 5 tests    | PASS   |
+| use-form-state              | `webui/src/hooks/use-form-state.test.ts`                                              | 3 tests    | PASS   |
 | Global Store                | `webui/src/store/cddm-store.test.ts`                                                  | 11 tests   | PASS   |
 | hub-slice                   | `webui/src/store/hub-slice.test.ts`                                                   | 5 tests    | PASS   |
 | Semantic Slice              | `webui/src/store/semantic-slice.test.ts`                                              | 7 tests    | PASS   |
@@ -410,6 +414,7 @@
 | Watch Slice                 | `webui/src/store/watch-slice.test.ts`                                                 | 6 tests    | PASS   |
 | Type System                 | `webui/src/types/cddm-types.test.ts`                                                  | 2 tests    | PASS   |
 | api-client                  | `webui/src/utils/api-client.test.ts`                                                  | 4 tests    | PASS   |
+| file-download               | `webui/src/utils/file-download.test.ts`                                               | 1 tests    | PASS   |
 | Graph Layout Engine         | `webui/src/utils/graph-layout.test.ts`                                                | 3 tests    | PASS   |
 | IDE Deeplinks               | `webui/src/utils/ide-links.test.ts`                                                   | 8 tests    | PASS   |
 

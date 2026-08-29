@@ -1,7 +1,13 @@
 #![forbid(unsafe_code)]
 
-use cddm_core::{export_cache_pack, import_cache_pack};
+use cddm_core::{CachePackSummary, export_cache_pack, import_cache_pack};
 use std::path::PathBuf;
+
+fn print_pack_summary(summary: &CachePackSummary, entry_label: &str) {
+    println!("\x1b[32m[SUCCESS] {}\x1b[0m", summary.message);
+    println!("  {}: {}", entry_label, summary.entry_count);
+    println!("  Checksum: {}", summary.checksum);
+}
 
 /// Executes the CLI `cddm cache export` command.
 pub fn run_cache_export_command(
@@ -18,10 +24,7 @@ pub fn run_cache_export_command(
     );
 
     let summary = export_cache_pack(&db_path, &out_path)?;
-    println!("\x1b[32m[SUCCESS] {}\x1b[0m", summary.message);
-    println!("  Entries:  {}", summary.entry_count);
-    println!("  Checksum: {}", summary.checksum);
-
+    print_pack_summary(&summary, "Entries");
     Ok(())
 }
 
@@ -39,9 +42,6 @@ pub fn run_cache_import_command(
     );
 
     let summary = import_cache_pack(&pack_file, &target_dir)?;
-    println!("\x1b[32m[SUCCESS] {}\x1b[0m", summary.message);
-    println!("  Entries Imported: {}", summary.entry_count);
-    println!("  SHA-256 Checksum: {}", summary.checksum);
-
+    print_pack_summary(&summary, "Entries Imported");
     Ok(())
 }

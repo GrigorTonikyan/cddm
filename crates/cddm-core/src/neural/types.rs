@@ -24,9 +24,9 @@ pub struct NeuralEmbeddingConfig {
 impl Default for NeuralEmbeddingConfig {
     fn default() -> Self {
         Self {
-            dimension: 256,
-            similarity_threshold: 0.85,
-            max_subwords: 512,
+            dimension: super::constants::DEFAULT_NEURAL_DIMENSION,
+            similarity_threshold: super::constants::DEFAULT_NEURAL_SIMILARITY_THRESHOLD,
+            max_subwords: super::constants::DEFAULT_NEURAL_MAX_SUBWORDS,
         }
     }
 }

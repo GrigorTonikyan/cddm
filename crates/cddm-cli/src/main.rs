@@ -39,149 +39,88 @@ async fn run_app() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Scan {
-            directory,
-            min_tokens,
-            format,
-            fail_threshold,
-            languages,
-            ignore,
-            git_blame,
-            cache_dir,
-            no_cache,
-            clear_cache,
-            cddmignore,
-            ignore_tests,
-            ignore_mocks,
-            ignore_generated,
-            rules,
-            enforce_policies,
-            cross_language,
-            no_type3,
-            threads,
-        } => {
+        Commands::Scan(args) => {
+            let enable_cross_lang = args.cross_language && !args.no_cross_language;
+            let effective_ignore_tests = args.ignore_tests && !args.no_ignore_tests;
+            let effective_ignore_mocks = args.ignore_mocks && !args.no_ignore_mocks;
             run_scan_command(
-                directory,
-                min_tokens,
-                format,
-                fail_threshold,
-                languages,
-                ignore,
-                git_blame,
-                cache_dir,
-                no_cache,
-                clear_cache,
-                cddmignore,
-                ignore_tests,
-                ignore_mocks,
-                ignore_generated,
-                rules,
-                enforce_policies,
-                cross_language,
-                !no_type3,
-                threads,
+                args.directory,
+                args.min_tokens,
+                args.format,
+                args.fail_threshold,
+                args.languages,
+                args.ignore,
+                args.git_blame,
+                args.cache_dir,
+                args.no_cache,
+                args.clear_cache,
+                args.cddmignore,
+                effective_ignore_tests,
+                effective_ignore_mocks,
+                args.ignore_generated,
+                args.rules,
+                args.enforce_policies,
+                enable_cross_lang,
+                !args.no_type3,
+                args.threads,
             )
             .await?;
         }
 
-        Commands::Diff {
-            base_ref,
-            target_ref,
-            directory,
-            min_tokens,
-            format,
-            fail_threshold,
-            languages,
-            ignore,
-            git_blame,
-            cache_dir,
-            no_cache,
-            cddmignore,
-            ignore_tests,
-            ignore_mocks,
-            ignore_generated,
-            rules,
-            enforce_policies,
-            cross_language,
-        } => {
+        Commands::Diff(args) => {
             run_diff_command(
-                base_ref,
-                target_ref,
-                directory,
-                min_tokens,
-                format,
-                fail_threshold,
-                languages,
-                ignore,
-                git_blame,
-                cache_dir,
-                no_cache,
-                cddmignore,
-                ignore_tests,
-                ignore_mocks,
-                ignore_generated,
-                rules,
-                enforce_policies,
-                cross_language,
+                args.base_ref,
+                args.target_ref,
+                args.directory,
+                args.min_tokens,
+                args.format,
+                args.fail_threshold,
+                args.languages,
+                args.ignore,
+                args.git_blame,
+                args.cache_dir,
+                args.no_cache,
+                args.cddmignore,
+                args.ignore_tests,
+                args.ignore_mocks,
+                args.ignore_generated,
+                args.rules,
+                args.enforce_policies,
+                args.cross_language,
             )
             .await?;
         }
 
-        Commands::Semantic {
-            directory,
-            threshold,
-            min_tokens,
-            format,
-            languages,
-            ignore,
-            neural,
-            neural_threshold,
-            threads,
-        } => {
+        Commands::Semantic(args) => {
             run_semantic_command(
-                directory,
-                threshold,
-                min_tokens,
-                format,
-                languages,
-                ignore,
-                neural,
-                neural_threshold,
-                threads,
+                args.directory,
+                args.threshold,
+                args.min_tokens,
+                args.format,
+                args.languages,
+                args.ignore,
+                args.neural,
+                args.neural_threshold,
+                args.threads,
             )?;
         }
 
-        Commands::Refactor {
-            pair,
-            cluster,
-            directory,
-            min_tokens,
-            output,
-            prompt,
-            ast,
-            fn_name,
-            target_module,
-            apply_branch,
-            verify,
-            test_cmd,
-            languages,
-            ignore,
-        } => {
+        Commands::Refactor(args) => {
             run_refactor_command(
-                pair,
-                cluster,
-                directory,
-                min_tokens,
-                output,
-                prompt,
-                ast,
-                fn_name,
-                target_module,
-                apply_branch,
-                verify,
-                test_cmd,
-                languages,
-                ignore,
+                args.pair,
+                args.cluster,
+                args.directory,
+                args.min_tokens,
+                args.output,
+                args.prompt,
+                args.ast,
+                args.fn_name,
+                args.target_module,
+                args.apply_branch,
+                args.verify,
+                args.test_cmd,
+                args.languages,
+                args.ignore,
             )
             .await?;
         }
@@ -190,57 +129,40 @@ async fn run_app() -> Result<(), Box<dyn std::error::Error>> {
             run_extract_command(args).await?;
         }
 
-        Commands::Serve { port, open } => {
-            serve::start_server(port, open).await?;
+        Commands::Serve(args) => {
+            serve::start_server(args.port, args.open).await?;
         }
 
-        Commands::Watch {
-            directory,
-            min_tokens,
-            languages,
-            ignore,
-            git_blame,
-            cache_dir,
-            no_cache,
-            debounce_ms,
-            fail_threshold,
-            serve,
-            open,
-            format,
-            cross_language,
-        } => {
+        Commands::Watch(args) => {
             run_watch_command(
-                directory,
-                min_tokens,
-                languages,
-                ignore,
-                git_blame,
-                cache_dir,
-                no_cache,
-                debounce_ms,
-                fail_threshold,
-                serve,
-                open,
-                format,
-                cross_language,
+                args.directory,
+                args.min_tokens,
+                args.languages,
+                args.ignore,
+                args.git_blame,
+                args.cache_dir,
+                args.no_cache,
+                args.debounce_ms,
+                args.fail_threshold,
+                args.serve,
+                args.open,
+                args.format,
+                args.cross_language,
             )
             .await?;
         }
 
-        Commands::Lsp {
-            directory,
-            min_tokens,
-        } => {
-            run_lsp_command(directory, min_tokens).await?;
+        Commands::Lsp(args) => {
+            run_lsp_command(args.directory, args.min_tokens).await?;
         }
 
-        Commands::Trend {
-            directory,
-            max_samples,
-            min_tokens,
-            format,
-        } => {
-            run_trend_command(directory, max_samples, min_tokens, format)?;
+        Commands::Trend(args) => {
+            run_trend_command(
+                args.directory,
+                args.max_samples,
+                args.min_tokens,
+                args.format,
+            )?;
         }
 
         Commands::Hook { action } => {
@@ -255,24 +177,25 @@ async fn run_app() -> Result<(), Box<dyn std::error::Error>> {
             run_rules_command(action).await?;
         }
 
-        Commands::Init {
-            platform,
-            fail_threshold,
-            min_tokens,
-            output,
-            write,
-        } => {
-            run_init_command(platform, fail_threshold, min_tokens, output, write)?;
+        Commands::Init(args) => {
+            run_init_command(
+                args.platform,
+                args.fail_threshold,
+                args.min_tokens,
+                args.output,
+                args.write,
+            )?;
         }
 
-        Commands::Comment {
-            directory,
-            min_tokens,
-            fail_threshold,
-            platform,
-            output,
-        } => {
-            run_comment_command(directory, min_tokens, fail_threshold, platform, output).await?;
+        Commands::Comment(args) => {
+            run_comment_command(
+                args.directory,
+                args.min_tokens,
+                args.fail_threshold,
+                args.platform,
+                args.output,
+            )
+            .await?;
         }
 
         Commands::Heal(args) => {
@@ -308,28 +231,18 @@ async fn run_app() -> Result<(), Box<dyn std::error::Error>> {
             }
         },
 
-        Commands::Monorepo {
-            directory,
-            min_tokens,
-        } => {
-            run_monorepo_command(directory, min_tokens).await?;
+        Commands::Monorepo(args) => {
+            run_monorepo_command(args.directory, args.min_tokens).await?;
         }
 
-        Commands::Tui {
-            directory,
-            min_tokens,
-            watch,
-            fail_threshold,
-            languages,
-            ignore,
-        } => {
+        Commands::Tui(args) => {
             run_tui_command(
-                directory,
-                min_tokens,
-                watch,
-                fail_threshold,
-                languages,
-                ignore,
+                args.directory,
+                args.min_tokens,
+                args.watch,
+                args.fail_threshold,
+                args.languages,
+                args.ignore,
             )
             .await?;
         }

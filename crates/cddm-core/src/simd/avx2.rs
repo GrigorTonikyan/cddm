@@ -41,6 +41,7 @@ pub fn compute_kgram_rolling_hashes_avx2(
     )
 }
 
+// cddm:ignore-start
 #[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx2")]
 #[allow(unsafe_code)]
@@ -183,6 +184,7 @@ unsafe fn compute_dot_product_f32_avx2_inner(a: &[f32], b: &[f32]) -> f32 {
 
     sum
 }
+// cddm:ignore-end
 
 #[cfg(test)]
 pub(crate) mod tests {

@@ -1,6 +1,8 @@
 #![forbid(unsafe_code)]
 
-use crate::formatters::{print_trend_console_report, print_trend_markdown_report};
+use crate::formatters::{
+    print_structured_json_output, print_trend_console_report, print_trend_markdown_report,
+};
 use crate::types::OutputFormat;
 use cddm_core::collect_git_timeline;
 use std::path::PathBuf;
@@ -16,19 +18,15 @@ pub fn run_trend_command(
     match collect_git_timeline(&directory, max_samples, min_tokens, cancel_flag) {
         Ok(trend) => match format {
             OutputFormat::Console => print_trend_console_report(&trend),
-            OutputFormat::Json => {
-                println!("{}", serde_json::to_string_pretty(&trend)?);
-            }
+            OutputFormat::Json => print_structured_json_output(&trend, false)?,
             OutputFormat::Markdown => print_trend_markdown_report(&trend),
             OutputFormat::Sarif => {
                 eprintln!(
                     "[WARN] SARIF format is not applicable for timeline trend. Outputting JSON."
                 );
-                println!("{}", serde_json::to_string_pretty(&trend)?);
+                print_structured_json_output(&trend, false)?;
             }
-            OutputFormat::Ndjson => {
-                println!("{}", serde_json::to_string(&trend)?);
-            }
+            OutputFormat::Ndjson => print_structured_json_output(&trend, true)?,
         },
         Err(err) => {
             eprintln!("[ERROR] Failed to collect Git timeline trend: {}", err);

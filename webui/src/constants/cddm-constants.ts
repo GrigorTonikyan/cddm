@@ -30,6 +30,10 @@ export const API_ROUTES = {
   REFACTOR_AI_PROMPT: "/api/refactor/ai-prompt",
   REFACTOR_AST: "/api/refactor/ast",
   REFACTOR_VERIFY: "/api/refactor/verify",
+  REFACTOR_HEAL: "/api/refactor/heal",
+  CACHE_EXPORT: "/api/cache/export",
+  CACHE_IMPORT: "/api/cache/import",
+  MONOREPO_SCAN: "/api/monorepo/scan",
   POLICY_RULES: "/api/policy/rules",
   POLICY_EVALUATE: "/api/policy/evaluate",
   SEMANTIC_GRAPH: "/api/semantic-graph",
@@ -48,13 +52,46 @@ export const API_ROUTES = {
 } as const;
 
 /**
+ * Default parameters for autonomous AI healing refactoring.
+ */
+export const DEFAULT_HEAL_CONFIG = {
+  max_iterations: 3,
+  verify: true,
+  default_provider: "Mock" as const,
+  default_gemini_model: "gemini-2.5-pro",
+  default_claude_model: "claude-3-7-sonnet",
+  default_openai_model: "gpt-4.5-preview",
+  default_ollama_model: "qwen2.5-coder",
+  default_ollama_endpoint: "http://localhost:11434",
+} as const;
+
+/**
+ * Default quality gate threshold (5.0%).
+ */
+export const DEFAULT_FAIL_THRESHOLD = 5.0;
+
+/**
  * Default fallback parameters for scanning codebases.
  */
 export const DEFAULT_SCAN_CONFIG: ScanConfig = {
   directory: ".",
   min_tokens: 50,
   languages: [],
-  ignore_patterns: ["node_modules", "target", ".git", "dist", "build", ".logs"],
+  ignore_patterns: [
+    "node_modules",
+    "target",
+    ".git",
+    "dist",
+    "build",
+    ".logs",
+    "packaging",
+    "npm",
+    "editors",
+    "test-results",
+    "tests",
+    ".test.",
+    ".spec.",
+  ],
   detect_type2: true,
   detect_type3: true,
   scan_self: true,
@@ -62,7 +99,7 @@ export const DEFAULT_SCAN_CONFIG: ScanConfig = {
   ignore_tests: false,
   ignore_mocks: false,
   ignore_generated: true,
-  cross_language: false,
+  cross_language: true,
 };
 
 /**

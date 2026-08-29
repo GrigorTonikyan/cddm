@@ -7,12 +7,8 @@ use crate::cache::{CACHE_SCHEMA_VERSION, CachedFileEntry, DiskFingerprintCache};
 use crate::fingerprint::{MIN_K_GRAM, WINDOW_OFFSET, winnow};
 use crate::grammar::get_grammar_for_path;
 use crate::tokenizer::tokenize;
-use crate::types::{
-    DEFAULT_CACHE_FILE, LanguageStats, MAX_HEALTH_SCORE, MIN_HEALTH_SCORE, ScanConfig, ScanPhase,
-    ScanProgress, ScanResult,
-};
+use crate::types::{DEFAULT_CACHE_FILE, ScanConfig, ScanPhase, ScanProgress, ScanResult};
 use rayon::prelude::*;
-use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Arc, RwLock};
@@ -348,7 +344,7 @@ pub async fn run_scan(
                     let scan_res =
                         crate::semantic_graph::scan_cross_language_workspace_with_progress(
                             &config_clone,
-                            0.70,
+                            0.85,
                             Some(
                                 move |evaluated: usize, total_candidates: usize, _msg: &str| {
                                     let p = 0.65
@@ -370,6 +366,31 @@ pub async fn run_scan(
 
                     if let Ok(cross_pairs) = scan_res {
                         for cp in cross_pairs {
+                            let path_a = std::path::Path::new(&cp.file_a);
+                            let path_b = std::path::Path::new(&cp.file_b);
+                            if suppression_engine_clone.is_path_ignored(path_a, None)
+                                || suppression_engine_clone.is_path_ignored(path_b, None)
+                            {
+                                continue;
+                            }
+                            if suppression_engine_clone
+                                .is_clone_type_ignored(path_a, &crate::types::CloneType::Semantic)
+                                || suppression_engine_clone.is_clone_type_ignored(
+                                    path_b,
+                                    &crate::types::CloneType::Semantic,
+                                )
+                            {
+                                continue;
+                            }
+                            let eff_a = suppression_engine_clone
+                                .get_effective_min_tokens(path_a, config_clone.min_tokens);
+                            let eff_b = suppression_engine_clone
+                                .get_effective_min_tokens(path_b, config_clone.min_tokens);
+                            let req_min = eff_a.max(eff_b);
+                            if config_clone.min_tokens < req_min {
+                                continue;
+                            }
+
                             let fragment_hash = format!(
                                 "cross-lang-{}:{}-{}:{}-{}",
                                 cp.file_a,
@@ -411,49 +432,8 @@ pub async fn run_scan(
         tracker.progress_scaled.store(9500, Ordering::Relaxed);
     }
 
-    let mut lang_stats_map: HashMap<String, LanguageStats> = HashMap::new();
-    for pf in parsed_files.iter() {
-        let stats = lang_stats_map
-            .entry(pf.language.clone())
-            .or_insert(LanguageStats {
-                language: pf.language.clone(),
-                files: 0,
-                tokens: 0,
-                clones: 0,
-            });
-        stats.files += 1;
-        stats.tokens += pf.token_count;
-    }
-
-    let mut cross_module_count = 0;
-    for pair in &merged_pairs {
-        let norm_a = pair.file_a.replace('\\', "/");
-        let norm_b = pair.file_b.replace('\\', "/");
-        let parent_a = Path::new(&norm_a).parent().unwrap_or(Path::new(""));
-        let parent_b = Path::new(&norm_b).parent().unwrap_or(Path::new(""));
-        if parent_a != parent_b {
-            cross_module_count += 1;
-        }
-    }
-
-    let language_breakdown: Vec<LanguageStats> = lang_stats_map.into_values().collect();
-    let total_duplicated_tokens: usize = merged_pairs.iter().map(|p| p.token_count).sum();
-    let duplication_percentage = if total_tokens > 0 {
-        ((total_duplicated_tokens as f64) / (total_tokens as f64) * 100.0).clamp(0.0, 100.0)
-    } else {
-        0.0
-    };
-    let cross_module_ratio = if !merged_pairs.is_empty() {
-        cross_module_count as f64 / merged_pairs.len() as f64
-    } else {
-        0.0
-    };
-    let duplication_weight = 1.5 * (1.0 + 0.3 * cross_module_ratio);
-    let dry_health_score = (MAX_HEALTH_SCORE - duplication_percentage * duplication_weight)
-        .clamp(MIN_HEALTH_SCORE, MAX_HEALTH_SCORE);
-
-    let clone_clusters = crate::cluster::cluster_clone_pairs(&merged_pairs);
-    let total_clusters = clone_clusters.len();
+    let metrics = super::scoring::compute_scan_scoring(&parsed_files, &merged_pairs, total_tokens);
+    let total_clusters = metrics.clone_clusters.len();
 
     let mut scan_result = ScanResult {
         scan_id: scan_id.clone(),
@@ -461,12 +441,12 @@ pub async fn run_scan(
         total_tokens,
         total_clones: merged_pairs.len(),
         total_clusters,
-        duplication_percentage,
-        dry_health_score,
+        duplication_percentage: metrics.duplication_percentage,
+        dry_health_score: metrics.dry_health_score,
         clone_pairs: merged_pairs,
-        clone_clusters,
+        clone_clusters: metrics.clone_clusters,
         duration_ms: start_time.elapsed().as_millis() as u64,
-        language_breakdown,
+        language_breakdown: metrics.language_breakdown,
         policy_violations: Vec::new(),
     };
 

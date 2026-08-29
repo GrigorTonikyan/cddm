@@ -48,7 +48,7 @@ export const SemanticPairsTable: React.FC<SemanticPairsTableProps> = ({
                         </span>
                         <span className="font-bold text-slate-200">{pair.function_a}</span>
                       </div>
-                      <div className="text-[10px] text-slate-400 truncate max-w-[200px] mt-0.5">
+                      <div className="text-[10px] text-slate-400 truncate max-w-50 mt-0.5">
                         {pair.file_a}:{pair.lines_a[0]}-{pair.lines_a[1]}
                       </div>
                     </td>
@@ -60,7 +60,7 @@ export const SemanticPairsTable: React.FC<SemanticPairsTableProps> = ({
                         </span>
                         <span className="font-bold text-slate-200">{pair.function_b}</span>
                       </div>
-                      <div className="text-[10px] text-slate-400 truncate max-w-[200px] mt-0.5">
+                      <div className="text-[10px] text-slate-400 truncate max-w-50 mt-0.5">
                         {pair.file_b}:{pair.lines_b[0]}-{pair.lines_b[1]}
                       </div>
                     </td>
@@ -101,7 +101,7 @@ export const SemanticPairsTable: React.FC<SemanticPairsTableProps> = ({
                         <span className="px-1.5 py-0.5 rounded bg-indigo-950 text-indigo-300 border border-indigo-800/50 text-[10px]">
                           {pair.language_a}
                         </span>
-                        <span className="font-bold text-slate-200 truncate max-w-[180px]">
+                        <span className="font-bold text-slate-200 truncate max-w-45">
                           {pair.file_a}
                         </span>
                       </div>
@@ -115,7 +115,7 @@ export const SemanticPairsTable: React.FC<SemanticPairsTableProps> = ({
                         <span className="px-1.5 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-800/50 text-[10px]">
                           {pair.language_b}
                         </span>
-                        <span className="font-bold text-slate-200 truncate max-w-[180px]">
+                        <span className="font-bold text-slate-200 truncate max-w-45">
                           {pair.file_b}
                         </span>
                       </div>
@@ -142,7 +142,7 @@ export const SemanticPairsTable: React.FC<SemanticPairsTableProps> = ({
                       </span>
                     </td>
 
-                    <td className="py-2.5 px-3 text-slate-400 text-[11px] truncate max-w-[280px] text-right">
+                    <td className="py-2.5 px-3 text-slate-400 text-[11px] truncate max-w-70 text-right">
                       {pair.semantic_rationale}
                     </td>
                   </tr>

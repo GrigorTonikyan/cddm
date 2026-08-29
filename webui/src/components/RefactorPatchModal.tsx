@@ -8,6 +8,7 @@ import {
   RefactorSuggestion,
 } from "../types/cddm-types";
 import { parsePath } from "../utils/path-utils";
+import { downloadTextFile } from "../utils/file-download";
 import { CollapsibleCard, CodeBlock, BADGE_VARIANTS, CODE_BLOCK_VARIANTS } from "./ui";
 import { Win2xWindow } from "./ui/win2x-manager";
 import { useCDDMStore } from "../store/cddm-store";
@@ -147,20 +148,10 @@ export const RefactorPatchModal: React.FC<RefactorPatchModalProps> = ({
 
   const handleDownloadPatch = () => {
     if (!currentPatch) return;
-    const blob = new Blob([currentPatch], {
-      type: "text/x-diff;charset=utf-8",
-    });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
     const filename = cluster
       ? `cddm-cluster-${cluster.id}-refactor.patch`
       : `cddm-refactor-${parsePath(fileA || "code").filename}.patch`;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    downloadTextFile(currentPatch, filename, "text/x-diff;charset=utf-8");
     setDownloaded(true);
     setTimeout(() => setDownloaded(false), 2000);
   };

@@ -13,7 +13,7 @@ pub fn generate_default_hub_config(name: Option<&str>) -> String {
         r#"# CDDM Organization Federation Hub Configuration
 name = "{hub_name}"
 min_tokens = 50
-fail_threshold = 15.0
+fail_threshold = 5.0
 ignore_patterns = ["**/target/**", "**/node_modules/**", "**/dist/**", "**/.git/**"]
 
 [[repositories]]

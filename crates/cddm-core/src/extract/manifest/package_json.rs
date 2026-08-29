@@ -1,10 +1,9 @@
 #![forbid(unsafe_code)]
 
 use super::common::{
-    create_manifest_update, find_enclosing_manifest, update_root_workspace_manifest,
+    create_manifest_update, resolve_caller_manifest_content, update_root_workspace_manifest,
 };
 use crate::extract::types::ManifestUpdate;
-use std::fs;
 use std::path::Path;
 
 pub fn update_package_json_root(
@@ -25,9 +24,8 @@ pub fn update_caller_package_json(
     caller_file: &str,
     new_crate_name: &str,
 ) -> Option<ManifestUpdate> {
-    let caller_path = workspace_root.join(caller_file);
-    let manifest_path = find_enclosing_manifest(&caller_path, "package.json", workspace_root)?;
-    let content = fs::read_to_string(&manifest_path).ok()?;
+    let (manifest_path, content) =
+        resolve_caller_manifest_content(workspace_root, caller_file, "package.json")?;
 
     if content.contains(&format!("\"{}\"", new_crate_name)) {
         return None;

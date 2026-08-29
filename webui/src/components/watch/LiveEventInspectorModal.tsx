@@ -211,7 +211,7 @@ export const LiveEventInspectorModal: React.FC<LiveEventInspectorModalProps> = (
                         title={file}
                       >
                         <FileCode className="w-3 h-3 text-indigo-400" />
-                        <span className="truncate max-w-[280px]">{file}</span>
+                        <span className="truncate max-w-70">{file}</span>
                       </span>
                     ))}
                   </div>

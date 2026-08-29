@@ -13,6 +13,7 @@ import {
 import type { CfgNode, CrossLanguageClonePair } from "../types/cddm-types";
 import { SingleGraphCard } from "./semantic/SingleGraphCard";
 import { CrossLanguageExplorerTab } from "./semantic/CrossLanguageExplorerTab";
+import { ModalTabs } from "./ui/ModalTabs";
 
 export interface SemanticGraphModalProps {
   isOpen: boolean;
@@ -112,46 +113,24 @@ export const SemanticGraphModal: React.FC<SemanticGraphModalProps> = ({ isOpen, 
       <div className="space-y-4">
         {/* Navigation Tabs */}
         <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setActiveTab("visualizer")}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 transition-colors cursor-pointer ${
-                activeTab === "visualizer"
-                  ? "bg-indigo-600 text-white"
-                  : "bg-slate-900 text-slate-400 hover:text-slate-200"
-              }`}
-            >
-              <Network className="w-3.5 h-3.5" />
-              <span>Graph Visualizer</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab("sandbox")}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 transition-colors cursor-pointer ${
-                activeTab === "sandbox"
-                  ? "bg-indigo-600 text-white"
-                  : "bg-slate-900 text-slate-400 hover:text-slate-200"
-              }`}
-            >
-              <Code2 className="w-3.5 h-3.5" />
-              <span>Polyglot Sandbox</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab("cross-lang")}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 transition-colors cursor-pointer ${
-                activeTab === "cross-lang"
-                  ? "bg-purple-600 text-white"
-                  : "bg-slate-900 text-slate-400 hover:text-slate-200"
-              }`}
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Cross-Language Explorer</span>
-            </button>
-          </div>
+          <ModalTabs
+            tabs={[
+              {
+                id: "visualizer",
+                label: "Graph Visualizer",
+                icon: <Network className="w-3.5 h-3.5" />,
+              },
+              { id: "sandbox", label: "Polyglot Sandbox", icon: <Code2 className="w-3.5 h-3.5" /> },
+              {
+                id: "cross-lang",
+                label: "Cross-Language Explorer",
+                icon: <Sparkles className="w-3.5 h-3.5" />,
+              },
+            ]}
+            activeTab={activeTab}
+            onTabChange={(id) => setActiveTab(id as "visualizer" | "sandbox" | "cross-lang")}
+            activeColorClass="bg-indigo-600 text-white"
+          />
 
           {comparison && (
             <div className="flex items-center gap-2">

@@ -7,32 +7,12 @@
   user-select: none;
 }
 
-.button {
-  width: 2rem;
-  height: 1.75rem;
-  display: flex;
+.maximizeWrapper {
+  position: relative;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  border-radius: var(--win2x-radius-button);
-  color: var(--win2x-text-muted);
-  transition:
-    color var(--win2x-transition-fast),
-    background-color var(--win2x-transition-fast);
+}
 
-  &:hover {
-    color: var(--win2x-text-primary);
-    background-color: var(--win2x-bg-btn-hover);
-  }
-
-  &:active {
-    background-color: var(--win2x-bg-btn-active);
-  }
-
-  &.closeButton:hover {
-    background-color: var(--win2x-bg-danger-hover);
-    color: #ffffff;
-  }
+.restoreIcon {
+  transform: rotate(180deg);
 }

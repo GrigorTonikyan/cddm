@@ -12,44 +12,7 @@ use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
 use tokio::sync::mpsc;
 
-struct Dsu {
-    parent: Vec<usize>,
-    rank: Vec<usize>,
-}
-
-impl Dsu {
-    fn new(size: usize) -> Self {
-        Self {
-            parent: (0..size).collect(),
-            rank: vec![0; size],
-        }
-    }
-
-    fn find(&mut self, i: usize) -> usize {
-        if self.parent[i] == i {
-            i
-        } else {
-            let p = self.parent[i];
-            self.parent[i] = self.find(p);
-            self.parent[i]
-        }
-    }
-
-    fn union(&mut self, i: usize, j: usize) {
-        let root_i = self.find(i);
-        let root_j = self.find(j);
-        if root_i != root_j {
-            if self.rank[root_i] < self.rank[root_j] {
-                self.parent[root_i] = root_j;
-            } else if self.rank[root_i] > self.rank[root_j] {
-                self.parent[root_j] = root_i;
-            } else {
-                self.parent[root_j] = root_i;
-                self.rank[root_i] += 1;
-            }
-        }
-    }
-}
+use crate::cluster::UnionFind;
 
 /// Executes an organization-wide Federation Hub scan across all configured repositories.
 pub async fn run_hub_scan(config: &HubConfig) -> Result<HubScanSummary, String> {
@@ -253,14 +216,14 @@ fn cluster_cross_repo_pairs(pairs: &[CrossRepoClonePair]) -> Vec<CrossRepoCluste
         edges.push((idx_a, idx_b));
     }
 
-    let mut dsu = Dsu::new(occ_list.len());
+    let mut uf = UnionFind::new(occ_list.len());
     for (idx_a, idx_b) in edges {
-        dsu.union(idx_a, idx_b);
+        uf.union(idx_a, idx_b);
     }
 
     let mut group_map: HashMap<usize, Vec<usize>> = HashMap::new();
     for i in 0..occ_list.len() {
-        let root = dsu.find(i);
+        let root = uf.find(i);
         group_map.entry(root).or_default().push(i);
     }
 

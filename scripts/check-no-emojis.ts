@@ -140,26 +140,20 @@ export function scanDirectoryForEmojis(
   return results;
 }
 
+import { reportViolationsAndExit } from "./lib/step-runner";
+
 async function main() {
   console.log("\x1b[36m--> Scanning codebase for emoji violations (NO EMOJI policy)...\x1b[0m");
   const matches = scanDirectoryForEmojis(".");
 
-  if (matches.length > 0) {
-    console.error(
-      `\n\x1b[31m[ERROR] Found ${matches.length} emoji violation(s) in codebase:\x1b[0m\n`,
-    );
-    for (const m of matches) {
-      console.error(
-        `  \x1b[31m[FAIL] [${m.file}:${m.line}:${m.column}]\x1b[0m ${m.char} (${m.codePoint}) -> ${m.context}`,
-      );
-    }
-    console.error(
-      "\n\x1b[31mPlease remove all emojis to maintain a clean, professional codebase.\x1b[0m\n",
-    );
-    process.exit(1);
-  }
-
-  console.log("\x1b[32m[PASS] Codebase is 100% clean! Zero emojis found.\x1b[0m\n");
+  reportViolationsAndExit(
+    "emoji violation(s) in codebase",
+    matches,
+    (m) =>
+      `  \x1b[31m[FAIL] [${m.file}:${m.line}:${m.column}]\x1b[0m ${m.char} (${m.codePoint}) -> ${m.context}`,
+    "Codebase is 100% clean! Zero emojis found.",
+    "Please remove all emojis to maintain a clean, professional codebase.",
+  );
 }
 
 if (import.meta.main) {

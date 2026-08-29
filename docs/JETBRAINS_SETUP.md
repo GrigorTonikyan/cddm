@@ -52,7 +52,7 @@ You can bind CDDM commands to quick IDE keyboard shortcuts.
 Enforce duplication quality gates natively in JetBrains Git tool window:
 
 ```bash
-cddm hook install --hook-type pre-commit --fail-threshold 15.0
+cddm hook install --hook-type pre-commit --fail-threshold 5.0
 ```
 
 When committing via JetBrains IDE (`Ctrl + K`), CDDM will automatically prevent duplicate code commits.

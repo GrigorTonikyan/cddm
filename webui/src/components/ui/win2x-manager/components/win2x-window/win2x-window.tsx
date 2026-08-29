@@ -62,7 +62,7 @@ export interface Win2xWindowProps {
   className?: string;
 }
 
-const DEFAULT_WINDOW_ICON = <Sparkles className="w-4 h-4 text-indigo-400" />;
+const DEFAULT_WINDOW_ICON = <Sparkles size={16} color="var(--win2x-accent, #818cf8)" />;
 
 /**
  * Universal composed Windows 11 Acrylic Window organism.

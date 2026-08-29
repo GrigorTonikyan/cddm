@@ -74,3 +74,23 @@ export async function executeStep(
 
   return { step, exitCode, elapsedMs, passed };
 }
+
+export function reportViolationsAndExit<T>(
+  title: string,
+  violations: T[],
+  formatter: (v: T) => string,
+  passMessage: string,
+  failAdvice?: string,
+): void {
+  if (violations.length > 0) {
+    console.error(`\n\x1b[31m[ERROR] Found ${violations.length} ${title}:\x1b[0m\n`);
+    for (const v of violations) {
+      console.error(formatter(v));
+    }
+    if (failAdvice) {
+      console.error(`\n\x1b[31m${failAdvice}\x1b[0m\n`);
+    }
+    process.exit(1);
+  }
+  console.log(`\x1b[32m[PASS] ${passMessage}\x1b[0m\n`);
+}

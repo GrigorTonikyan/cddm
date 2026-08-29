@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { API_ROUTES, DEFAULT_HEAL_CONFIG } from "../../constants/cddm-constants";
+import { useFormState } from "../../hooks/use-form-state";
 import type {
   AiProviderKind,
   CloneLocation,
@@ -24,19 +26,31 @@ export interface AutoHealTabProps {
   targetModulePath?: string;
 }
 
+interface AutoHealForm {
+  provider: AiProviderKind;
+  model: string;
+  apiKey: string;
+  endpoint: string;
+  maxIterations: number;
+  verify: boolean;
+  testCmd: string;
+  branch: string;
+  customInstructions: string;
+}
+
 export const AutoHealTab: React.FC<AutoHealTabProps> = ({
   occurrences,
   clusterId,
   customFunctionName,
   targetModulePath,
 }) => {
-  const [form, setForm] = useState({
-    provider: "Mock" as AiProviderKind,
+  const { form, updateField } = useFormState<AutoHealForm>({
+    provider: DEFAULT_HEAL_CONFIG.default_provider as AiProviderKind,
     model: "",
     apiKey: "",
     endpoint: "",
-    maxIterations: 3,
-    verify: true,
+    maxIterations: DEFAULT_HEAL_CONFIG.max_iterations,
+    verify: DEFAULT_HEAL_CONFIG.verify,
     testCmd: "",
     branch: `cddm/heal-cluster-${clusterId || 1}`,
     customInstructions: "",
@@ -44,10 +58,6 @@ export const AutoHealTab: React.FC<AutoHealTabProps> = ({
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [healResult, setHealResult] = useState<HealRefactorResult | null>(null);
   const [healError, setHealError] = useState<string | null>(null);
-
-  const updateField = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
-  };
 
   const handleStartHealing = async () => {
     setIsRunning(true);
@@ -73,7 +83,7 @@ export const AutoHealTab: React.FC<AutoHealTabProps> = ({
     };
 
     try {
-      const res = await fetch("/api/refactor/heal", {
+      const res = await fetch(API_ROUTES.REFACTOR_HEAL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -113,10 +123,10 @@ export const AutoHealTab: React.FC<AutoHealTabProps> = ({
               className="w-full bg-zinc-950 border border-zinc-800 rounded px-2 py-1 text-zinc-200"
             >
               <option value="Mock">Mock / Deterministic</option>
-              <option value="Gemini">Google Gemini</option>
-              <option value="Claude">Anthropic Claude</option>
-              <option value="OpenAi">OpenAI GPT-4o</option>
-              <option value="Ollama">Ollama (Local)</option>
+              <option value="Gemini">Google Gemini (gemini-2.5-pro)</option>
+              <option value="Claude">Anthropic Claude (claude-3-7-sonnet)</option>
+              <option value="OpenAi">OpenAI (gpt-4.5-preview)</option>
+              <option value="Ollama">Ollama Local (qwen2.5-coder)</option>
             </select>
           </div>
 
@@ -124,7 +134,15 @@ export const AutoHealTab: React.FC<AutoHealTabProps> = ({
             <label className="text-zinc-400 block mb-1">Model ID</label>
             <input
               type="text"
-              placeholder={form.provider === "Ollama" ? "codellama" : "gemini-1.5-pro"}
+              placeholder={
+                form.provider === "Ollama"
+                  ? DEFAULT_HEAL_CONFIG.default_ollama_model
+                  : form.provider === "Claude"
+                    ? DEFAULT_HEAL_CONFIG.default_claude_model
+                    : form.provider === "OpenAi"
+                      ? DEFAULT_HEAL_CONFIG.default_openai_model
+                      : DEFAULT_HEAL_CONFIG.default_gemini_model
+              }
               value={form.model}
               onChange={(e) => updateField("model", e.target.value)}
               className="w-full bg-zinc-950 border border-zinc-800 rounded px-2 py-1 text-zinc-200"
@@ -160,7 +178,7 @@ export const AutoHealTab: React.FC<AutoHealTabProps> = ({
             <label className="text-zinc-400 block mb-1">Custom Endpoint URL</label>
             <input
               type="text"
-              placeholder="e.g. http://localhost:11434"
+              placeholder={`e.g. ${DEFAULT_HEAL_CONFIG.default_ollama_endpoint}`}
               value={form.endpoint}
               onChange={(e) => updateField("endpoint", e.target.value)}
               className="w-full bg-zinc-950 border border-zinc-800 rounded px-2 py-1 text-zinc-200"

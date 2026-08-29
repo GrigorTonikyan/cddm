@@ -28,6 +28,37 @@ pub struct MonorepoScanSummary {
     pub scan_result: ScanResult,
 }
 
+fn scan_subdirectories_for_manifest(
+    root: &Path,
+    sub_dir_name: &str,
+    manifest_name: &str,
+    package_type: &str,
+    workspaces: &mut Vec<MonorepoWorkspace>,
+) {
+    let sub_dir = root.join(sub_dir_name);
+    if sub_dir.is_dir()
+        && let Ok(entries) = fs::read_dir(sub_dir)
+    {
+        for entry in entries.flatten() {
+            if entry.path().is_dir() && entry.path().join(manifest_name).exists() {
+                let name = entry.file_name().to_string_lossy().to_string();
+                let rel = entry
+                    .path()
+                    .strip_prefix(root)
+                    .unwrap_or(&entry.path())
+                    .to_string_lossy()
+                    .replace('\\', "/");
+                workspaces.push(MonorepoWorkspace {
+                    name,
+                    path: rel,
+                    manifest_file: manifest_name.to_string(),
+                    package_type: package_type.to_string(),
+                });
+            }
+        }
+    }
+}
+
 /// Automatically discovers workspace packages within a root repository.
 pub fn discover_workspaces(root: &Path) -> Vec<MonorepoWorkspace> {
     let mut workspaces = Vec::new();
@@ -38,55 +69,24 @@ pub fn discover_workspaces(root: &Path) -> Vec<MonorepoWorkspace> {
         && let Ok(content) = fs::read_to_string(&root_cargo)
         && content.contains("[workspace]")
     {
-        let crates_dir = root.join("crates");
-        if crates_dir.is_dir()
-            && let Ok(entries) = fs::read_dir(crates_dir)
-        {
-            for entry in entries.flatten() {
-                if entry.path().is_dir() && entry.path().join("Cargo.toml").exists() {
-                    let name = entry.file_name().to_string_lossy().to_string();
-                    let rel = entry
-                        .path()
-                        .strip_prefix(root)
-                        .unwrap_or(&entry.path())
-                        .to_string_lossy()
-                        .replace('\\', "/");
-                    workspaces.push(MonorepoWorkspace {
-                        name,
-                        path: rel,
-                        manifest_file: "Cargo.toml".to_string(),
-                        package_type: "Rust (Cargo)".to_string(),
-                    });
-                }
-            }
-        }
+        scan_subdirectories_for_manifest(
+            root,
+            "crates",
+            "Cargo.toml",
+            "Rust (Cargo)",
+            &mut workspaces,
+        );
     }
 
     // Check packages/ or apps/ directory (JS/TS monorepos)
     for sub in &["packages", "apps", "services"] {
-        let sub_dir = root.join(sub);
-        if sub_dir.is_dir()
-            && let Ok(entries) = fs::read_dir(sub_dir)
-        {
-            for entry in entries.flatten() {
-                let p_json = entry.path().join("package.json");
-                if entry.path().is_dir() && p_json.exists() {
-                    let name = entry.file_name().to_string_lossy().to_string();
-                    let rel = entry
-                        .path()
-                        .strip_prefix(root)
-                        .unwrap_or(&entry.path())
-                        .to_string_lossy()
-                        .replace('\\', "/");
-                    workspaces.push(MonorepoWorkspace {
-                        name,
-                        path: rel,
-                        manifest_file: "package.json".to_string(),
-                        package_type: "JavaScript/TypeScript (npm)".to_string(),
-                    });
-                }
-            }
-        }
+        scan_subdirectories_for_manifest(
+            root,
+            sub,
+            "package.json",
+            "JavaScript/TypeScript (npm)",
+            &mut workspaces,
+        );
     }
 
     if workspaces.is_empty() {

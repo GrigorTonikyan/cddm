@@ -2,6 +2,7 @@
  * Scoped CSS Custom Properties for win2x-manager
  */
 
+/* cddm:ignore-start */
 :root,
 [data-win2x-theme="dark"] {
   /* Surface & Background Colors */
@@ -253,6 +254,7 @@
   --win2x-blur-acrylic: 0px;
   --win2x-blur-backdrop: 0px;
 }
+/* cddm:ignore-end */
 
 :global(.win2x-acrylic-flyout),
 .win2x-acrylic-flyout {

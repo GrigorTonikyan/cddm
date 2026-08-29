@@ -53,15 +53,25 @@ pub fn compute_relative_path(from: &Path, to: &Path) -> String {
     }
 }
 
+pub fn resolve_caller_manifest_content(
+    workspace_root: &Path,
+    caller_file: &str,
+    manifest_name: &str,
+) -> Option<(PathBuf, String)> {
+    let caller_path = workspace_root.join(caller_file);
+    let manifest_path = find_enclosing_manifest(&caller_path, manifest_name, workspace_root)?;
+    let content = std::fs::read_to_string(&manifest_path).ok()?;
+    Some((manifest_path, content))
+}
+
 pub fn resolve_caller_manifest_and_rel_path(
     workspace_root: &Path,
     caller_file: &str,
     manifest_name: &str,
     new_crate_path: &str,
 ) -> Option<(PathBuf, String, String)> {
-    let caller_path = workspace_root.join(caller_file);
-    let manifest_path = find_enclosing_manifest(&caller_path, manifest_name, workspace_root)?;
-    let content = std::fs::read_to_string(&manifest_path).ok()?;
+    let (manifest_path, content) =
+        resolve_caller_manifest_content(workspace_root, caller_file, manifest_name)?;
     let manifest_dir = manifest_path.parent()?;
     let target_abs = workspace_root.join(new_crate_path);
     let rel_to_target = compute_relative_path(manifest_dir, &target_abs);
@@ -145,11 +155,17 @@ pub fn update_root_workspace_manifest(
     let rel_path = new_crate_path.replace('\\', "/");
     let member_entry = format!("\"{}\"", rel_path);
 
-    if content.contains(&member_entry)
-        || (rel_path.starts_with("crates/") && content.contains("\"crates/*\""))
-        || (rel_path.starts_with("packages/") && content.contains("\"packages/*\""))
-    {
+    if content.contains(&member_entry) {
         return None;
+    }
+
+    // Check if the path is dynamically covered by any wildcard glob pattern (e.g. "crates/*", "packages/*", "libs/*")
+    if let Some((prefix, _)) = rel_path.split_once('/') {
+        let glob_double = format!("\"{}/*\"", prefix);
+        let glob_single = format!("'{}/*'", prefix);
+        if content.contains(&glob_double) || content.contains(&glob_single) {
+            return None;
+        }
     }
 
     let updated_content = insert_member_into_toml_array(&content, array_key, &member_entry)?;

@@ -21,7 +21,7 @@ fn default_min_tokens() -> usize {
 }
 
 fn default_fail_threshold() -> f64 {
-    15.0
+    crate::types::DEFAULT_FAIL_THRESHOLD
 }
 
 /// Configuration for an individual member repository in the Federation Hub.

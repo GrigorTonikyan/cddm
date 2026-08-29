@@ -86,35 +86,50 @@ export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
     return { exact, renamed, nearMiss, semantic, total: results.clone_pairs.length };
   }, [results]);
 
+  function matchesScanFilters(
+    files: string[],
+    cloneType: string,
+    similarity: number,
+    minSimilarity: number,
+    selectedCloneType: string,
+    searchTerm: string,
+    selectedLang: string,
+  ): boolean {
+    if (similarity * 100 < minSimilarity) return false;
+    if (selectedCloneType !== "ALL" && cloneType !== selectedCloneType) return false;
+
+    const term = searchTerm.toLowerCase().trim();
+    if (term) {
+      const hasMatch = files.some((f) => f.toLowerCase().includes(term));
+      if (!hasMatch) return false;
+    }
+
+    if (selectedLang !== "ALL") {
+      const allowedExts = LANG_EXTENSIONS[selectedLang.toLowerCase()] || [];
+      const hasLangMatch = files.some((f) => {
+        const ext = f.split(".").pop()?.toLowerCase() || "";
+        return allowedExts.includes(ext);
+      });
+      if (!hasLangMatch) return false;
+    }
+
+    return true;
+  }
+
   // Filter & Sort Clone Pairs
   const filteredPairs = useMemo(() => {
     if (!results || !Array.isArray(results.clone_pairs)) return [];
-    const filtered = results.clone_pairs.filter((pair) => {
-      const matchesSim = pair.similarity * 100 >= minSimilarity;
-      if (!matchesSim) return false;
-
-      if (selectedCloneType !== "ALL" && pair.clone_type !== selectedCloneType) {
-        return false;
-      }
-
-      const term = searchTerm.toLowerCase().trim();
-      if (term) {
-        const fileA = pair.file_a.toLowerCase();
-        const fileB = pair.file_b.toLowerCase();
-        if (!fileA.includes(term) && !fileB.includes(term)) return false;
-      }
-
-      if (selectedLang !== "ALL") {
-        const extA = pair.file_a.split(".").pop()?.toLowerCase() || "";
-        const extB = pair.file_b.split(".").pop()?.toLowerCase() || "";
-        const allowedExts = LANG_EXTENSIONS[selectedLang.toLowerCase()] || [];
-        if (!allowedExts.includes(extA) && !allowedExts.includes(extB)) {
-          return false;
-        }
-      }
-
-      return true;
-    });
+    const filtered = results.clone_pairs.filter((pair) =>
+      matchesScanFilters(
+        [pair.file_a, pair.file_b],
+        pair.clone_type,
+        pair.similarity,
+        minSimilarity,
+        selectedCloneType,
+        searchTerm,
+        selectedLang,
+      ),
+    );
 
     return sortByMetric(filtered, sortBy, (a, b) =>
       parsePath(a.file_a).filename.localeCompare(parsePath(b.file_a).filename),
@@ -124,33 +139,17 @@ export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
   // Filter & Sort Clone Clusters
   const filteredClusters = useMemo(() => {
     if (!results || !Array.isArray(results.clone_clusters)) return [];
-    const filtered = results.clone_clusters.filter((cluster) => {
-      const matchesSim = cluster.similarity * 100 >= minSimilarity;
-      if (!matchesSim) return false;
-
-      if (selectedCloneType !== "ALL" && cluster.clone_type !== selectedCloneType) {
-        return false;
-      }
-
-      const term = searchTerm.toLowerCase().trim();
-      if (term) {
-        const matchesAnyFile = cluster.occurrences.some((loc) =>
-          loc.file.toLowerCase().includes(term),
-        );
-        if (!matchesAnyFile) return false;
-      }
-
-      if (selectedLang !== "ALL") {
-        const allowedExts = LANG_EXTENSIONS[selectedLang.toLowerCase()] || [];
-        const matchesAnyLang = cluster.occurrences.some((loc) => {
-          const ext = loc.file.split(".").pop()?.toLowerCase() || "";
-          return allowedExts.includes(ext);
-        });
-        if (!matchesAnyLang) return false;
-      }
-
-      return true;
-    });
+    const filtered = results.clone_clusters.filter((cluster) =>
+      matchesScanFilters(
+        cluster.occurrences.map((loc) => loc.file),
+        cluster.clone_type,
+        cluster.similarity,
+        minSimilarity,
+        selectedCloneType,
+        searchTerm,
+        selectedLang,
+      ),
+    );
 
     return sortByMetric(filtered, sortBy, (a, b) => a.id - b.id);
   }, [results?.clone_clusters, searchTerm, minSimilarity, selectedLang, selectedCloneType, sortBy]);

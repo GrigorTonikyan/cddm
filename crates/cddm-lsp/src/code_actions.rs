@@ -1,6 +1,8 @@
 #![forbid(unsafe_code)]
 
-use crate::utils::{line_range_to_lsp_range, normalize_path_for_compare, path_to_url, url_to_path};
+use crate::utils::{
+    line_range_to_lsp_range, normalize_path_for_compare, path_to_url, to_0_based_line, url_to_path,
+};
 use cddm_core::{ClonePair, refactor::analyze_clone_refactoring};
 use std::collections::HashMap;
 use std::path::Path;
@@ -12,13 +14,10 @@ use tower_lsp::lsp_types::{
 /// Checks if an LSP range overlaps with 1-based start and end lines.
 #[must_use]
 pub fn range_overlaps_lines(range: &Range, start_line: usize, end_line: usize) -> bool {
-    let start_0 = if start_line > 0 { start_line - 1 } else { 0 };
-    let end_0 = if end_line > 0 { end_line - 1 } else { 0 };
-
     let req_start = range.start.line as usize;
     let req_end = range.end.line as usize;
 
-    req_start <= end_0 && req_end >= start_0
+    req_start <= to_0_based_line(end_line) && req_end >= to_0_based_line(start_line)
 }
 
 /// Generates LSP `CodeActionOrCommand` options for a given document and range.

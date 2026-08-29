@@ -181,30 +181,44 @@ impl DiskFingerprintCache {
         }
     }
 
-    /// Persists a batch of cached file entries in a single atomic ACID transaction.
-    pub fn batch_save_entries(
-        &self,
-        entries: &[(String, CachedFileEntry)],
-    ) -> Result<usize, String> {
+    fn execute_write_transaction<F>(&self, op: F) -> Result<usize, String>
+    where
+        F: FnOnce(&mut redb::Table<&str, &[u8]>) -> usize,
+    {
         let db = match &self.db {
             Some(database) => database,
             None => return Ok(0),
         };
 
-        if entries.is_empty() {
-            return Ok(0);
-        }
-
         let write_txn = db
             .begin_write()
             .map_err(|e| format!("Failed to begin write transaction: {}", e))?;
 
-        let mut saved_count = 0;
-        {
+        let count = {
             let mut table = write_txn
                 .open_table(TABLE_FINGERPRINTS)
-                .map_err(|e| format!("Failed to open table for batch save: {}", e))?;
+                .map_err(|e| format!("Failed to open table: {}", e))?;
+            op(&mut table)
+        };
 
+        write_txn
+            .commit()
+            .map_err(|e| format!("Failed to commit cache transaction: {}", e))?;
+
+        Ok(count)
+    }
+
+    /// Persists a batch of cached file entries in a single atomic ACID transaction.
+    pub fn batch_save_entries(
+        &self,
+        entries: &[(String, CachedFileEntry)],
+    ) -> Result<usize, String> {
+        if entries.is_empty() {
+            return Ok(0);
+        }
+
+        self.execute_write_transaction(|table| {
+            let mut saved_count = 0;
             for (path, entry) in entries {
                 if let Ok(serialized) = serde_json::to_vec(entry)
                     && table.insert(path.as_str(), serialized.as_slice()).is_ok()
@@ -212,48 +226,25 @@ impl DiskFingerprintCache {
                     saved_count += 1;
                 }
             }
-        }
-
-        write_txn
-            .commit()
-            .map_err(|e| format!("Failed to commit batch cache save: {}", e))?;
-
-        Ok(saved_count)
+            saved_count
+        })
     }
 
     /// Removes deleted files from the persistent cache in a single write transaction.
     pub fn remove_entries(&self, paths: &[String]) -> Result<usize, String> {
-        let db = match &self.db {
-            Some(database) => database,
-            None => return Ok(0),
-        };
-
         if paths.is_empty() {
             return Ok(0);
         }
 
-        let write_txn = db
-            .begin_write()
-            .map_err(|e| format!("Failed to begin write transaction: {}", e))?;
-
-        let mut removed_count = 0;
-        {
-            let mut table = write_txn
-                .open_table(TABLE_FINGERPRINTS)
-                .map_err(|e| format!("Failed to open table for removals: {}", e))?;
-
+        self.execute_write_transaction(|table| {
+            let mut removed_count = 0;
             for path in paths {
                 if table.remove(path.as_str()).is_ok() {
                     removed_count += 1;
                 }
             }
-        }
-
-        write_txn
-            .commit()
-            .map_err(|e| format!("Failed to commit cache removals: {}", e))?;
-
-        Ok(removed_count)
+            removed_count
+        })
     }
 
     /// Clears all entries from the persistent cache database.

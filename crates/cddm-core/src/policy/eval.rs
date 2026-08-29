@@ -20,76 +20,53 @@ pub fn evaluate_scan_policies(
         let path_a = Path::new(&pair.file_a);
         let path_b = Path::new(&pair.file_b);
 
+        let check_boundary_direction =
+            |src_file: &str,
+             target_file: &str,
+             boundary: &CompiledBoundary,
+             violations: &mut Vec<PolicyViolation>| {
+                for (idx, target_matcher) in boundary.target_matchers.iter().enumerate() {
+                    if path_matches_glob(target_matcher, Path::new(target_file)) {
+                        let target_pattern = boundary
+                            .rule
+                            .forbidden_targets
+                            .get(idx)
+                            .map(|s| s.as_str())
+                            .unwrap_or("forbidden target");
+                        violations.push(PolicyViolation {
+                            rule_name: boundary.rule.name.clone(),
+                            rule_type: "boundary".to_string(),
+                            severity: boundary.rule.severity,
+                            message: format!(
+                                "Architecture boundary '{}' violated: duplication across source \
+                                 '{}' ({}) and target '{}' ({})",
+                                boundary.rule.name,
+                                boundary.rule.source,
+                                src_file,
+                                target_pattern,
+                                target_file
+                            ),
+                            file_a: pair.file_a.clone(),
+                            start_line_a: pair.start_line_a,
+                            end_line_a: pair.end_line_a,
+                            file_b: Some(pair.file_b.clone()),
+                            start_line_b: Some(pair.start_line_b),
+                            end_line_b: Some(pair.end_line_b),
+                            cluster_id: None,
+                            token_count: pair.token_count,
+                        });
+                    }
+                }
+            };
+
         for boundary in compiled_boundaries {
             let a_matches_src = path_matches_glob(&boundary.source_matcher, path_a);
             let b_matches_src = path_matches_glob(&boundary.source_matcher, path_b);
 
             if a_matches_src {
-                for (idx, target_matcher) in boundary.target_matchers.iter().enumerate() {
-                    if path_matches_glob(target_matcher, path_b) {
-                        let target_pattern = boundary
-                            .rule
-                            .forbidden_targets
-                            .get(idx)
-                            .map(|s| s.as_str())
-                            .unwrap_or("forbidden target");
-                        violations.push(PolicyViolation {
-                            rule_name: boundary.rule.name.clone(),
-                            rule_type: "boundary".to_string(),
-                            severity: boundary.rule.severity,
-                            message: format!(
-                                "Architecture boundary '{}' violated: duplication across source \
-                                 '{}' ({}) and target '{}' ({})",
-                                boundary.rule.name,
-                                boundary.rule.source,
-                                pair.file_a,
-                                target_pattern,
-                                pair.file_b
-                            ),
-                            file_a: pair.file_a.clone(),
-                            start_line_a: pair.start_line_a,
-                            end_line_a: pair.end_line_a,
-                            file_b: Some(pair.file_b.clone()),
-                            start_line_b: Some(pair.start_line_b),
-                            end_line_b: Some(pair.end_line_b),
-                            cluster_id: None,
-                            token_count: pair.token_count,
-                        });
-                    }
-                }
+                check_boundary_direction(&pair.file_a, &pair.file_b, boundary, &mut violations);
             } else if b_matches_src {
-                for (idx, target_matcher) in boundary.target_matchers.iter().enumerate() {
-                    if path_matches_glob(target_matcher, path_a) {
-                        let target_pattern = boundary
-                            .rule
-                            .forbidden_targets
-                            .get(idx)
-                            .map(|s| s.as_str())
-                            .unwrap_or("forbidden target");
-                        violations.push(PolicyViolation {
-                            rule_name: boundary.rule.name.clone(),
-                            rule_type: "boundary".to_string(),
-                            severity: boundary.rule.severity,
-                            message: format!(
-                                "Architecture boundary '{}' violated: duplication across source \
-                                 '{}' ({}) and target '{}' ({})",
-                                boundary.rule.name,
-                                boundary.rule.source,
-                                pair.file_b,
-                                target_pattern,
-                                pair.file_a
-                            ),
-                            file_a: pair.file_a.clone(),
-                            start_line_a: pair.start_line_a,
-                            end_line_a: pair.end_line_a,
-                            file_b: Some(pair.file_b.clone()),
-                            start_line_b: Some(pair.start_line_b),
-                            end_line_b: Some(pair.end_line_b),
-                            cluster_id: None,
-                            token_count: pair.token_count,
-                        });
-                    }
-                }
+                check_boundary_direction(&pair.file_b, &pair.file_a, boundary, &mut violations);
             }
         }
 

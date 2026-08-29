@@ -96,23 +96,23 @@ export const useCDDMStore = create<CDDMStoreState>((set, get) => ({
   setIsLanguageModalOpen: (isLanguageModalOpen) => set({ isLanguageModalOpen }),
   setIsClusterRefactorModalOpen: (isClusterRefactorModalOpen) =>
     set({ isClusterRefactorModalOpen }),
-  setIsTimelineModalOpen: (isTimelineModalOpen) => {
-    set({ isTimelineModalOpen });
-    if (isTimelineModalOpen && !get().timelineData && !get().isTimelineLoading) {
+  setIsTimelineModalOpen: (isOpen) => {
+    set({ isTimelineModalOpen: isOpen });
+    if (isOpen && !get().timelineData && !get().isTimelineLoading) {
       void get().fetchTimeline();
       void get().fetchHookStatus();
     }
   },
-  setIsSuppressionModalOpen: (isSuppressionModalOpen) => {
-    set({ isSuppressionModalOpen });
-    if (isSuppressionModalOpen && !get().suppressionConfig && !get().isSuppressionLoading) {
+  setIsSuppressionModalOpen: (isOpen) => {
+    set({ isSuppressionModalOpen: isOpen });
+    if (isOpen && !get().suppressionConfig && !get().isSuppressionLoading) {
       void get().fetchSuppressionRules();
     }
   },
   setIsRefactorSandboxOpen: (isRefactorSandboxOpen) => set({ isRefactorSandboxOpen }),
-  setIsPolicyRulesModalOpen: (isPolicyRulesModalOpen) => {
-    set({ isPolicyRulesModalOpen });
-    if (isPolicyRulesModalOpen && !get().policyConfig && !get().isPolicyLoading) {
+  setIsPolicyRulesModalOpen: (isOpen) => {
+    set({ isPolicyRulesModalOpen: isOpen });
+    if (isOpen && !get().policyConfig && !get().isPolicyLoading) {
       void get().fetchPolicyRules();
     }
   },

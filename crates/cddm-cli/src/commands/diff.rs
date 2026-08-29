@@ -1,6 +1,8 @@
 #![forbid(unsafe_code)]
 
-use crate::formatters::{print_diff_console_report, print_diff_markdown_report};
+use crate::formatters::{
+    print_diff_console_report, print_diff_markdown_report, print_structured_json_output,
+};
 use crate::types::OutputFormat;
 use cddm_core::run_diff_scan;
 use std::path::PathBuf;
@@ -61,17 +63,13 @@ pub async fn run_diff_command(
 
     match format {
         OutputFormat::Console => print_diff_console_report(&diff_result),
-        OutputFormat::Json => {
-            println!("{}", serde_json::to_string_pretty(&diff_result)?);
-        }
+        OutputFormat::Json => print_structured_json_output(&diff_result, false)?,
         OutputFormat::Markdown => print_diff_markdown_report(&diff_result),
         OutputFormat::Sarif => {
             eprintln!("Warning: SARIF format for diff scanning falls back to JSON");
-            println!("{}", serde_json::to_string_pretty(&diff_result)?);
+            print_structured_json_output(&diff_result, false)?;
         }
-        OutputFormat::Ndjson => {
-            println!("{}", serde_json::to_string(&diff_result)?);
-        }
+        OutputFormat::Ndjson => print_structured_json_output(&diff_result, true)?,
     }
 
     if let Some(threshold) = fail_threshold {

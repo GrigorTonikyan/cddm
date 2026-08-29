@@ -1,4 +1,5 @@
 import React from "react";
+import { DEFAULT_FAIL_THRESHOLD } from "../constants/cddm-constants";
 import { ScanResult } from "../types/cddm-types";
 import { Win2xWindow } from "./ui/win2x-manager";
 import {
@@ -10,6 +11,7 @@ import {
   Layers,
   ArrowRight,
 } from "lucide-react";
+import { ModalFooter } from "./ui/ModalFooter";
 
 export interface HealthAuditModalProps {
   isOpen: boolean;
@@ -21,7 +23,7 @@ export const HealthAuditModal: React.FC<HealthAuditModalProps> = ({ isOpen, onCl
   if (!isOpen) return null;
 
   const isHealthy = results.dry_health_score >= 80;
-  const isModerate = results.dry_health_score >= 60 && results.dry_health_score < 80;
+  const isModerate = results.dry_health_score >= 60;
 
   const scoreColor = isHealthy
     ? "text-emerald-400 border-emerald-500/40 bg-emerald-950/20"
@@ -29,23 +31,7 @@ export const HealthAuditModal: React.FC<HealthAuditModalProps> = ({ isOpen, onCl
       ? "text-amber-400 border-amber-500/40 bg-amber-950/20"
       : "text-rose-400 border-rose-500/40 bg-rose-950/20";
 
-  const qualityGatePass = results.duplication_percentage <= 15.0;
-
-  const footerContent = (
-    <>
-      <div className="flex items-center gap-2 text-xs font-mono text-slate-400">
-        <ShieldCheck className="w-3.5 h-3.5 text-indigo-400" />
-        <span>Target Quality Gate: &lt; 15.0% duplication</span>
-      </div>
-      <button
-        type="button"
-        onClick={onClose}
-        className="px-4 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs transition-colors"
-      >
-        Close
-      </button>
-    </>
-  );
+  const qualityGatePass = results.duplication_percentage <= DEFAULT_FAIL_THRESHOLD;
 
   return (
     <Win2xWindow
@@ -57,7 +43,13 @@ export const HealthAuditModal: React.FC<HealthAuditModalProps> = ({ isOpen, onCl
       subtitle="Architectural health rating, redundancy penalties, and quality gate analysis"
       badge={`Score: ${results.dry_health_score.toFixed(1)}/100`}
       icon={<Award className="w-4 h-4 text-indigo-400" />}
-      footer={footerContent}
+      footer={
+        <ModalFooter
+          infoIcon={<ShieldCheck className="w-3.5 h-3.5 text-indigo-400" />}
+          infoText={`Target Quality Gate: < ${DEFAULT_FAIL_THRESHOLD.toFixed(1)}% duplication`}
+          onClose={onClose}
+        />
+      }
       initialWidth={880}
       initialHeight={640}
     >
@@ -127,14 +119,16 @@ export const HealthAuditModal: React.FC<HealthAuditModalProps> = ({ isOpen, onCl
 
               <p className="text-xs text-slate-400 mt-2">
                 {qualityGatePass
-                  ? "Codebase satisfies the strict <= 15.0% dogfooding quality threshold standard."
-                  : "Duplication exceeds the 15.0% threshold standard. Automated CI scans will fail."}
+                  ? `Codebase satisfies the strict <= ${DEFAULT_FAIL_THRESHOLD.toFixed(1)}% dogfooding quality threshold standard.`
+                  : `Duplication exceeds the ${DEFAULT_FAIL_THRESHOLD.toFixed(1)}% threshold standard. Automated CI scans will fail.`}
               </p>
             </div>
 
             <div className="pt-3 border-t border-slate-800/60 flex items-center justify-between text-xs font-mono text-slate-400">
               <span>Threshold Standard:</span>
-              <span className="text-indigo-300 font-bold">&le; 15.0% max</span>
+              <span className="text-indigo-300 font-bold">
+                &le; {DEFAULT_FAIL_THRESHOLD.toFixed(1)}% max
+              </span>
             </div>
           </div>
         </div>

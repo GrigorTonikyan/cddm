@@ -169,7 +169,7 @@ fn test_print_trend_reports() {
 fn test_cli_subcommands_parsing() {
     let cli_lsp = Cli::try_parse_from(["cddm", "lsp", "--min-tokens", "40"]).expect("parse lsp");
     match cli_lsp.command {
-        Commands::Lsp { min_tokens, .. } => assert_eq!(min_tokens, 40),
+        Commands::Lsp(args) => assert_eq!(args.min_tokens, 40),
         _ => panic!("expected Lsp command"),
     }
 
@@ -221,7 +221,7 @@ fn test_cli_subcommands_parsing() {
     let cli_monorepo =
         Cli::try_parse_from(["cddm", "monorepo", "--min-tokens", "30"]).expect("parse monorepo");
     match cli_monorepo.command {
-        Commands::Monorepo { min_tokens, .. } => assert_eq!(min_tokens, 30),
+        Commands::Monorepo(args) => assert_eq!(args.min_tokens, 30),
         _ => panic!("expected Monorepo command"),
     }
 
@@ -248,13 +248,9 @@ fn test_cli_subcommands_parsing() {
         Cli::try_parse_from(["cddm", "semantic", "--neural", "--neural-threshold", "0.92"])
             .expect("parse semantic neural");
     match cli_neural_semantic.command {
-        Commands::Semantic {
-            neural,
-            neural_threshold,
-            ..
-        } => {
-            assert!(neural);
-            assert!((neural_threshold - 0.92).abs() < 1e-4);
+        Commands::Semantic(args) => {
+            assert!(args.neural);
+            assert!((args.neural_threshold - 0.92).abs() < 1e-4);
         }
         _ => panic!("expected Semantic command"),
     }

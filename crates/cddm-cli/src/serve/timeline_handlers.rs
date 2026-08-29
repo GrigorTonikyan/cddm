@@ -35,7 +35,9 @@ pub async fn install_hook_handler(
     Json(req): Json<InstallHookRequest>,
 ) -> Result<Json<serde_json::Value>, (StatusCode, String)> {
     let dir_str = req.directory.unwrap_or_else(|| ".".to_string());
-    let fail_threshold = req.fail_threshold.unwrap_or(15.0);
+    let fail_threshold = req
+        .fail_threshold
+        .unwrap_or(cddm_core::DEFAULT_FAIL_THRESHOLD);
     let min_tokens = req.min_tokens.unwrap_or(DEFAULT_MIN_TOKENS);
 
     match install_git_hook(

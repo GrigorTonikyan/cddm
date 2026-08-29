@@ -12,18 +12,22 @@
   pointer-events: none; /* Let clicks pass through empty space */
 }
 
-.dockGlobalControls {
-  pointer-events: auto;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem;
+.dockGlobalControls,
+.dockDragHandle {
   background-color: var(--win2x-bg-acrylic);
   border: 1px solid var(--win2x-border-window);
   border-radius: var(--win2x-radius-pill, 12px);
   box-shadow: var(--win2x-shadow-window);
   backdrop-filter: blur(var(--win2x-blur-acrylic));
   -webkit-backdrop-filter: blur(var(--win2x-blur-acrylic));
+}
+
+.dockGlobalControls {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
 }
 
 .divider {
@@ -46,6 +50,10 @@
     color: var(--win2x-text-primary);
     background-color: rgba(255, 255, 255, 0.08);
   }
+}
+
+.rotate180 {
+  transform: rotate(180deg);
 }
 
 .dockPillContainer {
@@ -119,16 +127,19 @@
   align-items: center;
   justify-content: center;
   padding: 0.5rem 0.25rem;
-  background-color: var(--win2x-bg-acrylic);
-  border: 1px solid var(--win2x-border-window);
-  border-radius: var(--win2x-radius-pill, 12px);
-  box-shadow: var(--win2x-shadow-window);
-  backdrop-filter: blur(var(--win2x-blur-acrylic));
-  -webkit-backdrop-filter: blur(var(--win2x-blur-acrylic));
 
   &:active {
     cursor: grabbing;
   }
+}
+
+.dragHandleIcon {
+  color: var(--win2x-text-muted, #64748b);
+  transition: color var(--win2x-transition-fast, 150ms ease);
+}
+
+.dockDragHandle:hover .dragHandleIcon {
+  color: var(--win2x-text-primary, #cbd5e1);
 }
 
 .pillTextGroup {

@@ -1,6 +1,6 @@
 #![forbid(unsafe_code)]
 
-use super::helpers::run_scan_from_mcp_args;
+use super::helpers::{make_json_payload_response, run_scan_from_mcp_args};
 use crate::protocol::{
     JsonRpcResponse, make_error_response, make_text_response, mcp_tools, rpc_errors,
 };
@@ -19,10 +19,7 @@ pub async fn handle_scan_codebase(
         .unwrap_or(false);
 
     match run_scan_from_mcp_args(args, git_blame).await {
-        Ok(scan_res) => make_text_response(
-            id,
-            serde_json::to_string_pretty(&scan_res).unwrap_or_default(),
-        ),
+        Ok(scan_res) => make_json_payload_response(id, &scan_res),
         Err(e) => make_error_response(id, rpc_errors::INTERNAL_ERROR, e),
     }
 }
@@ -112,10 +109,7 @@ pub fn handle_export_cache_pack(
         .unwrap_or("cddm-cache.cddmpack");
 
     match cddm_core::export_cache_pack(Path::new(db_path_str), Path::new(out_path_str)) {
-        Ok(summary) => {
-            let json_str = serde_json::to_string_pretty(&summary).unwrap_or_default();
-            make_text_response(id, json_str)
-        }
+        Ok(summary) => make_json_payload_response(id, &summary),
         Err(e) => make_error_response(id, rpc_errors::INTERNAL_ERROR, e),
     }
 }
@@ -134,10 +128,7 @@ pub fn handle_import_cache_pack(
             .unwrap_or(".cddm");
 
         match cddm_core::import_cache_pack(Path::new(pack_str), Path::new(target_dir_str)) {
-            Ok(summary) => {
-                let json_str = serde_json::to_string_pretty(&summary).unwrap_or_default();
-                make_text_response(id, json_str)
-            }
+            Ok(summary) => make_json_payload_response(id, &summary),
             Err(e) => make_error_response(id, rpc_errors::INTERNAL_ERROR, e),
         }
     } else {

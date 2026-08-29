@@ -98,3 +98,37 @@ pub fn diff_del_line(text: impl Into<String>) -> Line<'static> {
         Style::default().fg(Color::Red),
     )])
 }
+
+/// Helper to render a scrolled diff panel with consistent wrapping and styling.
+pub fn render_scrolled_diff_panel(
+    frame: &mut Frame,
+    lines: Vec<Line<'static>>,
+    title: &str,
+    scroll_offset: usize,
+    area: Rect,
+) {
+    let block = create_titled_block(title, false);
+    let p = Paragraph::new(lines)
+        .block(block)
+        .scroll((scroll_offset as u16, 0))
+        .wrap(Wrap { trim: false });
+    frame.render_widget(p, area);
+}
+
+/// Helper to render an action button bar with styled badges inside a titled block.
+pub fn render_action_bar(
+    frame: &mut Frame,
+    badges: &[(&'static str, Color)],
+    title: &str,
+    area: Rect,
+) {
+    let mut spans = Vec::new();
+    for (i, (label, color)) in badges.iter().enumerate() {
+        if i > 0 {
+            spans.push(Span::raw("  "));
+        }
+        spans.push(styled_action_badge(label, *color));
+    }
+    let block = create_titled_block(title, true);
+    frame.render_widget(Paragraph::new(vec![Line::from(spans)]).block(block), area);
+}

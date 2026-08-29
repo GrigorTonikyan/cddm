@@ -20,138 +20,37 @@ export interface FeatureParityCheck {
   tuiViewFile: string;
 }
 
-export const MANDATORY_PARITY_FEATURES: FeatureParityCheck[] = (
-  [
-    ["scan", "Codebase Scan", "commands/scan.rs", /scan_codebase/, /\/api\/scan/, "overview.rs"],
-    [
-      "diff",
-      "Differential Scan",
-      "commands/diff.rs",
-      /cddm_diff_scan/,
-      /\/api\/diff/,
-      "overview.rs",
-    ],
-    [
-      "cluster",
-      "Clone Graph Clustering",
-      "commands/refactor.rs",
-      /cddm_get_clone_cluster/,
-      /\/api\/refactor-cluster/,
-      "clones.rs",
-    ],
-    [
-      "diff_viewer",
-      "Split Diff Visualizer",
-      "formatters/scan.rs",
-      /cddm_get_clone_pair/,
-      /\/api\/snippet/,
-      "clones.rs",
-    ],
-    [
-      "semantic",
-      "Cross-Language Matching",
-      "commands/semantic.rs",
-      /cddm_scan_cross_language/,
-      /\/api\/semantic/,
-      "semantic.rs",
-    ],
-    [
-      "refactor",
-      "AST Refactoring Sandbox",
-      "commands/refactor.rs",
-      /cddm_ast_refactor/,
-      /\/api\/refactor\/ast/,
-      "refactor.rs",
-    ],
-    [
-      "extract",
-      "Shared Module Extraction",
-      "commands/extract.rs",
-      /cddm_extract_shared_module/,
-      /\/api\/extract/,
-      "extract.rs",
-    ],
-    [
-      "heal",
-      "AI Code Surgeon",
-      "commands/heal.rs",
-      /cddm_heal_refactor/,
-      /\/api\/refactor\/heal/,
-      "refactor.rs",
-    ],
-    [
-      "policy",
-      "Policy Engine",
-      "commands/rules.rs",
-      /cddm_check_policies/,
-      /\/api\/policy/,
-      "policy.rs",
-    ],
-    [
-      "suppression",
-      "AST Suppression",
-      "commands/ignore.rs",
-      /cddm_check_suppression/,
-      /\/api\/suppression/,
-      "policy.rs",
-    ],
-    [
-      "timeline",
-      "Git History Trends",
-      "commands/trend.rs",
-      /cddm_get_timeline/,
-      /\/api\/timeline/,
-      "timeline.rs",
-    ],
-    [
-      "workflow",
-      "CI/CD & Hook Manager",
-      "commands/hook.rs",
-      /cddm_export_sarif|cddm:\/\/workspace\/hooks/,
-      /\/api\/workflow\/hooks/,
-      "workflow.rs",
-    ],
-    [
-      "overlap",
-      "Ecosystem Library Overlap",
-      "commands/overlap.rs",
-      /cddm_detect_overlap/,
-      /\/api\/overlap/,
-      "overlap.rs",
-    ],
-    [
-      "hub",
-      "Organization Federation Hub",
-      "commands/hub.rs",
-      /cddm_scan_hub/,
-      /\/api\/hub/,
-      "hub.rs",
-    ],
-    [
-      "coverage",
-      "Runtime Execution & Coverage",
-      "commands/coverage.rs",
-      /cddm_correlate_coverage/,
-      /\/api\/coverage/,
-      "coverage.rs",
-    ],
-    [
-      "neural",
-      "Neural Embeddings & Algorithmic Clones",
-      "commands/semantic.rs",
-      /cddm_semantic_neural_scan/,
-      /\/api\/semantic\/neural/,
-      "semantic.rs",
-    ],
-  ] as const
-).map(([id, name, cliRel, mcpToolPattern, axumRoutePattern, tuiRel]) => ({
-  id,
-  name,
-  cliCommandFile: `crates/cddm-cli/src/${cliRel}`,
-  mcpToolPattern,
-  axumRoutePattern,
-  tuiViewFile: `crates/cddm-cli/src/tui/views/${tuiRel}`,
-}));
+const RAW_PARITY_MATRIX = [
+  "scan|Codebase Scan|commands/scan.rs|scan_codebase|/api/scan|overview.rs",
+  "diff|Differential Scan|commands/diff.rs|cddm_diff_scan|/api/diff|overview.rs",
+  "cluster|Clone Graph Clustering|commands/refactor.rs|cddm_get_clone_cluster|/api/refactor-cluster|clones.rs",
+  "diff_viewer|Split Diff Visualizer|formatters/scan.rs|cddm_get_clone_pair|/api/snippet|clones.rs",
+  "semantic|Cross-Language Matching|commands/semantic.rs|cddm_scan_cross_language|/api/semantic|semantic.rs",
+  "refactor|AST Refactoring Sandbox|commands/refactor.rs|cddm_ast_refactor|/api/refactor/ast|refactor.rs",
+  "extract|Shared Module Extraction|commands/extract.rs|cddm_extract_shared_module|/api/extract|extract.rs",
+  "heal|AI Code Surgeon|commands/heal.rs|cddm_heal_refactor|/api/refactor/heal|refactor.rs",
+  "policy|Policy Engine|commands/rules.rs|cddm_check_policies|/api/policy|policy.rs",
+  "suppression|AST Suppression|commands/ignore.rs|cddm_check_suppression|/api/suppression|policy.rs",
+  "timeline|Git History Trends|commands/trend.rs|cddm_get_timeline|/api/timeline|timeline.rs",
+  "workflow|CI/CD & Hook Manager|commands/hook.rs|cddm_export_sarif|/api/workflow/hooks|workflow.rs",
+  "overlap|Ecosystem Library Overlap|commands/overlap.rs|cddm_detect_overlap|/api/overlap|overlap.rs",
+  "hub|Organization Federation Hub|commands/hub.rs|cddm_scan_hub|/api/hub|hub.rs",
+  "coverage|Runtime Execution & Coverage|commands/coverage.rs|cddm_correlate_coverage|/api/coverage|coverage.rs",
+  "neural|Neural Embeddings & Algorithmic Clones|commands/semantic.rs|cddm_semantic_neural_scan|/api/semantic/neural|semantic.rs",
+] as const;
+
+export const MANDATORY_PARITY_FEATURES: FeatureParityCheck[] = RAW_PARITY_MATRIX.map((entry) => {
+  const parts = entry.split("|") as string[];
+  const [id = "", name = "", cliRel = "", mcpPat = "", routePat = "", tuiRel = ""] = parts;
+  return {
+    id,
+    name,
+    cliCommandFile: `crates/cddm-cli/src/${cliRel}`,
+    mcpToolPattern: new RegExp(mcpPat),
+    axumRoutePattern: new RegExp(routePat.replace(/\//g, "\\/")),
+    tuiViewFile: `crates/cddm-cli/src/tui/views/${tuiRel}`,
+  };
+});
 
 export interface ParityViolation {
   featureId: string;
@@ -263,6 +162,8 @@ export function validateFeatureParity(workspaceRoot: string = process.cwd()): Pa
   return violations;
 }
 
+import { reportViolationsAndExit } from "./lib/step-runner";
+
 async function main() {
   console.log(
     "\x1b[36m--> Validating 4-Pillar Cross-Interface Feature Parity (CLI, WebUI, MCP, TUI)...\x1b[0m",
@@ -270,23 +171,13 @@ async function main() {
 
   const violations = validateFeatureParity();
 
-  if (violations.length > 0) {
-    console.error(
-      `\n\x1b[31m[ERROR] Found ${violations.length} Feature Parity Violation(s):\x1b[0m\n`,
-    );
-    for (const v of violations) {
-      console.error(
-        `  \x1b[31m[FAIL] [${v.missingPillar}] ${v.featureName} (${v.featureId}):\x1b[0m ${v.detail}`,
-      );
-    }
-    console.error(
-      "\n\x1b[31mAll CDDM capabilities must be strictly supported across all 4 interface pillars!\x1b[0m\n",
-    );
-    process.exit(1);
-  }
-
-  console.log(
-    `\x1b[32m[PASS] All ${MANDATORY_PARITY_FEATURES.length} core capabilities adhere to 4-Pillar Feature Parity!\x1b[0m\n`,
+  reportViolationsAndExit(
+    "Feature Parity Violation(s)",
+    violations,
+    (v) =>
+      `  \x1b[31m[FAIL] [${v.missingPillar}] ${v.featureName} (${v.featureId}):\x1b[0m ${v.detail}`,
+    `All ${MANDATORY_PARITY_FEATURES.length} core capabilities adhere to 4-Pillar Feature Parity!`,
+    "All CDDM capabilities must be strictly supported across all 4 interface pillars!",
   );
 }
 

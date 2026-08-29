@@ -418,7 +418,7 @@ Setting up CI/CD duplication quality gates and local pre-commit hooks manually r
    - Generates GitHub Actions workflow (`.github/workflows/cddm.yml`) with automated OASIS SARIF v2.1.0 upload and PR Markdown summary comments.
    - Generates GitLab CI (`.gitlab-ci.yml`) and Azure DevOps Pipelines (`azure-pipelines.yml`).
 2. **Git Hook Lifecycle Manager**:
-   - `cddm hook install --type pre-commit|pre-push --fail-threshold 15.0`.
+   - `cddm hook install --type pre-commit|pre-push --fail-threshold 5.0`.
    - `cddm hook uninstall --type pre-commit|pre-push`.
    - `cddm hook status` inspecting `.git/hooks`.
 3. **CLI Subcommands**:

@@ -164,21 +164,33 @@ pub fn classify_ast_clone(
             (CloneType::NearMiss, (sim * 100.0).round() / 100.0)
         } else {
             // Check if subtrees share structural Merkle hashes (Type-4 Semantic)
-            let subtrees_a = compute_ast_subtree_hashes(&tree_a, 2);
-            let subtrees_b = compute_ast_subtree_hashes(&tree_b, 2);
+            let subtrees_a = compute_ast_subtree_hashes(&tree_a, 3);
+            let subtrees_b = compute_ast_subtree_hashes(&tree_b, 3);
             if !subtrees_a.is_empty() && !subtrees_b.is_empty() {
                 let hashes_b: HashSet<_> = subtrees_b.iter().map(|s| &s.hash_hex).collect();
-                for sub_a in &subtrees_a {
-                    if hashes_b.contains(&sub_a.hash_hex) && sub_a.depth >= 3 {
-                        return (CloneType::Semantic, (sim * 100.0).round() / 100.0);
-                    }
+                let match_count = subtrees_a
+                    .iter()
+                    .filter(|s| hashes_b.contains(&s.hash_hex))
+                    .count();
+                let ratio =
+                    (2.0 * match_count as f64) / ((subtrees_a.len() + subtrees_b.len()) as f64);
+                if ratio >= 0.60 {
+                    return (CloneType::Semantic, (ratio * 100.0).round() / 100.0);
                 }
             }
-            (CloneType::Renamed, (sim * 100.0).round() / 100.0)
+            (CloneType::NearMiss, (sim * 100.0).round() / 100.0)
         }
     } else {
-        // 3. Fallback for non-AST languages
-        (CloneType::Renamed, 1.0)
+        // 3. Fallback for non-AST languages: compute line sequence LCS similarity
+        let a_vec: Vec<String> = lines_a.iter().map(|s| s.to_string()).collect();
+        let b_vec: Vec<String> = lines_b.iter().map(|s| s.to_string()).collect();
+        let sim = calculate_sequence_similarity(&a_vec, &b_vec);
+        let rounded_sim = (sim * 100.0).round() / 100.0;
+        if sim >= 0.999 {
+            (CloneType::Exact, 1.0)
+        } else {
+            (CloneType::NearMiss, rounded_sim)
+        }
     }
 }
 

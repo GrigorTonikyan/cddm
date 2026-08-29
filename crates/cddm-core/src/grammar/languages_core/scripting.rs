@@ -2,6 +2,7 @@
 
 use crate::grammar::types::{LanguageGrammar, make_c_style_grammar};
 
+// cddm:ignore-start
 pub const TYPESCRIPT: LanguageGrammar = make_c_style_grammar(
     "TypeScript",
     &["ts", "tsx"],
@@ -216,3 +217,4 @@ pub const PHP: LanguageGrammar = make_c_style_grammar(
         "yield",
     ],
 );
+// cddm:ignore-end

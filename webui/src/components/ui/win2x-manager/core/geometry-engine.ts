@@ -226,7 +226,26 @@ export function expandHandleToEdges(
  * Magnetic window-to-window snapping: checks if moving window's edges
  * are within threshold of neighboring windows and snaps smoothly.
  */
-export function detectWindowToWindowSnap(
+function snap1D(
+  pos: number,
+  size: number,
+  otherPos: number,
+  otherSize: number,
+  threshold: number,
+): { pos: number; snapped: boolean } {
+  if (Math.abs(pos - (otherPos + otherSize)) <= threshold) {
+    return { pos: otherPos + otherSize, snapped: true };
+  }
+  if (Math.abs(pos + size - otherPos) <= threshold) {
+    return { pos: otherPos - size, snapped: true };
+  }
+  if (Math.abs(pos - otherPos) <= threshold) {
+    return { pos: otherPos, snapped: true };
+  }
+  return { pos, snapped: false };
+}
+
+export function snapToNeighborWindows(
   movingRect: Win2xRect,
   otherWindows: Win2xRect[],
   threshold = WIN2X_SNAP_DEFAULTS.MAGNETIC_SNAP_THRESHOLD_PX,
@@ -237,41 +256,23 @@ export function detectWindowToWindowSnap(
   let snappedY = false;
 
   for (const win of otherWindows) {
-    // Snap X to neighbor's right edge (adjacent left)
-    if (Math.abs(movingRect.x - (win.x + win.width)) <= threshold) {
-      nextX = win.x + win.width;
-      snappedX = true;
-    }
-    // Snap right edge to neighbor's left edge (adjacent right)
-    else if (Math.abs(movingRect.x + movingRect.width - win.x) <= threshold) {
-      nextX = win.x - movingRect.width;
-      snappedX = true;
-    }
-    // Snap X alignment (left-left)
-    else if (Math.abs(movingRect.x - win.x) <= threshold) {
-      nextX = win.x;
+    const sX = snap1D(nextX, movingRect.width, win.x, win.width, threshold);
+    if (sX.snapped) {
+      nextX = sX.pos;
       snappedX = true;
     }
 
-    // Snap Y to neighbor's bottom edge (adjacent below)
-    if (Math.abs(movingRect.y - (win.y + win.height)) <= threshold) {
-      nextY = win.y + win.height;
-      snappedY = true;
-    }
-    // Snap bottom edge to neighbor's top edge (adjacent above)
-    else if (Math.abs(movingRect.y + movingRect.height - win.y) <= threshold) {
-      nextY = win.y - movingRect.height;
-      snappedY = true;
-    }
-    // Snap Y alignment (top-top)
-    else if (Math.abs(movingRect.y - win.y) <= threshold) {
-      nextY = win.y;
+    const sY = snap1D(nextY, movingRect.height, win.y, win.height, threshold);
+    if (sY.snapped) {
+      nextY = sY.pos;
       snappedY = true;
     }
   }
 
   return { x: nextX, y: nextY, snappedX, snappedY };
 }
+
+export const detectWindowToWindowSnap = snapToNeighborWindows;
 
 /**
  * Screen edge snap zone detector.

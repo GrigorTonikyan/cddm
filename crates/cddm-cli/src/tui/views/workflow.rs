@@ -22,7 +22,7 @@ fn render_hook_status(frame: &mut Frame, area: Rect) {
                     .bg(Color::Green)
                     .add_modifier(Modifier::BOLD),
             ),
-            Span::raw(" (Enforcing --fail-threshold 15.0)"),
+            Span::raw(" (Enforcing --fail-threshold 5.0)"),
         ]),
         Line::from(vec![
             Span::styled("Pre-Push Git Hook:    ", Style::default().fg(Color::Cyan)),
@@ -44,7 +44,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: GrigorTonikyan/cddm-action@v2
         with:
-          fail-threshold: 15.0
+          fail-threshold: 5.0
           format: sarif
           output: cddm-results.sarif
       - uses: github/codeql-action/upload-sarif@v3

@@ -89,7 +89,7 @@ const STEPS: ScriptStep[] = [
       "--min-tokens",
       "50",
       "--fail-threshold",
-      "15.0",
+      "5.0",
     ],
   },
 ];

@@ -127,6 +127,12 @@ pub fn index_and_match_clone_pairs(
         }
     });
 
+    merged_pairs.retain(|pair| {
+        pair.similarity >= 0.70
+            || pair.clone_type == CloneType::Semantic
+            || pair.clone_type == CloneType::Exact
+    });
+
     // Filter out clone pairs if detect_type3 is disabled
     if !config.detect_type3 {
         merged_pairs.retain(|pair| pair.clone_type != crate::types::CloneType::NearMiss);

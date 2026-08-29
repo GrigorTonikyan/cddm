@@ -49,7 +49,7 @@ export const SingleGraphCard: React.FC<SingleGraphCardProps> = ({
   return (
     <div
       key={`single-graph-${keyIndex}-${cfg.function_name}`}
-      className="flex-1 min-w-[340px] bg-slate-900/70 border border-slate-800 rounded-xl p-3.5 flex flex-col"
+      className="flex-1 min-w-85 bg-slate-900/70 border border-slate-800 rounded-xl p-3.5 flex flex-col"
     >
       <div className="flex items-center justify-between border-b border-slate-800 pb-2 mb-3">
         <div className="flex items-center gap-2">

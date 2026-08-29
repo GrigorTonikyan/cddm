@@ -1,5 +1,6 @@
 #![forbid(unsafe_code)]
 
+use super::constants::*;
 use super::types::{AiProviderConfig, AiProviderKind};
 use async_trait::async_trait;
 use serde_json::json;
@@ -31,7 +32,7 @@ impl AiProvider for MockAiProvider {
         if let Some(resp) = &self.canned_response {
             Ok(resp.clone())
         } else {
-            Ok("--- a/test.rs\n+++ b/test.rs\n@@ -1,3 +1,3 @@\n-old();\n+new();\n".to_string())
+            Ok(DEFAULT_MOCK_DIFF_RESPONSE.to_string())
         }
     }
 }
@@ -47,9 +48,9 @@ pub struct OllamaProvider {
 impl OllamaProvider {
     pub fn new(model: Option<String>, endpoint: Option<String>, temperature: Option<f64>) -> Self {
         Self {
-            model: model.unwrap_or_else(|| "llama3".to_string()),
-            endpoint: endpoint.unwrap_or_else(|| "http://localhost:11434".to_string()),
-            temperature: temperature.unwrap_or(0.2),
+            model: model.unwrap_or_else(|| DEFAULT_OLLAMA_MODEL.to_string()),
+            endpoint: endpoint.unwrap_or_else(|| DEFAULT_OLLAMA_ENDPOINT.to_string()),
+            temperature: temperature.unwrap_or(DEFAULT_TEMPERATURE),
         }
     }
 }
@@ -59,15 +60,9 @@ fn execute_curl_post(
     extra_headers: &[(&str, &str)],
     payload: &serde_json::Value,
 ) -> Result<String, String> {
-    let mut cmd = std::process::Command::new("curl");
-    cmd.args([
-        "-s",
-        "-X",
-        "POST",
-        url,
-        "-H",
-        "Content-Type: application/json",
-    ]);
+    let mut cmd = std::process::Command::new(CURL_COMMAND);
+    let content_type_hdr = format!("{}: {}", HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON);
+    cmd.args(["-s", "-X", "POST", url, "-H", &content_type_hdr]);
     for (k, v) in extra_headers {
         cmd.args(["-H", &format!("{}: {}", k, v)]);
     }
@@ -95,7 +90,11 @@ impl AiProvider for OllamaProvider {
             }
         });
 
-        let url = format!("{}/api/generate", self.endpoint.trim_end_matches('/'));
+        let url = format!(
+            "{}/{}",
+            self.endpoint.trim_end_matches('/'),
+            OLLAMA_GENERATE_PATH
+        );
         let resp_str = execute_curl_post(&url, &[], &payload)?;
         if let Ok(val) = serde_json::from_str::<serde_json::Value>(&resp_str)
             && let Some(resp) = val.get("response").and_then(|r| r.as_str())
@@ -133,65 +132,154 @@ fn init_provider_config(
         api_key
             .or_else(|| std::env::var(env_var).ok())
             .unwrap_or_default(),
-        temperature.unwrap_or(0.2),
+        temperature.unwrap_or(DEFAULT_TEMPERATURE),
     )
 }
 
-/// Google Gemini provider.
+/// Cloud AI provider supporting Gemini, Claude, and OpenAI backends.
 #[derive(Debug, Clone)]
-pub struct GeminiProvider {
+pub struct CloudAiProvider {
     pub model: String,
     pub api_key: String,
     pub temperature: f64,
+    pub kind: AiProviderKind,
 }
 
-impl GeminiProvider {
-    pub fn new(model: Option<String>, api_key: Option<String>, temperature: Option<f64>) -> Self {
-        let (model, api_key, temperature) = init_provider_config(
-            model,
-            "gemini-1.5-pro",
-            api_key,
-            "GEMINI_API_KEY",
-            temperature,
-        );
+pub type GeminiProvider = CloudAiProvider;
+pub type ClaudeProvider = CloudAiProvider;
+pub type OpenAiProvider = CloudAiProvider;
+
+impl CloudAiProvider {
+    fn create_cloud(
+        model: Option<String>,
+        default_model: &str,
+        api_key: Option<String>,
+        env_key: &str,
+        temperature: Option<f64>,
+        kind: AiProviderKind,
+    ) -> Self {
+        let (model, api_key, temperature) =
+            init_provider_config(model, default_model, api_key, env_key, temperature);
         Self {
             model,
             api_key,
             temperature,
+            kind,
         }
+    }
+
+    pub fn new_gemini(
+        model: Option<String>,
+        api_key: Option<String>,
+        temperature: Option<f64>,
+    ) -> Self {
+        Self::create_cloud(
+            model,
+            DEFAULT_GEMINI_MODEL,
+            api_key,
+            ENV_GEMINI_API_KEY,
+            temperature,
+            AiProviderKind::Gemini,
+        )
+    }
+
+    pub fn new_claude(
+        model: Option<String>,
+        api_key: Option<String>,
+        temperature: Option<f64>,
+    ) -> Self {
+        Self::create_cloud(
+            model,
+            DEFAULT_CLAUDE_MODEL,
+            api_key,
+            ENV_ANTHROPIC_API_KEY,
+            temperature,
+            AiProviderKind::Claude,
+        )
+    }
+
+    pub fn new_openai(
+        model: Option<String>,
+        api_key: Option<String>,
+        temperature: Option<f64>,
+    ) -> Self {
+        Self::create_cloud(
+            model,
+            DEFAULT_OPENAI_MODEL,
+            api_key,
+            ENV_OPENAI_API_KEY,
+            temperature,
+            AiProviderKind::OpenAi,
+        )
     }
 }
 
 #[async_trait]
-impl AiProvider for GeminiProvider {
+impl AiProvider for CloudAiProvider {
     async fn complete_prompt(&self, prompt: &str) -> Result<String, String> {
-        if self.api_key.is_empty() {
-            return Err("Gemini API key not provided or set in GEMINI_API_KEY".to_string());
-        }
-
-        let payload = json!({
-            "contents": [{
-                "parts": [{"text": prompt}]
-            }],
-            "generationConfig": {
-                "temperature": self.temperature,
+        match self.kind {
+            AiProviderKind::Gemini => {
+                if self.api_key.is_empty() {
+                    return Err(format!(
+                        "Gemini API key not provided or set in {ENV_GEMINI_API_KEY}"
+                    ));
+                }
+                let payload = json!({
+                    "contents": [{"parts": [{"text": prompt}]}],
+                    "generationConfig": {"temperature": self.temperature}
+                });
+                let url = GEMINI_API_ENDPOINT_TEMPLATE
+                    .replacen("{}", &self.model, 1)
+                    .replacen("{}", &self.api_key, 1);
+                post_and_extract(&url, &[], &payload, |val| {
+                    val.get("candidates")?
+                        .get(0)?
+                        .get("content")?
+                        .get("parts")?
+                        .get(0)?
+                        .get("text")?
+                        .as_str()
+                })
             }
-        });
-
-        let url = format!(
-            "https://generativelanguage.googleapis.com/v1beta/models/{}:generateContent?key={}",
-            self.model, self.api_key
-        );
-
-        post_and_extract(&url, &[], &payload, |val| {
-            val.get("candidates")?
-                .get(0)?
-                .get("content")?
-                .get("parts")?
-                .get(0)?
-                .get("text")?
-                .as_str()
-        })
+            AiProviderKind::Claude => {
+                if self.api_key.is_empty() {
+                    return Err(format!(
+                        "Anthropic API key not provided or set in {ENV_ANTHROPIC_API_KEY}"
+                    ));
+                }
+                let payload = chat_message_payload(
+                    &self.model,
+                    self.temperature,
+                    prompt,
+                    Some(DEFAULT_CLAUDE_MAX_TOKENS),
+                );
+                let headers = [
+                    (HEADER_ANTHROPIC_API_KEY, self.api_key.as_str()),
+                    (HEADER_ANTHROPIC_VERSION, ANTHROPIC_API_VERSION),
+                ];
+                execute_http_chat(DEFAULT_CLAUDE_ENDPOINT, &headers, &payload, |val| {
+                    val.get("content")?.get(0)?.get("text")?.as_str()
+                })
+            }
+            AiProviderKind::OpenAi => {
+                if self.api_key.is_empty() {
+                    return Err(format!(
+                        "OpenAI API key not provided or set in {ENV_OPENAI_API_KEY}"
+                    ));
+                }
+                let payload = chat_message_payload(&self.model, self.temperature, prompt, None);
+                let auth_hdr = format!("{BEARER_PREFIX}{}", self.api_key);
+                let headers = [(HEADER_AUTHORIZATION, auth_hdr.as_str())];
+                execute_http_chat(DEFAULT_OPENAI_ENDPOINT, &headers, &payload, |val| {
+                    val.get("choices")?
+                        .get(0)?
+                        .get("message")?
+                        .get("content")?
+                        .as_str()
+                })
+            }
+            _ => Err("Unsupported cloud provider backend".to_string()),
+        }
     }
 }
 
@@ -225,99 +313,6 @@ fn execute_http_chat(
     post_and_extract(url, headers, payload, extract_fn)
 }
 
-/// Anthropic Claude provider.
-#[derive(Debug, Clone)]
-pub struct ClaudeProvider {
-    pub model: String,
-    pub api_key: String,
-    pub temperature: f64,
-}
-
-impl ClaudeProvider {
-    pub fn new(model: Option<String>, api_key: Option<String>, temperature: Option<f64>) -> Self {
-        let (model, api_key, temperature) = init_provider_config(
-            model,
-            "claude-3-5-sonnet-20241022",
-            api_key,
-            "ANTHROPIC_API_KEY",
-            temperature,
-        );
-        Self {
-            model,
-            api_key,
-            temperature,
-        }
-    }
-}
-
-#[async_trait]
-impl AiProvider for ClaudeProvider {
-    async fn complete_prompt(&self, prompt: &str) -> Result<String, String> {
-        if self.api_key.is_empty() {
-            return Err("Anthropic API key not provided or set in ANTHROPIC_API_KEY".to_string());
-        }
-
-        let payload = chat_message_payload(&self.model, self.temperature, prompt, Some(4096));
-        let headers = [
-            ("x-api-key", self.api_key.as_str()),
-            ("anthropic-version", "2023-06-01"),
-        ];
-
-        execute_http_chat(
-            "https://api.anthropic.com/v1/messages",
-            &headers,
-            &payload,
-            |val| val.get("content")?.get(0)?.get("text")?.as_str(),
-        )
-    }
-}
-
-/// OpenAI provider.
-#[derive(Debug, Clone)]
-pub struct OpenAiProvider {
-    pub model: String,
-    pub api_key: String,
-    pub temperature: f64,
-}
-
-impl OpenAiProvider {
-    pub fn new(model: Option<String>, api_key: Option<String>, temperature: Option<f64>) -> Self {
-        let (model, api_key, temperature) =
-            init_provider_config(model, "gpt-4o", api_key, "OPENAI_API_KEY", temperature);
-        Self {
-            model,
-            api_key,
-            temperature,
-        }
-    }
-}
-
-#[async_trait]
-impl AiProvider for OpenAiProvider {
-    async fn complete_prompt(&self, prompt: &str) -> Result<String, String> {
-        if self.api_key.is_empty() {
-            return Err("OpenAI API key not provided or set in OPENAI_API_KEY".to_string());
-        }
-
-        let payload = chat_message_payload(&self.model, self.temperature, prompt, None);
-        let auth_hdr = format!("Bearer {}", self.api_key);
-        let headers = [("Authorization", auth_hdr.as_str())];
-
-        execute_http_chat(
-            "https://api.openai.com/v1/chat/completions",
-            &headers,
-            &payload,
-            |val| {
-                val.get("choices")?
-                    .get(0)?
-                    .get("message")?
-                    .get("content")?
-                    .as_str()
-            },
-        )
-    }
-}
-
 /// Constructs an AI provider instance from a configuration object.
 pub fn create_ai_provider(config: &AiProviderConfig) -> Box<dyn AiProvider> {
     match config.provider {
@@ -327,17 +322,17 @@ pub fn create_ai_provider(config: &AiProviderConfig) -> Box<dyn AiProvider> {
             config.endpoint.clone(),
             config.temperature,
         )),
-        AiProviderKind::Gemini => Box::new(GeminiProvider::new(
+        AiProviderKind::Gemini => Box::new(CloudAiProvider::new_gemini(
             config.model.clone(),
             config.api_key.clone(),
             config.temperature,
         )),
-        AiProviderKind::Claude => Box::new(ClaudeProvider::new(
+        AiProviderKind::Claude => Box::new(CloudAiProvider::new_claude(
             config.model.clone(),
             config.api_key.clone(),
             config.temperature,
         )),
-        AiProviderKind::OpenAi => Box::new(OpenAiProvider::new(
+        AiProviderKind::OpenAi => Box::new(CloudAiProvider::new_openai(
             config.model.clone(),
             config.api_key.clone(),
             config.temperature,

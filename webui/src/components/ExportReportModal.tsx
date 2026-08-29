@@ -134,7 +134,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
       - name: Run CDDM Duplication Scan & SARIF Export
         run: |
-          cargo run -p cddm-cli -- scan . --min-tokens 50 --fail-threshold 15.0 --sarif cddm-results.sarif
+          cargo run -p cddm-cli -- scan . --min-tokens 50 --fail-threshold 5.0 --sarif cddm-results.sarif
       - name: Upload SARIF to GitHub Code Scanning
         uses: github/codeql-action/upload-sarif@v3
         if: always()

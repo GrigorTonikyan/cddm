@@ -13,6 +13,7 @@ import { SandboxFooterActions } from "./sandbox/SandboxFooterActions";
 import { SandboxHeaderControls } from "./sandbox/SandboxHeaderControls";
 import { TestVerificationPanel } from "./sandbox/TestVerificationPanel";
 import { Win2xWindow } from "./ui/win2x-manager";
+import { downloadTextFile } from "../utils/file-download";
 import { Bot, Box, FileCode2, Sparkles, TrendingDown } from "lucide-react";
 
 export interface RefactorSandboxModalProps {
@@ -149,16 +150,8 @@ export const RefactorSandboxModal: React.FC<RefactorSandboxModalProps> = ({ isOp
 
   const handleDownloadPatch = () => {
     if (!currentPatch) return;
-    const blob = new Blob([currentPatch], { type: "text/x-diff;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
     const filename = `cddm-refactor-${customFunctionName || "custom"}.patch`;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    downloadTextFile(currentPatch, filename, "text/x-diff;charset=utf-8");
     setDownloaded(true);
     setTimeout(() => setDownloaded(false), 2000);
   };

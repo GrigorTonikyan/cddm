@@ -4,6 +4,8 @@ import { getLanguageStyle } from "../utils/path-utils";
 import { Win2xWindow } from "./ui/win2x-manager";
 import { PieChart, Sparkles, Layers, FileCode } from "lucide-react";
 
+import { ModalFooter } from "./ui/ModalFooter";
+
 export interface LanguageAnalyticsModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -24,22 +26,6 @@ export const LanguageAnalyticsModal: React.FC<LanguageAnalyticsModalProps> = ({
   const totalTokensAllLangs =
     totalTokens > 0 ? totalTokens : languages.reduce((sum, item) => sum + item.tokens, 0);
 
-  const footerContent = (
-    <>
-      <div className="flex items-center gap-2 text-xs font-mono text-slate-400">
-        <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-        <span>{languages.length} programming language ecosystem composition</span>
-      </div>
-      <button
-        type="button"
-        onClick={onClose}
-        className="px-4 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs transition-colors"
-      >
-        Close
-      </button>
-    </>
-  );
-
   return (
     <Win2xWindow
       id="cddm-language-analytics-window"
@@ -50,7 +36,13 @@ export const LanguageAnalyticsModal: React.FC<LanguageAnalyticsModalProps> = ({
       subtitle="Multi-language token distribution, file densities, and duplication metrics"
       badge={`${languages.length} Languages`}
       icon={<PieChart className="w-4 h-4 text-indigo-400" />}
-      footer={footerContent}
+      footer={
+        <ModalFooter
+          infoIcon={<Sparkles className="w-3.5 h-3.5 text-indigo-400" />}
+          infoText={`${languages.length} programming language ecosystem composition`}
+          onClose={onClose}
+        />
+      }
       initialWidth={920}
       initialHeight={650}
     >

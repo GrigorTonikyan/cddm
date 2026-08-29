@@ -21,9 +21,9 @@ pub use refactor::{
     VerifyRefactorResult,
 };
 pub use scan::{
-    DEFAULT_CACHE_FILE, DEFAULT_DIRECTORY, DEFAULT_IGNORE_PATTERNS, DEFAULT_MIN_TOKENS,
-    DEFAULT_RULES_FILE, LanguageStats, LineSpan, MAX_HEALTH_SCORE, MIN_HEALTH_SCORE,
-    NormalizedToken, ScanConfig, ScanPhase, ScanProgress, ScanResult,
+    DEFAULT_CACHE_FILE, DEFAULT_DIRECTORY, DEFAULT_FAIL_THRESHOLD, DEFAULT_IGNORE_PATTERNS,
+    DEFAULT_MIN_TOKENS, DEFAULT_RULES_FILE, LanguageStats, LineSpan, MAX_HEALTH_SCORE,
+    MIN_HEALTH_SCORE, NormalizedToken, ScanConfig, ScanPhase, ScanProgress, ScanResult,
 };
 pub use suppression::{SuppressionConfig, SuppressionDirective, SuppressionRule};
 pub use timeline::{FileChurnMetric, TimelineSnapshot, TimelineTrend};
@@ -45,6 +45,9 @@ mod tests {
         assert!(config.detect_type3);
         assert!(config.scan_self);
         assert!(!config.enable_git_blame);
+        assert!(config.cross_language);
+        assert!(config.ignore_tests);
+        assert!(config.ignore_mocks);
     }
 
     fn assert_serde_roundtrip<

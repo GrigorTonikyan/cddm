@@ -2,27 +2,27 @@ use crate::types::{CloneCluster, CloneLocation, ClonePair, CloneType};
 use std::collections::HashMap;
 
 /// Disjoint-Set Union (Union-Find) with path compression and rank optimization.
-struct UnionFind {
+pub(crate) struct UnionFind {
     parent: Vec<usize>,
     rank: Vec<usize>,
 }
 
 impl UnionFind {
-    fn new(size: usize) -> Self {
+    pub(crate) fn new(size: usize) -> Self {
         Self {
             parent: (0..size).collect(),
             rank: vec![0; size],
         }
     }
 
-    fn find(&mut self, i: usize) -> usize {
+    pub(crate) fn find(&mut self, i: usize) -> usize {
         if self.parent[i] != i {
             self.parent[i] = self.find(self.parent[i]);
         }
         self.parent[i]
     }
 
-    fn union(&mut self, i: usize, j: usize) {
+    pub(crate) fn union(&mut self, i: usize, j: usize) {
         let root_i = self.find(i);
         let root_j = self.find(j);
         if root_i != root_j {

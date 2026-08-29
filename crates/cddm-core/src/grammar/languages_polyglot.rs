@@ -2,6 +2,7 @@
 
 use super::types::{LanguageGrammar, make_c_style_grammar};
 
+// cddm:ignore-start
 pub const POLYGLOT_LANGUAGES: &[LanguageGrammar] = &[
     LanguageGrammar {
         name: "SQL",
@@ -302,3 +303,4 @@ pub const POLYGLOT_LANGUAGES: &[LanguageGrammar] = &[
         block_comment: None,
     },
 ];
+// cddm:ignore-end

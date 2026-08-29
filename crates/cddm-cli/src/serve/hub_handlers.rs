@@ -33,7 +33,7 @@ pub async fn hub_config_get_handler() -> impl IntoResponse {
             name: "my-organization".to_string(),
             repositories: vec![],
             min_tokens: 50,
-            fail_threshold: 15.0,
+            fail_threshold: cddm_core::DEFAULT_FAIL_THRESHOLD,
             ignore_patterns: vec![],
         });
         (StatusCode::OK, Json(parsed)).into_response()

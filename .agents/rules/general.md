@@ -11,7 +11,7 @@ trigger: always_on
 5. **Conventional Commits Enforcement**: All git commit messages must satisfy `@commitlint/cli` rules configured in `commitlint.config.ts`.
 6. **Automated Semantic Releases**: Version bumps and releases must use `vp run bump` or `vp run version:release`, synchronizing Cargo and npm manifests.
 7. **Zero Magic Literals**: Use typed enums (`ScanPhase`, `CloneType`) and centralized constants (`API_ROUTES`, `DEFAULT_SCAN_CONFIG`, `APP_VERSION`).
-8. **Dogfooding Quality Gate**: Always verify with `cddm scan . --min-tokens 50 --fail-threshold 15.0`.
+8. **Dogfooding Quality Gate**: Always verify with `cddm scan . --min-tokens 50 --fail-threshold 5.0`.
 9. **Strict TypeScript**: Full strict type safety with zero `any` across `webui/`, `scripts/`, and `tests/`.
 10. **Full Pipeline Verification**: Always validate with `vp run verify` (or `bun scripts/verify.ts`) before completing work.
 11. **Cross-Interface Feature Parity**: Every capability must be simultaneously available across CLI, WebUI Studio, MCP Server, and TUI Studio (governed by `.agents/rules/interface-feature-parity.md`).

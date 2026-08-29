@@ -21,7 +21,7 @@ pub enum AiProviderKind {
 pub struct AiProviderConfig {
     /// Target provider backend
     pub provider: AiProviderKind,
-    /// Model identifier (e.g. "gemini-1.5-pro", "claude-3-5-sonnet", "gpt-4o", "llama3")
+    /// Model identifier (e.g. "gemini-2.5-pro", "claude-3-7-sonnet", "gpt-4.5-preview", "qwen2.5-coder")
     pub model: Option<String>,
     /// Secret API key for authentication
     pub api_key: Option<String>,
@@ -51,7 +51,7 @@ pub struct HealIterationLog {
 }
 
 /// Request parameters for initiating an autonomous refactoring healing loop.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct HealRefactorRequest {
     /// Optional target clone cluster ID
     pub cluster_id: Option<usize>,
@@ -67,7 +67,7 @@ pub struct HealRefactorRequest {
     pub custom_instructions: Option<String>,
     /// AI provider connection settings
     pub provider_config: AiProviderConfig,
-    /// Maximum healing repair iterations (default: 3)
+    /// Maximum healing repair iterations (default: DEFAULT_HEAL_ITERATIONS)
     pub max_iterations: usize,
     /// Optional Git branch name to commit passing refactoring to
     pub apply_branch: Option<String>,
@@ -77,6 +77,25 @@ pub struct HealRefactorRequest {
     pub test_cmd: Option<String>,
     /// Root directory path of workspace
     pub workspace_root: Option<PathBuf>,
+}
+
+impl Default for HealRefactorRequest {
+    fn default() -> Self {
+        Self {
+            cluster_id: None,
+            pair_id: None,
+            occurrences: Vec::new(),
+            function_name: None,
+            target_module: None,
+            custom_instructions: None,
+            provider_config: AiProviderConfig::default(),
+            max_iterations: super::constants::DEFAULT_HEAL_ITERATIONS,
+            apply_branch: None,
+            verify: false,
+            test_cmd: None,
+            workspace_root: None,
+        }
+    }
 }
 
 /// Final outcome of an autonomous self-healing refactoring session.

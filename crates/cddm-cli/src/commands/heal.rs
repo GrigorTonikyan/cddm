@@ -1,8 +1,8 @@
 #![forbid(unsafe_code)]
 
 use cddm_core::{
-    AiProviderConfig, AiProviderKind, CloneLocation, HealRefactorRequest, ScanConfig,
-    heal_cluster_refactor, run_scan,
+    AiProviderConfig, AiProviderKind, CloneLocation, DEFAULT_PROVIDER_TIMEOUT_SECS,
+    DEFAULT_TEMPERATURE, HealRefactorRequest, ScanConfig, heal_cluster_refactor, run_scan,
 };
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -47,22 +47,7 @@ pub async fn run_heal_command(args: HealCliArgs) -> Result<(), Box<dyn std::erro
     let scan_config = ScanConfig {
         directory: args.directory.to_string_lossy().to_string(),
         min_tokens: args.min_tokens,
-        languages: vec![],
-        ignore_patterns: vec![],
-        detect_type2: true,
-        detect_type3: true,
-        scan_self: false,
-        enable_git_blame: false,
-        cache_dir: None,
-        enable_cache: false,
-        cddmignore_path: None,
-        ignore_tests: false,
-        ignore_mocks: false,
-        ignore_generated: true,
-        rules_path: None,
-        enforce_policies: false,
-        cross_language: false,
-        threads: None,
+        ..Default::default()
     };
 
     println!("\x1b[33m--> Scanning workspace for target clone locations...\x1b[0m");
@@ -159,8 +144,8 @@ pub async fn run_heal_command(args: HealCliArgs) -> Result<(), Box<dyn std::erro
             model: args.model,
             api_key: args.api_key,
             endpoint: args.endpoint,
-            temperature: Some(0.2),
-            timeout_secs: Some(60),
+            temperature: Some(DEFAULT_TEMPERATURE),
+            timeout_secs: Some(DEFAULT_PROVIDER_TIMEOUT_SECS),
         },
         max_iterations: args.max_iterations,
         apply_branch: args.branch,

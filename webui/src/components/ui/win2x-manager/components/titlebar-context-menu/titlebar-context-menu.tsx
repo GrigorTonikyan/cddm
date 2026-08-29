@@ -84,7 +84,7 @@ export const TitleBarContextMenu: React.FC<TitleBarContextMenuProps> = ({
           onClose();
         }}
       >
-        <RotateCcw className="w-3.5 h-3.5 mr-2.5 opacity-70" />
+        <RotateCcw size={14} className={styles.itemIcon} />
         <span>Restore</span>
       </button>
 
@@ -96,7 +96,7 @@ export const TitleBarContextMenu: React.FC<TitleBarContextMenuProps> = ({
           onClose();
         }}
       >
-        <Move className="w-3.5 h-3.5 mr-2.5 opacity-70" />
+        <Move size={14} className={styles.itemIcon} />
         <span>Move</span>
       </button>
 
@@ -109,7 +109,7 @@ export const TitleBarContextMenu: React.FC<TitleBarContextMenuProps> = ({
           onClose();
         }}
       >
-        <Scaling className="w-3.5 h-3.5 mr-2.5 opacity-70" />
+        <Scaling size={14} className={styles.itemIcon} />
         <span>Size</span>
       </button>
 
@@ -121,7 +121,7 @@ export const TitleBarContextMenu: React.FC<TitleBarContextMenuProps> = ({
           onClose();
         }}
       >
-        <Minimize2 className="w-3.5 h-3.5 mr-2.5 opacity-70" />
+        <Minimize2 size={14} className={styles.itemIcon} />
         <span>Minimize</span>
       </button>
 
@@ -134,7 +134,7 @@ export const TitleBarContextMenu: React.FC<TitleBarContextMenuProps> = ({
           onClose();
         }}
       >
-        <Maximize2 className="w-3.5 h-3.5 mr-2.5 opacity-70" />
+        <Maximize2 size={14} className={styles.itemIcon} />
         <span>Maximize</span>
       </button>
 
@@ -148,7 +148,7 @@ export const TitleBarContextMenu: React.FC<TitleBarContextMenuProps> = ({
           onClose();
         }}
       >
-        <Layers className="w-3.5 h-3.5 mr-2.5 opacity-70" />
+        <Layers size={14} className={styles.itemIcon} />
         <span>Cascade All</span>
       </button>
 
@@ -160,7 +160,7 @@ export const TitleBarContextMenu: React.FC<TitleBarContextMenuProps> = ({
           onClose();
         }}
       >
-        <LayoutGrid className="w-3.5 h-3.5 mr-2.5 opacity-70" />
+        <LayoutGrid size={14} className={styles.itemIcon} />
         <span>Tile All</span>
       </button>
 
@@ -174,7 +174,7 @@ export const TitleBarContextMenu: React.FC<TitleBarContextMenuProps> = ({
           onClose();
         }}
       >
-        <X className="w-3.5 h-3.5 mr-2.5 opacity-70 text-rose-400" />
+        <X size={14} className={styles.itemIcon} />
         <span>Close</span>
         <span className={styles.shortcutHint}>Ctrl+W</span>
       </button>

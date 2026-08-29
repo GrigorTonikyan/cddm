@@ -8,7 +8,12 @@ import {
   WIN2X_SNAP_ZONES,
   WIN2X_THEMES,
 } from "../constants/win2x-constants";
-import type { SnapAssistSession, Win2xManagerContextValue, WindowLayoutMode } from "../core/types";
+import type {
+  SnapAssistSession,
+  Win2xManagerContextValue,
+  WindowLayoutMode,
+  WindowRegistration,
+} from "../core/types";
 import {
   calculateCascadePositions,
   calculateTileGridPositions,
@@ -188,29 +193,34 @@ export const Win2xManagerProvider: React.FC<Win2xManagerProviderProps> = ({
     [snapAssistSession, windowsRef, updateWindow],
   );
 
+  const getActiveLayoutContext = (prev: Map<string, WindowRegistration>) => {
+    const activeIds = zIndexStackRef.current.filter(
+      (id) => !prev.get(id)?.isMinimized && !prev.get(id)?.isMaximized,
+    );
+    if (activeIds.length === 0) return null;
+
+    const viewportW =
+      typeof window !== "undefined" ? window.innerWidth : WIN2X_DEFAULTS.FALLBACK_VIEWPORT_WIDTH;
+    const viewportH =
+      typeof window !== "undefined" ? window.innerHeight : WIN2X_DEFAULTS.FALLBACK_VIEWPORT_HEIGHT;
+
+    return { activeIds, viewportW, viewportH };
+  };
+
   const cascadeWindows = useCallback(() => {
     setWindows((prev) => {
-      const activeIds = zIndexStackRef.current.filter(
-        (id) => !prev.get(id)?.isMinimized && !prev.get(id)?.isMaximized,
-      );
-      if (activeIds.length === 0) return prev;
-
-      const viewportW =
-        typeof window !== "undefined" ? window.innerWidth : WIN2X_DEFAULTS.FALLBACK_VIEWPORT_WIDTH;
-      const viewportH =
-        typeof window !== "undefined"
-          ? window.innerHeight
-          : WIN2X_DEFAULTS.FALLBACK_VIEWPORT_HEIGHT;
+      const ctx = getActiveLayoutContext(prev);
+      if (!ctx) return prev;
 
       const newPositions = calculateCascadePositions(
-        activeIds,
-        viewportW,
-        viewportH,
+        ctx.activeIds,
+        ctx.viewportW,
+        ctx.viewportH,
         WIN2X_DEFAULTS.CASCADE_STEP,
       );
       const next = new Map(prev);
 
-      activeIds.forEach((id) => {
+      ctx.activeIds.forEach((id) => {
         const win = next.get(id)!;
         const pos = newPositions.get(id)!;
         next.set(id, {
@@ -228,28 +238,17 @@ export const Win2xManagerProvider: React.FC<Win2xManagerProviderProps> = ({
   const tileWindows = useCallback(
     (mode: WindowLayoutMode) => {
       setWindows((prev) => {
-        const activeIds = zIndexStackRef.current.filter(
-          (id) => !prev.get(id)?.isMinimized && !prev.get(id)?.isMaximized,
-        );
-        if (activeIds.length === 0) return prev;
-
-        const viewportW =
-          typeof window !== "undefined"
-            ? window.innerWidth
-            : WIN2X_DEFAULTS.FALLBACK_VIEWPORT_WIDTH;
-        const viewportH =
-          typeof window !== "undefined"
-            ? window.innerHeight
-            : WIN2X_DEFAULTS.FALLBACK_VIEWPORT_HEIGHT;
+        const ctx = getActiveLayoutContext(prev);
+        if (!ctx) return prev;
 
         let newRects = new Map<string, { x: number; y: number; width: number; height: number }>();
         if (mode === "tile-grid") {
-          newRects = calculateTileGridPositions(activeIds, viewportW, viewportH);
+          newRects = calculateTileGridPositions(ctx.activeIds, ctx.viewportW, ctx.viewportH);
         } else if (mode === "tile-horizontal" || mode === "tile-vertical") {
           newRects = calculateTileSplitPositions(
-            activeIds,
-            viewportW,
-            viewportH,
+            ctx.activeIds,
+            ctx.viewportW,
+            ctx.viewportH,
             mode === "tile-horizontal" ? "horizontal" : "vertical",
           );
         }
@@ -257,7 +256,7 @@ export const Win2xManagerProvider: React.FC<Win2xManagerProviderProps> = ({
         if (newRects.size === 0) return prev;
 
         const next = new Map(prev);
-        activeIds.forEach((id) => {
+        ctx.activeIds.forEach((id) => {
           const win = next.get(id)!;
           const rect = newRects.get(id);
           if (rect) {

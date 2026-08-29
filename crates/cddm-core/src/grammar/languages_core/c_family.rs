@@ -2,6 +2,7 @@
 
 use crate::grammar::types::{LanguageGrammar, make_c_style_grammar};
 
+// cddm:ignore-start
 pub const RUST: LanguageGrammar = make_c_style_grammar(
     "Rust",
     &["rs"],
@@ -200,3 +201,4 @@ pub const CSHARP: LanguageGrammar = make_c_style_grammar(
         "while",
     ],
 );
+// cddm:ignore-end

@@ -1,11 +1,12 @@
 #![forbid(unsafe_code)]
 
-use super::actions::{
-    CacheAction, HookAction, IgnoreAction, OutputFormat, PlatformChoice, RulesAction,
+use super::actions::{CacheAction, HookAction, IgnoreAction, RulesAction};
+use super::commands::{
+    CommentArgs, CoverageArgs, DiffArgs, ExtractArgs, HealArgs, HubArgs, InitArgs, LspArgs,
+    MonorepoArgs, OverlapArgs, RefactorArgs, ScanArgs, SemanticArgs, ServeArgs, TrendArgs, TuiArgs,
+    WatchArgs,
 };
-use super::commands::{CoverageArgs, ExtractArgs, HealArgs, HubArgs, OverlapArgs};
 use clap::{Parser, Subcommand};
-use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
 #[command(
@@ -25,353 +26,31 @@ pub struct Cli {
 #[derive(Subcommand, Debug)]
 pub enum Commands {
     /// Scan target directory for code duplication & DRY health score
-    Scan {
-        /// Directory path to scan (default: current directory)
-        #[arg(default_value = cddm_core::DEFAULT_DIRECTORY)]
-        directory: PathBuf,
-
-        /// Minimum token count to consider as duplicate clone
-        #[arg(short, long, default_value_t = cddm_core::DEFAULT_MIN_TOKENS)]
-        min_tokens: usize,
-
-        /// Output report format (console, json, markdown, sarif)
-        #[arg(short, long, value_enum, default_value_t = OutputFormat::Console)]
-        format: OutputFormat,
-
-        /// Exit with non-zero status code if duplication percentage exceeds threshold (0-100)
-        #[arg(long)]
-        fail_threshold: Option<f64>,
-
-        /// Specific language(s) to scan (e.g. Rust, TypeScript, Python)
-        #[arg(short, long)]
-        languages: Vec<String>,
-
-        /// Glob patterns to ignore (e.g. node_modules, target)
-        #[arg(short, long)]
-        ignore: Vec<String>,
-
-        /// Enable in-process git blame author & line age annotation
-        #[arg(long, default_value_t = false)]
-        git_blame: bool,
-
-        /// Custom path for persistent redb cache database (default: .cddm/cache.db)
-        #[arg(long)]
-        cache_dir: Option<PathBuf>,
-
-        /// Bypass persistent disk cache and force full re-scan
-        #[arg(long, default_value_t = false)]
-        no_cache: bool,
-
-        /// Clear existing persistent cache database before scanning
-        #[arg(long, default_value_t = false)]
-        clear_cache: bool,
-
-        /// Custom path to .cddmignore configuration file
-        #[arg(long)]
-        cddmignore: Option<PathBuf>,
-
-        /// Automatically filter test files and test directories
-        #[arg(long, default_value_t = false)]
-        ignore_tests: bool,
-
-        /// Automatically filter mock and fixture files
-        #[arg(long, default_value_t = false)]
-        ignore_mocks: bool,
-
-        /// Automatically filter auto-generated files with generator headers
-        #[arg(long, default_value_t = true)]
-        ignore_generated: bool,
-
-        /// Path to custom architectural policy rules (.cddmrules.toml)
-        #[arg(long)]
-        rules: Option<PathBuf>,
-
-        /// Enforce architectural policy rules (exit code 1 on error-level violations)
-        #[arg(long, default_value_t = false)]
-        enforce_policies: bool,
-
-        /// Detect cross-language semantic clones across different programming languages
-        #[arg(long, default_value_t = false)]
-        cross_language: bool,
-
-        /// Disable Type-3 near-miss modified statement clone detection
-        #[arg(long, default_value_t = false)]
-        no_type3: bool,
-
-        /// Maximum number of parallel worker threads to utilize (default: all logical cores)
-        #[arg(short = 'j', long)]
-        threads: Option<usize>,
-    },
+    Scan(ScanArgs),
 
     /// Differential duplication scan comparing current changes against a Git base revision
-    Diff {
-        /// Base Git revision to compare against (e.g. main, origin/main, HEAD~1)
-        base_ref: String,
-
-        /// Target Git revision (default: working directory / HEAD)
-        target_ref: Option<String>,
-
-        /// Directory path of the Git repository to scan (default: current directory)
-        #[arg(short, long, default_value = cddm_core::DEFAULT_DIRECTORY)]
-        directory: PathBuf,
-
-        /// Minimum token count to consider as duplicate clone
-        #[arg(short, long, default_value_t = cddm_core::DEFAULT_MIN_TOKENS)]
-        min_tokens: usize,
-
-        /// Output report format (console, json, markdown, sarif)
-        #[arg(short, long, value_enum, default_value_t = OutputFormat::Console)]
-        format: OutputFormat,
-
-        /// Exit with non-zero status code if duplication percentage exceeds threshold (0-100)
-        #[arg(long)]
-        fail_threshold: Option<f64>,
-
-        /// Specific language(s) to scan
-        #[arg(short, long)]
-        languages: Vec<String>,
-
-        /// Glob patterns to ignore
-        #[arg(short, long)]
-        ignore: Vec<String>,
-
-        /// Enable in-process git blame author & line age annotation
-        #[arg(long, default_value_t = false)]
-        git_blame: bool,
-
-        /// Custom path for persistent redb cache database (default: .cddm/cache.db)
-        #[arg(long)]
-        cache_dir: Option<PathBuf>,
-
-        /// Bypass persistent disk cache and force full re-scan
-        #[arg(long, default_value_t = false)]
-        no_cache: bool,
-
-        /// Custom path to .cddmignore configuration file
-        #[arg(long)]
-        cddmignore: Option<PathBuf>,
-
-        /// Automatically filter test files and test directories
-        #[arg(long, default_value_t = false)]
-        ignore_tests: bool,
-
-        /// Automatically filter mock and fixture files
-        #[arg(long, default_value_t = false)]
-        ignore_mocks: bool,
-
-        /// Automatically filter auto-generated files with generator headers
-        #[arg(long, default_value_t = true)]
-        ignore_generated: bool,
-
-        /// Path to custom architectural policy rules (.cddmrules.toml)
-        #[arg(long)]
-        rules: Option<PathBuf>,
-
-        /// Enforce architectural policy rules (exit code 1 on error-level violations)
-        #[arg(long, default_value_t = false)]
-        enforce_policies: bool,
-
-        /// Detect cross-language semantic clones across different programming languages
-        #[arg(long, default_value_t = false)]
-        cross_language: bool,
-    },
+    Diff(DiffArgs),
 
     /// Analyze cross-language semantic clones & Weisfeiler-Lehman graph isomorphisms
-    Semantic {
-        /// Directory path to scan (default: current directory)
-        #[arg(default_value = cddm_core::DEFAULT_DIRECTORY)]
-        directory: PathBuf,
-
-        /// Minimum hybrid similarity threshold (0.0 to 1.0, default: 0.70)
-        #[arg(short, long, default_value_t = 0.70)]
-        threshold: f64,
-
-        /// Minimum token count to consider as duplicate clone
-        #[arg(short, long, default_value_t = cddm_core::DEFAULT_MIN_TOKENS)]
-        min_tokens: usize,
-
-        /// Output report format (console, json, markdown)
-        #[arg(short, long, value_enum, default_value_t = OutputFormat::Console)]
-        format: OutputFormat,
-
-        /// Specific language(s) to scan
-        #[arg(short, long)]
-        languages: Vec<String>,
-
-        /// Glob patterns to ignore
-        #[arg(short, long)]
-        ignore: Vec<String>,
-
-        /// Enable in-process dense neural code embedding equivalence scan
-        #[arg(long)]
-        neural: bool,
-
-        /// Minimum cosine similarity threshold for neural matching (default: 0.85)
-        #[arg(long, default_value_t = 0.85)]
-        neural_threshold: f32,
-
-        /// Maximum number of parallel worker threads to utilize (default: all logical cores)
-        #[arg(short = 'j', long)]
-        threads: Option<usize>,
-    },
+    Semantic(SemanticArgs),
 
     /// Synthesize automated refactoring suggestions for duplicate clone pairs
-    Refactor {
-        /// 1-based index of clone pair to refactor
-        #[arg(short, long, default_value_t = 1)]
-        pair: usize,
-
-        /// 1-based index of clone cluster to refactor
-        #[arg(short = 'c', long)]
-        cluster: Option<usize>,
-
-        /// Directory path to scan (default: current directory)
-        #[arg(default_value = cddm_core::DEFAULT_DIRECTORY)]
-        directory: PathBuf,
-
-        /// Minimum token count to consider as duplicate clone
-        #[arg(short, long, default_value_t = cddm_core::DEFAULT_MIN_TOKENS)]
-        min_tokens: usize,
-
-        /// Output file path to write patch to (default: stdout)
-        #[arg(short, long)]
-        output: Option<PathBuf>,
-
-        /// Generate formatted markdown prompt for AI refactoring agents
-        #[arg(long, default_value_t = false)]
-        prompt: bool,
-
-        /// Generate Tree-sitter AST-native code transformations
-        #[arg(long, default_value_t = false)]
-        ast: bool,
-
-        /// Custom name for extracted function
-        #[arg(long)]
-        fn_name: Option<String>,
-
-        /// Target module path for extracted helper
-        #[arg(long)]
-        target_module: Option<String>,
-
-        /// Apply refactoring to dedicated Git branch
-        #[arg(long)]
-        apply_branch: Option<String>,
-
-        /// Verify refactoring against test suite
-        #[arg(long, default_value_t = false)]
-        verify: bool,
-
-        /// Custom test command for verification
-        #[arg(long)]
-        test_cmd: Option<String>,
-
-        /// Specific language(s) to scan
-        #[arg(short, long)]
-        languages: Vec<String>,
-
-        /// Glob patterns to ignore
-        #[arg(short, long)]
-        ignore: Vec<String>,
-    },
+    Refactor(RefactorArgs),
 
     /// Extract duplicate code into a standalone shared crate or module
     Extract(ExtractArgs),
 
     /// Launch interactive WebUI dashboard in browser
-    Serve {
-        /// Port to bind the WebUI HTTP and WebSocket server to
-        #[arg(short, long, default_value_t = 3000)]
-        port: u16,
-
-        /// Automatically open WebUI in default web browser
-        #[arg(short, long, default_value_t = false)]
-        open: bool,
-    },
+    Serve(ServeArgs),
 
     /// Watch directory and trigger continuous real-time clone analysis on file save
-    Watch {
-        /// Directory path to watch (default: current directory)
-        #[arg(default_value = cddm_core::DEFAULT_DIRECTORY)]
-        directory: PathBuf,
-
-        /// Minimum token count to consider as duplicate clone
-        #[arg(short, long, default_value_t = cddm_core::DEFAULT_MIN_TOKENS)]
-        min_tokens: usize,
-
-        /// Specific language(s) to scan
-        #[arg(short, long)]
-        languages: Vec<String>,
-
-        /// Glob patterns to ignore
-        #[arg(short, long)]
-        ignore: Vec<String>,
-
-        /// Enable in-process git blame author & line age annotation
-        #[arg(long, default_value_t = false)]
-        git_blame: bool,
-
-        /// Custom path for persistent redb cache database (default: .cddm/cache.db)
-        #[arg(long)]
-        cache_dir: Option<PathBuf>,
-
-        /// Bypass persistent disk cache and force full re-scan
-        #[arg(long, default_value_t = false)]
-        no_cache: bool,
-
-        /// Debounce delay in milliseconds before scanning on file changes
-        #[arg(short, long, default_value_t = 500)]
-        debounce_ms: u64,
-
-        /// Exit with non-zero status code if duplication percentage exceeds threshold (0-100)
-        #[arg(long)]
-        fail_threshold: Option<f64>,
-
-        /// Optionally start embedded WebUI Studio server on specified port (default: 3000)
-        #[arg(short = 's', long, num_args = 0..=1, default_missing_value = "3000")]
-        serve: Option<u16>,
-
-        /// Automatically open WebUI in browser when --serve is enabled
-        #[arg(short, long, default_value_t = false)]
-        open: bool,
-
-        /// Output report format (console, json, markdown, ndjson)
-        #[arg(short, long, value_enum, default_value_t = OutputFormat::Console)]
-        format: OutputFormat,
-
-        /// Detect cross-language semantic clones across different programming languages
-        #[arg(long, default_value_t = false)]
-        cross_language: bool,
-    },
+    Watch(WatchArgs),
 
     /// Run Language Server Protocol (LSP) server for live IDE diagnostic squiggles
-    Lsp {
-        /// Directory path to serve LSP for (default: current directory)
-        #[arg(default_value = cddm_core::DEFAULT_DIRECTORY)]
-        directory: PathBuf,
-
-        /// Minimum token count for clone detection
-        #[arg(short, long, default_value_t = cddm_core::DEFAULT_MIN_TOKENS)]
-        min_tokens: usize,
-    },
+    Lsp(LspArgs),
 
     /// Analyze historical duplication trends across Git commit history
-    Trend {
-        /// Directory path of Git repository (default: current directory)
-        #[arg(default_value = cddm_core::DEFAULT_DIRECTORY)]
-        directory: PathBuf,
-
-        /// Maximum number of historical commit snapshots to sample (default: 10)
-        #[arg(short = 's', long, default_value_t = 10)]
-        max_samples: usize,
-
-        /// Minimum token count to consider as duplicate clone
-        #[arg(short, long, default_value_t = cddm_core::DEFAULT_MIN_TOKENS)]
-        min_tokens: usize,
-
-        /// Output report format (console, json, markdown)
-        #[arg(short, long, value_enum, default_value_t = OutputFormat::Console)]
-        format: OutputFormat,
-    },
+    Trend(TrendArgs),
 
     /// Manage local Git hooks (pre-commit / pre-push) for automated duplication gate enforcement
     Hook {
@@ -395,50 +74,10 @@ pub enum Commands {
     },
 
     /// Generate turnkey CI/CD workflow configurations (GitHub Actions, GitLab CI, Azure Pipelines)
-    Init {
-        /// Target CI/CD platform: github, gitlab, or azure
-        #[arg(value_enum, default_value_t = PlatformChoice::Github)]
-        platform: PlatformChoice,
-
-        /// Duplication percentage threshold to fail on (default: 15.0)
-        #[arg(long, default_value_t = 15.0)]
-        fail_threshold: f64,
-
-        /// Minimum token count for clone detection (default: 50)
-        #[arg(short, long, default_value_t = cddm_core::DEFAULT_MIN_TOKENS)]
-        min_tokens: usize,
-
-        /// Output file path (defaults to standard platform config file)
-        #[arg(short, long)]
-        output: Option<PathBuf>,
-
-        /// Write directly to disk (default: print to stdout unless --write or output specified)
-        #[arg(short = 'w', long, default_value_t = false)]
-        write: bool,
-    },
+    Init(InitArgs),
 
     /// Generate formatted Markdown summary comment for Pull Requests / Merge Requests
-    Comment {
-        /// Directory path to scan (default: current directory)
-        #[arg(default_value = cddm_core::DEFAULT_DIRECTORY)]
-        directory: PathBuf,
-
-        /// Minimum token count to consider as duplicate clone
-        #[arg(short, long, default_value_t = cddm_core::DEFAULT_MIN_TOKENS)]
-        min_tokens: usize,
-
-        /// Duplication percentage threshold to fail on (default: 15.0)
-        #[arg(long, default_value_t = 15.0)]
-        fail_threshold: f64,
-
-        /// Target CI/CD platform format: github, gitlab, or azure
-        #[arg(short, long, value_enum, default_value_t = PlatformChoice::Github)]
-        platform: PlatformChoice,
-
-        /// Output file path to write Markdown comment to (default: stdout)
-        #[arg(short, long)]
-        output: Option<PathBuf>,
-    },
+    Comment(CommentArgs),
 
     /// Autonomous AI Code Surgeon refactoring with closed-loop test healing
     Heal(HealArgs),
@@ -451,41 +90,10 @@ pub enum Commands {
     },
 
     /// Discover and scan monorepos with multi-workspace packages
-    Monorepo {
-        /// Root directory of monorepo (default: current directory)
-        #[arg(default_value = cddm_core::DEFAULT_DIRECTORY)]
-        directory: PathBuf,
-
-        /// Minimum token count to consider as duplicate clone
-        #[arg(short, long, default_value_t = cddm_core::DEFAULT_MIN_TOKENS)]
-        min_tokens: usize,
-    },
+    Monorepo(MonorepoArgs),
 
     /// Launch interactive Terminal UI (TUI) Studio dashboard
-    Tui {
-        /// Directory path to scan (default: current directory)
-        directory: Option<PathBuf>,
-
-        /// Minimum token count to consider as duplicate clone
-        #[arg(short, long, default_value_t = cddm_core::DEFAULT_MIN_TOKENS)]
-        min_tokens: usize,
-
-        /// Enable live watch mode for real-time rescanning on file changes
-        #[arg(short, long, default_value_t = false)]
-        watch: bool,
-
-        /// Exit with non-zero status code if duplication percentage exceeds threshold (0-100)
-        #[arg(long)]
-        fail_threshold: Option<f64>,
-
-        /// Specific language(s) to scan
-        #[arg(short, long)]
-        languages: Vec<String>,
-
-        /// Glob patterns to ignore
-        #[arg(short, long)]
-        ignore: Vec<String>,
-    },
+    Tui(TuiArgs),
 
     /// Detect reimplemented ecosystem library algorithms and suggest standard packages
     Overlap(OverlapArgs),

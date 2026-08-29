@@ -68,11 +68,7 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({
               title={UI_ARIA_LABELS.COPY_SNIPPET}
               aria-label={UI_ARIA_LABELS.COPY_SNIPPET}
             >
-              {copied ? (
-                <Check className={`w-3.5 h-3.5 ${styles.checkIcon || ""}`} />
-              ) : (
-                <Copy className="w-3.5 h-3.5" />
-              )}
+              {copied ? <Check size={14} className={styles.checkIcon} /> : <Copy size={14} />}
             </button>
           )}
         </div>

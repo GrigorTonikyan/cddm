@@ -71,32 +71,29 @@ export const CoverageCorrelationModal: React.FC<CoverageCorrelationModalProps> =
       <div className="flex flex-col h-full bg-[#1e1e2e] text-slate-200 text-sm">
         {/* Header Stats Bar */}
         <div className="grid grid-cols-5 gap-2 p-3 bg-[#181825] border-b border-slate-700/60 text-xs">
-          <div className="flex flex-col items-center justify-center p-2 rounded bg-slate-800/60 border border-slate-700/40">
-            <span className="text-slate-400">Total Clones</span>
-            <span className="text-lg font-bold text-cyan-400">
-              {summary?.total_clone_pairs ?? 0}
-            </span>
-          </div>
-          <div className="flex flex-col items-center justify-center p-2 rounded bg-slate-800/60 border border-slate-700/40">
-            <span className="text-slate-400">Covered Rate</span>
-            <span className="text-lg font-bold text-emerald-400">
-              {summary?.overall_covered_clones_pct?.toFixed(1) ?? "0.0"}%
-            </span>
-          </div>
-          <div className="flex flex-col items-center justify-center p-2 rounded bg-slate-800/60 border border-slate-700/40">
-            <span className="text-slate-400">Dead Code Clones</span>
-            <span className="text-lg font-bold text-amber-400">
-              {summary?.dead_code_clones ?? 0}
-            </span>
-          </div>
-          <div className="flex flex-col items-center justify-center p-2 rounded bg-slate-800/60 border border-slate-700/40">
-            <span className="text-slate-400">Test Gaps</span>
-            <span className="text-lg font-bold text-rose-400">{summary?.test_gap_clones ?? 0}</span>
-          </div>
-          <div className="flex flex-col items-center justify-center p-2 rounded bg-slate-800/60 border border-slate-700/40">
-            <span className="text-slate-400">Hot Path Clones</span>
-            <span className="text-lg font-bold text-red-500">{summary?.hot_path_clones ?? 0}</span>
-          </div>
+          {[
+            { label: "Total Clones", val: summary?.total_clone_pairs ?? 0, col: "text-cyan-400" },
+            {
+              label: "Covered Rate",
+              val: `${summary?.overall_covered_clones_pct?.toFixed(1) ?? "0.0"}%`,
+              col: "text-emerald-400",
+            },
+            {
+              label: "Dead Code Clones",
+              val: summary?.dead_code_clones ?? 0,
+              col: "text-amber-400",
+            },
+            { label: "Test Gaps", val: summary?.test_gap_clones ?? 0, col: "text-rose-400" },
+            { label: "Hot Path Clones", val: summary?.hot_path_clones ?? 0, col: "text-red-500" },
+          ].map((stat) => (
+            <div
+              key={stat.label}
+              className="flex flex-col items-center justify-center p-2 rounded bg-slate-800/60 border border-slate-700/40"
+            >
+              <span className="text-slate-400">{stat.label}</span>
+              <span className={`text-lg font-bold ${stat.col}`}>{stat.val}</span>
+            </div>
+          ))}
         </div>
 
         {/* Filter Navigation Bar */}

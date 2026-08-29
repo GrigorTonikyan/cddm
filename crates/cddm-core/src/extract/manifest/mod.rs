@@ -97,7 +97,7 @@ pub fn update_workspace_manifests(
                 }
             }
         }
-        "java" => {
+        "java" | "kt" | "kts" | "scala" => {
             for caller in caller_files {
                 if let Some(caller_update) =
                     jvm_dotnet::update_caller_pom_xml(workspace_root, caller, new_crate_name)
@@ -110,7 +110,7 @@ pub fn update_workspace_manifests(
                 }
             }
         }
-        "cs" => {
+        "cs" | "fs" => {
             for caller in caller_files {
                 if let Some(caller_update) = jvm_dotnet::update_caller_csproj(
                     workspace_root,

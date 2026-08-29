@@ -27,33 +27,56 @@ fn parse_format_str(fmt: Option<&str>) -> CoverageFormat {
     }
 }
 
-/// Handler for POST /api/coverage/ingest: parses coverage tracefile and returns stats.
-pub async fn coverage_ingest_handler(
-    Json(payload): Json<CoverageIngestRequest>,
-) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-    let format = parse_format_str(payload.format.as_deref());
-
-    let report: CoverageReport = if let Some(content) = payload.report_content {
-        parse_coverage_data(&content, format).map_err(|err| {
+fn load_or_parse_coverage(
+    content: Option<String>,
+    path_str: Option<String>,
+    format_str: Option<&str>,
+    fallback_default_lcov: bool,
+) -> Result<CoverageReport, (StatusCode, Json<serde_json::Value>)> {
+    let format = parse_format_str(format_str);
+    if let Some(c) = content {
+        parse_coverage_data(&c, format).map_err(|err| {
             (
                 StatusCode::BAD_REQUEST,
                 Json(json!({ "error": format!("Failed to parse coverage content: {err}") })),
             )
-        })?
-    } else if let Some(path_str) = payload.report_path {
-        let path = Path::new(&path_str);
-        load_coverage_report(path, format).map_err(|err| {
+        })
+    } else if let Some(p) = path_str {
+        load_coverage_report(Path::new(&p), format).map_err(|err| {
             (
                 StatusCode::BAD_REQUEST,
                 Json(json!({ "error": format!("Failed to read coverage report file: {err}") })),
             )
-        })?
+        })
+    } else if fallback_default_lcov {
+        if Path::new("lcov.info").exists() {
+            load_coverage_report(Path::new("lcov.info"), CoverageFormat::Auto).map_err(|err| {
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(json!({ "error": format!("Failed to load default lcov.info: {err}") })),
+                )
+            })
+        } else {
+            Ok(CoverageReport::default())
+        }
     } else {
-        return Err((
+        Err((
             StatusCode::BAD_REQUEST,
             Json(json!({ "error": "Either report_content or report_path must be provided" })),
-        ));
-    };
+        ))
+    }
+}
+
+/// Handler for POST /api/coverage/ingest: parses coverage tracefile and returns stats.
+pub async fn coverage_ingest_handler(
+    Json(payload): Json<CoverageIngestRequest>,
+) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
+    let report = load_or_parse_coverage(
+        payload.report_content,
+        payload.report_path,
+        payload.format.as_deref(),
+        false,
+    )?;
 
     Ok((
         StatusCode::OK,
@@ -71,36 +94,12 @@ pub async fn coverage_correlate_handler(
     State(state): State<AppState>,
     Json(payload): Json<CoverageCorrelateRequest>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-    let format = parse_format_str(payload.format.as_deref());
-
-    let coverage_report: CoverageReport = if let Some(content) = payload.report_content {
-        parse_coverage_data(&content, format).map_err(|err| {
-            (
-                StatusCode::BAD_REQUEST,
-                Json(json!({ "error": format!("Failed to parse coverage content: {err}") })),
-            )
-        })?
-    } else if let Some(path_str) = payload.report_path {
-        let path = Path::new(&path_str);
-        load_coverage_report(path, format).map_err(|err| {
-            (
-                StatusCode::BAD_REQUEST,
-                Json(json!({ "error": format!("Failed to load coverage report: {err}") })),
-            )
-        })?
-    } else if Path::new("lcov.info").exists() {
-        load_coverage_report(Path::new("lcov.info"), CoverageFormat::Auto).map_err(|err| {
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(json!({ "error": format!("Failed to load default lcov.info: {err}") })),
-            )
-        })?
-    } else {
-        return Err((
-            StatusCode::BAD_REQUEST,
-            Json(json!({ "error": "No coverage report provided and lcov.info not found" })),
-        ));
-    };
+    let coverage_report = load_or_parse_coverage(
+        payload.report_content,
+        payload.report_path,
+        payload.format.as_deref(),
+        true,
+    )?;
 
     // Get latest scan result or execute fresh scan
     let scan_result = {

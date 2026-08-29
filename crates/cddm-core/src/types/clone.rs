@@ -15,6 +15,24 @@ pub enum CloneType {
     Semantic,
 }
 
+impl CloneType {
+    /// Returns static string representation of clone type.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            CloneType::Exact => "Exact",
+            CloneType::Renamed => "Renamed",
+            CloneType::NearMiss => "NearMiss",
+            CloneType::Semantic => "Semantic",
+        }
+    }
+}
+
+impl std::fmt::Display for CloneType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.as_str())
+    }
+}
+
 /// Represents a single occurrence/location of duplicate code in a file.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct CloneLocation {

@@ -16,3 +16,15 @@ pub use refactor::{
 pub use scan::{print_console_report, print_markdown_report, print_sarif_report};
 pub use semantic::format_semantic_report;
 pub use trend::{print_trend_console_report, print_trend_markdown_report};
+
+pub fn print_structured_json_output<T: serde::Serialize>(
+    payload: &T,
+    is_ndjson: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
+    if is_ndjson {
+        println!("{}", serde_json::to_string(payload)?);
+    } else {
+        println!("{}", serde_json::to_string_pretty(payload)?);
+    }
+    Ok(())
+}

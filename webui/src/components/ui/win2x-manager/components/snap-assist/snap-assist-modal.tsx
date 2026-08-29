@@ -3,6 +3,7 @@ import { SnapAssistSession, WindowRegistration } from "../../core/types";
 import { computeSnapLayoutSlotRect, getSnapLayoutDefinitions } from "../../core/geometry-engine";
 import { WIN2X_DATA_ATTRS } from "../../constants/win2x-constants";
 import { X, LayoutTemplate } from "lucide-react";
+import { WindowMetaDisplay } from "../common/window-meta";
 import styles from "./snap-assist-modal.module.css";
 
 export interface SnapAssistModalProps {
@@ -49,7 +50,7 @@ export const SnapAssistModal: React.FC<SnapAssistModalProps> = ({
     >
       <div className={styles.header}>
         <div className={styles.titleArea}>
-          <LayoutTemplate className="w-4 h-4 text-indigo-400 mr-2" />
+          <LayoutTemplate size={16} className={styles.headerIcon} />
           <span className={styles.title}>Snap Assist: Select window for {slotLabel}</span>
         </div>
         <button
@@ -59,7 +60,7 @@ export const SnapAssistModal: React.FC<SnapAssistModalProps> = ({
           aria-label="Dismiss Snap Assist"
           title="Dismiss"
         >
-          <X className="w-4 h-4" />
+          <X size={16} />
         </button>
       </div>
 
@@ -71,12 +72,14 @@ export const SnapAssistModal: React.FC<SnapAssistModalProps> = ({
             className={styles.candidateCard}
             onClick={() => onSelectWindow(win.id)}
           >
-            <div className={styles.cardIconWrapper}>{win.icon}</div>
-            <div className={styles.cardInfo}>
-              <span className={styles.cardTitle}>{win.title}</span>
-              {win.subtitle && <span className={styles.cardSubtitle}>{win.subtitle}</span>}
-            </div>
-            {win.badge && <span className={styles.cardBadge}>{win.badge}</span>}
+            <WindowMetaDisplay
+              win={win}
+              iconWrapperClass={styles.cardIconWrapper}
+              infoClass={styles.cardInfo}
+              titleClass={styles.cardTitle}
+              subtitleClass={styles.cardSubtitle}
+              badgeClass={styles.cardBadge}
+            />
           </button>
         ))}
       </div>

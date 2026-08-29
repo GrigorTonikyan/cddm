@@ -15,7 +15,7 @@ describe("HealthAuditModal Component", () => {
     const onClose = vi.fn();
     const mockResult = createMockScanResult({
       dry_health_score: 94.5,
-      duplication_percentage: 5.5,
+      duplication_percentage: 3.5,
     });
 
     renderWithWin2x(<HealthAuditModal isOpen={true} onClose={onClose} results={mockResult} />);
@@ -24,7 +24,7 @@ describe("HealthAuditModal Component", () => {
     expect(screen.getByText("Score: 94.5/100")).toBeDefined();
     expect(screen.getByText("94.5")).toBeDefined();
     expect(screen.getByText("[PASS] Threshold")).toBeDefined();
-    expect(screen.getByText(/5\.50% Duplication/i)).toBeDefined();
+    expect(screen.getByText(/3\.50% Duplication/i)).toBeDefined();
 
     // Test close button
     const closeBtn = screen.getByText("Close");

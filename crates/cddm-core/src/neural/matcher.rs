@@ -4,6 +4,7 @@ use rayon::prelude::*;
 use std::fs;
 use std::path::Path;
 
+use super::constants::*;
 use super::embedder::NeuralCodeEmbedder;
 use super::types::{
     CodeEmbeddingVector, EquivalenceConfidence, NeuralClonePair, NeuralEmbeddingConfig,
@@ -49,9 +50,9 @@ impl NeuralMatcher {
                 let similarity =
                     NeuralCodeEmbedder::cosine_similarity(&vec_a.vector, &vec_b.vector);
                 if similarity >= config.similarity_threshold {
-                    let confidence = if similarity >= 0.95 {
+                    let confidence = if similarity >= HIGH_CONFIDENCE_THRESHOLD {
                         EquivalenceConfidence::High
-                    } else if similarity >= 0.88 {
+                    } else if similarity >= MEDIUM_CONFIDENCE_THRESHOLD {
                         EquivalenceConfidence::Medium
                     } else {
                         EquivalenceConfidence::Low
@@ -151,12 +152,12 @@ impl NeuralMatcher {
 
                     // Extract chunk blocks
                     let lines: Vec<&str> = content.lines().collect();
-                    let chunk_size = 20;
+                    let chunk_size = DEFAULT_CHUNK_SIZE;
                     let mut start = 1;
                     while start <= lines.len() {
                         let end = (start + chunk_size).min(lines.len());
                         let block_code = lines[start - 1..end].join("\n");
-                        if block_code.trim().len() > 30 {
+                        if block_code.trim().len() > MIN_CODE_BLOCK_LENGTH {
                             let vec = NeuralCodeEmbedder::embed_code_block(
                                 &block_code,
                                 &rel_path,

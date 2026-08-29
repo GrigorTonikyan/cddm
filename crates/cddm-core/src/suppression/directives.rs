@@ -6,25 +6,32 @@ use std::path::Path;
 /// Determines if a file is a test file based on conventions.
 pub fn is_test_path(path: &Path) -> bool {
     let p = path.to_string_lossy().replace('\\', "/").to_lowercase();
-    p.contains("/tests/")
-        || p.contains("/test/")
-        || p.contains("/__tests__/")
-        || p.contains(".test.")
-        || p.contains(".spec.")
-        || p.contains("_test.")
-        || p.contains("_spec.")
-        || p.ends_with("test.rs")
+    let norm = p.trim_start_matches("./");
+    norm.starts_with("tests/")
+        || norm.starts_with("test/")
+        || norm.contains("/tests/")
+        || norm.contains("/test/")
+        || norm.contains("/__tests__/")
+        || norm.contains(".test.")
+        || norm.contains(".spec.")
+        || norm.contains("_test.")
+        || norm.contains("_spec.")
+        || norm.ends_with("test.rs")
 }
 
 /// Determines if a file is a mock or test fixture.
 pub fn is_mock_path(path: &Path) -> bool {
     let p = path.to_string_lossy().replace('\\', "/").to_lowercase();
-    p.contains("/mocks/")
-        || p.contains("/mock/")
-        || p.contains("/__mocks__/")
-        || p.contains("/fixtures/")
-        || p.contains(".mock.")
-        || p.contains("_mock.")
+    let norm = p.trim_start_matches("./");
+    norm.starts_with("mocks/")
+        || norm.starts_with("mock/")
+        || norm.starts_with("fixtures/")
+        || norm.contains("/mocks/")
+        || norm.contains("/mock/")
+        || norm.contains("/__mocks__/")
+        || norm.contains("/fixtures/")
+        || norm.contains(".mock.")
+        || norm.contains("_mock.")
 }
 
 /// Inspects the top lines of a file to detect common automated code generation headers.
@@ -86,6 +93,14 @@ pub fn parse_inline_directives(file_path: &str, content: &str) -> Vec<Suppressio
                 end_line: line_num + 1,
                 directive_type: "ignore_line".to_string(),
                 reason: None,
+            });
+        } else if trimmed.starts_with("#[cfg(test)]") {
+            directives.push(SuppressionDirective {
+                file_path: file_path.to_string(),
+                start_line: line_num,
+                end_line: content.lines().count(),
+                directive_type: "ignore_tests".to_string(),
+                reason: Some("#[cfg(test)]".to_string()),
             });
         }
     }

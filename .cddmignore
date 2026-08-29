@@ -9,6 +9,17 @@ build/**
 .cddm/**
 .vite-hooks/**
 packaging/**
+npm/**
+editors/**
+test-results/**
+
+# Tests, test fixtures, and mock suites:
+tests/**
+scripts/tests/**
+webui/src/**/*.test.ts
+webui/src/**/*.test.tsx
+**/*.test.*
+**/*.spec.*
 
 # Generated code files:
 *.generated.*
@@ -16,9 +27,14 @@ packaging/**
 *_pb2.py
 *.g.dart
 
-# Custom min-token thresholds for specific directories:
-# [threshold] tests/** min_tokens=100
-# [threshold] fixtures/** min_tokens=80
+# Declarative stylesheets & structured data configs (pure declarative assets)
+[type-filter] **/*.css ignore=Exact,Renamed,NearMiss,Semantic
+[type-filter] **/*.json ignore=Exact,Renamed,NearMiss,Semantic
+[type-filter] **/*.toml ignore=Exact,Renamed,NearMiss,Semantic
 
-# Exclude specific clone types from detection:
-# [type-filter] src/mocks/** ignore=Exact,Renamed
+# Domain data models, protocol schemas, and UI layout scaffold thresholds
+[threshold] **/types/** min_tokens=150
+[threshold] **/types.rs min_tokens=150
+[threshold] crates/** min_tokens=100
+[threshold] webui/src/** min_tokens=100
+[threshold] scripts/** min_tokens=100

@@ -55,7 +55,7 @@ export const TabBar: React.FC<TabBarProps> = ({
           onClick={() => scrollBy(-150)}
           aria-label="Scroll left"
         >
-          <ChevronLeft className="w-4 h-4" />
+          <ChevronLeft size={16} />
         </button>
       )}
 
@@ -99,7 +99,7 @@ export const TabBar: React.FC<TabBarProps> = ({
                     }
                   }}
                 >
-                  <X className="w-3 h-3" />
+                  <X size={12} />
                 </div>
               )}
             </button>
@@ -114,13 +114,13 @@ export const TabBar: React.FC<TabBarProps> = ({
           onClick={() => scrollBy(150)}
           aria-label="Scroll right"
         >
-          <ChevronRight className="w-4 h-4" />
+          <ChevronRight size={16} />
         </button>
       )}
 
       {onTabAdd && (
         <button type="button" className={styles.addBtn} onClick={onTabAdd} aria-label="Add new tab">
-          <Plus className="w-4 h-4" />
+          <Plus size={16} />
         </button>
       )}
     </div>

@@ -24,22 +24,7 @@ pub async fn run_extract_command(args: ExtractArgs) -> Result<(), Box<dyn std::e
     let scan_config = ScanConfig {
         directory: args.directory.to_string_lossy().to_string(),
         min_tokens: args.min_tokens,
-        languages: vec![],
-        ignore_patterns: vec![],
-        detect_type2: true,
-        detect_type3: true,
-        scan_self: false,
-        enable_git_blame: false,
-        cache_dir: None,
-        enable_cache: false,
-        cddmignore_path: None,
-        ignore_tests: false,
-        ignore_mocks: false,
-        ignore_generated: true,
-        rules_path: None,
-        enforce_policies: false,
-        cross_language: false,
-        threads: None,
+        ..Default::default()
     };
 
     let (progress_tx, _progress_rx) = tokio::sync::mpsc::channel(100);

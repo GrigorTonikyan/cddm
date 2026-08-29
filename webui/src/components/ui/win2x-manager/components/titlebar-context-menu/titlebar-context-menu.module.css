@@ -55,6 +55,12 @@
   margin: 4px 2px;
 }
 
+.itemIcon {
+  margin-right: 0.625rem;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
 .closeItem {
   color: #fb7185;
 }

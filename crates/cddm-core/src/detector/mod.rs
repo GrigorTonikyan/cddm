@@ -3,7 +3,10 @@
 pub mod discovery;
 pub mod indexer;
 pub mod runner;
+pub mod scoring;
 pub mod types;
+
+pub use scoring::compute_scan_scoring;
 
 pub use discovery::{discover_candidate_files, init_policy_engine, init_suppression_engine};
 pub use indexer::index_and_match_clone_pairs;

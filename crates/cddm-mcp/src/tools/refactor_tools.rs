@@ -5,9 +5,12 @@ use crate::protocol::{
     JsonRpcResponse, make_error_response, make_text_response, mcp_tools, rpc_errors,
 };
 use cddm_core::{
-    AiRefactorPromptRequest, CloneLocation, CloneType, analyze_clone_refactoring,
-    analyze_cluster_refactoring, apply_cluster_refactor_branch, generate_ai_refactor_prompt,
-    generate_ast_cluster_refactor, verify_refactor_test_suite,
+    AiRefactorPromptRequest, CloneLocation, CloneType, DEFAULT_EXTRACTED_FUNCTION_NAME,
+    DEFAULT_HEAL_ITERATIONS, DEFAULT_HEAL_LINES_SAVED_MULTIPLIER, DEFAULT_HEAL_SIMILARITY,
+    DEFAULT_HEAL_TOKEN_COUNT, DEFAULT_PROVIDER_TIMEOUT_SECS, DEFAULT_TARGET_MODULE,
+    DEFAULT_TEMPERATURE, analyze_clone_refactoring, analyze_cluster_refactoring,
+    apply_cluster_refactor_branch, generate_ai_refactor_prompt, generate_ast_cluster_refactor,
+    verify_refactor_test_suite,
 };
 use std::path::Path;
 
@@ -154,11 +157,11 @@ pub fn handle_generate_ai_prompt(
         let fn_name = args_val
             .get("function_name")
             .and_then(|v| v.as_str())
-            .unwrap_or("extracted_helper");
+            .unwrap_or(DEFAULT_EXTRACTED_FUNCTION_NAME);
         let target_mod = args_val
             .get("target_module")
             .and_then(|v| v.as_str())
-            .unwrap_or("src/utils.rs");
+            .unwrap_or(DEFAULT_TARGET_MODULE);
         let inv_body = args_val
             .get("invariant_body")
             .and_then(|v| v.as_str())
@@ -182,9 +185,9 @@ pub fn handle_generate_ai_prompt(
 
         let prompt_req = AiRefactorPromptRequest {
             clone_type: CloneType::Renamed,
-            similarity: 0.90,
-            token_count: 100,
-            lines_saved_est: occurrences.len() * 10,
+            similarity: DEFAULT_HEAL_SIMILARITY,
+            token_count: DEFAULT_HEAL_TOKEN_COUNT,
+            lines_saved_est: occurrences.len() * DEFAULT_HEAL_LINES_SAVED_MULTIPLIER,
             function_name: fn_name.to_string(),
             target_module: target_mod.to_string(),
             occurrences,
@@ -313,7 +316,7 @@ pub async fn handle_heal_refactor(
         let max_iters = args_val
             .get("max_iterations")
             .and_then(|v| v.as_u64())
-            .unwrap_or(3) as usize;
+            .unwrap_or(DEFAULT_HEAL_ITERATIONS as u64) as usize;
         let verify = args_val
             .get("verify")
             .and_then(|v| v.as_bool())
@@ -343,8 +346,8 @@ pub async fn handle_heal_refactor(
                 model,
                 api_key,
                 endpoint,
-                temperature: Some(0.2),
-                timeout_secs: Some(60),
+                temperature: Some(DEFAULT_TEMPERATURE),
+                timeout_secs: Some(DEFAULT_PROVIDER_TIMEOUT_SECS),
             },
             max_iterations: max_iters,
             apply_branch: branch,

@@ -152,21 +152,29 @@ impl SuppressionEngine {
             return true;
         }
 
-        if let Ok(cur) = std::env::current_dir()
-            && let Ok(rel) = path.strip_prefix(&cur)
-        {
-            let rel_str = rel.to_string_lossy().replace('\\', "/");
-            let clean_rel = rel_str.trim_start_matches("./");
-            if self
-                .gitignore
-                .matched(Path::new(clean_rel), false)
-                .is_ignore()
-                || self
+        if let Ok(cur) = std::env::current_dir() {
+            let cur_norm = cur.to_string_lossy().replace('\\', "/");
+            let cur_norm_lower = cur_norm.to_lowercase();
+            let norm_lower = norm_str.to_lowercase();
+            if norm_lower.starts_with(&cur_norm_lower) {
+                let rel = norm_str[cur_norm.len()..].trim_start_matches('/');
+                if self.gitignore.matched(Path::new(rel), false).is_ignore() {
+                    return true;
+                }
+            } else if let Ok(rel) = path.strip_prefix(&cur) {
+                let rel_str = rel.to_string_lossy().replace('\\', "/");
+                let clean_rel = rel_str.trim_start_matches("./");
+                if self
                     .gitignore
-                    .matched(Path::new(&rel_str), false)
+                    .matched(Path::new(clean_rel), false)
                     .is_ignore()
-            {
-                return true;
+                    || self
+                        .gitignore
+                        .matched(Path::new(&rel_str), false)
+                        .is_ignore()
+                {
+                    return true;
+                }
             }
         }
 
@@ -242,12 +250,18 @@ impl SuppressionEngine {
         false
     }
 
+    fn matches_gitignore_pattern(gi: &ignore::gitignore::Gitignore, path: &Path) -> bool {
+        let norm_str = path.to_string_lossy().replace('\\', "/");
+        let clean_str = norm_str.trim_start_matches("./");
+        gi.matched(path, false).is_ignore()
+            || gi.matched(Path::new(&norm_str), false).is_ignore()
+            || gi.matched(Path::new(clean_str), false).is_ignore()
+    }
+
     /// Gets the effective minimum token threshold for a file path, taking overrides into account.
     pub fn get_effective_min_tokens(&self, path: &Path, default_min: usize) -> usize {
-        let norm_str = path.to_string_lossy().replace('\\', "/");
-        let norm_path = Path::new(&norm_str);
         for (gi, min) in &self.threshold_overrides {
-            if gi.matched(path, false).is_ignore() || gi.matched(norm_path, false).is_ignore() {
+            if Self::matches_gitignore_pattern(gi, path) {
                 return *min;
             }
         }
@@ -256,12 +270,8 @@ impl SuppressionEngine {
 
     /// Checks if a clone type is excluded for a given file path.
     pub fn is_clone_type_ignored(&self, path: &Path, clone_type: &CloneType) -> bool {
-        let norm_str = path.to_string_lossy().replace('\\', "/");
-        let norm_path = Path::new(&norm_str);
         for (gi, types) in &self.type_filters {
-            if (gi.matched(path, false).is_ignore() || gi.matched(norm_path, false).is_ignore())
-                && types.contains(clone_type)
-            {
+            if Self::matches_gitignore_pattern(gi, path) && types.contains(clone_type) {
                 return true;
             }
         }

@@ -1,4 +1,4 @@
-import { API_ROUTES } from "../../constants/cddm-constants";
+import { API_ROUTES, DEFAULT_FAIL_THRESHOLD } from "../../constants/cddm-constants";
 import type { GetStoreState, SetStoreState } from "./scan-slice";
 
 export const createTimelineSlice = (set: SetStoreState, get: GetStoreState) => ({
@@ -42,7 +42,11 @@ export const createTimelineSlice = (set: SetStoreState, get: GetStoreState) => (
     }
   },
 
-  installHook: async (hookType: string, failThreshold: number = 15.0, minTokens?: number) => {
+  installHook: async (
+    hookType: string,
+    failThreshold: number = DEFAULT_FAIL_THRESHOLD,
+    minTokens?: number,
+  ) => {
     const { config } = get();
     const tokens = minTokens ?? config.min_tokens;
     const res = await fetch(API_ROUTES.HOOKS_INSTALL, {

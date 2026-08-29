@@ -78,13 +78,9 @@ export const TitleBar: React.FC<TitleBarProps> = ({
       <div className={styles.infoArea}>
         {icon && <div className={styles.iconWrapper}>{icon}</div>}
         <div className={styles.textContainer}>
-          <div className="flex items-center gap-2">
+          <div className={styles.titleRow}>
             <h3 className={styles.title}>{title}</h3>
-            {badge && (
-              <span className="text-[0.65rem] font-mono font-bold px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                {badge}
-              </span>
-            )}
+            {badge && <span className={styles.badge}>{badge}</span>}
           </div>
           {subtitle && <p className={styles.subtitle}>{subtitle}</p>}
         </div>

@@ -6,6 +6,8 @@ import {
   WIN2X_DATA_ATTRS,
   WIN2X_TIMINGS,
 } from "../../constants/win2x-constants";
+import { IconButton } from "../../../atoms/icon-button/icon-button";
+import { BUTTON_SIZES, BUTTON_VARIANTS } from "../../../constants/ui-constants";
 import { SnapLayoutsMenu } from "../snap-layouts-menu/snap-layouts-menu";
 import styles from "./window-controls.module.css";
 
@@ -36,7 +38,6 @@ export const WindowControls: React.FC<WindowControlsProps> = ({
   const [showSnapMenu, setShowSnapMenu] = useState(false);
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const maxBtnRef = useRef<HTMLButtonElement | null>(null);
 
   const handleMouseEnter = () => {
     if (!enableSnapLayouts) return;
@@ -82,24 +83,24 @@ export const WindowControls: React.FC<WindowControlsProps> = ({
       onMouseLeave={() => setShowSnapMenu(false)}
     >
       {showMinimize && onMinimize && (
-        <button
-          type="button"
+        <IconButton
+          icon={<Minus size={14} />}
+          title={WIN2X_ARIA_LABELS.MINIMIZE}
+          size={BUTTON_SIZES.MD}
           onClick={(e) => {
             e.stopPropagation();
             onMinimize();
           }}
-          aria-label={WIN2X_ARIA_LABELS.MINIMIZE}
-          title={WIN2X_ARIA_LABELS.MINIMIZE}
-          className={styles.button || ""}
-        >
-          <Minus className="w-3.5 h-3.5" />
-        </button>
+        />
       )}
 
-      <div className="relative inline-flex items-center">
-        <button
-          ref={maxBtnRef}
-          type="button"
+      <div className={styles.maximizeWrapper}>
+        <IconButton
+          icon={
+            isMaximized ? <Copy size={12} className={styles.restoreIcon} /> : <Square size={12} />
+          }
+          title={isMaximized ? WIN2X_ARIA_LABELS.RESTORE : WIN2X_ARIA_LABELS.MAXIMIZE}
+          size={BUTTON_SIZES.MD}
           onClick={(e) => {
             e.stopPropagation();
             setShowSnapMenu(false);
@@ -110,12 +111,7 @@ export const WindowControls: React.FC<WindowControlsProps> = ({
           onContextMenu={handleContextMenu}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
-          aria-label={isMaximized ? WIN2X_ARIA_LABELS.RESTORE : WIN2X_ARIA_LABELS.MAXIMIZE}
-          title={isMaximized ? WIN2X_ARIA_LABELS.RESTORE : WIN2X_ARIA_LABELS.MAXIMIZE}
-          className={styles.button || ""}
-        >
-          {isMaximized ? <Copy className="w-3 h-3 rotate-180" /> : <Square className="w-3 h-3" />}
-        </button>
+        />
 
         {enableSnapLayouts && showSnapMenu && onSnapPresetSelect && (
           <SnapLayoutsMenu
@@ -129,18 +125,16 @@ export const WindowControls: React.FC<WindowControlsProps> = ({
         )}
       </div>
 
-      <button
-        type="button"
+      <IconButton
+        icon={<X size={16} />}
+        title={WIN2X_ARIA_LABELS.CLOSE}
+        variant={BUTTON_VARIANTS.DANGER}
+        size={BUTTON_SIZES.MD}
         onClick={(e) => {
           e.stopPropagation();
           onClose();
         }}
-        aria-label={WIN2X_ARIA_LABELS.CLOSE}
-        title={WIN2X_ARIA_LABELS.CLOSE}
-        className={`${styles.button || ""} ${styles.closeButton || ""}`}
-      >
-        <X className="w-4 h-4" />
-      </button>
+      />
     </div>
   );
 };
