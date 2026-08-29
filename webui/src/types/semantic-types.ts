@@ -139,3 +139,33 @@ export interface OverlapScanRequest {
   directory?: string;
   threshold?: number;
 }
+
+export type EquivalenceConfidence = "High" | "Medium" | "Low";
+
+export interface NeuralClonePair {
+  file_a: string;
+  start_line_a: number;
+  end_line_a: number;
+  language_a: string;
+  file_b: string;
+  start_line_b: number;
+  end_line_b: number;
+  language_b: string;
+  similarity: number;
+  confidence: EquivalenceConfidence;
+  semantic_rationale: string;
+}
+
+export interface NeuralScanResult {
+  total_blocks_embedded: number;
+  total_neural_pairs: number;
+  high_confidence_count: number;
+  pairs: NeuralClonePair[];
+}
+
+export interface SemanticNeuralRequest {
+  directory?: string;
+  threshold?: number;
+  dimension?: number;
+  max_subwords?: number;
+}

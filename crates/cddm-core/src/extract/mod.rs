@@ -16,7 +16,6 @@ pub use rewriter::rewrite_caller_files;
 pub use test_generator::generate_unit_test_files;
 pub use types::*;
 
-use std::fs;
 use std::path::Path;
 
 /// Core coordinator to generate an automated shared crate or module extraction.
@@ -35,25 +34,8 @@ pub fn generate_shared_extraction(
         .unwrap_or("rs");
 
     // 1. Read code snippets per occurrence
-    let mut site_snippets = Vec::new();
-    for occ in &request.occurrences {
-        let abs_path = workspace_root.join(&occ.file);
-        if !abs_path.exists() {
-            return Err(format!("Occurrence file '{}' does not exist", occ.file));
-        }
-        let content = fs::read_to_string(&abs_path)
-            .map_err(|e| format!("Failed to read occurrence file '{}': {}", occ.file, e))?;
-        let lines: Vec<String> = content.lines().map(|s| s.to_string()).collect();
-        let start_idx = occ.start_line.saturating_sub(1);
-        let end_idx = occ.end_line.min(lines.len());
-        if start_idx < end_idx {
-            site_snippets.push((occ, lines[start_idx..end_idx].to_vec()));
-        }
-    }
-
-    if site_snippets.is_empty() {
-        return Err("No valid code snippets extracted from occurrences".to_string());
-    }
+    let site_snippets =
+        crate::refactor::ast::load_occurrence_snippets(Some(workspace_root), &request.occurrences)?;
 
     // 2 & 3. Compute consensus invariant code and infer parameters
     let occ_pairs: Vec<(&crate::types::CloneLocation, &[String])> = site_snippets

@@ -1,6 +1,6 @@
 #![forbid(unsafe_code)]
 
-use clap::Args;
+use clap::{Args, Subcommand};
 use std::path::PathBuf;
 
 /// CLI Arguments for `cddm extract`
@@ -129,4 +129,90 @@ pub struct OverlapArgs {
     /// Output format (console, json, markdown)
     #[arg(short, long, default_value = "console")]
     pub format: String,
+}
+
+/// Subcommands for `cddm hub`
+#[derive(Subcommand, Debug, Clone)]
+pub enum HubSubcommand {
+    /// Initialize a new .cddmhub.toml configuration template
+    Init {
+        /// Custom configuration file path (default: .cddmhub.toml)
+        #[arg(short, long, default_value = cddm_core::DEFAULT_HUB_CONFIG_FILE)]
+        config: PathBuf,
+        /// Organization or hub name
+        #[arg(short, long)]
+        name: Option<String>,
+    },
+    /// Scan organization federation repositories for cross-repository duplication
+    Scan {
+        /// Configuration file path or repository directories to scan
+        #[arg(default_values_t = [String::from(cddm_core::DEFAULT_HUB_CONFIG_FILE)])]
+        targets: Vec<String>,
+        /// Output format (console, json, markdown)
+        #[arg(short, long, default_value = "console")]
+        format: String,
+        /// Minimum token count
+        #[arg(short, long, default_value_t = cddm_core::DEFAULT_MIN_TOKENS)]
+        min_tokens: usize,
+    },
+    /// Extract a cross-repository duplicate cluster into a standalone shared package
+    Extract {
+        /// Configuration file path (default: .cddmhub.toml)
+        #[arg(short, long, default_value = cddm_core::DEFAULT_HUB_CONFIG_FILE)]
+        config: PathBuf,
+        /// Cluster index to extract
+        #[arg(short = 'c', long, default_value_t = 1)]
+        cluster: usize,
+        /// Target package name (e.g. @org/shared-utils or cddm-shared-common)
+        #[arg(short = 'n', long, default_value = "@org/shared-extracted")]
+        pkg_name: String,
+        /// Target package ecosystem (npm, cargo, pypi, go)
+        #[arg(short = 't', long, default_value = "npm")]
+        pkg_type: String,
+        /// Destination directory path for the new standalone package
+        #[arg(short = 'd', long, default_value = "./packages/shared-extracted")]
+        target_dir: String,
+        /// Dry run preview without writing changes to disk
+        #[arg(long, default_value_t = false)]
+        dry_run: bool,
+    },
+}
+
+/// CLI Arguments for `cddm hub`
+#[derive(Args, Debug, Clone)]
+pub struct HubArgs {
+    #[command(subcommand)]
+    pub action: HubSubcommand,
+}
+
+/// CLI Arguments for `cddm coverage`
+#[derive(Args, Debug, Clone)]
+pub struct CoverageArgs {
+    /// Path to coverage tracefile (e.g. lcov.info, coverage.xml, coverage-final.json)
+    #[arg(short, long)]
+    pub report: PathBuf,
+
+    /// Directory path to scan (default: current directory)
+    #[arg(default_value = cddm_core::DEFAULT_DIRECTORY)]
+    pub directory: PathBuf,
+
+    /// Minimum token count to consider as duplicate clone
+    #[arg(short, long, default_value_t = cddm_core::DEFAULT_MIN_TOKENS)]
+    pub min_tokens: usize,
+
+    /// Output report format (console, json, markdown)
+    #[arg(short, long, default_value = "console")]
+    pub format: String,
+
+    /// Show only dead code duplicates (0 runtime executions across all sites)
+    #[arg(long, default_value_t = false)]
+    pub dead_code_only: bool,
+
+    /// Filter clones by minimum combined runtime execution hits
+    #[arg(long, default_value_t = 0)]
+    pub min_hits: u64,
+
+    /// Filter clones exceeding this risk score threshold (0-100)
+    #[arg(long)]
+    pub risk_threshold: Option<f64>,
 }

@@ -11,6 +11,8 @@ import { RefactorSandboxModal } from "./components/RefactorSandboxModal";
 import { PolicyRulesModal } from "./components/PolicyRulesModal";
 import { SemanticGraphModal } from "./components/SemanticGraphModal";
 import { OverlapDetectorModal } from "./components/OverlapDetectorModal";
+import { HubFederationModal } from "./components/HubFederationModal";
+import { CoverageCorrelationModal } from "./components/CoverageCorrelationModal";
 import { LiveWatchBar } from "./components/watch/LiveWatchBar";
 import { LiveEventInspectorModal } from "./components/watch/LiveEventInspectorModal";
 import {
@@ -28,6 +30,8 @@ import {
   History,
   Network,
   Layers,
+  Building2,
+  Activity,
 } from "lucide-react";
 
 export const App: React.FC = () => {
@@ -52,6 +56,10 @@ export const App: React.FC = () => {
     setIsSemanticGraphModalOpen,
     isOverlapDetectorOpen,
     setIsOverlapDetectorOpen,
+    isHubModalOpen,
+    setIsHubModalOpen,
+    isCoverageModalOpen,
+    setIsCoverageModalOpen,
     isLiveEventInspectorOpen,
     setIsLiveEventInspectorOpen,
   } = useCDDMStore();
@@ -136,6 +144,24 @@ export const App: React.FC = () => {
           >
             <Layers className="w-3.5 h-3.5 text-amber-400" />
             <span>Overlap Detector</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsHubModalOpen(true)}
+            className="px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 hover:bg-slate-800 text-slate-300 flex items-center gap-1.5 transition-colors shadow-sm"
+          >
+            <Building2 className="w-3.5 h-3.5 text-indigo-400" />
+            <span>Org Hub</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsCoverageModalOpen(true)}
+            className="px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 hover:bg-slate-800 text-slate-300 flex items-center gap-1.5 transition-colors shadow-sm"
+          >
+            <Activity className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Coverage</span>
           </button>
 
           {results && (
@@ -237,6 +263,15 @@ export const App: React.FC = () => {
       <OverlapDetectorModal
         isOpen={isOverlapDetectorOpen}
         onClose={() => setIsOverlapDetectorOpen(false)}
+      />
+
+      {/* Organization Federation Hub Modal */}
+      <HubFederationModal isOpen={isHubModalOpen} onClose={() => setIsHubModalOpen(false)} />
+
+      {/* Runtime Coverage Correlation Modal */}
+      <CoverageCorrelationModal
+        isOpen={isCoverageModalOpen}
+        onClose={() => setIsCoverageModalOpen(false)}
       />
 
       {/* Live Watch & Sync Event Inspector Modal */}

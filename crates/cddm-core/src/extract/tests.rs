@@ -1,5 +1,6 @@
 use super::*;
 use crate::types::{CloneLocation, InferredParameter};
+use std::fs;
 use tempfile::tempdir;
 
 #[test]

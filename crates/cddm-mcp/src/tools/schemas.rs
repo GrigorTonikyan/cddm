@@ -14,49 +14,23 @@ pub fn get_tool_definitions() -> Vec<serde_json::Value> {
             "inputSchema": {
                 "type": "object",
                 "properties": {
-                    mcp_tools::PARAM_DIRECTORY: {
-                        "type": "string",
-                        "description": "Target directory path to analyze (default: current directory)"
-                    },
-                    mcp_tools::PARAM_MIN_TOKENS: {
-                        "type": "number",
-                        "description": format!("Minimum token threshold (default: {})", DEFAULT_MIN_TOKENS)
-                    },
-                    mcp_tools::PARAM_ENABLE_GIT_BLAME: {
-                        "type": "boolean",
-                        "description": "Annotate duplicate lines with in-process git blame author metadata"
-                    }
+                    mcp_tools::PARAM_DIRECTORY: { "type": "string", "description": "Target directory path to analyze (default: current directory)" },
+                    mcp_tools::PARAM_MIN_TOKENS: { "type": "number", "description": format!("Minimum token threshold (default: {})", DEFAULT_MIN_TOKENS) },
+                    mcp_tools::PARAM_ENABLE_GIT_BLAME: { "type": "boolean", "description": "Annotate duplicate lines with in-process git blame author metadata" }
                 }
             }
         }),
-        json!({
-            "name": mcp_tools::GET_CLONE_PAIR,
-            "description": "Fetch localized source lines, token counts, and git blame context for a duplicate clone pair.",
-            "inputSchema": clone_pair_input_schema()
-        }),
-        json!({
-            "name": mcp_tools::SUGGEST_REFACTOR,
-            "description": "Run invariant extraction on duplicate clone fragments and generate a structural refactoring suggestion with unified .patch format.",
-            "inputSchema": clone_pair_input_schema()
-        }),
+        json!({ "name": mcp_tools::GET_CLONE_PAIR, "description": "Fetch localized source lines, token counts, and git blame context for a duplicate clone pair.", "inputSchema": clone_pair_input_schema() }),
+        json!({ "name": mcp_tools::SUGGEST_REFACTOR, "description": "Run invariant extraction on duplicate clone fragments and generate a structural refactoring suggestion with unified .patch format.", "inputSchema": clone_pair_input_schema() }),
         json!({
             "name": mcp_tools::GET_CLONE_CLUSTER,
             "description": "Fetch localized source lines, token counts, and occurrences context for an N-way clone cluster.",
             "inputSchema": {
                 "type": "object",
                 "properties": {
-                    mcp_tools::PARAM_CLUSTER_ID: {
-                        "type": "number",
-                        "description": "1-based cluster index"
-                    },
-                    mcp_tools::PARAM_DIRECTORY: {
-                        "type": "string",
-                        "description": "Target directory path (default: current directory)"
-                    },
-                    mcp_tools::PARAM_MIN_TOKENS: {
-                        "type": "number",
-                        "description": format!("Minimum token threshold (default: {})", DEFAULT_MIN_TOKENS)
-                    }
+                    mcp_tools::PARAM_CLUSTER_ID: { "type": "number", "description": "1-based cluster index" },
+                    mcp_tools::PARAM_DIRECTORY: { "type": "string", "description": "Target directory path (default: current directory)" },
+                    mcp_tools::PARAM_MIN_TOKENS: { "type": "number", "description": format!("Minimum token threshold (default: {})", DEFAULT_MIN_TOKENS) }
                 },
                 "required": [mcp_tools::PARAM_CLUSTER_ID]
             }
@@ -67,18 +41,9 @@ pub fn get_tool_definitions() -> Vec<serde_json::Value> {
             "inputSchema": {
                 "type": "object",
                 "properties": {
-                    mcp_tools::PARAM_CLUSTER_ID: {
-                        "type": "number",
-                        "description": "1-based cluster index"
-                    },
-                    mcp_tools::PARAM_DIRECTORY: {
-                        "type": "string",
-                        "description": "Target directory path (default: current directory)"
-                    },
-                    mcp_tools::PARAM_MIN_TOKENS: {
-                        "type": "number",
-                        "description": format!("Minimum token threshold (default: {})", DEFAULT_MIN_TOKENS)
-                    },
+                    mcp_tools::PARAM_CLUSTER_ID: { "type": "number", "description": "1-based cluster index" },
+                    mcp_tools::PARAM_DIRECTORY: { "type": "string", "description": "Target directory path (default: current directory)" },
+                    mcp_tools::PARAM_MIN_TOKENS: { "type": "number", "description": format!("Minimum token threshold (default: {})", DEFAULT_MIN_TOKENS) },
                     mcp_tools::PARAM_OCCURRENCES: {
                         "type": "array",
                         "description": "Explicit list of cluster occurrence locations",
@@ -101,14 +66,8 @@ pub fn get_tool_definitions() -> Vec<serde_json::Value> {
             "inputSchema": {
                 "type": "object",
                 "properties": {
-                    mcp_tools::PARAM_DIRECTORY: {
-                        "type": "string",
-                        "description": "Target directory path (default: current directory)"
-                    },
-                    mcp_tools::PARAM_MIN_TOKENS: {
-                        "type": "number",
-                        "description": format!("Minimum token threshold (default: {})", DEFAULT_MIN_TOKENS)
-                    }
+                    mcp_tools::PARAM_DIRECTORY: { "type": "string", "description": "Target directory path (default: current directory)" },
+                    mcp_tools::PARAM_MIN_TOKENS: { "type": "number", "description": format!("Minimum token threshold (default: {})", DEFAULT_MIN_TOKENS) }
                 }
             }
         }),
@@ -118,22 +77,10 @@ pub fn get_tool_definitions() -> Vec<serde_json::Value> {
             "inputSchema": {
                 "type": "object",
                 "properties": {
-                    mcp_tools::PARAM_BASE_REF: {
-                        "type": "string",
-                        "description": "Base Git reference branch/tag/commit (e.g. 'main')"
-                    },
-                    mcp_tools::PARAM_TARGET_REF: {
-                        "type": "string",
-                        "description": "Target Git reference branch/tag/commit (default: 'HEAD')"
-                    },
-                    mcp_tools::PARAM_DIRECTORY: {
-                        "type": "string",
-                        "description": "Target directory path (default: current directory)"
-                    },
-                    mcp_tools::PARAM_MIN_TOKENS: {
-                        "type": "number",
-                        "description": format!("Minimum token threshold (default: {})", DEFAULT_MIN_TOKENS)
-                    }
+                    mcp_tools::PARAM_BASE_REF: { "type": "string", "description": "Base Git reference branch/tag/commit (e.g. 'main')" },
+                    mcp_tools::PARAM_TARGET_REF: { "type": "string", "description": "Target Git reference branch/tag/commit (default: 'HEAD')" },
+                    mcp_tools::PARAM_DIRECTORY: { "type": "string", "description": "Target directory path (default: current directory)" },
+                    mcp_tools::PARAM_MIN_TOKENS: { "type": "number", "description": format!("Minimum token threshold (default: {})", DEFAULT_MIN_TOKENS) }
                 },
                 "required": [mcp_tools::PARAM_BASE_REF]
             }
@@ -144,18 +91,9 @@ pub fn get_tool_definitions() -> Vec<serde_json::Value> {
             "inputSchema": {
                 "type": "object",
                 "properties": {
-                    mcp_tools::PARAM_DIRECTORY: {
-                        "type": "string",
-                        "description": "Target directory path (default: current directory)"
-                    },
-                    mcp_tools::PARAM_MAX_SAMPLES: {
-                        "type": "number",
-                        "description": "Maximum historical commit samples to inspect (default: 10)"
-                    },
-                    mcp_tools::PARAM_MIN_TOKENS: {
-                        "type": "number",
-                        "description": format!("Minimum token threshold (default: {})", DEFAULT_MIN_TOKENS)
-                    }
+                    mcp_tools::PARAM_DIRECTORY: { "type": "string", "description": "Target directory path (default: current directory)" },
+                    mcp_tools::PARAM_MAX_SAMPLES: { "type": "number", "description": "Maximum historical commit samples to inspect (default: 10)" },
+                    mcp_tools::PARAM_MIN_TOKENS: { "type": "number", "description": format!("Minimum token threshold (default: {})", DEFAULT_MIN_TOKENS) }
                 }
             }
         }),
@@ -165,30 +103,12 @@ pub fn get_tool_definitions() -> Vec<serde_json::Value> {
             "inputSchema": {
                 "type": "object",
                 "properties": {
-                    mcp_tools::PARAM_PATH: {
-                        "type": "string",
-                        "description": "Target file path to check"
-                    },
-                    mcp_tools::PARAM_LINE: {
-                        "type": "number",
-                        "description": "Optional 1-based line number to check for inline suppression directives"
-                    },
-                    mcp_tools::PARAM_CDDMIGNORE: {
-                        "type": "string",
-                        "description": "Custom path to .cddmignore file"
-                    },
-                    mcp_tools::PARAM_IGNORE_TESTS: {
-                        "type": "boolean",
-                        "description": "Check with test file suppression enabled"
-                    },
-                    mcp_tools::PARAM_IGNORE_MOCKS: {
-                        "type": "boolean",
-                        "description": "Check with mock file suppression enabled"
-                    },
-                    mcp_tools::PARAM_IGNORE_GENERATED: {
-                        "type": "boolean",
-                        "description": "Check with generated file suppression enabled"
-                    }
+                    mcp_tools::PARAM_PATH: { "type": "string", "description": "Target file path to check" },
+                    mcp_tools::PARAM_LINE: { "type": "number", "description": "Optional 1-based line number to check for inline suppression directives" },
+                    mcp_tools::PARAM_CDDMIGNORE: { "type": "string", "description": "Custom path to .cddmignore file" },
+                    mcp_tools::PARAM_IGNORE_TESTS: { "type": "boolean", "description": "Check with test file suppression enabled" },
+                    mcp_tools::PARAM_IGNORE_MOCKS: { "type": "boolean", "description": "Check with mock file suppression enabled" },
+                    mcp_tools::PARAM_IGNORE_GENERATED: { "type": "boolean", "description": "Check with generated file suppression enabled" }
                 },
                 "required": [mcp_tools::PARAM_PATH]
             }
@@ -199,18 +119,9 @@ pub fn get_tool_definitions() -> Vec<serde_json::Value> {
             "inputSchema": {
                 "type": "object",
                 "properties": {
-                    mcp_tools::PARAM_PATCH: {
-                        "type": "string",
-                        "description": "Unified diff patch content synthesized by CDDM"
-                    },
-                    mcp_tools::PARAM_BRANCH_NAME: {
-                        "type": "string",
-                        "description": "Optional target Git branch name (default: cddm/refactor-auto)"
-                    },
-                    mcp_tools::PARAM_CREATE_BRANCH: {
-                        "type": "boolean",
-                        "description": "Whether to create a new Git branch for the refactoring changes (default: false)"
-                    }
+                    mcp_tools::PARAM_PATCH: { "type": "string", "description": "Unified diff patch content synthesized by CDDM" },
+                    mcp_tools::PARAM_BRANCH_NAME: { "type": "string", "description": "Optional target Git branch name (default: cddm/refactor-auto)" },
+                    mcp_tools::PARAM_CREATE_BRANCH: { "type": "boolean", "description": "Whether to create a new Git branch for the refactoring changes (default: false)" }
                 },
                 "required": [mcp_tools::PARAM_PATCH]
             }
@@ -262,175 +173,222 @@ pub fn get_tool_definitions() -> Vec<serde_json::Value> {
                     },
                     "custom_function_name": { "type": "string" },
                     "target_module_path": { "type": "string" },
-                    "custom_parameter_names": {
-                        "type": "array",
-                        "items": { "type": "string" }
-                    }
+                    "custom_parameter_names": { "type": "array", "items": { "type": "string" } }
                 },
                 "required": ["occurrences"]
             }
         }),
         json!({
             "name": mcp_tools::VERIFY_REFACTOR,
-            "description": "Run closed-loop test suite verification on the workspace or refactored branch to ensure zero behavioral regressions.",
+            "description": "Run closed-loop test verification to validate that a refactoring patch does not break existing test suites.",
             "inputSchema": {
                 "type": "object",
                 "properties": {
-                    "directory": { "type": "string" },
-                    "test_command": { "type": "string" },
-                    "branch_name": { "type": "string" },
-                    "timeout_seconds": { "type": "integer" }
-                }
+                    "patch": { "type": "string", "description": "Unified diff patch content" },
+                    "test_command": { "type": "string", "description": "Custom test command to execute (e.g. 'cargo test', 'npm test')" },
+                    "timeout_seconds": { "type": "number", "description": "Execution timeout in seconds (default: 30)" }
+                },
+                "required": ["patch"]
             }
         }),
         json!({
             "name": mcp_tools::CHECK_POLICIES,
-            "description": "Evaluate architectural boundary and zero-duplication policies against the workspace (.cddmrules.toml).",
+            "description": "Evaluate workspace code duplication and architectural boundaries against .cddmrules.toml policies.",
             "inputSchema": {
                 "type": "object",
                 "properties": {
-                    mcp_tools::PARAM_DIRECTORY: { "type": "string" },
-                    mcp_tools::PARAM_RULES: { "type": "string" },
-                    mcp_tools::PARAM_MIN_TOKENS: { "type": "number" }
+                    mcp_tools::PARAM_DIRECTORY: { "type": "string", "description": "Target workspace directory path (default: .)" },
+                    mcp_tools::PARAM_RULES: { "type": "string", "description": "Custom path to .cddmrules.toml policy rules file" },
+                    mcp_tools::PARAM_MIN_TOKENS: { "type": "number", "description": format!("Minimum token threshold (default: {})", DEFAULT_MIN_TOKENS) }
                 }
             }
         }),
         json!({
             "name": mcp_tools::HEAL_REFACTOR,
-            "description": "Autonomous AI Code Surgeon healing loop with test error-feedback repair and automated branch creation.",
+            "description": "Run autonomous AI Code Surgeon loop: synthesize refactoring, run compiler/tests, diagnose errors, and heal patch automatically.",
             "inputSchema": {
                 "type": "object",
                 "properties": {
-                    "directory": { "type": "string" },
-                    "cluster_id": { "type": "number" },
-                    "pair_id": { "type": "number" },
-                    "provider": { "type": "string", "description": "AI provider (gemini, claude, openai, ollama, mock)" },
-                    "model": { "type": "string" },
-                    "api_key": { "type": "string" },
-                    "endpoint": { "type": "string" },
-                    "max_iterations": { "type": "number", "default": 3 },
-                    "verify": { "type": "boolean", "default": true },
-                    "test_command": { "type": "string" },
-                    "branch_name": { "type": "string" },
-                    "function_name": { "type": "string" },
-                    "target_module": { "type": "string" }
-                }
+                    "cluster_id": { "type": "number", "description": "1-based cluster index" },
+                    "max_iterations": { "type": "number", "description": "Maximum healing retry iterations (default: 3)" },
+                    "provider": { "type": "string", "description": "AI provider backend (mock, openai, anthropic, gemini)" },
+                    "api_key": { "type": "string", "description": "Optional API key for AI provider" },
+                    "model": { "type": "string", "description": "Model identifier (e.g. gpt-4o, claude-3-5-sonnet)" },
+                    "test_command": { "type": "string", "description": "Test command to verify refactoring (e.g. 'cargo test')" }
+                },
+                "required": ["cluster_id"]
             }
         }),
         json!({
             "name": mcp_tools::EXPORT_CACHE_PACK,
-            "description": "Export persistent fingerprint cache database into a portable .cddmpack archive.",
+            "description": "Export CDDM incremental fingerprint cache into a compressed portable .cddmpack archive for CI/CD sharing.",
             "inputSchema": {
                 "type": "object",
                 "properties": {
-                    "cache_dir": { "type": "string", "description": "Path to cache database (default: .cddm/cache.db)" },
-                    "output_pack_path": { "type": "string", "description": "Target .cddmpack output path (default: cddm-cache.cddmpack)" }
+                    "output_file": { "type": "string", "description": "Destination path for .cddmpack archive (default: cddm-cache.cddmpack)" },
+                    "cache_dir": { "type": "string", "description": "Path to persistent cache directory (default: .cddm/cache.db)" }
                 }
             }
         }),
         json!({
             "name": mcp_tools::IMPORT_CACHE_PACK,
-            "description": "Import a portable .cddmpack archive into persistent fingerprint cache database.",
+            "description": "Import a shared .cddmpack cache archive to warm up local or CI incremental scan cache.",
             "inputSchema": {
                 "type": "object",
                 "properties": {
-                    "pack_file": { "type": "string", "description": "Path to .cddmpack file" },
-                    "target_cache_dir": { "type": "string", "description": "Target cache directory (default: .cddm)" }
+                    "pack_file": { "type": "string", "description": "Path to .cddmpack archive file to import" },
+                    "target_dir": { "type": "string", "description": "Destination cache directory (default: .cddm/cache.db)" }
                 },
                 "required": ["pack_file"]
             }
         }),
         json!({
             "name": mcp_tools::SCAN_MONOREPO,
-            "description": "Discover monorepo workspaces and execute comprehensive cross-package duplication scan.",
+            "description": "Discover all workspaces and packages across Cargo, npm/pnpm/yarn, and Python Poetry monorepos and analyze cross-package duplicates.",
             "inputSchema": {
                 "type": "object",
                 "properties": {
-                    mcp_tools::PARAM_DIRECTORY: { "type": "string", "description": "Monorepo root directory" },
-                    mcp_tools::PARAM_MIN_TOKENS: { "type": "number", "description": "Minimum token threshold" }
+                    mcp_tools::PARAM_DIRECTORY: { "type": "string", "description": "Root directory of monorepo workspace (default: .)" },
+                    mcp_tools::PARAM_MIN_TOKENS: { "type": "number", "description": format!("Minimum token threshold (default: {})", DEFAULT_MIN_TOKENS) }
                 }
             }
         }),
         json!({
             "name": mcp_tools::GET_SEMANTIC_GRAPH,
-            "description": "Extract Control Flow Graph (CFG) and Program Dependence Graph (PDG) structures and Weisfeiler-Lehman hash from source code or file.",
+            "description": "Extract Control Flow Graph (CFG) and Program Dependence Graph (PDG) from source code for AST semantic analysis.",
             "inputSchema": {
                 "type": "object",
                 "properties": {
-                    "code": { "type": "string", "description": "Raw source code snippet" },
-                    "file": { "type": "string", "description": "File path to read source from" },
-                    "language": { "type": "string", "description": "Target programming language (default: Rust)" }
+                    "file_path": { "type": "string", "description": "File path of source code" },
+                    "code_content": { "type": "string", "description": "Source code snippet (optional if file_path is provided)" },
+                    "language": { "type": "string", "description": "Programming language (e.g. rust, typescript, python)" }
                 }
             }
         }),
         json!({
             "name": mcp_tools::COMPARE_SEMANTIC_GRAPHS,
-            "description": "Compare two code snippets for Type-4 semantic clone similarity via Weisfeiler-Lehman graph kernels and subword embeddings.",
+            "description": "Compare two code snippets or files using semantic CFG/PDG graph isomorphism and Weisfeiler-Lehman graph kernels.",
             "inputSchema": {
                 "type": "object",
                 "properties": {
-                    "code_a": { "type": "string", "description": "First code snippet to compare" },
-                    "code_b": { "type": "string", "description": "Second code snippet to compare" },
-                    "language": { "type": "string", "description": "Default programming language (default: Rust)" },
-                    "language_a": { "type": "string", "description": "Language of first snippet" },
-                    "language_b": { "type": "string", "description": "Language of second snippet" }
+                    "code_a": { "type": "string", "description": "First code snippet" },
+                    "language_a": { "type": "string", "description": "Language of first code snippet" },
+                    "code_b": { "type": "string", "description": "Second code snippet" },
+                    "language_b": { "type": "string", "description": "Language of second code snippet" }
                 },
                 "required": ["code_a", "code_b"]
             }
         }),
         json!({
             "name": mcp_tools::SCAN_CROSS_LANGUAGE,
-            "description": "Discover cross-language semantic clones across different programming languages via Weisfeiler-Lehman graph kernels and subword vector embeddings.",
+            "description": "Scan codebase for cross-language semantic clones and compute language translation parity.",
             "inputSchema": {
                 "type": "object",
                 "properties": {
-                    mcp_tools::PARAM_DIRECTORY: { "type": "string", "description": "Target workspace directory to scan (default: current directory)" },
-                    "threshold": { "type": "number", "description": "Hybrid similarity threshold (0.0 to 1.0, default: 0.70)" },
-                    mcp_tools::PARAM_MIN_TOKENS: { "type": "number", "description": "Minimum token threshold (default: 50)" },
-                    "languages": { "type": "array", "items": { "type": "string" }, "description": "Optional list of languages to restrict analysis to" },
-                    "ignore": { "type": "array", "items": { "type": "string" }, "description": "Optional glob patterns to ignore" }
+                    mcp_tools::PARAM_DIRECTORY: { "type": "string", "description": "Target workspace directory path (default: .)" },
+                    "threshold": { "type": "number", "description": "Similarity threshold from 0.0 to 1.0 (default: 0.70)" },
+                    mcp_tools::PARAM_MIN_TOKENS: { "type": "number", "description": format!("Minimum token threshold (default: {})", DEFAULT_MIN_TOKENS) }
                 }
             }
         }),
         json!({
             "name": mcp_tools::EXTRACT_SHARED_MODULE,
-            "description": "Automate extracting duplicate code into a standalone shared crate or module with manifest updates and caller rewrites.",
+            "description": "Automated shared crate or module extraction generator with caller AST rewrites and manifest updates.",
             "inputSchema": {
                 "type": "object",
                 "properties": {
-                    "target": { "type": "string", "description": "Target crate path or module path (e.g. crates/shared_utils)" },
-                    "fn_name": { "type": "string", "description": "Custom function name for extracted helper" },
-                    "crate_type": { "type": "string", "description": "Packaging strategy: auto, crate, module, existing" },
-                    "dry_run": { "type": "boolean", "description": "Preview extraction without writing to disk (default: false)" },
-                    "generate_tests": { "type": "boolean", "description": "Automatically synthesize unit tests for the extracted helper" },
-                    "generate_benchmarks": { "type": "boolean", "description": "Automatically synthesize performance micro-benchmarks for the extracted helper" },
-                    mcp_tools::PARAM_CLUSTER_ID: { "type": "number", "description": "1-based cluster index" },
-                    mcp_tools::PARAM_DIRECTORY: { "type": "string", "description": "Target directory path" },
-                    mcp_tools::PARAM_MIN_TOKENS: { "type": "number", "description": "Minimum token threshold" },
-                    mcp_tools::PARAM_OCCURRENCES: {
-                        "type": "array",
-                        "description": "Explicit list of cluster occurrence locations",
-                        "items": {
-                            "type": "object",
-                            "properties": {
-                                "file": { "type": "string" },
-                                "start_line": { "type": "number" },
-                                "end_line": { "type": "number" }
-                            },
-                            "required": ["file", "start_line", "end_line"]
-                        }
-                    }
-                }
+                    "cluster_id": { "type": "number", "description": "1-based cluster index to extract" },
+                    "target_kind": { "type": "string", "description": "Target extraction kind: new_crate or existing_module (default: new_crate)" },
+                    "target_path": { "type": "string", "description": "Destination crate or module path (e.g. 'crates/shared_utils')" },
+                    "function_name": { "type": "string", "description": "Custom name for extracted function" },
+                    "generate_tests": { "type": "boolean", "description": "Generate companion unit test file" },
+                    "generate_benchmarks": { "type": "boolean", "description": "Generate performance micro-benchmark file" },
+                    "dry_run": { "type": "boolean", "description": "Preview without writing to disk (default: true)" }
+                },
+                "required": ["cluster_id"]
             }
         }),
         json!({
             "name": mcp_tools::DETECT_OVERLAP,
-            "description": "Detect reimplemented ecosystem library algorithms and suggest standard packages.",
+            "description": "Scan workspace for custom algorithms that reimplement standard library or popular open-source packages.",
             "inputSchema": {
                 "type": "object",
                 "properties": {
                     mcp_tools::PARAM_DIRECTORY: { "type": "string", "description": "Target workspace directory path (default: .)" },
                     "threshold": { "type": "number", "description": "Confidence threshold from 0.0 to 1.0 (default: 0.3)" }
+                }
+            }
+        }),
+        json!({
+            "name": mcp_tools::SCAN_HUB,
+            "description": "Scan multiple repositories in an Organization Federation Hub for cross-repository code duplication.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "config_path": { "type": "string", "description": "Path to .cddmhub.toml configuration file" },
+                    "repositories": { "type": "array", "items": { "type": "string" }, "description": "List of repository directory paths to scan" },
+                    "min_tokens": { "type": "number", "description": "Minimum token threshold (default: 50)" }
+                }
+            }
+        }),
+        json!({
+            "name": mcp_tools::EXTRACT_HUB_PACKAGE,
+            "description": "Extract a cross-repository clone cluster into a standalone shared package with caller repository PR updates.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "cluster_id": { "type": "number", "description": "1-based cross-repository cluster index" },
+                    "package_name": { "type": "string", "description": "Name for the shared package" },
+                    "package_type": { "type": "string", "description": "Package ecosystem: npm, cargo, pypi, go (default: npm)" },
+                    "target_dir": { "type": "string", "description": "Destination path for standalone package directory" },
+                    "config_path": { "type": "string", "description": "Optional path to .cddmhub.toml" },
+                    "dry_run": { "type": "boolean", "description": "Preview without writing to disk (default: true)" }
+                },
+                "required": ["cluster_id"]
+            }
+        }),
+        json!({
+            "name": mcp_tools::CORRELATE_COVERAGE,
+            "description": "Correlate test and runtime execution coverage tracefiles (LCOV, Cobertura, Istanbul) with duplicate clone pairs.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "report_path": { "type": "string", "description": "Path to coverage tracefile (e.g. lcov.info, coverage.xml)" },
+                    "report_content": { "type": "string", "description": "Raw coverage report file content (optional if report_path provided)" },
+                    "format": { "type": "string", "description": "Coverage format: lcov, cobertura, istanbul, auto (default: auto)" },
+                    "directory": { "type": "string", "description": "Target workspace directory path (default: .)" },
+                    "min_tokens": { "type": "number", "description": "Minimum token threshold (default: 50)" },
+                    "dead_code_only": { "type": "boolean", "description": "Filter for dead code duplicates with 0 runtime executions" },
+                    "min_hits": { "type": "number", "description": "Minimum combined runtime execution hits" }
+                }
+            }
+        }),
+        json!({
+            "name": mcp_tools::DETECT_DEAD_CLONES,
+            "description": "Find duplicate code fragments across the codebase that have zero runtime/test executions (dead code elimination candidates).",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "report_path": { "type": "string", "description": "Path to coverage tracefile (e.g. lcov.info, coverage.xml)" },
+                    "report_content": { "type": "string", "description": "Raw coverage report file content" },
+                    "directory": { "type": "string", "description": "Target workspace directory path (default: .)" },
+                    "min_tokens": { "type": "number", "description": "Minimum token threshold (default: 50)" }
+                }
+            }
+        }),
+        json!({
+            "name": mcp_tools::SEMANTIC_NEURAL_SCAN,
+            "description": "In-process local neural code embedding & algorithmic equivalence scan using subword projections and cosine similarity.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "directory": { "type": "string", "description": "Target workspace directory path (default: .)" },
+                    "threshold": { "type": "number", "description": "Minimum cosine similarity threshold from 0.0 to 1.0 (default: 0.85)" },
+                    "dimension": { "type": "number", "description": "Dense embedding vector dimensionality (default: 256)" },
+                    "code_a": { "type": "string", "description": "Optional snippet A for direct pairwise comparison" },
+                    "language_a": { "type": "string", "description": "Programming language for snippet A" },
+                    "code_b": { "type": "string", "description": "Optional snippet B for direct pairwise comparison" },
+                    "language_b": { "type": "string", "description": "Programming language for snippet B" }
                 }
             }
         }),

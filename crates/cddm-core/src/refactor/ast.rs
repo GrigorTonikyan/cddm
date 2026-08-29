@@ -33,25 +33,7 @@ pub fn generate_ast_cluster_refactor(
     }
 
     // Step 1: Read code snippets per occurrence
-    let mut site_snippets = Vec::new();
-    for occ in occurrences {
-        let p = Path::new(&occ.file);
-        if !p.exists() {
-            return Err(format!("Occurrence file '{}' does not exist", occ.file));
-        }
-        let content = fs::read_to_string(p)
-            .map_err(|e| format!("Failed to read occurrence file '{}': {}", occ.file, e))?;
-        let lines: Vec<String> = content.lines().map(|s| s.to_string()).collect();
-        let start_idx = occ.start_line.saturating_sub(1);
-        let end_idx = occ.end_line.min(lines.len());
-        if start_idx < end_idx {
-            site_snippets.push((occ, lines[start_idx..end_idx].to_vec()));
-        }
-    }
-
-    if site_snippets.is_empty() {
-        return Err("Failed to extract code snippets from occurrences".to_string());
-    }
+    let site_snippets = load_occurrence_snippets(None, occurrences)?;
 
     // Step 2 & 3: Compute common invariant lines and infer parameters
     let occ_pairs: Vec<(&CloneLocation, &[String])> = site_snippets
@@ -186,4 +168,39 @@ pub(crate) fn collect_consensus_and_parameters(
     }
 
     (cluster_refactor, inferred_parameters)
+}
+
+/// Reads source lines for occurrences from disk.
+pub fn load_occurrence_snippets<'a>(
+    workspace_root: Option<&Path>,
+    occurrences: &'a [CloneLocation],
+) -> Result<Vec<(&'a CloneLocation, Vec<String>)>, String> {
+    let mut site_snippets = Vec::new();
+    for occ in occurrences {
+        let path_buf;
+        let p = match workspace_root {
+            Some(root) => {
+                path_buf = root.join(&occ.file);
+                path_buf.as_path()
+            }
+            None => Path::new(&occ.file),
+        };
+        if !p.exists() {
+            return Err(format!("Occurrence file '{}' does not exist", occ.file));
+        }
+        let content = fs::read_to_string(p)
+            .map_err(|e| format!("Failed to read occurrence file '{}': {}", occ.file, e))?;
+        let lines: Vec<String> = content.lines().map(|s| s.to_string()).collect();
+        let start_idx = occ.start_line.saturating_sub(1);
+        let end_idx = occ.end_line.min(lines.len());
+        if start_idx < end_idx {
+            site_snippets.push((occ, lines[start_idx..end_idx].to_vec()));
+        }
+    }
+
+    if site_snippets.is_empty() {
+        return Err("No valid code snippets extracted from occurrences".to_string());
+    }
+
+    Ok(site_snippets)
 }

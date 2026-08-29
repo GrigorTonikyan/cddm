@@ -52,25 +52,15 @@ pub fn generate_ai_refactor_prompt(req: &AiRefactorPromptRequest) -> String {
 
     prompt.push_str("## 1. Duplication Diagnostics\n\n");
     prompt.push_str(&format!(
-        "- **Clone Classification**: {:?}\n",
-        req.clone_type
-    ));
-    prompt.push_str(&format!(
-        "- **Structural Similarity**: {:.1}%\n",
-        req.similarity * 100.0
-    ));
-    prompt.push_str(&format!("- **Duplicate Tokens**: {}\n", req.token_count));
-    prompt.push_str(&format!(
-        "- **Estimated Lines Saved**: {} LOC\n",
-        req.lines_saved_est
-    ));
-    prompt.push_str(&format!(
-        "- **Target Function Name**: `{}`\n",
-        req.function_name
-    ));
-    prompt.push_str(&format!(
-        "- **Destination Module**: `{}`\n\n",
-        req.target_module
+        "- **Clone Classification**: {:?}\n- **Structural Similarity**: {:.1}%\n- **Duplicate \
+         Tokens**: {}\n- **Estimated Lines Saved**: {} LOC\n- **Target Function Name**: `{}`\n- \
+         **Destination Module**: `{}`\n\n",
+        req.clone_type,
+        req.similarity * 100.0,
+        req.token_count,
+        req.lines_saved_est,
+        req.function_name,
+        req.target_module,
     ));
 
     if !req.parameters.is_empty() {

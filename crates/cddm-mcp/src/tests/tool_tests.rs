@@ -242,3 +242,108 @@ async fn test_mcp_detect_overlap_tool() {
     .expect("Expected response");
     assert!(resp.error.is_none());
 }
+
+#[tokio::test]
+async fn test_mcp_hub_tools() {
+    let resp_scan = handle_mcp_request(make_test_req(
+        75,
+        mcp_methods::TOOLS_CALL,
+        Some(json!({
+            "name": mcp_tools::SCAN_HUB,
+            "arguments": {
+                "repositories": ["."],
+                "min_tokens": 50
+            }
+        })),
+    ))
+    .await
+    .expect("Expected response");
+    assert!(resp_scan.error.is_none());
+
+    let resp_extract = handle_mcp_request(make_test_req(
+        76,
+        mcp_methods::TOOLS_CALL,
+        Some(json!({
+            "name": mcp_tools::EXTRACT_HUB_PACKAGE,
+            "arguments": {
+                "cluster_id": 1,
+                "package_name": "@org/shared-test",
+                "dry_run": true
+            }
+        })),
+    ))
+    .await
+    .expect("Expected response");
+    assert!(resp_extract.error.is_none());
+}
+
+#[tokio::test]
+async fn test_mcp_coverage_tools() {
+    let lcov_content = "SF:src/auth.ts\nDA:10,5\nDA:11,5\nend_of_record\n";
+    let resp_cov = handle_mcp_request(make_test_req(
+        77,
+        mcp_methods::TOOLS_CALL,
+        Some(json!({
+            "name": mcp_tools::CORRELATE_COVERAGE,
+            "arguments": {
+                "report_content": lcov_content,
+                "format": "lcov",
+                "directory": "."
+            }
+        })),
+    ))
+    .await
+    .expect("Expected response");
+    assert!(resp_cov.error.is_none());
+
+    let resp_dead = handle_mcp_request(make_test_req(
+        78,
+        mcp_methods::TOOLS_CALL,
+        Some(json!({
+            "name": mcp_tools::DETECT_DEAD_CLONES,
+            "arguments": {
+                "report_content": lcov_content,
+                "directory": "."
+            }
+        })),
+    ))
+    .await
+    .expect("Expected response");
+    assert!(resp_dead.error.is_none());
+}
+
+#[tokio::test]
+async fn test_mcp_semantic_neural_scan_tool() {
+    let resp = handle_mcp_request(make_test_req(
+        79,
+        mcp_methods::TOOLS_CALL,
+        Some(json!({
+            "name": mcp_tools::SEMANTIC_NEURAL_SCAN,
+            "arguments": {
+                "directory": ".",
+                "threshold": 0.85
+            }
+        })),
+    ))
+    .await
+    .expect("Expected response");
+    assert!(resp.error.is_none());
+
+    let resp_pair = handle_mcp_request(make_test_req(
+        80,
+        mcp_methods::TOOLS_CALL,
+        Some(json!({
+            "name": mcp_tools::SEMANTIC_NEURAL_SCAN,
+            "arguments": {
+                "code_a": "fn compute_a() { let x = 1; }",
+                "language_a": "rs",
+                "code_b": "def compute_a():\n    x = 1",
+                "language_b": "py",
+                "threshold": 0.70
+            }
+        })),
+    ))
+    .await
+    .expect("Expected response");
+    assert!(resp_pair.error.is_none());
+}

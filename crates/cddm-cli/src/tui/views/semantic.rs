@@ -1,5 +1,3 @@
-#![forbid(unsafe_code)]
-
 use ratatui::Frame;
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::style::{Color, Modifier, Style};
@@ -9,9 +7,9 @@ use ratatui::widgets::{Gauge, List, ListItem, Paragraph};
 use super::helpers::{create_titled_block, split_horizontal_2, split_vertical_header_body};
 use crate::tui::app::TuiApp;
 
-/// Render Tab 3: Cross-Language Semantic Matching & Hybrid Embeddings Explorer.
+/// Render Tab 3: Cross-Language Semantic Matching & Hybrid Neural Embeddings Explorer.
 pub fn render_semantic_view(frame: &mut Frame, app: &TuiApp, area: Rect) {
-    let (list_pane, detail_pane) = split_horizontal_2(area, 40, 60);
+    let (list_pane, detail_pane) = split_horizontal_2(area, 38, 62);
     render_semantic_list(frame, app, list_pane);
     render_semantic_details(frame, app, detail_pane);
 }
@@ -20,7 +18,7 @@ fn render_semantic_list(frame: &mut Frame, _app: &TuiApp, area: Rect) {
     let items = vec![
         ListItem::new(Line::from(vec![
             Span::styled(
-                " > [Polyglot] ",
+                " > [Neural] ",
                 Style::default()
                     .fg(Color::Magenta)
                     .add_modifier(Modifier::BOLD),
@@ -28,25 +26,29 @@ fn render_semantic_list(frame: &mut Frame, _app: &TuiApp, area: Rect) {
             Span::raw("Rust <-> Python (tokenize_stream vs parse_tokens)"),
         ])),
         ListItem::new(Line::from(vec![
-            Span::styled("   [Polyglot] ", Style::default().fg(Color::Magenta)),
+            Span::styled("   [Neural] ", Style::default().fg(Color::Cyan)),
             Span::raw("TypeScript <-> Go (validate_jwt vs CheckAuthToken)"),
         ])),
         ListItem::new(Line::from(vec![
-            Span::styled("   [Polyglot] ", Style::default().fg(Color::Magenta)),
+            Span::styled("   [Neural] ", Style::default().fg(Color::Green)),
             Span::raw("Java <-> C# (CalculateMetrics vs ComputeStats)"),
+        ])),
+        ListItem::new(Line::from(vec![
+            Span::styled("   [Neural] ", Style::default().fg(Color::Yellow)),
+            Span::raw("Rust <-> C++ (compute_sum vs parallel_accumulate)"),
         ])),
     ];
 
-    let block = create_titled_block(" Cross-Language Semantic Duplicates ", true);
+    let block = create_titled_block(" Cross-Language & Neural Algorithmic Clones ", true);
     frame.render_widget(List::new(items).block(block), area);
 }
 
 fn render_semantic_details(frame: &mut Frame, app: &TuiApp, area: Rect) {
-    let (gauge_area, diff_area) = split_vertical_header_body(area, 7);
+    let (gauge_area, diff_area) = split_vertical_header_body(area, 8);
 
-    // Hybrid Formula Display
+    // Hybrid Formula & Neural Metric Display
     let block_gauge = create_titled_block(
-        " Hybrid Similarity Model: S_hybrid = 0.5 * S_graph + 0.5 * S_token ",
+        " Neural Embedding Model & Weisfeiler-Lehman Graph Isomorphism ",
         false,
     );
 
@@ -61,20 +63,20 @@ fn render_semantic_details(frame: &mut Frame, app: &TuiApp, area: Rect) {
 
     frame.render_widget(block_gauge, gauge_area);
 
-    let g_hybrid = Gauge::default()
+    let g_neural = Gauge::default()
         .gauge_style(Style::default().fg(Color::Magenta))
-        .ratio(0.88)
-        .label("Combined Hybrid Score: 88.0%");
+        .ratio(0.91)
+        .label("Neural Embedding Cosine Similarity: 91.0% (High Confidence)");
     let g_graph = Gauge::default()
         .gauge_style(Style::default().fg(Color::Cyan))
-        .ratio(0.92)
-        .label("Weisfeiler-Lehman Graph Isomorphism: 92.0%");
+        .ratio(0.94)
+        .label("Weisfeiler-Lehman Graph Isomorphism: 94.0%");
     let g_token = Gauge::default()
         .gauge_style(Style::default().fg(Color::Green))
-        .ratio(0.84)
-        .label("Subword 3-Gram Vector Cosine Similarity: 84.0%");
+        .ratio(0.88)
+        .label("Subword 3-Gram Vector Projection: 88.0%");
 
-    frame.render_widget(g_hybrid, gauge_layout[0]);
+    frame.render_widget(g_neural, gauge_layout[0]);
     frame.render_widget(g_graph, gauge_layout[1]);
     frame.render_widget(g_token, gauge_layout[2]);
 

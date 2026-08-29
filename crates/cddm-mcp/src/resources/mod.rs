@@ -77,6 +77,24 @@ pub fn resources_list_response(id: Option<serde_json::Value>) -> JsonRpcResponse
                     "name": "Workspace Ecosystem Library Overlap",
                     "description": "Reimplemented standard and community package utilities detected across workspace files.",
                     "mimeType": mcp_resources::MIME_APPLICATION_JSON
+                },
+                {
+                    "uri": mcp_resources::URI_WORKSPACE_HUB,
+                    "name": "Organization Federation Hub",
+                    "description": "Multi-repository organization duplication metrics, member repositories, and cross-repo clusters.",
+                    "mimeType": mcp_resources::MIME_APPLICATION_JSON
+                },
+                {
+                    "uri": mcp_resources::URI_WORKSPACE_COVERAGE,
+                    "name": "Workspace Runtime Coverage Correlation",
+                    "description": "Runtime execution hit counts, dead code duplicates, and hot path risk analysis correlated with code clones.",
+                    "mimeType": mcp_resources::MIME_APPLICATION_JSON
+                },
+                {
+                    "uri": mcp_resources::URI_WORKSPACE_NEURAL_EMBEDDINGS,
+                    "name": "Workspace Neural Code Embeddings & Algorithmic Equivalence",
+                    "description": "Dense subword embedding vectors and cross-language algorithmic equivalence clone pairs.",
+                    "mimeType": mcp_resources::MIME_APPLICATION_JSON
                 }
             ]
         })),
@@ -353,6 +371,96 @@ pub async fn handle_resource_read(
                                 "mimeType": mcp_resources::MIME_APPLICATION_JSON,
                                 "text": serde_json::to_string_pretty(&result).unwrap_or_default()
                             }
+                        ]
+                    })),
+                    error: None,
+                },
+                Err(e) => make_error_response(id, rpc_errors::INTERNAL_ERROR, e),
+            }
+        }
+
+        mcp_resources::URI_WORKSPACE_HUB => {
+            let config = if Path::new(cddm_core::DEFAULT_HUB_CONFIG_FILE).exists() {
+                cddm_core::load_hub_config(cddm_core::DEFAULT_HUB_CONFIG_FILE).unwrap_or_else(
+                    |_| cddm_core::build_adhoc_hub_config("hub", &[Path::new(".")], 50),
+                )
+            } else {
+                cddm_core::build_adhoc_hub_config("hub", &[Path::new(".")], 50)
+            };
+
+            match cddm_core::run_hub_scan(&config).await {
+                Ok(summary) => JsonRpcResponse {
+                    jsonrpc: JSONRPC_VERSION.to_string(),
+                    id,
+                    result: Some(json!({
+                        "contents": [
+                             {
+                                 "uri": mcp_resources::URI_WORKSPACE_HUB,
+                                 "mimeType": mcp_resources::MIME_APPLICATION_JSON,
+                                 "text": serde_json::to_string_pretty(&summary).unwrap_or_default()
+                             }
+                        ]
+                    })),
+                    error: None,
+                },
+                Err(e) => make_error_response(id, rpc_errors::INTERNAL_ERROR, e),
+            }
+        }
+
+        mcp_resources::URI_WORKSPACE_COVERAGE => {
+            let report = if Path::new("lcov.info").exists() {
+                cddm_core::load_coverage_report(
+                    Path::new("lcov.info"),
+                    cddm_core::CoverageFormat::Auto,
+                )
+                .unwrap_or_default()
+            } else {
+                cddm_core::CoverageReport::default()
+            };
+
+            let scan_config = cddm_core::ScanConfig {
+                directory: ".".to_string(),
+                min_tokens: 50,
+                ..Default::default()
+            };
+            let (tx, _rx) = tokio::sync::mpsc::channel(100);
+            let cancel = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+
+            match cddm_core::run_scan(scan_config, tx, cancel).await {
+                Ok(scan_result) => {
+                    let summary = cddm_core::correlate_coverage(&scan_result, &report);
+                    JsonRpcResponse {
+                        jsonrpc: JSONRPC_VERSION.to_string(),
+                        id,
+                        result: Some(json!({
+                            "contents": [
+                                 {
+                                     "uri": mcp_resources::URI_WORKSPACE_COVERAGE,
+                                     "mimeType": mcp_resources::MIME_APPLICATION_JSON,
+                                     "text": serde_json::to_string_pretty(&summary).unwrap_or_default()
+                                 }
+                            ]
+                        })),
+                        error: None,
+                    }
+                }
+                Err(e) => make_error_response(id, rpc_errors::INTERNAL_ERROR, e),
+            }
+        }
+
+        mcp_resources::URI_WORKSPACE_NEURAL_EMBEDDINGS => {
+            let config = cddm_core::NeuralEmbeddingConfig::default();
+            match cddm_core::scan_neural_clones(Path::new("."), &config) {
+                Ok(result) => JsonRpcResponse {
+                    jsonrpc: JSONRPC_VERSION.to_string(),
+                    id,
+                    result: Some(json!({
+                        "contents": [
+                             {
+                                 "uri": mcp_resources::URI_WORKSPACE_NEURAL_EMBEDDINGS,
+                                 "mimeType": mcp_resources::MIME_APPLICATION_JSON,
+                                 "text": serde_json::to_string_pretty(&result).unwrap_or_default()
+                             }
                         ]
                     })),
                     error: None,

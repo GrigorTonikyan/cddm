@@ -8,6 +8,8 @@ import { createScanSlice } from "./slices/scan-slice";
 import { createSemanticSlice } from "./slices/semantic-slice";
 import { createTimelineSlice } from "./slices/timeline-slice";
 import { createWatchSlice } from "./slices/watch-slice";
+import { createHubSlice } from "./slices/hub-slice";
+import { createCoverageSlice } from "./slices/coverage-slice";
 import type { CDDMStoreState } from "./types";
 
 export type { CDDMStoreState } from "./types";
@@ -123,6 +125,8 @@ export const useCDDMStore = create<CDDMStoreState>((set, get) => ({
   ...createRefactorSlice(set, get),
   ...createSemanticSlice(set, get),
   ...createWatchSlice(set, get),
+  ...createHubSlice(set, get),
+  ...createCoverageSlice(set, get),
 }));
 
 let eventSourceInstance: EventSource | null = null;

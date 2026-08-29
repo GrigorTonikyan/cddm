@@ -130,8 +130,19 @@ async fn run_app() -> Result<(), Box<dyn std::error::Error>> {
             format,
             languages,
             ignore,
+            neural,
+            neural_threshold,
         } => {
-            run_semantic_command(directory, threshold, min_tokens, format, languages, ignore)?;
+            run_semantic_command(
+                directory,
+                threshold,
+                min_tokens,
+                format,
+                languages,
+                ignore,
+                neural,
+                neural_threshold,
+            )?;
         }
 
         Commands::Refactor {
@@ -319,6 +330,14 @@ async fn run_app() -> Result<(), Box<dyn std::error::Error>> {
 
         Commands::Overlap(args) => {
             run_overlap_command(args)?;
+        }
+
+        Commands::Hub(args) => {
+            run_hub_command(args).await?;
+        }
+
+        Commands::Coverage(args) => {
+            handle_coverage_command(args).await?;
         }
     }
 

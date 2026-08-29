@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from "@testing-library/react";
-import { describe, it, expect, beforeEach } from "vite-plus/test";
+import { describe, it, expect, beforeEach, vi } from "vite-plus/test";
 import App from "./App";
 import { useCDDMStore } from "./store/cddm-store";
 import { createMockScanResult } from "./test/test-helpers";
@@ -8,6 +8,13 @@ import { Win2xManagerProvider } from "./components/ui/win2x-manager/context/win2
 describe("App Component", () => {
   beforeEach(() => {
     useCDDMStore.getState().resetScan();
+    global.fetch = vi.fn().mockImplementation(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({}),
+        text: () => Promise.resolve(""),
+      }),
+    );
   });
 
   it("should render CDDM Studio header", () => {
@@ -82,5 +89,17 @@ describe("App Component", () => {
     const overlapBtn = screen.getByText("Overlap Detector");
     fireEvent.click(overlapBtn);
     expect(screen.getByText("Ecosystem Library Reimplementation & Overlap Detector")).toBeDefined();
+  });
+
+  it("should open HubFederationModal when clicking Org Hub in header", () => {
+    render(
+      <Win2xManagerProvider>
+        <App />
+      </Win2xManagerProvider>,
+    );
+
+    const hubBtn = screen.getByText("Org Hub");
+    fireEvent.click(hubBtn);
+    expect(screen.getByText("Organization Federation Hub (.cddmhub.toml)")).toBeDefined();
   });
 });

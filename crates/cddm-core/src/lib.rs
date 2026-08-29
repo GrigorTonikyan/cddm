@@ -4,13 +4,16 @@ pub mod ast;
 pub mod blame;
 pub mod cache;
 pub mod cluster;
+pub mod coverage;
 pub mod detector;
 pub mod diff;
 pub mod extract;
 pub mod fingerprint;
 pub mod grammar;
+pub mod hub;
 pub mod io;
 pub mod monorepo;
+pub mod neural;
 pub mod overlap;
 pub mod policy;
 pub mod pr_comment;
@@ -35,6 +38,10 @@ pub use cache::pack::{
 };
 pub use cache::{CachedFileEntry, DiskFingerprintCache};
 pub use cluster::cluster_clone_pairs;
+pub use coverage::{
+    CloneCoverageMetric, CoverageCorrelationSummary, CoverageFormat, CoverageReport, ExecutionTier,
+    correlate_coverage, load_coverage_report, normalize_path, parse_coverage_data, parse_lcov,
+};
 pub use detector::run_scan;
 pub use diff::{get_changed_files_between_refs, run_diff_scan};
 pub use extract::{
@@ -42,9 +49,20 @@ pub use extract::{
     apply_extraction_to_workspace, apply_shared_extraction, generate_extracted_target_files,
     generate_shared_extraction, update_workspace_manifests,
 };
+pub use hub::{
+    CrossRepoClonePair, CrossRepoCluster, CrossRepoOccurrence, DEFAULT_HUB_CONFIG_FILE, HubConfig,
+    HubExtractRequest, HubExtractResult, HubRepoConfig, HubRepoUpdate, HubScanSummary,
+    RepoDuplicationMetric, build_adhoc_hub_config, generate_default_hub_config,
+    generate_hub_extraction, load_hub_config, run_hub_scan,
+};
 pub use io::{FileSource, MMAP_THRESHOLD_BYTES, read_file_source};
 pub use monorepo::{
     MonorepoScanSummary, MonorepoWorkspace, discover_workspaces, run_monorepo_scan,
+};
+pub use neural::{
+    CodeEmbeddingVector, EquivalenceConfidence, NeuralClonePair, NeuralCodeEmbedder,
+    NeuralEmbeddingConfig, NeuralMatcher, NeuralScanResult, SubwordTokenizer,
+    compare_code_embeddings, compute_code_embedding, scan_neural_clones,
 };
 pub use overlap::{
     EcosystemAlgorithm, OverlapMatch, OverlapScanResult, RecommendedLibrary,

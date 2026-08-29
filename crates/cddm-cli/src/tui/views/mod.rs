@@ -1,8 +1,10 @@
 #![forbid(unsafe_code)]
 
 pub mod clones;
+pub mod coverage;
 pub mod extract;
 pub mod helpers;
+pub mod hub;
 pub mod overlap;
 pub mod overview;
 pub mod policy;
@@ -28,5 +30,7 @@ pub fn render_main_content(frame: &mut Frame, app: &TuiApp, area: Rect) {
         TuiTab::Timeline => timeline::render_timeline_view(frame, app, area),
         TuiTab::Workflow => workflow::render_workflow_view(frame, app, area),
         TuiTab::Overlap => overlap::render_overlap_view(frame, app, area),
+        TuiTab::Hub => hub::render_hub_view(frame, app, area),
+        TuiTab::Coverage => coverage::render_coverage_view(frame, app, area),
     }
 }

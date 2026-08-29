@@ -93,11 +93,11 @@ fn test_tui_tab_lifecycle() {
     let tab = TuiTab::Overview;
     assert_eq!(tab.title(), "[1] Overview");
     assert_eq!(tab.next(), TuiTab::Clones);
-    assert_eq!(tab.prev(), TuiTab::Overlap);
+    assert_eq!(tab.prev(), TuiTab::Coverage);
 
-    let last_tab = TuiTab::Overlap;
+    let last_tab = TuiTab::Coverage;
     assert_eq!(last_tab.next(), TuiTab::Overview);
-    assert_eq!(last_tab.title(), "[9] Overlap");
+    assert_eq!(last_tab.title(), "[C] Coverage");
 }
 
 #[test]
@@ -225,13 +225,14 @@ fn test_tui_key_events() {
 }
 
 #[test]
-fn test_render_all_9_tabs_on_test_backend() {
+fn test_render_all_tabs_on_test_backend() {
     let backend = TestBackend::new(120, 40);
-    let mut terminal = Terminal::new(backend).expect("Failed to create TestBackend terminal");
+    let mut terminal = Terminal::new(backend).expect("Backend init");
 
     let mut app = TuiApp::new(PathBuf::from("."), ScanConfig::default(), None, false);
     let pair = make_sample_pair("src/a.rs", "src/b.rs", 85, CloneType::Exact);
-    app.set_scan_result(make_sample_scan_result(vec![pair], 3.4, 95.2));
+    let result = make_sample_scan_result(vec![pair], 3.4, 95.2);
+    app.set_scan_result(result);
 
     let all_tabs = [
         TuiTab::Overview,
@@ -243,6 +244,8 @@ fn test_render_all_9_tabs_on_test_backend() {
         TuiTab::Timeline,
         TuiTab::Workflow,
         TuiTab::Overlap,
+        TuiTab::Hub,
+        TuiTab::Coverage,
     ];
 
     for tab in all_tabs {

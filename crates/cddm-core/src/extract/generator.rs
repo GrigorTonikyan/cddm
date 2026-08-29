@@ -277,6 +277,56 @@ pub(crate) fn derive_target_name(path: &str) -> String {
     }
 }
 
+/// Helper to resolve target path and import statement for auxiliary files (tests, benchmarks).
+pub fn resolve_auxiliary_file_path(
+    norm_target: &str,
+    snake_fn: &str,
+    function_name: &str,
+    norm_ext: &str,
+    target_kind: ExtractTargetKind,
+    suffix: &str,
+) -> (String, String) {
+    let clean_target = norm_target.trim_end_matches('/');
+    if norm_ext == "py" {
+        if target_kind == ExtractTargetKind::NewCrate {
+            let dir_name = if suffix == "bench" {
+                "benches"
+            } else {
+                "tests"
+            };
+            let p = format!("{}/{}/{}_{}.py", clean_target, dir_name, suffix, snake_fn);
+            let i = format!(
+                "from {} import {}",
+                derive_target_name(norm_target),
+                function_name
+            );
+            (p, i)
+        } else {
+            let base = norm_target.trim_end_matches(".py");
+            let p = format!("{}_{}.py", base, suffix);
+            let stem = std::path::Path::new(base)
+                .file_stem()
+                .and_then(|s| s.to_str())
+                .unwrap_or("module");
+            let i = format!("from {} import {}", stem, function_name);
+            (p, i)
+        }
+    } else if target_kind == ExtractTargetKind::NewCrate {
+        let p = format!("{}/src/{}.{}.{}", clean_target, snake_fn, suffix, norm_ext);
+        let i = format!("import {{ {} }} from \"./index\";", function_name);
+        (p, i)
+    } else {
+        let base = norm_target.trim_end_matches(&format!(".{}", norm_ext));
+        let p = format!("{}.{}.{}", base, suffix, norm_ext);
+        let stem = std::path::Path::new(base)
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or("module");
+        let i = format!("import {{ {} }} from \"./{}\";", function_name, stem);
+        (p, i)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

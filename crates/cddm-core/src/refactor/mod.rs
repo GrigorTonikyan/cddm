@@ -318,42 +318,49 @@ mod tests {
         assert!(res.unwrap_err().contains("Hunk mismatch"));
     }
 
-    #[test]
-    fn test_generate_ast_cluster_refactor() {
-        let mut file_a = NamedTempFile::with_suffix(".rs").unwrap();
-        let mut file_b = NamedTempFile::with_suffix(".rs").unwrap();
+    fn create_test_pair_files(
+        suffix: &str,
+        content_a: &str,
+        content_b: &str,
+        start_line: usize,
+        end_line: usize,
+    ) -> (NamedTempFile, NamedTempFile, String, Vec<CloneLocation>) {
+        let mut file_a = NamedTempFile::with_suffix(suffix).unwrap();
+        let mut file_b = NamedTempFile::with_suffix(suffix).unwrap();
         let path_a = file_a.path().to_str().unwrap().to_string();
         let path_b = file_b.path().to_str().unwrap().to_string();
 
-        writeln!(
-            file_a,
-            "fn compute_a() {{\n    let x = 10;\n    let y = 20;\n    println!(\"{{}}\", x + \
-             y);\n}}"
-        )
-        .unwrap();
-        writeln!(
-            file_b,
-            "fn compute_b() {{\n    let x = 10;\n    let y = 20;\n    println!(\"{{}}\", x + \
-             y);\n}}"
-        )
-        .unwrap();
+        writeln!(file_a, "{}", content_a).unwrap();
+        writeln!(file_b, "{}", content_b).unwrap();
         file_a.flush().unwrap();
         file_b.flush().unwrap();
 
         let occurrences = vec![
             CloneLocation {
                 file: path_a.clone(),
-                start_line: 2,
-                end_line: 4,
+                start_line,
+                end_line,
                 author: None,
             },
             CloneLocation {
-                file: path_b.clone(),
-                start_line: 2,
-                end_line: 4,
+                file: path_b,
+                start_line,
+                end_line,
                 author: None,
             },
         ];
+        (file_a, file_b, path_a, occurrences)
+    }
+
+    #[test]
+    fn test_generate_ast_cluster_refactor() {
+        let (_fa, _fb, path_a, occurrences) = create_test_pair_files(
+            ".rs",
+            "fn compute_a() {\n    let x = 10;\n    let y = 20;\n    println!(\"{}\", x + y);\n}",
+            "fn compute_b() {\n    let x = 10;\n    let y = 20;\n    println!(\"{}\", x + y);\n}",
+            2,
+            4,
+        );
 
         let result = generate_ast_cluster_refactor(
             &occurrences,
@@ -374,38 +381,13 @@ mod tests {
 
     #[test]
     fn test_generate_ast_cluster_refactor_go() {
-        let mut file_a = NamedTempFile::with_suffix(".go").unwrap();
-        let mut file_b = NamedTempFile::with_suffix(".go").unwrap();
-        let path_a = file_a.path().to_str().unwrap().to_string();
-        let path_b = file_b.path().to_str().unwrap().to_string();
-
-        writeln!(
-            file_a,
-            "package main\n\nfunc RunA() {{\n\tval := 100\n\t_ = val * 2\n}}"
-        )
-        .unwrap();
-        writeln!(
-            file_b,
-            "package main\n\nfunc RunB() {{\n\tval := 100\n\t_ = val * 2\n}}"
-        )
-        .unwrap();
-        file_a.flush().unwrap();
-        file_b.flush().unwrap();
-
-        let occurrences = vec![
-            CloneLocation {
-                file: path_a.clone(),
-                start_line: 4,
-                end_line: 5,
-                author: None,
-            },
-            CloneLocation {
-                file: path_b.clone(),
-                start_line: 4,
-                end_line: 5,
-                author: None,
-            },
-        ];
+        let (_fa, _fb, path_a, occurrences) = create_test_pair_files(
+            ".go",
+            "package main\n\nfunc RunA() {\n\tval := 100\n\t_ = val * 2\n}",
+            "package main\n\nfunc RunB() {\n\tval := 100\n\t_ = val * 2\n}",
+            4,
+            5,
+        );
 
         let result = generate_ast_cluster_refactor(
             &occurrences,
@@ -427,38 +409,13 @@ mod tests {
 
     #[test]
     fn test_generate_ast_cluster_refactor_python() {
-        let mut file_a = NamedTempFile::with_suffix(".py").unwrap();
-        let mut file_b = NamedTempFile::with_suffix(".py").unwrap();
-        let path_a = file_a.path().to_str().unwrap().to_string();
-        let path_b = file_b.path().to_str().unwrap().to_string();
-
-        writeln!(
-            file_a,
-            "def handle_a():\n    score = 10\n    print(score)\n"
-        )
-        .unwrap();
-        writeln!(
-            file_b,
-            "def handle_b():\n    score = 10\n    print(score)\n"
-        )
-        .unwrap();
-        file_a.flush().unwrap();
-        file_b.flush().unwrap();
-
-        let occurrences = vec![
-            CloneLocation {
-                file: path_a.clone(),
-                start_line: 2,
-                end_line: 3,
-                author: None,
-            },
-            CloneLocation {
-                file: path_b.clone(),
-                start_line: 2,
-                end_line: 3,
-                author: None,
-            },
-        ];
+        let (_fa, _fb, path_a, occurrences) = create_test_pair_files(
+            ".py",
+            "def handle_a():\n    score = 10\n    print(score)\n",
+            "def handle_b():\n    score = 10\n    print(score)\n",
+            2,
+            3,
+        );
 
         let result =
             generate_ast_cluster_refactor(&occurrences, Some("log_score"), Some(&path_a), None);

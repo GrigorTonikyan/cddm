@@ -69,6 +69,13 @@ export interface CDDMStoreState {
   isPolicyRulesModalOpen: boolean;
   isSemanticGraphModalOpen: boolean;
   isOverlapDetectorOpen: boolean;
+  isHubModalOpen: boolean;
+
+  /** Organization Federation Hub state */
+  hubConfig: import("../types/cddm-types").HubConfig | null;
+  hubSummary: import("../types/cddm-types").HubScanSummary | null;
+  isHubLoading: boolean;
+  hubError: string | null;
 
   /** Live watch sync counter and last sync events */
   liveSyncCount: number;
@@ -80,6 +87,8 @@ export interface CDDMStoreState {
   semanticGraphError: string | null;
   crossLanguageClones: import("../types/cddm-types").CrossLanguageClonePair[];
   isCrossLanguageLoading: boolean;
+  neuralResult: import("../types/cddm-types").NeuralScanResult | null;
+  isNeuralLoading: boolean;
 
   /** Historical timeline data and loading state */
   timelineData: TimelineTrend | null;
@@ -202,5 +211,30 @@ export interface CDDMStoreState {
     threshold?: number,
     directory?: string,
   ) => Promise<import("../types/cddm-types").CrossLanguageClonePair[]>;
+  scanNeuralClones: (
+    req?: import("../types/cddm-types").SemanticNeuralRequest,
+  ) => Promise<import("../types/cddm-types").NeuralScanResult>;
   openSemanticGraphModal: (req?: SemanticGraphRequest) => Promise<void>;
+
+  /** Organization Federation Hub actions */
+  setIsHubModalOpen: (open: boolean) => void;
+  fetchHubConfig: () => Promise<void>;
+  saveHubConfig: (config: import("../types/cddm-types").HubConfig) => Promise<void>;
+  runHubScan: (
+    config?: import("../types/cddm-types").HubConfig,
+  ) => Promise<import("../types/cddm-types").HubScanSummary>;
+  extractHubPackage: (
+    req: import("../types/cddm-types").HubExtractRequest,
+  ) => Promise<import("../types/cddm-types").HubExtractResult>;
+
+  /** Runtime Execution & Coverage correlation */
+  isCoverageModalOpen: boolean;
+  coverageSummary: import("../types/cddm-types").CoverageCorrelationSummary | null;
+  isCoverageLoading: boolean;
+  coverageError: string | null;
+  setIsCoverageModalOpen: (open: boolean) => void;
+  ingestCoverageReport: (req: import("../types/cddm-types").CoverageIngestRequest) => Promise<void>;
+  correlateCoverage: (
+    req?: import("../types/cddm-types").CoverageCorrelateRequest,
+  ) => Promise<import("../types/cddm-types").CoverageCorrelationSummary>;
 }

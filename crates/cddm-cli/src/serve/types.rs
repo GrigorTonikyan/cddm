@@ -80,6 +80,9 @@ pub const ROUTE_API_SEMANTIC_GRAPH: &str = "/api/semantic-graph";
 /// API endpoint path for workspace cross-language semantic clone scans.
 pub const ROUTE_API_SEMANTIC_SCAN: &str = "/api/semantic/scan";
 
+/// API endpoint path for in-process neural code embedding equivalence scans.
+pub const ROUTE_API_SEMANTIC_NEURAL: &str = "/api/semantic/neural";
+
 /// API endpoint path for watch daemon status and metrics.
 pub const ROUTE_API_WATCH_STATUS: &str = "/api/watch/status";
 
@@ -100,6 +103,21 @@ pub const ROUTE_API_OVERLAP_CATALOG: &str = "/api/overlap/catalog";
 
 /// API endpoint path for scanning workspace for library overlap matches.
 pub const ROUTE_API_OVERLAP_SCAN: &str = "/api/overlap/scan";
+
+/// API endpoint path for organization federation hub configuration.
+pub const ROUTE_API_HUB_CONFIG: &str = "/api/hub/config";
+
+/// API endpoint path for organization federation hub scanning.
+pub const ROUTE_API_HUB_SCAN: &str = "/api/hub/scan";
+
+/// API endpoint path for organization federation hub shared package extraction.
+pub const ROUTE_API_HUB_EXTRACT: &str = "/api/hub/extract";
+
+/// API endpoint path for ingesting raw coverage tracefile content.
+pub const ROUTE_API_COVERAGE_INGEST: &str = "/api/coverage/ingest";
+
+/// API endpoint path for correlating coverage reports with duplicate clones.
+pub const ROUTE_API_COVERAGE_CORRELATE: &str = "/api/coverage/correlate";
 
 /// Default localhost IPv4 binding.
 pub const DEFAULT_HOST_IP: [u8; 4] = [127, 0, 0, 1];
@@ -338,4 +356,34 @@ pub struct SemanticGraphResponse {
     pub cfgs: Vec<cddm_core::semantic_graph::ControlFlowGraph>,
     pub pdgs: Vec<cddm_core::semantic_graph::ProgramDependenceGraph>,
     pub comparison: Option<SemanticComparisonResponse>,
+}
+
+/// Request payload for ingesting coverage report content.
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Default)]
+pub struct CoverageIngestRequest {
+    pub report_content: Option<String>,
+    pub report_path: Option<String>,
+    pub format: Option<String>,
+}
+
+/// Request payload for correlating coverage with scan results.
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Default)]
+pub struct CoverageCorrelateRequest {
+    pub report_path: Option<String>,
+    pub report_content: Option<String>,
+    pub format: Option<String>,
+    pub directory: Option<String>,
+    pub min_tokens: Option<usize>,
+    pub dead_code_only: Option<bool>,
+    pub min_hits: Option<u64>,
+    pub risk_threshold: Option<f64>,
+}
+
+/// Request payload for in-process neural code embedding equivalence scan.
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Default)]
+pub struct SemanticNeuralRequest {
+    pub directory: Option<String>,
+    pub threshold: Option<f32>,
+    pub dimension: Option<usize>,
+    pub max_subwords: Option<usize>,
 }

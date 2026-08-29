@@ -60,24 +60,16 @@ fn render_metrics_and_languages(frame: &mut Frame, app: &TuiApp, area: Rect) {
         None => (0, 0, 0, 0),
     };
 
-    let rows = vec![
-        Row::new(vec![
-            "Scanned Code Files".to_string(),
-            format!("{} files", files),
-        ]),
-        Row::new(vec![
-            "Total Processed Tokens".to_string(),
-            format!("{} tokens", tokens),
-        ]),
-        Row::new(vec![
-            "Identified Clone Pairs".to_string(),
-            format!("{} pairs", clones),
-        ]),
-        Row::new(vec![
-            "Connected Clone Clusters".to_string(),
-            format!("{} clusters", clusters),
-        ]),
+    let metric_data = [
+        ("Scanned Code Files", format!("{} files", files)),
+        ("Total Processed Tokens", format!("{} tokens", tokens)),
+        ("Identified Clone Pairs", format!("{} pairs", clones)),
+        ("Connected Clone Clusters", format!("{} clusters", clusters)),
     ];
+    let rows: Vec<Row> = metric_data
+        .into_iter()
+        .map(|(k, v)| Row::new(vec![k.to_string(), v]))
+        .collect();
 
     render_overview_table(frame, " Codebase Modularity Metrics ", rows, left_box);
 
@@ -100,24 +92,25 @@ fn render_metrics_and_languages(frame: &mut Frame, app: &TuiApp, area: Rect) {
         None => (0, 0, 0, 0),
     };
 
-    let type_rows = vec![
-        Row::new(vec![
-            "Type-1 Exact Clones".to_string(),
-            format!("{} occurrences", exact),
-        ]),
-        Row::new(vec![
-            "Type-2 Renamed Identifiers".to_string(),
+    let type_data = [
+        ("Type-1 Exact Clones", format!("{} occurrences", exact)),
+        (
+            "Type-2 Renamed Identifiers",
             format!("{} occurrences", renamed),
-        ]),
-        Row::new(vec![
-            "Type-3 Near-Miss Statements".to_string(),
+        ),
+        (
+            "Type-3 Near-Miss Statements",
             format!("{} occurrences", near_miss),
-        ]),
-        Row::new(vec![
-            "Type-4 Semantic / Polyglot".to_string(),
+        ),
+        (
+            "Type-4 Semantic / Polyglot",
             format!("{} occurrences", semantic),
-        ]),
+        ),
     ];
+    let type_rows: Vec<Row> = type_data
+        .into_iter()
+        .map(|(k, v)| Row::new(vec![k.to_string(), v]))
+        .collect();
 
     render_overview_table(
         frame,

@@ -255,3 +255,91 @@ pub fn handle_scan_cross_language(
         Err(e) => make_error_response(id, rpc_errors::INTERNAL_ERROR, e),
     }
 }
+
+/// Handler for `cddm_semantic_neural_scan` MCP tool.
+pub fn handle_semantic_neural_scan(
+    id: Option<serde_json::Value>,
+    args: Option<&serde_json::Value>,
+) -> JsonRpcResponse {
+    let empty_map = serde_json::Map::new();
+    let args_obj = args.and_then(|v| v.as_object()).unwrap_or(&empty_map);
+
+    let threshold = args_obj
+        .get("threshold")
+        .and_then(|v| v.as_f64())
+        .unwrap_or(0.85) as f32;
+    let dimension = args_obj
+        .get("dimension")
+        .and_then(|v| v.as_u64())
+        .unwrap_or(256) as usize;
+    let neural_config = cddm_core::NeuralEmbeddingConfig {
+        dimension,
+        similarity_threshold: threshold,
+        max_subwords: 512,
+    };
+
+    // Case 1: Direct pairwise code comparison
+    if let (Some(code_a), Some(code_b)) = (
+        args_obj.get("code_a").and_then(|v| v.as_str()),
+        args_obj.get("code_b").and_then(|v| v.as_str()),
+    ) {
+        let lang_a = args_obj
+            .get("language_a")
+            .and_then(|v| v.as_str())
+            .unwrap_or("rs");
+        let lang_b = args_obj
+            .get("language_b")
+            .and_then(|v| v.as_str())
+            .unwrap_or("rs");
+
+        let sim =
+            cddm_core::compare_code_embeddings(code_a, lang_a, code_b, lang_b, &neural_config);
+
+        let payload = json!({
+            "cosine_similarity": sim,
+            "is_equivalent": sim >= threshold,
+            "threshold": threshold,
+            "language_a": lang_a,
+            "language_b": lang_b,
+        });
+
+        return make_text_response(
+            id,
+            serde_json::to_string_pretty(&payload).unwrap_or_default(),
+        );
+    }
+
+    // Case 2: Workspace directory scan
+    let dir = args_obj
+        .get("directory")
+        .and_then(|v| v.as_str())
+        .unwrap_or(cddm_core::DEFAULT_DIRECTORY);
+
+    let path = Path::new(dir);
+    if !path.exists() {
+        return make_error_response(
+            id,
+            rpc_errors::INVALID_PARAMS,
+            format!("Target directory '{}' does not exist", dir),
+        );
+    }
+
+    match cddm_core::scan_neural_clones(path, &neural_config) {
+        Ok(result) => {
+            let payload = json!({
+                "directory": dir,
+                "threshold": threshold,
+                "dimension": dimension,
+                "total_blocks_embedded": result.total_blocks_embedded,
+                "total_neural_pairs": result.total_neural_pairs,
+                "high_confidence_count": result.high_confidence_count,
+                "pairs": result.pairs,
+            });
+            make_text_response(
+                id,
+                serde_json::to_string_pretty(&payload).unwrap_or_default(),
+            )
+        }
+        Err(e) => make_error_response(id, rpc_errors::INTERNAL_ERROR, e),
+    }
+}

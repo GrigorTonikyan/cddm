@@ -1,8 +1,10 @@
 #![forbid(unsafe_code)]
 
 pub mod clone_tools;
+pub mod coverage_tools;
 pub mod extract_tools;
 pub mod helpers;
+pub mod hub_tools;
 pub mod overlap_tools;
 pub mod policy_tools;
 pub mod refactor_tools;
@@ -70,6 +72,11 @@ pub async fn dispatch_tool_call(
             extract_tools::handle_extract_shared_module(id, args).await
         }
         mcp_tools::DETECT_OVERLAP => overlap_tools::handle_detect_overlap(id, args).await,
+        mcp_tools::SCAN_HUB => hub_tools::handle_scan_hub(id, args).await,
+        mcp_tools::EXTRACT_HUB_PACKAGE => hub_tools::handle_extract_hub_package(id, args).await,
+        mcp_tools::CORRELATE_COVERAGE => coverage_tools::handle_correlate_coverage(id, args).await,
+        mcp_tools::DETECT_DEAD_CLONES => coverage_tools::handle_detect_dead_clones(id, args).await,
+        mcp_tools::SEMANTIC_NEURAL_SCAN => semantic_tools::handle_semantic_neural_scan(id, args),
         _ => make_error_response(
             id,
             rpc_errors::METHOD_NOT_FOUND,

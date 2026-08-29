@@ -151,3 +151,29 @@ pub async fn semantic_scan_handler(
         .map(Json)
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))
 }
+
+/// Handler for `POST /api/semantic/neural` executing in-process neural code embedding equivalence scan.
+pub async fn semantic_neural_handler(
+    Json(req): Json<SemanticNeuralRequest>,
+) -> Result<Json<cddm_core::NeuralScanResult>, (StatusCode, String)> {
+    let dir = req
+        .directory
+        .unwrap_or_else(|| DEFAULT_DIRECTORY.to_string());
+    let path = Path::new(&dir);
+    if !path.exists() {
+        return Err((
+            StatusCode::NOT_FOUND,
+            format!("Directory '{}' does not exist", dir),
+        ));
+    }
+
+    let config = cddm_core::NeuralEmbeddingConfig {
+        dimension: req.dimension.unwrap_or(256),
+        similarity_threshold: req.threshold.unwrap_or(0.85),
+        max_subwords: req.max_subwords.unwrap_or(512),
+    };
+
+    cddm_core::scan_neural_clones(path, &config)
+        .map(Json)
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))
+}

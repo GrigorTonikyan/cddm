@@ -1,5 +1,7 @@
 #![forbid(unsafe_code)]
 
+mod coverage_tests;
+mod semantic_tests;
 mod watch_tests;
 
 use super::*;

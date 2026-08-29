@@ -1,28 +1,28 @@
 import { API_ROUTES } from "../../constants/cddm-constants";
 import type {
   CrossLanguageClonePair,
+  NeuralScanResult,
   SemanticGraphRequest,
   SemanticGraphResponse,
+  SemanticNeuralRequest,
 } from "../../types/cddm-types";
+import { postJson } from "../../utils/api-client";
 import type { GetStoreState, SetStoreState } from "./scan-slice";
 
 export const createSemanticSlice = (set: SetStoreState, get: GetStoreState) => ({
   crossLanguageClones: [] as CrossLanguageClonePair[],
   isCrossLanguageLoading: false,
+  neuralResult: null as NeuralScanResult | null,
+  isNeuralLoading: false,
 
   fetchSemanticGraph: async (req: SemanticGraphRequest): Promise<SemanticGraphResponse> => {
     set({ isSemanticGraphLoading: true, semanticGraphError: null });
     try {
-      const res = await fetch(API_ROUTES.SEMANTIC_GRAPH, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(req),
-      });
-      if (!res.ok) {
-        const errText = await res.text().catch(() => res.statusText);
-        throw new Error(`Semantic graph extraction failed (${res.status}): ${errText}`);
-      }
-      const data: SemanticGraphResponse = await res.json();
+      const data = await postJson<SemanticGraphResponse>(
+        API_ROUTES.SEMANTIC_GRAPH,
+        req,
+        "Semantic graph extraction failed",
+      );
       set({
         semanticGraphRequest: req,
         semanticGraphResponse: data,
@@ -43,16 +43,11 @@ export const createSemanticSlice = (set: SetStoreState, get: GetStoreState) => (
   ): Promise<CrossLanguageClonePair[]> => {
     set({ isCrossLanguageLoading: true });
     try {
-      const res = await fetch(API_ROUTES.SEMANTIC_SCAN, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ directory, threshold }),
-      });
-      if (!res.ok) {
-        const errText = await res.text().catch(() => res.statusText);
-        throw new Error(`Cross-language scan failed (${res.status}): ${errText}`);
-      }
-      const pairs: CrossLanguageClonePair[] = await res.json();
+      const pairs = await postJson<CrossLanguageClonePair[]>(
+        API_ROUTES.SEMANTIC_SCAN,
+        { directory, threshold },
+        "Cross-language scan failed",
+      );
       set({
         crossLanguageClones: pairs,
         isCrossLanguageLoading: false,
@@ -60,6 +55,27 @@ export const createSemanticSlice = (set: SetStoreState, get: GetStoreState) => (
       return pairs;
     } catch (err) {
       set({ isCrossLanguageLoading: false });
+      throw err;
+    }
+  },
+
+  scanNeuralClones: async (
+    req: SemanticNeuralRequest = { directory: ".", threshold: 0.85 },
+  ): Promise<NeuralScanResult> => {
+    set({ isNeuralLoading: true });
+    try {
+      const result = await postJson<NeuralScanResult>(
+        API_ROUTES.SEMANTIC_NEURAL,
+        req,
+        "Neural scan failed",
+      );
+      set({
+        neuralResult: result,
+        isNeuralLoading: false,
+      });
+      return result;
+    } catch (err) {
+      set({ isNeuralLoading: false });
       throw err;
     }
   },

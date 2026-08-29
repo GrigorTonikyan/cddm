@@ -120,4 +120,38 @@ describe("useCDDMStore - Semantic Slice", () => {
     expect(state.crossLanguageClones).toEqual(mockClones);
     expect(state.isCrossLanguageLoading).toBe(false);
   });
+
+  it("should successfully execute in-process neural code scan", async () => {
+    const mockNeuralResult = {
+      total_blocks_embedded: 42,
+      total_neural_pairs: 3,
+      high_confidence_count: 2,
+      pairs: [
+        {
+          file_a: "src/a.rs",
+          start_line_a: 10,
+          end_line_a: 25,
+          language_a: "rs",
+          file_b: "src/b.py",
+          start_line_b: 15,
+          end_line_b: 30,
+          language_b: "py",
+          similarity: 0.93,
+          confidence: "High" as const,
+          semantic_rationale: "Neural cosine similarity 93.0%",
+        },
+      ],
+    };
+
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(mockNeuralResult),
+    } as Response);
+
+    const res = await useCDDMStore.getState().scanNeuralClones({ directory: ".", threshold: 0.85 });
+    expect(res).toEqual(mockNeuralResult);
+    const state = useCDDMStore.getState();
+    expect(state.neuralResult).toEqual(mockNeuralResult);
+    expect(state.isNeuralLoading).toBe(false);
+  });
 });

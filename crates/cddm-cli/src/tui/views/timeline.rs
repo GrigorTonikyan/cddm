@@ -1,24 +1,20 @@
 #![forbid(unsafe_code)]
 
 use ratatui::Frame;
-use ratatui::layout::{Constraint, Direction, Layout, Rect};
+use ratatui::layout::{Constraint, Rect};
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Paragraph, Row, Table};
 
-use super::helpers::create_titled_block;
+use super::helpers::{create_titled_block, split_vertical_header_body};
 use crate::tui::app::TuiApp;
 use crate::tui::theme::TuiTheme;
 
 /// Render Tab 7: Git History Timeline & Trend Analyzer (`cddm trend`).
 pub fn render_timeline_view(frame: &mut Frame, _app: &TuiApp, area: Rect) {
-    let chunks = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([Constraint::Length(6), Constraint::Min(8)])
-        .split(area);
-
-    render_trend_trajectory(frame, chunks[0]);
-    render_snapshots_table(frame, chunks[1]);
+    let (trend_pane, table_pane) = split_vertical_header_body(area, 6);
+    render_trend_trajectory(frame, trend_pane);
+    render_snapshots_table(frame, table_pane);
 }
 
 fn render_trend_trajectory(frame: &mut Frame, area: Rect) {

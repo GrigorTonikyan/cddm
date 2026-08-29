@@ -3,7 +3,7 @@
 use super::actions::{
     CacheAction, HookAction, IgnoreAction, OutputFormat, PlatformChoice, RulesAction,
 };
-use super::commands::{ExtractArgs, HealArgs, OverlapArgs};
+use super::commands::{CoverageArgs, ExtractArgs, HealArgs, HubArgs, OverlapArgs};
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
@@ -193,6 +193,14 @@ pub enum Commands {
         /// Glob patterns to ignore
         #[arg(short, long)]
         ignore: Vec<String>,
+
+        /// Enable in-process dense neural code embedding equivalence scan
+        #[arg(long)]
+        neural: bool,
+
+        /// Minimum cosine similarity threshold for neural matching (default: 0.85)
+        #[arg(long, default_value_t = 0.85)]
+        neural_threshold: f32,
     },
 
     /// Synthesize automated refactoring suggestions for duplicate clone pairs
@@ -469,4 +477,10 @@ pub enum Commands {
 
     /// Detect reimplemented ecosystem library algorithms and suggest standard packages
     Overlap(OverlapArgs),
+
+    /// Manage and scan multi-repository Organization Federation Hub (.cddmhub.toml)
+    Hub(HubArgs),
+
+    /// Dynamic runtime execution & coverage-aware de-duplication analysis
+    Coverage(CoverageArgs),
 }

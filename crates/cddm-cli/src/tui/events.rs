@@ -69,7 +69,7 @@ pub fn handle_key_event(app: &mut TuiApp, key: KeyEvent) {
             app.show_help_modal = !app.show_help_modal;
         }
 
-        // Direct Tab Shortcuts (1 - 9)
+        // Direct Tab Shortcuts (1 - 9, 0)
         (KeyCode::Char('1'), _) => app.active_tab = TuiTab::Overview,
         (KeyCode::Char('2'), _) => app.active_tab = TuiTab::Clones,
         (KeyCode::Char('3'), _) => app.active_tab = TuiTab::Semantic,
@@ -79,6 +79,8 @@ pub fn handle_key_event(app: &mut TuiApp, key: KeyEvent) {
         (KeyCode::Char('7'), _) => app.active_tab = TuiTab::Timeline,
         (KeyCode::Char('8'), _) => app.active_tab = TuiTab::Workflow,
         (KeyCode::Char('9'), _) => app.active_tab = TuiTab::Overlap,
+        (KeyCode::Char('0'), _) => app.active_tab = TuiTab::Hub,
+        (KeyCode::Char('C'), _) | (KeyCode::Char('v'), _) => app.active_tab = TuiTab::Coverage,
 
         // Tab Switching
         (KeyCode::Tab, KeyModifiers::NONE) | (KeyCode::Char('l'), KeyModifiers::NONE) => {

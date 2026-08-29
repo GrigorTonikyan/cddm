@@ -224,4 +224,38 @@ fn test_cli_subcommands_parsing() {
         Commands::Monorepo { min_tokens, .. } => assert_eq!(min_tokens, 30),
         _ => panic!("expected Monorepo command"),
     }
+
+    let cli_coverage = Cli::try_parse_from([
+        "cddm",
+        "coverage",
+        "--report",
+        "lcov.info",
+        "--dead-code-only",
+        "--min-hits",
+        "10",
+    ])
+    .expect("parse coverage");
+    match cli_coverage.command {
+        Commands::Coverage(args) => {
+            assert_eq!(args.report, PathBuf::from("lcov.info"));
+            assert!(args.dead_code_only);
+            assert_eq!(args.min_hits, 10);
+        }
+        _ => panic!("expected Coverage command"),
+    }
+
+    let cli_neural_semantic =
+        Cli::try_parse_from(["cddm", "semantic", "--neural", "--neural-threshold", "0.92"])
+            .expect("parse semantic neural");
+    match cli_neural_semantic.command {
+        Commands::Semantic {
+            neural,
+            neural_threshold,
+            ..
+        } => {
+            assert!(neural);
+            assert!((neural_threshold - 0.92).abs() < 1e-4);
+        }
+        _ => panic!("expected Semantic command"),
+    }
 }

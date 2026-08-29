@@ -63,6 +63,11 @@ pub mod mcp_tools {
     pub const SCAN_CROSS_LANGUAGE: &str = "cddm_scan_cross_language";
     pub const EXTRACT_SHARED_MODULE: &str = "cddm_extract_shared_module";
     pub const DETECT_OVERLAP: &str = "cddm_detect_overlap";
+    pub const SCAN_HUB: &str = "cddm_scan_hub";
+    pub const EXTRACT_HUB_PACKAGE: &str = "cddm_extract_hub_package";
+    pub const CORRELATE_COVERAGE: &str = "cddm_correlate_coverage";
+    pub const DETECT_DEAD_CLONES: &str = "cddm_detect_dead_clones";
+    pub const SEMANTIC_NEURAL_SCAN: &str = "cddm_semantic_neural_scan";
 
     pub const PARAM_DIRECTORY: &str = "directory";
     pub const PARAM_MIN_TOKENS: &str = "min_tokens";
@@ -102,6 +107,9 @@ pub mod mcp_resources {
     pub const URI_WORKSPACE_CROSS_LANGUAGE_CLONES: &str = "cddm://workspace/cross_language_clones";
     pub const URI_WORKSPACE_WATCH_STATUS: &str = "cddm://workspace/watch_status";
     pub const URI_WORKSPACE_OVERLAP: &str = "cddm://workspace/overlap";
+    pub const URI_WORKSPACE_HUB: &str = "cddm://workspace/hub";
+    pub const URI_WORKSPACE_COVERAGE: &str = "cddm://workspace/coverage";
+    pub const URI_WORKSPACE_NEURAL_EMBEDDINGS: &str = "cddm://workspace/neural_embeddings";
     pub const MIME_APPLICATION_JSON: &str = "application/json";
 }
 

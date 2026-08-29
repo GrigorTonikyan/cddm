@@ -1,7 +1,9 @@
 #![forbid(unsafe_code)]
 
 pub mod assets;
+pub mod coverage_handlers;
 pub mod extract_handlers;
+pub mod hub_handlers;
 pub mod overlap_handlers;
 pub mod policy_handlers;
 pub mod refactor_handlers;
@@ -19,7 +21,9 @@ use axum::{
     routing::{get, post},
 };
 use cddm_core::{CddmWatcher, ScanConfig};
+use coverage_handlers::*;
 use extract_handlers::*;
+use hub_handlers::*;
 use overlap_handlers::*;
 use policy_handlers::*;
 use refactor_handlers::*;
@@ -90,6 +94,7 @@ pub fn build_app_with_state(state: AppState) -> Router {
         .route(ROUTE_API_MONOREPO, post(monorepo_handler))
         .route(ROUTE_API_SEMANTIC_GRAPH, post(semantic_graph_handler))
         .route(ROUTE_API_SEMANTIC_SCAN, post(semantic_scan_handler))
+        .route(ROUTE_API_SEMANTIC_NEURAL, post(semantic_neural_handler))
         .route(ROUTE_API_WATCH_STATUS, get(watch_status_handler))
         .route(ROUTE_API_WATCH_TOGGLE, post(watch_toggle_handler))
         .route(ROUTE_API_WATCH_RESCAN, post(watch_rescan_handler))
@@ -97,6 +102,17 @@ pub fn build_app_with_state(state: AppState) -> Router {
         .route(ROUTE_API_EXTRACT_APPLY, post(extract_apply_handler))
         .route(ROUTE_API_OVERLAP_CATALOG, get(overlap_catalog_handler))
         .route(ROUTE_API_OVERLAP_SCAN, post(overlap_scan_handler))
+        .route(
+            ROUTE_API_HUB_CONFIG,
+            get(hub_config_get_handler).post(hub_config_post_handler),
+        )
+        .route(ROUTE_API_HUB_SCAN, post(hub_scan_handler))
+        .route(ROUTE_API_HUB_EXTRACT, post(hub_extract_handler))
+        .route(ROUTE_API_COVERAGE_INGEST, post(coverage_ingest_handler))
+        .route(
+            ROUTE_API_COVERAGE_CORRELATE,
+            post(coverage_correlate_handler),
+        )
         .fallback(static_asset_handler)
         .layer(CorsLayer::permissive())
         .with_state(state)

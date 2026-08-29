@@ -19,10 +19,12 @@ pub enum TuiTab {
     Timeline = 6,
     Workflow = 7,
     Overlap = 8,
+    Hub = 9,
+    Coverage = 10,
 }
 
 impl TuiTab {
-    pub const ALL: [TuiTab; 9] = [
+    pub const ALL: [TuiTab; 11] = [
         TuiTab::Overview,
         TuiTab::Clones,
         TuiTab::Semantic,
@@ -32,6 +34,8 @@ impl TuiTab {
         TuiTab::Timeline,
         TuiTab::Workflow,
         TuiTab::Overlap,
+        TuiTab::Hub,
+        TuiTab::Coverage,
     ];
 
     pub fn title(&self) -> &'static str {
@@ -45,6 +49,8 @@ impl TuiTab {
             TuiTab::Timeline => "[7] Timeline",
             TuiTab::Workflow => "[8] CI/CD & Hooks",
             TuiTab::Overlap => "[9] Overlap",
+            TuiTab::Hub => "[0] Hub",
+            TuiTab::Coverage => "[C] Coverage",
         }
     }
 

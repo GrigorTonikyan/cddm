@@ -34,11 +34,17 @@ export const API_ROUTES = {
   POLICY_EVALUATE: "/api/policy/evaluate",
   SEMANTIC_GRAPH: "/api/semantic-graph",
   SEMANTIC_SCAN: "/api/semantic/scan",
+  SEMANTIC_NEURAL: "/api/semantic/neural",
   WATCH_STATUS: "/api/watch/status",
   WATCH_TOGGLE: "/api/watch/toggle",
   WATCH_RESCAN: "/api/watch/rescan",
   EXTRACT_PREVIEW: "/api/extract/preview",
   EXTRACT_APPLY: "/api/extract/apply",
+  HUB_CONFIG: "/api/hub/config",
+  HUB_SCAN: "/api/hub/scan",
+  HUB_EXTRACT: "/api/hub/extract",
+  COVERAGE_INGEST: "/api/coverage/ingest",
+  COVERAGE_CORRELATE: "/api/coverage/correlate",
 } as const;
 
 /**

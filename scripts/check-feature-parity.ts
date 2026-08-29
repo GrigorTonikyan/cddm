@@ -119,6 +119,30 @@ export const MANDATORY_PARITY_FEATURES: FeatureParityCheck[] = (
       /\/api\/overlap/,
       "overlap.rs",
     ],
+    [
+      "hub",
+      "Organization Federation Hub",
+      "commands/hub.rs",
+      /cddm_scan_hub/,
+      /\/api\/hub/,
+      "hub.rs",
+    ],
+    [
+      "coverage",
+      "Runtime Execution & Coverage",
+      "commands/coverage.rs",
+      /cddm_correlate_coverage/,
+      /\/api\/coverage/,
+      "coverage.rs",
+    ],
+    [
+      "neural",
+      "Neural Embeddings & Algorithmic Clones",
+      "commands/semantic.rs",
+      /cddm_semantic_neural_scan/,
+      /\/api\/semantic\/neural/,
+      "semantic.rs",
+    ],
   ] as const
 ).map(([id, name, cliRel, mcpToolPattern, axumRoutePattern, tuiRel]) => ({
   id,
