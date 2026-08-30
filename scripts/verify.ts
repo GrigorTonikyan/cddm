@@ -25,8 +25,8 @@ const STEPS: ScriptStep[] = [
     command: ["bunx", "tsc", "-p", "tsconfig.json"],
   },
   {
-    title: "Repository scripts unit tests (bun test scripts/tests)",
-    command: ["bun", "test", "scripts/tests"],
+    title: "Repository scripts unit tests (bun test scripts/tests scripts/lib)",
+    command: ["bun", "test", "scripts/tests", "scripts/lib"],
   },
   {
     title: "MCP Server per-tool test suites & dynamic discovery (bun test tests/mcp)",

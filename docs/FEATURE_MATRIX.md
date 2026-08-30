@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-27 | Rust: 284 #[test] units | WebUI: 211 tests across 59 suites | Scripts & MCP: 120 tests across 42 suites | CI Workflows: PASS
+> Last verified: 2026-08-27 | Rust: 284 #[test] units | WebUI: 211 tests across 59 suites | Scripts & MCP: 132 tests across 45 suites | CI Workflows: PASS
 
 ---
 
@@ -424,12 +424,15 @@
 
 ---
 
-## 3. Repository Scripts & MCP Protocol — Bun Test Suites (120 tests across 42 suites)
+## 3. Repository Scripts & MCP Protocol — Bun Test Suites (132 tests across 45 suites)
 
 ### Repository Tooling & Automation Suites
 
 | Module                        | Test Suite File                               | Test Cases | Status |
 | :---------------------------- | :-------------------------------------------- | :--------- | :----- |
+| step-runner                   | `scripts/lib/step-runner.test.ts`             | 4 tests    | PASS   |
+| test-matrix-generator         | `scripts/lib/test-matrix-generator.test.ts`   | 3 tests    | PASS   |
+| version-updater               | `scripts/lib/version-updater.test.ts`         | 2 tests    | PASS   |
 | bun-only                      | `scripts/tests/bun-only.test.ts`              | 2 tests    | PASS   |
 | Workspace Engine & Reset      | `scripts/tests/clean-reset.test.ts`           | 9 tests    | PASS   |
 | Documentation Integrity       | `scripts/tests/docs.test.ts`                  | 5 tests    | PASS   |
@@ -439,7 +442,7 @@
 | mcp-manual-audit              | `scripts/tests/mcp-manual-audit.test.ts`      | 4 tests    | PASS   |
 | Zero-Emoji Policy             | `scripts/tests/no-emojis.test.ts`             | 7 tests    | PASS   |
 | VSIX Packaging Pipeline       | `scripts/tests/package-vscode.test.ts`        | 5 tests    | PASS   |
-| ui-ux-qa-verification         | `scripts/tests/ui-ux-qa-verification.test.ts` | 0 tests    | PASS   |
+| ui-ux-qa-verification         | `scripts/tests/ui-ux-qa-verification.test.ts` | 3 tests    | PASS   |
 | Semantic Versioning & Commits | `scripts/tests/version.test.ts`               | 9 tests    | PASS   |
 | Polyglot Language Matrix      | `scripts/tests/vscode-extension.test.ts`      | 2 tests    | PASS   |
 
