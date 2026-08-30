@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-27 | Rust: 282 #[test] units | WebUI: 204 tests across 57 suites | Scripts & MCP: 116 tests across 41 suites | CI Workflows: PASS
+> Last verified: 2026-08-27 | Rust: 282 #[test] units | WebUI: 204 tests across 57 suites | Scripts & MCP: 120 tests across 42 suites | CI Workflows: PASS
 
 ---
 
@@ -422,7 +422,7 @@
 
 ---
 
-## 3. Repository Scripts & MCP Protocol — Bun Test Suites (116 tests across 41 suites)
+## 3. Repository Scripts & MCP Protocol — Bun Test Suites (120 tests across 42 suites)
 
 ### Repository Tooling & Automation Suites
 
@@ -434,6 +434,7 @@
 | Feature Matrix Synchronizer   | `scripts/tests/feature-matrix.test.ts`        | 4 tests    | PASS   |
 | 4-Pillar Feature Parity       | `scripts/tests/feature-parity.test.ts`        | 2 tests    | PASS   |
 | File Length Cap & Modularity  | `scripts/tests/file-length.test.ts`           | 7 tests    | PASS   |
+| mcp-manual-audit              | `scripts/tests/mcp-manual-audit.test.ts`      | 4 tests    | PASS   |
 | Zero-Emoji Policy             | `scripts/tests/no-emojis.test.ts`             | 7 tests    | PASS   |
 | VSIX Packaging Pipeline       | `scripts/tests/package-vscode.test.ts`        | 5 tests    | PASS   |
 | ui-ux-qa-verification         | `scripts/tests/ui-ux-qa-verification.test.ts` | 0 tests    | PASS   |
