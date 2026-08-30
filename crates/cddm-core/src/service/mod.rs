@@ -131,4 +131,36 @@ mod tests {
         assert!(received_progress);
         assert!(received_completed);
     }
+
+    #[tokio::test]
+    async fn test_service_query_delegation() {
+        let service = WorkspaceService::new();
+        let code = "fn add(a: i32, b: i32) -> i32 { a + b }";
+
+        let tokens = service.query_tokens("src/math.rs", code).await;
+        assert!(tokens.is_some());
+        let tok_data = tokens.unwrap();
+        assert_eq!(tok_data.language, "Rust");
+        assert!(!tok_data.tokens.is_empty());
+
+        let fingerprints = service.query_fingerprints("src/math.rs", code, 10).await;
+        assert!(!fingerprints.is_empty());
+
+        let ast = service.query_ast_summary("src/math.rs", code, "rs").await;
+        assert!(ast.is_some());
+        assert_eq!(ast.unwrap().extension, "rs");
+
+        let interner = crate::cpg::SymbolInterner::new();
+        let cpg = service
+            .query_cpg("src/math.rs", code, "Rust", &interner)
+            .await;
+        assert!(cpg.is_some());
+
+        let stats = service.query_cache_stats().await;
+        assert!(stats.entries >= 2);
+
+        service.clear_query_cache().await;
+        let stats_after = service.query_cache_stats().await;
+        assert_eq!(stats_after.entries, 0);
+    }
 }

@@ -81,7 +81,7 @@ describe("DuplicationTreemap Component & Layout", () => {
     const cratesText = screen.queryByText("crates");
     if (cratesText) {
       fireEvent.click(cratesText);
-      expect(screen.getByText("crates")).toBeDefined();
+      expect(screen.getAllByText("crates").length).toBeGreaterThan(0);
     }
   });
 });

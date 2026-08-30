@@ -3,6 +3,7 @@ import { test, expect } from "@playwright/test";
 test.describe("CDDM WebUI Browser Real-Time Multi-Project Analysis", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("http://localhost:3000");
+    await page.waitForLoadState("networkidle");
   });
 
   test("should render CDDM Studio interface and header", async ({ page }) => {

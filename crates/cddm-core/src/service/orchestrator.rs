@@ -18,6 +18,7 @@ use tokio::sync::{broadcast, mpsc};
 pub struct WorkspaceService {
     event_bus: EventBus,
     session_manager: Arc<SessionManager>,
+    query_engine: crate::query::IncrementalQueryEngine,
 }
 
 impl Default for WorkspaceService {
@@ -27,17 +28,81 @@ impl Default for WorkspaceService {
 }
 
 impl WorkspaceService {
-    /// Creates a new WorkspaceService instance with default event bus and session manager.
+    /// Creates a new WorkspaceService instance with default event bus, session manager, and incremental query engine.
     pub fn new() -> Self {
         Self {
             event_bus: EventBus::default(),
             session_manager: Arc::new(SessionManager::new()),
+            query_engine: crate::query::IncrementalQueryEngine::new(),
         }
     }
 
     /// Access the underlying event bus directly.
     pub fn event_bus(&self) -> &EventBus {
         &self.event_bus
+    }
+
+    /// Access the underlying incremental query engine.
+    pub fn query_engine(&self) -> &crate::query::IncrementalQueryEngine {
+        &self.query_engine
+    }
+
+    /// Queries or computes normalized tokens for a file.
+    pub async fn query_tokens(
+        &self,
+        file_path: &str,
+        content: &str,
+    ) -> Option<crate::query::CachedTokenization> {
+        self.query_engine
+            .get_or_compute_tokens(file_path, content)
+            .await
+    }
+
+    /// Queries or computes winnowing fingerprints for a file.
+    pub async fn query_fingerprints(
+        &self,
+        file_path: &str,
+        content: &str,
+        min_tokens: usize,
+    ) -> Vec<crate::fingerprint::Fingerprint> {
+        self.query_engine
+            .get_or_compute_fingerprints(file_path, content, min_tokens)
+            .await
+    }
+
+    /// Queries or computes an AST summary for a file.
+    pub async fn query_ast_summary(
+        &self,
+        file_path: &str,
+        content: &str,
+        extension: &str,
+    ) -> Option<crate::query::CachedAstSummary> {
+        self.query_engine
+            .get_or_compute_ast_summary(file_path, content, extension)
+            .await
+    }
+
+    /// Queries or computes a Code Property Graph (CPG) for a file.
+    pub async fn query_cpg(
+        &self,
+        file_path: &str,
+        content: &str,
+        language: &str,
+        interner: &crate::cpg::SymbolInterner,
+    ) -> Option<Arc<crate::cpg::CodePropertyGraph>> {
+        self.query_engine
+            .get_or_compute_cpg(file_path, content, language, interner)
+            .await
+    }
+
+    /// Retrieves query engine memoization cache statistics.
+    pub async fn query_cache_stats(&self) -> crate::query::QueryCacheStats {
+        self.query_engine.stats().await
+    }
+
+    /// Clears all memoized query entries.
+    pub async fn clear_query_cache(&self) {
+        self.query_engine.clear().await;
     }
 
     /// Subscribes to real-time reactive workspace events.

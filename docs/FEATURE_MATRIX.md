@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-27 | Rust: 286 #[test] units | WebUI: 216 tests across 61 suites | Scripts & MCP: 133 tests across 45 suites | CI Workflows: PASS
+> Last verified: 2026-08-27 | Rust: 292 #[test] units | WebUI: 219 tests across 62 suites | Scripts & MCP: 133 tests across 45 suites | CI Workflows: PASS
 
 ---
 
@@ -358,7 +358,7 @@
 
 ---
 
-## 2. WebUI Frontend — React 19 + TypeScript + Vitest (216 unit tests across 61 suites)
+## 2. WebUI Frontend — React 19 + TypeScript + Vitest (219 unit tests across 62 suites)
 
 | Module                      | Test Suite File                                                                       | Test Cases | Status |
 | :-------------------------- | :------------------------------------------------------------------------------------ | :--------- | :----- |
@@ -423,6 +423,7 @@
 | lazy-modal                  | `webui/src/utils/lazy-modal.test.tsx`                                                 | 1 tests    | PASS   |
 | sse-client                  | `webui/src/utils/sse-client.test.ts`                                                  | 2 tests    | PASS   |
 | treemap-layout              | `webui/src/utils/treemap-layout.test.ts`                                              | 4 tests    | PASS   |
+| worker-layout-client        | `webui/src/utils/worker-layout-client.test.ts`                                        | 3 tests    | PASS   |
 
 ---
 

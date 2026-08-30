@@ -107,7 +107,26 @@ pub fn resources_templates_list_response(id: Option<serde_json::Value>) -> JsonR
         jsonrpc: JSONRPC_VERSION.to_string(),
         id,
         result: Some(json!({
-            "resourceTemplates": []
+            "resourceTemplates": [
+                {
+                    "uriTemplate": "cddm://file/{path}/clones",
+                    "name": "File Code Clones",
+                    "description": "Code clone pairs involving a specific repository file path.",
+                    "mimeType": mcp_resources::MIME_APPLICATION_JSON
+                },
+                {
+                    "uriTemplate": "cddm://cluster/{cluster_id}/details",
+                    "name": "Clone Cluster Details",
+                    "description": "Occurrence details and consensus refactoring suggestions for a specific cluster ID.",
+                    "mimeType": mcp_resources::MIME_APPLICATION_JSON
+                },
+                {
+                    "uriTemplate": "cddm://file/{path}/tokens",
+                    "name": "File Token Spans",
+                    "description": "Normalized token breakdown and line spans for a specific file path.",
+                    "mimeType": mcp_resources::MIME_APPLICATION_JSON
+                }
+            ]
         })),
         error: None,
     }
@@ -316,10 +335,118 @@ pub async fn handle_resource_read(
             }
         }
 
+        uri if uri.starts_with("cddm://file/") && uri.ends_with("/clones") => {
+            let raw_path = &uri[12..uri.len() - 7];
+            let target_path = urlencoding_decode(raw_path);
+            match run_default_scan().await {
+                Ok(res) => {
+                    let matching: Vec<_> = res
+                        .clone_pairs
+                        .into_iter()
+                        .filter(|p| {
+                            p.file_a.contains(&target_path) || p.file_b.contains(&target_path)
+                        })
+                        .collect();
+                    let payload = json!({
+                        "file": target_path,
+                        "total_clones": matching.len(),
+                        "clone_pairs": matching
+                    });
+                    make_resource_json_response(id, uri, &payload)
+                }
+                Err(e) => make_error_response(id, rpc_errors::INTERNAL_ERROR, e),
+            }
+        }
+
+        uri if uri.starts_with("cddm://cluster/") && uri.ends_with("/details") => {
+            let cluster_id_str = &uri[15..uri.len() - 8];
+            let cluster_id: usize = cluster_id_str.parse().unwrap_or(0);
+            match run_default_scan().await {
+                Ok(res) => {
+                    let clusters = if res.clone_clusters.is_empty() {
+                        cddm_core::cluster_clone_pairs(&res.clone_pairs)
+                    } else {
+                        res.clone_clusters
+                    };
+                    if let Some(cluster) = clusters.into_iter().find(|c| c.id == cluster_id) {
+                        make_resource_json_response(id, uri, &cluster)
+                    } else {
+                        make_error_response(
+                            id,
+                            rpc_errors::INVALID_PARAMS,
+                            format!("Cluster ID '{}' not found", cluster_id_str),
+                        )
+                    }
+                }
+                Err(e) => make_error_response(id, rpc_errors::INTERNAL_ERROR, e),
+            }
+        }
+
+        uri if uri.starts_with("cddm://file/") && uri.ends_with("/tokens") => {
+            let raw_path = &uri[12..uri.len() - 7];
+            let target_path = urlencoding_decode(raw_path);
+            let path = Path::new(&target_path);
+            match cddm_core::read_file_source(path) {
+                Ok(content) => {
+                    if let Some(grammar) = cddm_core::grammar::get_grammar_for_path(path) {
+                        let tokens = cddm_core::tokenizer::tokenize(&content, grammar, true);
+                        let token_spans: Vec<_> =
+                            tokens.iter().map(|(_, span)| span.clone()).collect();
+                        let payload = json!({
+                            "file": target_path,
+                            "language": grammar.name,
+                            "token_count": tokens.len(),
+                            "token_spans": token_spans
+                        });
+                        make_resource_json_response(id, uri, &payload)
+                    } else {
+                        make_error_response(
+                            id,
+                            rpc_errors::INVALID_PARAMS,
+                            format!("Unsupported file language for '{}'", target_path),
+                        )
+                    }
+                }
+                Err(e) => make_error_response(id, rpc_errors::INTERNAL_ERROR, e.to_string()),
+            }
+        }
+
         _ => make_error_response(
             id,
             rpc_errors::INVALID_PARAMS,
             format!("Resource URI '{}' not found", uri),
         ),
     }
+}
+
+fn urlencoding_decode(input: &str) -> String {
+    let mut result = String::with_capacity(input.len());
+    let mut chars = input.chars().peekable();
+    while let Some(ch) = chars.next() {
+        if ch == '%' {
+            let h1 = chars.next();
+            let h2 = chars.next();
+            if let (Some(c1), Some(c2)) = (h1, h2) {
+                let hex_str = format!("{}{}", c1, c2);
+                if let Ok(byte) = u8::from_str_radix(&hex_str, 16) {
+                    result.push(byte as char);
+                    continue;
+                } else {
+                    result.push('%');
+                    result.push(c1);
+                    result.push(c2);
+                    continue;
+                }
+            } else {
+                result.push('%');
+                if let Some(c1) = h1 {
+                    result.push(c1);
+                }
+                continue;
+            }
+        } else {
+            result.push(ch);
+        }
+    }
+    result
 }

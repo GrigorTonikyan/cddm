@@ -99,7 +99,8 @@ fn collect_node_kinds(node: Node, kinds: &mut Vec<String>) {
     }
 }
 
-/// Computes Longest Common Subsequence (LCS) similarity ratio between two AST node sequences (0.0 to 1.0).
+/// Computes Longest Common Subsequence (LCS) similarity ratio between two AST node sequences (0.0 to 1.0)
+/// using a zero-heap stack-allocated rolling buffer for sequences <= 128 elements, and an O(min(N, M)) heap buffer otherwise.
 pub fn calculate_sequence_similarity(a: &[String], b: &[String]) -> f64 {
     if a.is_empty() && b.is_empty() {
         return 1.0;
@@ -110,19 +111,43 @@ pub fn calculate_sequence_similarity(a: &[String], b: &[String]) -> f64 {
     if a == b {
         return 1.0;
     }
-    let n = a.len();
-    let m = b.len();
-    let mut dp = vec![vec![0usize; m + 1]; n + 1];
-    for i in 0..n {
-        for j in 0..m {
-            if a[i] == b[j] {
-                dp[i + 1][j + 1] = dp[i][j] + 1;
-            } else {
-                dp[i + 1][j + 1] = dp[i][j + 1].max(dp[i + 1][j]);
+
+    let (shorter, longer) = if a.len() <= b.len() { (a, b) } else { (b, a) };
+    let m = shorter.len();
+    let n = longer.len();
+
+    let lcs = if m <= 128 {
+        let mut prev = [0usize; 129];
+        let mut curr = [0usize; 129];
+
+        for item_l in longer {
+            for j in 0..m {
+                if item_l == &shorter[j] {
+                    curr[j + 1] = prev[j] + 1;
+                } else {
+                    curr[j + 1] = prev[j + 1].max(curr[j]);
+                }
             }
+            prev[..=m].copy_from_slice(&curr[..=m]);
         }
-    }
-    let lcs = dp[n][m];
+        prev[m]
+    } else {
+        let mut prev = vec![0usize; m + 1];
+        let mut curr = vec![0usize; m + 1];
+
+        for item_l in longer {
+            for j in 0..m {
+                if item_l == &shorter[j] {
+                    curr[j + 1] = prev[j] + 1;
+                } else {
+                    curr[j + 1] = prev[j + 1].max(curr[j]);
+                }
+            }
+            std::mem::swap(&mut prev, &mut curr);
+        }
+        prev[m]
+    };
+
     (2.0 * lcs as f64) / ((n + m) as f64)
 }
 
@@ -295,5 +320,69 @@ mod tests {
             clone_type
         );
         assert!(sim > 0.5);
+    }
+
+    #[test]
+    fn test_lcs_similarity_empty() {
+        let empty: Vec<String> = vec![];
+        let non_empty = vec!["fn".to_string(), "ident".to_string()];
+        assert_eq!(calculate_sequence_similarity(&empty, &empty), 1.0);
+        assert_eq!(calculate_sequence_similarity(&empty, &non_empty), 0.0);
+        assert_eq!(calculate_sequence_similarity(&non_empty, &empty), 0.0);
+    }
+
+    #[test]
+    fn test_lcs_similarity_identical() {
+        let a = vec![
+            "let".to_string(),
+            "x".to_string(),
+            "=".to_string(),
+            "1".to_string(),
+        ];
+        let b = vec![
+            "let".to_string(),
+            "x".to_string(),
+            "=".to_string(),
+            "1".to_string(),
+        ];
+        assert_eq!(calculate_sequence_similarity(&a, &b), 1.0);
+    }
+
+    #[test]
+    fn test_lcs_similarity_disjoint() {
+        let a = vec!["a".to_string(), "b".to_string(), "c".to_string()];
+        let b = vec!["x".to_string(), "y".to_string(), "z".to_string()];
+        assert_eq!(calculate_sequence_similarity(&a, &b), 0.0);
+    }
+
+    #[test]
+    fn test_lcs_similarity_small_stack_buffer() {
+        let a = vec![
+            "fn".to_string(),
+            "foo".to_string(),
+            "block".to_string(),
+            "return".to_string(),
+        ];
+        let b = vec![
+            "fn".to_string(),
+            "bar".to_string(),
+            "block".to_string(),
+            "return".to_string(),
+        ];
+        let sim = calculate_sequence_similarity(&a, &b);
+        // Common subsequence: "fn", "block", "return" (len 3). Total len: 8. Ratio: 2*3/8 = 0.75
+        assert_eq!(sim, 0.75);
+    }
+
+    #[test]
+    fn test_lcs_similarity_large_heap_buffer() {
+        // Create sequences larger than 128 elements to exercise the heap-buffered branch
+        let a: Vec<String> = (0..150).map(|i| format!("node_{}", i)).collect();
+        let mut b: Vec<String> = (0..150).map(|i| format!("node_{}", i)).collect();
+        // Modify some elements in b
+        b[10] = "altered_10".to_string();
+        b[50] = "altered_50".to_string();
+        let sim = calculate_sequence_similarity(&a, &b);
+        assert!(sim > 0.95 && sim < 1.0);
     }
 }

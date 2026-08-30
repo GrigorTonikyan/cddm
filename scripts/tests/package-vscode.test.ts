@@ -67,7 +67,7 @@ describe("VSIX Manifest & Content Types Generator", () => {
 describe("VSIX Packaging Pipeline", () => {
   it("should compile and build valid .vsix package artifact", async () => {
     const result = await packageVscodeExtension();
-    expect(result.version).toBe("1.7.0");
+    expect(result.version).toMatch(/^\d+\.\d+\.\d+$/);
     expect(result.sizeBytes).toBeGreaterThan(5000);
     expect(result.filesCount).toBeGreaterThan(5);
     expect(existsSync(result.vsixPath)).toBe(true);

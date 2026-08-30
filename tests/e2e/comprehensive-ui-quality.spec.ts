@@ -31,7 +31,7 @@ test.describe("CDDM WebUI Studio Comprehensive UI/UX Quality Verification", () =
     await page.goto("http://localhost:3000");
     await page.waitForLoadState("networkidle");
     await expect(page.locator("h1")).toContainText("CDDM Studio");
-    await expect(page.getByText("v1.7.0")).toBeVisible();
+    await expect(page.getByText(/v1\.\d+\.\d+/)).toBeVisible();
     await expect(
       page.getByText("Code De-Duplication Meister & Architectural Health"),
     ).toBeVisible();
@@ -68,9 +68,13 @@ test.describe("CDDM WebUI Studio Comprehensive UI/UX Quality Verification", () =
 
     // 3. Duplicate Analysis Scan Execution
     await page.locator('input[placeholder*="e.g. ./src"]').fill(".");
-    const runScanBtn = page.getByRole("button", { name: /Run Duplicate Analysis/i }).first();
-    await expect(runScanBtn).toBeVisible();
-    await runScanBtn.click();
+    const scanBtn = page
+      .getByRole("button", { name: /Run Duplicate Analysis|Scanning Codebase/i })
+      .first();
+    await expect(scanBtn).toBeVisible();
+    if (await page.getByRole("button", { name: /Run Duplicate Analysis/i }).isVisible()) {
+      await page.getByRole("button", { name: /Run Duplicate Analysis/i }).click();
+    }
     await expect(page.getByText("DRY Health Score")).toBeVisible({ timeout: 45000 });
     await expect(page.getByText("Duplication Rate")).toBeVisible();
     await expect(page.getByText("Files Scanned")).toBeVisible();

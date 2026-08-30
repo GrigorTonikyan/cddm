@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { ClonePair, TreemapNode, TreemapRect } from "../types/cddm-types";
-import { buildTreemapHierarchy, computeSquarifiedLayout } from "../utils/treemap-layout";
+import { computeTreemapLayoutSync } from "../utils/worker-layout-client";
 
 export interface BreadcrumbItem {
   name: string;
@@ -32,25 +32,14 @@ export const useTreemapLayout = ({
 }: UseTreemapLayoutOptions): UseTreemapLayoutResult => {
   const [currentPath, setCurrentPath] = useState<string>("");
 
-  const fullHierarchy = useMemo(() => {
-    return buildTreemapHierarchy(clonePairs);
-  }, [clonePairs]);
-
-  const activeNode = useMemo(() => {
-    if (!currentPath) return fullHierarchy;
-    const segments = currentPath.split("/");
-    let curr: TreemapNode | undefined = fullHierarchy;
-    for (const seg of segments) {
-      if (!curr?.children) break;
-      curr = curr.children.find((c) => c.name === seg);
-    }
-    return curr || fullHierarchy;
-  }, [fullHierarchy, currentPath]);
-
-  const layoutRects = useMemo(() => {
-    const nodes = activeNode.children || [activeNode];
-    return computeSquarifiedLayout(nodes, 0, 0, width, height);
-  }, [activeNode, width, height]);
+  const { fullHierarchy, activeNode, layoutRects } = useMemo(() => {
+    return computeTreemapLayoutSync({
+      clonePairs,
+      width,
+      height,
+      currentPath,
+    });
+  }, [clonePairs, width, height, currentPath]);
 
   const breadcrumbs = useMemo(() => {
     if (!currentPath) return [{ name: "Root", path: "" }];
