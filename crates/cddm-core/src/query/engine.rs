@@ -2,7 +2,8 @@
 
 use super::memo::QueryMemoCache;
 use super::types::{
-    CachedTokenization, ContentHash, IncrementalDeltaReport, QueryCacheStats, QueryKey,
+    CachedAstSummary, CachedTokenization, ContentHash, IncrementalDeltaReport, QueryCacheStats,
+    QueryKey,
 };
 use crate::fingerprint::{Fingerprint, MIN_K_GRAM, WINDOW_OFFSET, winnow};
 use crate::grammar::get_grammar_for_path;
@@ -109,6 +110,36 @@ impl IncrementalQueryEngine {
             .insert_fingerprints(key, fingerprints.clone())
             .await;
         fingerprints
+    }
+
+    /// Retrieves or computes an AST summary for a file with automatic memoization.
+    pub async fn get_or_compute_ast_summary(
+        &self,
+        file_path: &str,
+        content: &str,
+        extension: &str,
+    ) -> Option<CachedAstSummary> {
+        let content_hash = compute_blake3_hash(content);
+        let key = QueryKey {
+            file_path: file_path.to_string(),
+            content_hash,
+        };
+
+        if let Some(cached) = self.memo.get_ast(&key).await {
+            return Some(cached);
+        }
+
+        let tree = crate::ast::parser::parse_ast_tree(content, extension)?;
+        let root = tree.root_node();
+        let summary = CachedAstSummary {
+            extension: extension.to_string(),
+            root_kind: root.kind().to_string(),
+            child_count: root.child_count(),
+            content_hash,
+        };
+
+        self.memo.insert_ast(key, summary.clone()).await;
+        Some(summary)
     }
 
     /// Compares two snapshots of repository file hashes and computes an incremental delta report.

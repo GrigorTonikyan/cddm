@@ -1154,6 +1154,13 @@ When extracting duplicate code across codebases into shared helper modules or cr
 ### Milestone v3.1.0 (Automated GitHub PR Fix-Bot Action)
 
 - [x] Create turnkey composite GitHub Action in `.github/actions/cddm-fix-bot/action.yml` for automated scanning, PR comment generation, and auto-extraction [EP-39]
+
+### Milestone v3.2.0 (Thread-Local Parser Recycling, Treemap Modularization, Incremental AST Queries & MCP 2026 Standards)
+
+- [x] Implement thread-local Tree-sitter parser cache in `cddm-core::ast::parser` [EP-40]
+- [x] Implement AST summary query memoization and caching in `cddm-core::query` [EP-42]
+- [x] Implement MCP 2026 tool capability annotations (`readOnly`, `idempotent`, `consequential`) in `cddm-mcp` [EP-44]
+- [x] Decompose Squarified Treemap layout engine into pure utilities and `useTreemapLayout` custom hook [EP-47]
 ```
 
 ---

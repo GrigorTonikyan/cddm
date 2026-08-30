@@ -1,4 +1,39 @@
+use std::cell::RefCell;
+use std::collections::HashMap;
 use tree_sitter::{Language, Parser, Tree};
+
+thread_local! {
+    static PARSER_CACHE: RefCell<HashMap<&'static str, Parser>> = RefCell::new(HashMap::new());
+}
+
+/// Returns a canonical static key for an extension to maximize parser cache hits across aliases.
+pub fn get_canonical_lang_key(extension: &str) -> Option<&'static str> {
+    match extension.to_lowercase().as_str() {
+        "rs" => Some("rust"),
+        "ts" | "tsx" => Some("typescript"),
+        "js" | "jsx" | "cjs" | "mjs" => Some("javascript"),
+        "py" => Some("python"),
+        "go" => Some("go"),
+        "c" | "h" => Some("c"),
+        "cpp" | "cc" | "cxx" | "hpp" | "hxx" | "c++" | "h++" => Some("cpp"),
+        "java" => Some("java"),
+        "cs" => Some("c_sharp"),
+        "rb" | "rake" | "gemspec" => Some("ruby"),
+        "php" | "phtml" => Some("php"),
+        "swift" => Some("swift"),
+        "sh" | "bash" => Some("bash"),
+        "lua" => Some("lua"),
+        "json" => Some("json"),
+        "html" | "htm" => Some("html"),
+        "kt" | "kts" => Some("kotlin"),
+        "zig" | "zon" => Some("zig"),
+        "scala" | "sc" => Some("scala"),
+        "ex" | "exs" => Some("elixir"),
+        "sql" | "dsql" => Some("sql"),
+        "dockerfile" | "containerfile" => Some("containerfile"),
+        _ => None,
+    }
+}
 
 /// Returns tree-sitter Language for supported extensions.
 pub fn get_tree_sitter_language(extension: &str) -> Option<Language> {
@@ -31,12 +66,20 @@ pub fn get_tree_sitter_language(extension: &str) -> Option<Language> {
     }
 }
 
-/// Parses source string into a tree-sitter Tree.
+/// Parses source string into a tree-sitter Tree using a thread-local parser cache.
 pub fn parse_ast_tree(source: &str, extension: &str) -> Option<Tree> {
+    let key = get_canonical_lang_key(extension)?;
     let lang = get_tree_sitter_language(extension)?;
-    let mut parser = Parser::new();
-    parser.set_language(&lang).ok()?;
-    parser.parse(source, None)
+
+    PARSER_CACHE.with(|cache| {
+        let mut map = cache.borrow_mut();
+        let parser = map.entry(key).or_insert_with(|| {
+            let mut p = Parser::new();
+            let _ = p.set_language(&lang);
+            p
+        });
+        parser.parse(source, None)
+    })
 }
 
 #[cfg(test)]
@@ -230,5 +273,18 @@ mod tests {
         let tree = parse_ast_tree(code, "dockerfile").expect("Dockerfile AST parsing failed");
         let root = tree.root_node();
         assert!(root.child_count() > 0);
+    }
+
+    #[test]
+    fn test_parser_cache_reuse_and_aliases() {
+        let code1 = "const a = 1;";
+        let code2 = "const b = 2;";
+        let tree1 = parse_ast_tree(code1, "ts").expect("TS parse 1");
+        let tree2 = parse_ast_tree(code2, "tsx").expect("TSX parse 2");
+        assert_eq!(tree1.root_node().kind(), "program");
+        assert_eq!(tree2.root_node().kind(), "program");
+        assert_eq!(get_canonical_lang_key("ts"), Some("typescript"));
+        assert_eq!(get_canonical_lang_key("tsx"), Some("typescript"));
+        assert_eq!(get_canonical_lang_key("unknown"), None);
     }
 }

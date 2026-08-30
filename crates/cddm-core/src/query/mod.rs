@@ -7,7 +7,8 @@ pub mod types;
 pub use engine::{IncrementalQueryEngine, compute_blake3_hash};
 pub use memo::QueryMemoCache;
 pub use types::{
-    CachedTokenization, ContentHash, IncrementalDeltaReport, QueryCacheStats, QueryKey,
+    CachedAstSummary, CachedTokenization, ContentHash, IncrementalDeltaReport, QueryCacheStats,
+    QueryKey,
 };
 
 #[cfg(test)]
@@ -39,6 +40,35 @@ mod tests {
             .unwrap();
         assert_eq!(res1.content_hash, res2.content_hash);
         assert_eq!(res1.tokens.len(), res2.tokens.len());
+
+        let stats2 = engine.stats().await;
+        assert_eq!(stats2.hits, 1);
+        assert_eq!(stats2.misses, 1);
+        assert_eq!(stats2.hit_ratio(), 50.0);
+    }
+
+    #[tokio::test]
+    async fn test_query_ast_memoization() {
+        let engine = IncrementalQueryEngine::new();
+        let code = "const x: number = 42;";
+
+        let ast1 = engine
+            .get_or_compute_ast_summary("src/index.ts", code, "ts")
+            .await
+            .unwrap();
+        assert_eq!(ast1.extension, "ts");
+        assert_eq!(ast1.root_kind, "program");
+
+        let stats1 = engine.stats().await;
+        assert_eq!(stats1.misses, 1);
+        assert_eq!(stats1.hits, 0);
+
+        let ast2 = engine
+            .get_or_compute_ast_summary("src/index.ts", code, "ts")
+            .await
+            .unwrap();
+        assert_eq!(ast1.content_hash, ast2.content_hash);
+        assert_eq!(ast1.root_kind, ast2.root_kind);
 
         let stats2 = engine.stats().await;
         assert_eq!(stats2.hits, 1);

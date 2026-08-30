@@ -23,11 +23,32 @@ fn tool_def(name: &str, description: &str, input_schema: serde_json::Value) -> s
         "synchronization"
     };
 
+    let is_consequential = name.contains("apply")
+        || name.contains("heal")
+        || name.contains("import")
+        || (name.contains("extract") && !name.contains("suggest"));
+
+    let is_read_only = !is_consequential
+        && (name.contains("scan")
+            || name.contains("get_")
+            || name.contains("check_")
+            || name.contains("detect_")
+            || name.contains("export_")
+            || name.contains("correlate_")
+            || name.contains("compare_"));
+
+    let annotations = json!({
+        "readOnly": is_read_only,
+        "consequential": is_consequential,
+        "idempotent": is_read_only || name.contains("suggest") || name.contains("generate") || name.contains("verify")
+    });
+
     json!({
         "name": name,
         "description": description,
         "inputSchema": input_schema,
-        "x-cddm-category": category
+        "x-cddm-category": category,
+        "annotations": annotations
     })
 }
 

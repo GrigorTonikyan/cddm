@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-27 | Rust: 282 #[test] units | WebUI: 204 tests across 57 suites | Scripts & MCP: 120 tests across 42 suites | CI Workflows: PASS
+> Last verified: 2026-08-27 | Rust: 284 #[test] units | WebUI: 211 tests across 59 suites | Scripts & MCP: 120 tests across 42 suites | CI Workflows: PASS
 
 ---
 
@@ -358,7 +358,7 @@
 
 ---
 
-## 2. WebUI Frontend — React 19 + TypeScript + Vitest (204 unit tests across 57 suites)
+## 2. WebUI Frontend — React 19 + TypeScript + Vitest (211 unit tests across 59 suites)
 
 | Module                      | Test Suite File                                                                       | Test Cases | Status |
 | :-------------------------- | :------------------------------------------------------------------------------------ | :--------- | :----- |
@@ -408,6 +408,7 @@
 | Win2x Resize Hook           | `webui/src/components/ui/win2x-manager/hooks/use-pointer-resize.test.ts`              | 2 tests    | PASS   |
 | Live Watch Studio           | `webui/src/components/watch/LiveWatch.test.tsx`                                       | 5 tests    | PASS   |
 | use-form-state              | `webui/src/hooks/use-form-state.test.ts`                                              | 3 tests    | PASS   |
+| use Treemap Layout          | `webui/src/hooks/useTreemapLayout.test.ts`                                            | 3 tests    | PASS   |
 | Global Store                | `webui/src/store/cddm-store.test.ts`                                                  | 11 tests   | PASS   |
 | hub-slice                   | `webui/src/store/hub-slice.test.ts`                                                   | 5 tests    | PASS   |
 | Semantic Slice              | `webui/src/store/semantic-slice.test.ts`                                              | 7 tests    | PASS   |
@@ -419,6 +420,7 @@
 | Graph Layout Engine         | `webui/src/utils/graph-layout.test.ts`                                                | 3 tests    | PASS   |
 | IDE Deeplinks               | `webui/src/utils/ide-links.test.ts`                                                   | 8 tests    | PASS   |
 | lazy-modal                  | `webui/src/utils/lazy-modal.test.tsx`                                                 | 1 tests    | PASS   |
+| treemap-layout              | `webui/src/utils/treemap-layout.test.ts`                                              | 4 tests    | PASS   |
 
 ---
 

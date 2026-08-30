@@ -4,3 +4,4 @@ export * from "./graph-layout";
 export * from "./ide-links";
 export * from "./lazy-modal";
 export * from "./path-utils";
+export * from "./treemap-layout";

@@ -369,3 +369,4 @@
 - [x] **v2.9.0**: Context-Aware Program Slicing for AI Refactor Surgeon with backward/forward PDG program slicing, def-use boundary extraction, and AI prompt context integration (`cddm_core::semantic_graph::slicing`, `cddm_core::ai_prompt`, `cddm_core::ai::heal`).
 - [x] **v3.0.0**: Ecosystem Library Reimplementation & Overlap Detector (`cddm_core::overlap`, CLI `cddm overlap`, Axum `/api/overlap/*`, MCP `cddm_detect_overlap` / `cddm://workspace/overlap`, TUI Tab 9, WebUI `OverlapDetectorModal.tsx`).
 - [x] **v3.1.0**: Automated GitHub PR Fix-Bot Action (`.github/actions/cddm-fix-bot/action.yml`) for automated CI scanning, PR commentary, and auto-extraction.
+- [x] **v3.2.0**: High-Performance Thread-Local Parser Recycling Pool (`cddm-core::ast::parser`), WebUI Treemap & Layout Hook Decomposition (`useTreemapLayout`, `treemap-layout.ts`), Incremental AST Query Memoization (`cddm-core::query`), and MCP 2026 Structured Capability Annotations (`cddm-mcp::schemas`).

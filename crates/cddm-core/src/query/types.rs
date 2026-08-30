@@ -15,6 +15,15 @@ pub struct CachedTokenization {
     pub content_hash: ContentHash,
 }
 
+/// Cached AST summary result for a specific file version.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CachedAstSummary {
+    pub extension: String,
+    pub root_kind: String,
+    pub child_count: usize,
+    pub content_hash: ContentHash,
+}
+
 /// Key used to look up cached computations in the incremental query engine.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct QueryKey {
