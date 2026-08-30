@@ -5,6 +5,7 @@ pub mod blame;
 pub mod cache;
 pub mod cluster;
 pub mod coverage;
+pub mod cpg;
 pub mod detector;
 pub mod diff;
 pub mod diff_matrix;
@@ -46,6 +47,10 @@ pub use cache::pack::*;
 pub use cache::{CachedFileEntry, DiskFingerprintCache};
 pub use cluster::cluster_clone_pairs;
 pub use coverage::*;
+pub use cpg::{
+    CodePropertyGraph, CpgEdge, CpgEdgeKind, CpgNode, CpgNodeKind, SymbolId, SymbolInterner,
+    build_cpg_from_function,
+};
 pub use detector::run_scan;
 pub use diff::{get_changed_files_between_refs, run_diff_scan};
 pub use diff_matrix::*;

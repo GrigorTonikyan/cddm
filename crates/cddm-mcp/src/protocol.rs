@@ -23,6 +23,7 @@ pub mod rpc_errors {
 }
 
 /// Supported MCP protocol method names.
+#[allow(dead_code)]
 pub mod mcp_methods {
     pub const INITIALIZE: &str = "initialize";
     pub const INITIALIZED: &str = "notifications/initialized";
@@ -34,8 +35,14 @@ pub mod mcp_methods {
     pub const RESOURCES_LIST: &str = "resources/list";
     pub const RESOURCES_READ: &str = "resources/read";
     pub const RESOURCES_TEMPLATES_LIST: &str = "resources/templates/list";
+    pub const RESOURCES_SUBSCRIBE: &str = "resources/subscribe";
+    pub const RESOURCES_UNSUBSCRIBE: &str = "resources/unsubscribe";
+    pub const RESOURCES_UPDATED: &str = "notifications/resources/updated";
     pub const PROMPTS_LIST: &str = "prompts/list";
     pub const PROMPTS_GET: &str = "prompts/get";
+    pub const ROOTS_LIST: &str = "roots/list";
+    pub const ROOTS_LIST_CHANGED: &str = "notifications/roots/list_changed";
+    pub const PROGRESS: &str = "notifications/progress";
 }
 
 /// Exposed tool identifiers and parameters.

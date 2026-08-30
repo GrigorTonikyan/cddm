@@ -5,6 +5,55 @@ All notable changes to **CDDM** (_Code De-Duplication Meister_) will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0] - 2026-08-30
+
+### Features
+
+- **arch**: enhance core parser pool, treemap hook, ast memo and mcp (`703f98d`)
+- **architecture**: integrate unified workspace service and incremental query engine (`9959bd8`)
+- **timeline**: implement multi-branch clone drift matrix and webui lazy code splitting (`6bf1fa4`)
+- **engine**: complete 4-pillar parity, chrome uiux verification, mcp tests, and modular refactoring (`6c934b9`)
+- **detector**: add type-3 clone detection toggle and deduplicate core engine (`4ea9daa`)
+- implement federation hub, coverage correlation, and neural clones (`4c18281`)
+- **overlap**: add algorithm overlap detector and benchmark synthesis (`584064c`)
+- **extract**: implement polyglot unit test synthesizer with 4-pillar parity [EP-34] (`83fd783`)
+- **extract**: implement polyglot AST rewriters and multi-language shared module extraction (EP-33) (`cb87923`)
+- **scripts**: use 100% native Bun.file, Bun.Glob, and zero node:fs in matrix generator (`e67ab73`)
+- **scripts**: use native Bun.Glob and eliminate node:path in test matrix generator (`4251eef`)
+- **scripts**: enforce Bun-only runtime, native APIs, and policy (`73030f6`)
+- **tests**: enforce universal test architecture, 1:1 MCP suites, and parity (`3382ee3`)
+- **extract**: implement automated shared module and crate extraction (EP-31) (`0804a76`)
+- **watch**: implement live watch daemon and real-time studio sync (`275d744`)
+- **semantic**: cross-language semantic matching, hybrid embeddings, and polyglot explorer (`2093ab7`)
+- **vscode**: add embedded webview studio, activity bar dashboard and vsix packager (`847cfd0`)
+- **studio**: add semantic graph visualizer, live watch sync, and polyglot ast refactor (`19e8c61`)
+- **core**: implement ai surgeon, semantic graph, and cache packs (`331c493`)
+- **core**: implement architectural boundary policy engine and polyglot expansion (`5fad2ba`)
+- **core**: implement AST rewrite engine and test verification (`8aae9f2`)
+
+### Bug Fixes
+
+- **extract**: deduplicate manifest updaters and compact parity table (`8fe942f`)
+
+### Performance Improvements
+
+- **core**: multithread cross-language scan, add SIMD dot products and granular progress streaming (`4260e96`)
+
+### Refactoring
+
+- **query**: extract get_entry helper to eliminate memoization duplication (`9a7d041`)
+- **core**: eliminate codebase duplication and enforce quality gate standard (`f94e68b`)
+- **arch**: decompose monolithic modules and lock zero-grandfather policy (`5571ee4`)
+
+### Tooling & Maintenance
+
+- **scripts**: add co-located tests for scripts/lib and package-distribution (`7afe805`)
+- **mcp**: add multi-tool fidelity audit test suite and update feature matrix (`08d821b`)
+- **e2e**: update cross-language explorer cutoff assertion in browser workflow spec (`ae0e889`)
+- **engine**: deduplicate consensus helpers and enforce inline suppression in runner (`d8b28ab`)
+- **e2e**: update playwright webserver cwd and conversation screenshot directory (`f9fb92f`)
+- **e2e**: complete Playwright full-stack browser suite and optimize dogfooding scan (`db036e5`)
+
 ## [1.7.0] - 2026-08-24
 
 ### Features

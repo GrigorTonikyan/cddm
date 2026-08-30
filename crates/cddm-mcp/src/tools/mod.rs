@@ -9,6 +9,7 @@ pub mod overlap_tools;
 pub mod policy_tools;
 pub mod refactor_tools;
 pub mod scan_tools;
+pub mod schema_helpers;
 pub mod schemas;
 pub mod semantic_tools;
 

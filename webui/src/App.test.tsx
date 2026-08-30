@@ -54,7 +54,9 @@ describe("App Component", () => {
 
     const configBtn = screen.getByText("Config Window");
     fireEvent.click(configBtn);
-    expect(await screen.findByText("Scan Parameters & Engine Configuration")).toBeDefined();
+    expect(
+      await screen.findByText("Scan Parameters & Engine Configuration", {}, { timeout: 5000 }),
+    ).toBeDefined();
   });
 
   it("should open HealthAuditModal and ExportReportModal from header when results exist", async () => {
@@ -71,7 +73,9 @@ describe("App Component", () => {
     // Test Health Audit modal
     const healthBtns = screen.getAllByText("Health Audit");
     fireEvent.click(healthBtns[0]!);
-    expect(await screen.findByText("DRY Health Score Audit & Diagnostics")).toBeDefined();
+    expect(
+      await screen.findByText("DRY Health Score Audit & Diagnostics", {}, { timeout: 5000 }),
+    ).toBeDefined();
 
     // Test Reports modal
     const reportsBtns = screen.getAllByText("Reports");

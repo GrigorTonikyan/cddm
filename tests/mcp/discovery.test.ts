@@ -47,6 +47,11 @@ describe("MCP Dynamic Discovery & 1:1 Test Suite Mapping", () => {
 
     const missingTests: string[] = [];
     for (const tool of tools) {
+      expect(tool.annotations).toBeDefined();
+      expect(typeof tool.annotations.readOnlyHint).toBe("boolean");
+      expect(typeof tool.annotations.destructiveHint).toBe("boolean");
+      expect(typeof tool.annotations.idempotentHint).toBe("boolean");
+
       const expectedFilename = toolNameToTestFilename(tool.name);
       if (!existingTestFiles.has(expectedFilename)) {
         missingTests.push(
@@ -58,5 +63,37 @@ describe("MCP Dynamic Discovery & 1:1 Test Suite Mapping", () => {
     if (missingTests.length > 0) {
       throw new Error(`MCP Tool Test Parity Violation:\n${missingTests.join("\n")}`);
     }
+  });
+
+  it("should handle roots/list and resource subscriptions", async () => {
+    const rootsRes = await callMcpStdio({
+      jsonrpc: "2.0",
+      id: 3,
+      method: "roots/list",
+      params: {},
+    });
+    expect(rootsRes.jsonrpc).toBe("2.0");
+    expect(rootsRes.error).toBeUndefined();
+    expect((rootsRes.result as any)?.roots).toBeDefined();
+
+    const subRes = await callMcpStdio({
+      jsonrpc: "2.0",
+      id: 4,
+      method: "resources/subscribe",
+      params: { uri: "cddm://workspace/health" },
+    });
+    expect(subRes.jsonrpc).toBe("2.0");
+    expect(subRes.error).toBeUndefined();
+    expect((subRes.result as any)?.subscribed).toBe(true);
+
+    const unsubRes = await callMcpStdio({
+      jsonrpc: "2.0",
+      id: 5,
+      method: "resources/unsubscribe",
+      params: { uri: "cddm://workspace/health" },
+    });
+    expect(unsubRes.jsonrpc).toBe("2.0");
+    expect(unsubRes.error).toBeUndefined();
+    expect((unsubRes.result as any)?.unsubscribed).toBe(true);
   });
 });

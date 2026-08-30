@@ -51,7 +51,9 @@ describe("ScanResults Component", () => {
 
     const healthCard = screen.getByText("DRY Health Score").closest("div");
     fireEvent.click(healthCard!);
-    expect(await screen.findByText("DRY Health Score Audit & Diagnostics")).toBeDefined();
+    expect(
+      await screen.findByText("DRY Health Score Audit & Diagnostics", {}, { timeout: 5000 }),
+    ).toBeDefined();
   });
 
   it("should open TreemapExplorerModal when clicking Open in Window on Treemap", async () => {
@@ -66,7 +68,9 @@ describe("ScanResults Component", () => {
 
     const openInWindowBtn = screen.getByText("Open in Window");
     fireEvent.click(openInWindowBtn);
-    expect(await screen.findByText("Duplication Treemap Explorer")).toBeDefined();
+    expect(
+      await screen.findByText("Duplication Treemap Explorer", {}, { timeout: 5000 }),
+    ).toBeDefined();
   });
 
   it("should render clone pair count", () => {

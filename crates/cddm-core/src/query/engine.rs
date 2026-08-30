@@ -142,6 +142,56 @@ impl IncrementalQueryEngine {
         Some(summary)
     }
 
+    /// Retrieves or computes a unified Code Property Graph (CPG) with memoization.
+    pub async fn get_or_compute_cpg(
+        &self,
+        file_path: &str,
+        content: &str,
+        language: &str,
+        interner: &crate::cpg::SymbolInterner,
+    ) -> Option<Arc<crate::cpg::CodePropertyGraph>> {
+        let content_hash = compute_blake3_hash(content);
+        let key = QueryKey {
+            file_path: file_path.to_string(),
+            content_hash,
+        };
+
+        if let Some(cached) = self.memo.get_cpg(&key).await {
+            return Some(cached);
+        }
+
+        let cpg = crate::cpg::build_cpg_from_function(file_path, content, language, interner)?;
+        let arc_cpg = Arc::new(cpg);
+        self.memo.insert_cpg(key, Arc::clone(&arc_cpg)).await;
+        Some(arc_cpg)
+    }
+
+    /// Checks if a file's semantic token stream changed, supporting early cutoff for comment/whitespace edits.
+    pub async fn is_token_stream_unchanged(&self, file_path: &str, content: &str) -> bool {
+        let tokenization = match self.get_or_compute_tokens(file_path, content).await {
+            Some(t) => t,
+            None => return false,
+        };
+
+        let mut hasher = blake3::Hasher::new();
+        for tok in &tokenization.tokens {
+            let val = crate::fingerprint::token_to_u64(tok);
+            hasher.update(&val.to_le_bytes());
+        }
+        let stream_hash = *hasher.finalize().as_bytes();
+
+        if let Some(prev_hash) = self.memo.get_normalized_token_hash(file_path).await
+            && prev_hash == stream_hash
+        {
+            return true;
+        }
+
+        self.memo
+            .insert_normalized_token_hash(file_path.to_string(), stream_hash)
+            .await;
+        false
+    }
+
     /// Compares two snapshots of repository file hashes and computes an incremental delta report.
     pub fn compute_incremental_delta(
         &self,

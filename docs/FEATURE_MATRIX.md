@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-27 | Rust: 284 #[test] units | WebUI: 211 tests across 59 suites | Scripts & MCP: 132 tests across 45 suites | CI Workflows: PASS
+> Last verified: 2026-08-27 | Rust: 286 #[test] units | WebUI: 216 tests across 61 suites | Scripts & MCP: 133 tests across 45 suites | CI Workflows: PASS
 
 ---
 
@@ -358,7 +358,7 @@
 
 ---
 
-## 2. WebUI Frontend — React 19 + TypeScript + Vitest (211 unit tests across 59 suites)
+## 2. WebUI Frontend — React 19 + TypeScript + Vitest (216 unit tests across 61 suites)
 
 | Module                      | Test Suite File                                                                       | Test Cases | Status |
 | :-------------------------- | :------------------------------------------------------------------------------------ | :--------- | :----- |
@@ -409,6 +409,7 @@
 | Live Watch Studio           | `webui/src/components/watch/LiveWatch.test.tsx`                                       | 5 tests    | PASS   |
 | use-form-state              | `webui/src/hooks/use-form-state.test.ts`                                              | 3 tests    | PASS   |
 | use Treemap Layout          | `webui/src/hooks/useTreemapLayout.test.ts`                                            | 3 tests    | PASS   |
+| use Virtualizer             | `webui/src/hooks/useVirtualizer.test.ts`                                              | 3 tests    | PASS   |
 | Global Store                | `webui/src/store/cddm-store.test.ts`                                                  | 11 tests   | PASS   |
 | hub-slice                   | `webui/src/store/hub-slice.test.ts`                                                   | 5 tests    | PASS   |
 | Semantic Slice              | `webui/src/store/semantic-slice.test.ts`                                              | 7 tests    | PASS   |
@@ -420,11 +421,12 @@
 | Graph Layout Engine         | `webui/src/utils/graph-layout.test.ts`                                                | 3 tests    | PASS   |
 | IDE Deeplinks               | `webui/src/utils/ide-links.test.ts`                                                   | 8 tests    | PASS   |
 | lazy-modal                  | `webui/src/utils/lazy-modal.test.tsx`                                                 | 1 tests    | PASS   |
+| sse-client                  | `webui/src/utils/sse-client.test.ts`                                                  | 2 tests    | PASS   |
 | treemap-layout              | `webui/src/utils/treemap-layout.test.ts`                                              | 4 tests    | PASS   |
 
 ---
 
-## 3. Repository Scripts & MCP Protocol — Bun Test Suites (132 tests across 45 suites)
+## 3. Repository Scripts & MCP Protocol — Bun Test Suites (133 tests across 45 suites)
 
 ### Repository Tooling & Automation Suites
 
@@ -450,7 +452,7 @@
 
 | Tool / Protocol Feature             | Test Suite File                                    | Test Cases | Status |
 | :---------------------------------- | :------------------------------------------------- | :--------- | :----- |
-| MCP Dynamic Discovery               | `tests/mcp/discovery.test.ts`                      | 2 tests    | PASS   |
+| MCP Dynamic Discovery               | `tests/mcp/discovery.test.ts`                      | 3 tests    | PASS   |
 | Tool: cddm_apply_cluster_refactor   | `tests/mcp/tools/apply-cluster-refactor.test.ts`   | 2 tests    | PASS   |
 | Tool: cddm_ast_refactor             | `tests/mcp/tools/ast-refactor.test.ts`             | 2 tests    | PASS   |
 | Tool: cddm_check_policies           | `tests/mcp/tools/check-policies.test.ts`           | 1 tests    | PASS   |

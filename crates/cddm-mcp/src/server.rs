@@ -21,8 +21,9 @@ pub async fn handle_mcp_request(req: JsonRpcRequest) -> Option<JsonRpcResponse> 
                 "protocolVersion": MCP_PROTOCOL_VERSION,
                 "capabilities": {
                     "tools": { "listChanged": false },
-                    "resources": { "subscribe": false, "listChanged": false },
+                    "resources": { "subscribe": true, "listChanged": false },
                     "prompts": { "listChanged": false },
+                    "roots": { "listChanged": true },
                     "logging": {}
                 },
                 "serverInfo": {
@@ -33,7 +34,10 @@ pub async fn handle_mcp_request(req: JsonRpcRequest) -> Option<JsonRpcResponse> 
             error: None,
         }),
 
-        mcp_methods::INITIALIZED | mcp_methods::INITIALIZED_ALT | mcp_methods::CANCELLED => None,
+        mcp_methods::INITIALIZED
+        | mcp_methods::INITIALIZED_ALT
+        | mcp_methods::CANCELLED
+        | mcp_methods::ROOTS_LIST_CHANGED => None,
 
         mcp_methods::PING => Some(JsonRpcResponse {
             jsonrpc: JSONRPC_VERSION.to_string(),
@@ -49,6 +53,34 @@ pub async fn handle_mcp_request(req: JsonRpcRequest) -> Option<JsonRpcResponse> 
         mcp_methods::RESOURCES_LIST => Some(resources_list_response(req.id)),
 
         mcp_methods::RESOURCES_TEMPLATES_LIST => Some(resources_templates_list_response(req.id)),
+
+        mcp_methods::RESOURCES_SUBSCRIBE => Some(JsonRpcResponse {
+            jsonrpc: JSONRPC_VERSION.to_string(),
+            id: req.id,
+            result: Some(json!({ "subscribed": true })),
+            error: None,
+        }),
+
+        mcp_methods::RESOURCES_UNSUBSCRIBE => Some(JsonRpcResponse {
+            jsonrpc: JSONRPC_VERSION.to_string(),
+            id: req.id,
+            result: Some(json!({ "unsubscribed": true })),
+            error: None,
+        }),
+
+        mcp_methods::ROOTS_LIST => Some(JsonRpcResponse {
+            jsonrpc: JSONRPC_VERSION.to_string(),
+            id: req.id,
+            result: Some(json!({
+                "roots": [
+                    {
+                        "uri": "file://.",
+                        "name": "workspace"
+                    }
+                ]
+            })),
+            error: None,
+        }),
 
         mcp_methods::RESOURCES_READ => {
             Some(handle_resource_read(req.id, req.params.as_ref()).await)

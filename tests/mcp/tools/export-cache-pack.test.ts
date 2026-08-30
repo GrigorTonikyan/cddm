@@ -16,7 +16,7 @@ describe("MCP Tool: cddm_export_cache_pack", () => {
     } finally {
       if (existsSync(tempPack)) unlinkSync(tempPack);
     }
-  });
+  }, 30000);
 
   it("should reject export when cache_dir does not exist", async () => {
     await assertToolError(

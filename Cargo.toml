@@ -3,7 +3,7 @@ resolver = "2"
 members = ["crates/cddm-cli", "crates/cddm-core", "crates/cddm-lsp", "crates/cddm-mcp"]
 
 [workspace.package]
-version = "1.7.0"
+version = "1.8.0"
 edition = "2024"
 documentation = "https://docs.rs/cddm-core"
 readme = "README.md"
