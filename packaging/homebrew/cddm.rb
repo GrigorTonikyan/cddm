@@ -1,7 +1,7 @@
 class Cddm < Formula
   desc "Polyglot Code De-Duplication Meister & Autonomous Refactoring Engine"
   homepage "https://git.gt-web-dev.com/gt-dev/cddm"
-  version "1.9.0"
+  version "1.10.0"
   license "MIT"
 
   on_macos do
