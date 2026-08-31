@@ -1,9 +1,9 @@
 # CDDM Task Tracking & Active Implementation TODO
 
 > **Reference Document**: [docs/ROADMAP.md](ROADMAP.md)  
-> **Last Updated**: 2026-08-23
-
----
+> **Primary SSoT**: [Gitea Portal (`git.gt-web-dev.com/gt-dev/cddm`)](https://git.gt-web-dev.com/gt-dev/cddm)  
+> **Governance Standard**: [.agents/rules/gitea-ssot-mirror-governance.md](../.agents/rules/gitea-ssot-mirror-governance.md)  
+> **Tracking Protocol**: All active tasks map to Gitea issues, milestones, and automated release verification.
 
 ## Active Development Tasks
 

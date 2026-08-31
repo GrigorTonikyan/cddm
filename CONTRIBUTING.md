@@ -73,10 +73,10 @@ For a deep dive into internal design, read [docs/ARCHITECTURE.md](docs/ARCHITECT
 
 ### Master Workspace Runners
 
-You can run the complete quality pipeline, auto-fix, clean, or workspace reset across both Rust backend and React WebUI with single cross-platform commands:
+You can run the complete quality pipeline, auto-fix, clean, or workspace reset across both Rust backend, WebUI, and scripts with single cross-platform commands:
 
 ```bash
-# 1. Run all 11 checks, tests, typechecks, lints, builds, and dogfood self-scan (Read-Only)
+# 1. Run all 18 checks, tests, typechecks, lints, builds, and dogfood self-scan (Read-Only)
 vp run verify
 # or directly:
 bun scripts/verify.ts
@@ -108,7 +108,7 @@ cargo fmt --check
 # Run Clippy lints (zero warning policy)
 cargo clippy --workspace --all-targets -- -D warnings
 
-# Run all 38 workspace unit & integration tests
+# Run all workspace unit & integration tests
 cargo test --workspace
 ```
 
@@ -117,16 +117,10 @@ cargo test --workspace
 ```bash
 cd webui
 
-# Check TypeScript types
-vp run check
+# Check TypeScript types and linting with Vite Plus
+vp check
 
-# Run Vite Plus linter
-vp run lint
-
-# Check code formatting with Vite Plus
-vp run format:check
-
-# Run unit tests (Vitest - 24 tests)
+# Run unit and component tests (Vitest)
 vp run test
 
 # Build production assets (embedded into rust-embed)
@@ -137,46 +131,57 @@ vp run build
 
 ## How to Contribute
 
-### 1. Adding Support for a New Language
+### 1. Gitea SSoT Issue Discovery
 
-To add a new language grammar to `cddm-core`:
+CDDM enforces [Gitea (`git.gt-web-dev.com`)](https://git.gt-web-dev.com/gt-dev/cddm) as the authoritative Single Source of Truth for issues, roadmaps, and PRs. GitHub is strictly a downstream replica mirror.
 
-1. Add the corresponding `tree-sitter-<lang>` crate to `Cargo.toml` dependencies.
-2. Register the extension mapping and language grammar in `crates/cddm-core/src/grammar.rs`.
-3. Add tokenizer rules and tests in `crates/cddm-core/src/tokenizer.rs`.
-4. Verify AST subtree hashing works in `crates/cddm-core/src/ast/parser.rs`.
+1. Always check existing [Gitea Issues](https://git.gt-web-dev.com/gt-dev/cddm/issues) before starting work.
+2. If no issue exists, create a new issue on Gitea (e.g. `Issue #19`) to establish the primary authoritative tracking record.
 
-### 2. Submitting Pull Requests
+### 2. Canonical Branching & Development
 
-1. **Fork the repo** and create your branch from `main`:
+1. Create a working branch derived strictly from the primary Gitea issue number:
 
    ```bash
-   git checkout -b feature/my-cool-feature
+   # Feature branch
+   git checkout -b feat/issue-19-my-feature-description
+
+   # Bugfix branch
+   git checkout -b fix/issue-19-my-fix-description
    ```
 
-2. Make your changes and write unit tests covering new functionality.
-3. Commit with clear, descriptive messages following Conventional Commits:
-   - `feat(core): add Go tree-sitter grammar support`
-   - `fix(webui): correct slider token threshold calculation`
-   - `docs: update MCP setup guide`
-   - `feat(api)!: breaking change to scan endpoint`
-4. Commit messages are automatically checked via `@commitlint/cli` and `commitlint.config.ts`.
-5. Run `vp run verify` to confirm all 11 quality checks pass.
-6. Push to your fork and submit a Pull Request to `main`.
+2. Make changes end-to-end with unit tests covering all 4 interface pillars where applicable (CLI, WebUI, MCP, TUI).
+3. Commit with clear, descriptive messages following Conventional Commits referencing the primary Gitea issue:
+   - `feat(core): add Go tree-sitter grammar support (#19)`
+   - `fix(webui): correct slider token threshold calculation (#19)`
+   - `docs(mcp): update MCP tool setup guide (#19)`
+4. Commit messages are automatically validated via `@commitlint/cli` and `commitlint.config.ts`.
+5. Run `vp run verify` to confirm all 18 quality checks pass.
 
-### 3. Releasing & Semantic Versioning
+### 3. Pull Requests, Auto-Closing & API Merge
 
-For maintainers creating new releases:
+1. Push your branch to `origin` (Gitea) first, then mirror to `github`:
+
+   ```bash
+   git push origin feat/issue-19-my-feature-description
+   ```
+
+2. Open the primary Pull Request on [Gitea](https://git.gt-web-dev.com/gt-dev/cddm/pulls) merging into `main`.
+3. Include closing keywords (`Fixes #19` or `Closes #19`) in the PR description and assign the target Milestone (e.g. `v1.11.0`).
+4. Merges into `main` are executed via the official Gitea REST API (`POST /repos/{owner}/{repo}/pulls/{id}/merge`), automatically marking the PR as merged, closing the linked issue, and deleting the feature branch.
+
+### 4. Automated Semantic Releases
+
+Releases synchronize all 10 project manifests (`package.json`, `Cargo.toml`, `webui/package.json`, NPM packages, VS Code extension, Homebrew, Scoop, Winget, and README badges) and trigger multi-platform CI cross-compilation:
 
 ```bash
 # Preview calculated version and changelog entry (dry-run)
 vp run version:check
 
-# Bump version and synchronize Cargo.toml, package manifests, and CHANGELOG.md
-vp run bump
-
-# Complete release: bumps versions, regenerates changelog, creates git commit and tag
+# Synchronize all 10 manifests and tag release (e.g. v1.11.0)
 vp run version:release
+# or:
+vp run bump
 ```
 
 ---

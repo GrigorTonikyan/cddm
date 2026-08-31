@@ -1,10 +1,9 @@
 # CDDM Engineering Roadmap & Strategic Enhancement Proposals
 
 > **Document Status**: Active / Living RFC Reference  
-> **Repository**: [gt-dev/cddm](https://git.gt-web-dev.com/gt-dev/cddm)  
-> **Last Updated**: 2026-08-23
-
----
+> **Primary SSoT**: [Gitea Portal (`git.gt-web-dev.com/gt-dev/cddm`)](https://git.gt-web-dev.com/gt-dev/cddm)  
+> **Governance Standard**: [.agents/rules/gitea-ssot-mirror-governance.md](../.agents/rules/gitea-ssot-mirror-governance.md)  
+> **Issue & PR Lifecycle**: All Enhancement Proposals (EP-xx) map 1:1 to primary Gitea issues, canonical branches (`feat/issue-<num>-<desc>`), and milestone releases.
 
 ## 1. Strategic Release Milestones
 

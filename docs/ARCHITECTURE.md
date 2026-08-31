@@ -273,3 +273,31 @@ To ensure high-throughput execution, real-time live watch subscriptions, and cle
 
 5. **MCP 2026 Agentic Sampling Protocol (`cddm-mcp`)**:
    - Sampling elicitation (`sampling/createMessage`) enabling AI coding assistants to leverage server-side reasoning loops.
+
+---
+
+## 13. Single Source of Truth (SSoT), Release Management & CI/CD Topology
+
+CDDM enforces an authoritative governance architecture separating primary repository operations from downstream distribution mirrors:
+
+```mermaid
+graph LR
+    subgraph SSoT ["Primary SSoT (git.gt-web-dev.com)"]
+        GI["Gitea Issues & Roadmaps"] --> GB["Canonical Issue Branch<br/>(feat/issue-X-desc)"]
+        GB --> GPR["Gitea Pull Request<br/>(Fixes #X)"]
+        GPR --> GM["Gitea API Merge<br/>(POST /pulls/X/merge)"]
+        GM --> GCI["Gitea Actions CI/CD<br/>(Linux AMD64 Runner)"]
+        GCI --> GTag["Semantic Release Tag<br/>(vX.Y.Z)"]
+    end
+
+    subgraph Mirror ["Secondary Downstream Mirror (github.com)"]
+        GH["GitHub Mirror<br/>(Read-Only Replica)"]
+    end
+
+    GTag --> GH
+```
+
+1. **Primary SSoT (Gitea)**: Authoritative repository for issue tracking, milestones, PRs, reviews, and primary binary packaging.
+2. **Automated API-Driven Merges**: Pull requests are merged exclusively via the Gitea REST API, ensuring PRs are marked `merged: true`, closed in the UI, and linked issues are automatically resolved.
+3. **Automated Multi-Manifest Release Pipeline**: `vp run version:release` synchronizes all 10 manifests (`package.json`, `Cargo.toml`, `webui/package.json`, NPM packages, VS Code extension, Homebrew, Scoop, Winget, and README badges) and triggers cross-compilation for Linux AMD64 and Windows x86_64 binaries.
+4. **Downstream Mirroring**: Commits, tags, and assets are synchronized downstream to GitHub.

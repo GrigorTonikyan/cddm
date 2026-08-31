@@ -89,11 +89,15 @@ CDDM (_Code De-Duplication Meister_) is a standalone, high-performance, multi-th
 
 ---
 
-## 3. Distribution & CI/CD Requirements
+## 3. Distribution, SSoT & CI/CD Requirements
 
-| Requirement                | Acceptance Criteria                                                                  | Status     |
-| :------------------------- | :----------------------------------------------------------------------------------- | :--------- |
-| **Cargo Distribution**     | Published workspace on `crates.io` with categories and keywords                      | Configured |
-| **npm Distribution**       | Published cross-platform binary package wrapper `cddm` on `npmjs.com`                | Configured |
-| **GitHub Releases**        | GitHub Actions workflow `.github/workflows/release.yml` compiles standalone binaries | Configured |
-| **Continuous Integration** | GitHub Actions `.github/workflows/ci.yml` builds and tests Rust + WebUI              | Configured |
+| Requirement                   | Acceptance Criteria                                                                                    | Status      |
+| :---------------------------- | :----------------------------------------------------------------------------------------------------- | :---------- |
+| **Gitea Primary SSoT**        | Authoritative issue tracking, roadmaps, PRs, and binary publishing on `git.gt-web-dev.com/gt-dev/cddm` | Implemented |
+| **Canonical Branching & PRs** | `feat/issue-X-desc`, `fix/issue-X-desc` branches with auto-closing `Fixes #X` citations                | Implemented |
+| **API-Driven Merges**         | Official Gitea REST API merge execution marking PRs as merged and auto-closing issues                  | Implemented |
+| **Cargo Distribution**        | Published workspace on `crates.io` with categories and keywords                                        | Configured  |
+| **npm Distribution**          | Published cross-platform binary package wrapper `cddm` on `npmjs.com`                                  | Configured  |
+| **Gitea Actions CI/CD**       | Gitea Actions workflow compiling Linux AMD64 and Windows x86_64 standalone release binaries            | Implemented |
+| **Automated Semantic Rel.**   | `vp run version:release` synchronizes 10 manifests, tags git release, and triggers publishing          | Implemented |
+| **Downstream GitHub Mirror**  | Read-only replica mirror synchronizing branches, PRs, and release assets to `github.com`               | Implemented |
