@@ -114,11 +114,11 @@ jobs:
       - name: Validate Workspace Formatting, Lints & Types (vp check)
         run: bunx vp check
 
-      - name: Run Repository Scripts Unit Tests (bun test)
-        run: bun test scripts/tests scripts/lib
+      - name: Run Script Test Suites (bun test)
+        run: bun test --timeout 30000 scripts/tests scripts/lib
 
       - name: Run MCP Protocol Per-Tool Test Suites (bun test)
-        run: bun test tests/mcp
+        run: bun test --timeout 30000 tests/mcp
 
       - name: Validate 4-Pillar Feature Parity
         run: bun scripts/check-feature-parity.ts

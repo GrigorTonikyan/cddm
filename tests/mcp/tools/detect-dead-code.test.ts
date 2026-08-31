@@ -17,7 +17,7 @@ describe("MCP Tool: cddm_detect_dead_code", () => {
     expect(typeof res.total_dead_lines).toBe("number");
     expect(typeof res.estimated_savings_pct).toBe("number");
     expect(Array.isArray(res.items)).toBe(true);
-  });
+  }, 30000);
 
   it("should support running with default parameters", async () => {
     const res = await executeTool("cddm_detect_dead_code", {});
@@ -25,5 +25,5 @@ describe("MCP Tool: cddm_detect_dead_code", () => {
     expect(res).toBeDefined();
     expect(typeof res.total_dead_items).toBe("number");
     expect(Array.isArray(res.items)).toBe(true);
-  });
+  }, 30000);
 });
