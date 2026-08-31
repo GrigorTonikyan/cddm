@@ -348,15 +348,15 @@ async fn test_interactive_tui_full_hands_on_workflow() {
     let content_unified = buffer_to_string(&terminal);
     assert!(content_unified.contains("Unified Refactor Diff"));
 
-    // 7. Cycle through tabs (3 -> 8)
-    for key_char in ['3', '4', '5', '6', '7', '8'] {
+    // 7. Cycle through all remaining tabs (3 -> 0, C)
+    for key_char in ['3', '4', '5', '6', '7', '8', '9', '0', 'c', 'C'] {
         handle_key_event(
             &mut app,
             KeyEvent::new(KeyCode::Char(key_char), KeyModifiers::NONE),
         );
         draw_test_frame(&mut terminal, &app);
     }
-    assert_eq!(app.active_tab, TuiTab::Workflow);
+    assert_eq!(app.active_tab, TuiTab::Coverage);
 
     // 8. Help Modal Toggle ('?') & Dismiss ('Esc')
     handle_key_event(

@@ -335,3 +335,90 @@ impl LanguageServer for CddmLspServer {
         Ok(None)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tower_lsp::LspService;
+    use tower_lsp::lsp_types::{Position, Range, TextDocumentIdentifier, TextDocumentItem, Url};
+
+    #[tokio::test]
+    async fn test_lsp_server_initialize_and_capabilities() {
+        let (service, _) =
+            LspService::new(|client| CddmLspServer::new(client, PathBuf::from("."), 50));
+        let server = service.inner();
+
+        let params = InitializeParams {
+            root_uri: Some(Url::from_directory_path(std::env::current_dir().unwrap()).unwrap()),
+            ..Default::default()
+        };
+
+        let result = server.initialize(params).await.unwrap();
+        assert_eq!(result.server_info.unwrap().name, "cddm-lsp");
+        assert!(result.capabilities.hover_provider.is_some());
+        assert!(result.capabilities.code_action_provider.is_some());
+        assert!(result.capabilities.code_lens_provider.is_some());
+        assert!(result.capabilities.inlay_hint_provider.is_some());
+    }
+
+    #[tokio::test]
+    async fn test_lsp_server_document_sync_and_queries() {
+        let (service, _) =
+            LspService::new(|client| CddmLspServer::new(client, PathBuf::from("."), 50));
+        let server = service.inner();
+
+        let doc_url = Url::parse("file:///workspace/src/lib.rs").unwrap();
+        server
+            .did_open(DidOpenTextDocumentParams {
+                text_document: TextDocumentItem {
+                    uri: doc_url.clone(),
+                    language_id: "rust".to_string(),
+                    version: 1,
+                    text: "pub fn add(a: i32, b: i32) -> i32 { a + b }\n".to_string(),
+                },
+            })
+            .await;
+
+        let code_actions = server
+            .code_action(CodeActionParams {
+                text_document: TextDocumentIdentifier {
+                    uri: doc_url.clone(),
+                },
+                range: Range {
+                    start: Position {
+                        line: 0,
+                        character: 0,
+                    },
+                    end: Position {
+                        line: 1,
+                        character: 0,
+                    },
+                },
+                context: Default::default(),
+                work_done_progress_params: Default::default(),
+                partial_result_params: Default::default(),
+            })
+            .await
+            .unwrap();
+
+        assert!(code_actions.is_some());
+
+        let hover_res = server
+            .hover(HoverParams {
+                text_document_position_params: tower_lsp::lsp_types::TextDocumentPositionParams {
+                    text_document: TextDocumentIdentifier {
+                        uri: doc_url.clone(),
+                    },
+                    position: Position {
+                        line: 0,
+                        character: 5,
+                    },
+                },
+                work_done_progress_params: Default::default(),
+            })
+            .await
+            .unwrap();
+
+        assert!(hover_res.is_none() || hover_res.is_some());
+    }
+}

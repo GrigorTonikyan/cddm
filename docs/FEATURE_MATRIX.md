@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-27 | Rust: 307 #[test] units | WebUI: 219 tests across 62 suites | Scripts & MCP: 133 tests across 45 suites | CI Workflows: PASS
+> Last verified: 2026-08-27 | Rust: 309 #[test] units | WebUI: 219 tests across 62 suites | Scripts & MCP: 133 tests across 45 suites | CI Workflows: PASS
 
 ---
 
