@@ -44,8 +44,9 @@ bun scripts/check-docs.ts
 
 Update docs in `docs/` and root as needed.
 
-## Step 6: Version Sync and Commit
+## Step 6: Version Sync, Commit, Gitea Push & PR
 
 1. Sync versions if needed: `vp run bump`
-2. Commit with Conventional Commits
-3. Push (never use `--no-verify`)
+2. Commit with Conventional Commits referencing the primary Gitea issue (`Fixes #<gitea-id>`)
+3. Push to `origin` (Gitea) first (never use `--no-verify`), then mirror to `github`
+4. Open the primary Pull Request on Gitea (`https://git.gt-web-dev.com/gt-dev/cddm/pulls`), then mirror on GitHub secondarily
