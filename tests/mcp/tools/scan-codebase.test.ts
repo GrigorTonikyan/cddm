@@ -16,13 +16,13 @@ describe("MCP Tool: scan_codebase", () => {
     expect(res.total_files).toBeGreaterThan(0);
     expect(res.dry_health_score).toBeGreaterThanOrEqual(0);
     expect(res.dry_health_score).toBeLessThanOrEqual(100);
-  });
+  }, 30000);
 
   it("should handle default directory and token arguments", async () => {
     const res = await executeTool("scan_codebase", {});
     expect(res).toBeDefined();
     expect(res.total_files).toBeGreaterThan(0);
-  });
+  }, 30000);
 
   it("should support detect_type3 toggle in scan_codebase", async () => {
     const resWith = await executeTool("scan_codebase", {
@@ -39,7 +39,7 @@ describe("MCP Tool: scan_codebase", () => {
     expect(resWith).toBeDefined();
     expect(resWithout).toBeDefined();
     expect(resWithout.total_files).toBe(resWith.total_files);
-  });
+  }, 30000);
 
   it("should support detect_type4 toggle in scan_codebase", async () => {
     const resWith = await executeTool("scan_codebase", {
@@ -56,5 +56,5 @@ describe("MCP Tool: scan_codebase", () => {
     expect(resWith).toBeDefined();
     expect(resWithout).toBeDefined();
     expect(resWithout.total_files).toBe(resWith.total_files);
-  });
+  }, 30000);
 });

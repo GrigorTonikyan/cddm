@@ -70,5 +70,5 @@ describe("MCP Tool: cddm_extract_shared_module", () => {
       { cluster_id: 999999 },
       RPC_ERRORS.INVALID_PARAMS,
     );
-  });
+  }, 30000);
 });

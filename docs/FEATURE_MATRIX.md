@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-27 | Rust: 321 #[test] units | WebUI: 223 tests across 63 suites | Scripts & MCP: 147 tests across 48 suites | CI Workflows: PASS
+> Last verified: 2026-08-27 | Rust: 321 #[test] units | WebUI: 223 tests across 63 suites | Scripts & MCP: 161 tests across 49 suites | CI Workflows: PASS
 
 ---
 
@@ -428,12 +428,13 @@
 
 ---
 
-## 3. Repository Scripts & MCP Protocol — Bun Test Suites (147 tests across 48 suites)
+## 3. Repository Scripts & MCP Protocol — Bun Test Suites (161 tests across 49 suites)
 
 ### Repository Tooling & Automation Suites
 
 | Module                        | Test Suite File                               | Test Cases | Status |
 | :---------------------------- | :-------------------------------------------- | :--------- | :----- |
+| clean-engine                  | `scripts/lib/clean-engine.test.ts`            | 14 tests   | PASS   |
 | step-runner                   | `scripts/lib/step-runner.test.ts`             | 4 tests    | PASS   |
 | test-matrix-generator         | `scripts/lib/test-matrix-generator.test.ts`   | 3 tests    | PASS   |
 | version-updater               | `scripts/lib/version-updater.test.ts`         | 2 tests    | PASS   |
