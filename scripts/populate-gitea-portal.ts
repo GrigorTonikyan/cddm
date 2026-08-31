@@ -92,7 +92,9 @@ const LABELS = [
 
 export async function syncMilestones(): Promise<Map<string, number>> {
   console.log("\x1b[36m--> Synchronizing Milestones...\x1b[0m");
-  const { data: existing } = await giteaFetch<any[]>(`/repos/${GITEA_REPO}/milestones?state=all`);
+  const { data: existing } = await giteaFetch<{ title: string; id: number }[]>(
+    `/repos/${GITEA_REPO}/milestones?state=all`,
+  );
   const map = new Map<string, number>();
 
   for (const item of MILESTONES) {
@@ -102,10 +104,13 @@ export async function syncMilestones(): Promise<Map<string, number>> {
       map.set(key, found.id);
       console.log(`  [EXISTS] Milestone: ${found.title} (ID: ${found.id})`);
     } else {
-      const res = await giteaFetch<any>(`/repos/${GITEA_REPO}/milestones`, {
-        method: "POST",
-        body: JSON.stringify(item),
-      });
+      const res = await giteaFetch<{ id: number; title: string }>(
+        `/repos/${GITEA_REPO}/milestones`,
+        {
+          method: "POST",
+          body: JSON.stringify(item),
+        },
+      );
       if (res.ok && res.data) {
         map.set(key, res.data.id);
         console.log(`  [CREATED] Milestone: ${res.data.title} (ID: ${res.data.id})`);
@@ -117,7 +122,9 @@ export async function syncMilestones(): Promise<Map<string, number>> {
 
 export async function syncLabels(): Promise<Map<string, number>> {
   console.log("\x1b[36m--> Synchronizing Labels...\x1b[0m");
-  const { data: existing } = await giteaFetch<any[]>(`/repos/${GITEA_REPO}/labels`);
+  const { data: existing } = await giteaFetch<{ name: string; id: number }[]>(
+    `/repos/${GITEA_REPO}/labels`,
+  );
   const map = new Map<string, number>();
 
   if (Array.isArray(existing)) {
@@ -128,7 +135,7 @@ export async function syncLabels(): Promise<Map<string, number>> {
 
   for (const item of LABELS) {
     if (!map.has(item.name.toLowerCase())) {
-      const res = await giteaFetch<any>(`/repos/${GITEA_REPO}/labels`, {
+      const res = await giteaFetch<{ id: number }>(`/repos/${GITEA_REPO}/labels`, {
         method: "POST",
         body: JSON.stringify(item),
       });
@@ -148,7 +155,7 @@ export async function syncIssues(
   labelMap: Map<string, number>,
 ): Promise<void> {
   console.log("\x1b[36m--> Synchronizing Issues...\x1b[0m");
-  const { data: existing } = await giteaFetch<any[]>(
+  const { data: existing } = await giteaFetch<{ title: string }[]>(
     `/repos/${GITEA_REPO}/issues?state=all&type=issues`,
   );
   const existingTitles = new Set((existing || []).map((i) => i.title.toLowerCase()));
@@ -164,7 +171,7 @@ export async function syncIssues(
       .map((l) => labelMap.get(l.toLowerCase()))
       .filter((id): id is number => id !== undefined);
 
-    const res = await giteaFetch<any>(`/repos/${GITEA_REPO}/issues`, {
+    const res = await giteaFetch<{ number: number }>(`/repos/${GITEA_REPO}/issues`, {
       method: "POST",
       body: JSON.stringify({
         title: issue.title,
@@ -193,7 +200,9 @@ export async function syncIssues(
 
 export async function syncReleases(): Promise<void> {
   console.log("\x1b[36m--> Synchronizing Releases...\x1b[0m");
-  const { data: releases } = await giteaFetch<any[]>(`/repos/${GITEA_REPO}/releases`);
+  const { data: releases } = await giteaFetch<{ tag_name: string; id: number }[]>(
+    `/repos/${GITEA_REPO}/releases`,
+  );
   const releaseList = Array.isArray(releases) ? releases : [];
 
   const v190 = releaseList.find((r) => r.tag_name === "v1.9.0");
@@ -311,7 +320,9 @@ export async function syncPackages(): Promise<void> {
 
 export async function syncWiki(): Promise<void> {
   console.log("\x1b[36m--> Synchronizing Wiki Documentation...\x1b[0m");
-  const { data: existingPages } = await giteaFetch<any[]>(`/repos/${GITEA_REPO}/wiki/pages`);
+  const { data: existingPages } = await giteaFetch<{ title: string; sub_url: string }[]>(
+    `/repos/${GITEA_REPO}/wiki/pages`,
+  );
   const pageList = Array.isArray(existingPages) ? existingPages : [];
   const existingMap = new Map<string, string>();
   for (const p of pageList) {
