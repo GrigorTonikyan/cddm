@@ -27,9 +27,11 @@ Review `git diff` output. Verify zero hallucinated APIs, partial stubs, placehol
 Whenever tests are added, modified, renamed, or moved, run `bun scripts/sync-feature-matrix.ts` to dynamically regenerate and synchronize [`docs/FEATURE_MATRIX.md`](../../docs/FEATURE_MATRIX.md).
 Then run `bun scripts/check-docs.ts` to validate full documentation integrity, link resolution, and zero-drift verification across all markdown files. Update all relevant documentation in `docs/` and root to reflect the exact state of the codebase.
 
-## Step 6: Version Sync, Conventional Commit, Gitea Push & PR
+## Step 6: Version Sync, Conventional Commit, Gitea Push, PR & Merge
 
 1. **Version Sync**: Synchronize version manifests if needed (`bun scripts/sync-version.ts` or `vp run bump`).
 2. **Conventional Commit**: Commit using strict Conventional Commits referencing the primary Gitea issue (`Fixes #<gitea-id>`).
-3. **Gitea-First Push & Mirror**: Push to `origin` (Gitea: `https://git.gt-web-dev.com/gt-dev/cddm.git`) first without bypassing Git hooks (`--no-verify` is forbidden), then mirror to `github`.
-4. **Primary Pull Request**: Open the primary Pull Request on Gitea (`https://git.gt-web-dev.com/gt-dev/cddm/pulls`) merging the feature/fix branch into `main`. Mirror to GitHub secondarily.
+3. **Gitea-First Push & Mirror**: Push to `origin` (Gitea: `https://git.gt-web-dev.com/gt-dev/cddm.git`) first without bypassing Git hooks (`--no-verify` is forbidden), using strictly ONE canonical branch name (`feat/issue-<num>-<desc>`). Then mirror to `github`.
+4. **Primary Pull Request**: Open the primary Pull Request on Gitea (`https://git.gt-web-dev.com/gt-dev/cddm/pulls`) merging the feature/fix branch into `main`. Include `Fixes #<id>` in the description and assign the target milestone.
+5. **API-Driven Merge**: When concluding a PR merge, execute the merge through the official Gitea REST API (`POST /repos/gt-dev/cddm/pulls/{id}/merge`) to register the PR as `merged: true`, close it in the UI, and automatically close the linked issue.
+6. **Milestone Release**: For release milestones, run `vp run version:release` to synchronize all 10 manifests, tag `vX.Y.Z`, and trigger the automated CI binary compilation and packaging pipeline.
