@@ -1,8 +1,10 @@
 #![forbid(unsafe_code)]
 
 use crate::code_actions::generate_code_actions;
+use crate::code_lens::generate_code_lenses;
 use crate::diagnostics::{clone_pair_to_diagnostics, generate_workspace_diagnostics};
 use crate::hover::generate_hover;
+use crate::inlay_hints::generate_inlay_hints;
 use crate::state::ServerState;
 use crate::utils::{
     line_range_to_lsp_range, match_clone_occurrence, normalize_path_for_compare, path_to_url,
@@ -12,10 +14,11 @@ use std::path::PathBuf;
 use tower_lsp::jsonrpc::Result;
 use tower_lsp::lsp_types::{
     CodeActionOptions, CodeActionParams, CodeActionProviderCapability, CodeActionResponse,
-    DidChangeTextDocumentParams, DidCloseTextDocumentParams, DidOpenTextDocumentParams,
-    DidSaveTextDocumentParams, ExecuteCommandOptions, ExecuteCommandParams, GotoDefinitionParams,
-    GotoDefinitionResponse, Hover, HoverParams, HoverProviderCapability, InitializeParams,
-    InitializeResult, InitializedParams, Location, MessageType, OneOf, ReferenceParams,
+    CodeLens, CodeLensOptions, CodeLensParams, DidChangeTextDocumentParams,
+    DidCloseTextDocumentParams, DidOpenTextDocumentParams, DidSaveTextDocumentParams,
+    ExecuteCommandOptions, ExecuteCommandParams, GotoDefinitionParams, GotoDefinitionResponse,
+    Hover, HoverParams, HoverProviderCapability, InitializeParams, InitializeResult,
+    InitializedParams, InlayHint, InlayHintParams, Location, MessageType, OneOf, ReferenceParams,
     ServerCapabilities, ServerInfo, TextDocumentSyncCapability, TextDocumentSyncKind,
 };
 use tower_lsp::{Client, LanguageServer};
@@ -94,6 +97,10 @@ impl LanguageServer for CddmLspServer {
             hover_provider: Some(HoverProviderCapability::Simple(true)),
             definition_provider: Some(OneOf::Left(true)),
             references_provider: Some(OneOf::Left(true)),
+            code_lens_provider: Some(CodeLensOptions {
+                resolve_provider: Some(false),
+            }),
+            inlay_hint_provider: Some(OneOf::Left(true)),
             execute_command_provider: Some(ExecuteCommandOptions {
                 commands: vec![
                     "cddm.rescanWorkspace".to_string(),
@@ -289,6 +296,30 @@ impl LanguageServer for CddmLspServer {
             Ok(None)
         } else {
             Ok(Some(locations))
+        }
+    }
+
+    async fn code_lens(&self, params: CodeLensParams) -> Result<Option<Vec<CodeLens>>> {
+        let url = params.text_document.uri;
+        let root = self.state.get_workspace_root().await;
+        let clones = self.state.get_clone_pairs_for_file(url.as_str()).await;
+        let lenses = generate_code_lenses(&url, &clones, &root);
+        if lenses.is_empty() {
+            Ok(None)
+        } else {
+            Ok(Some(lenses))
+        }
+    }
+
+    async fn inlay_hint(&self, params: InlayHintParams) -> Result<Option<Vec<InlayHint>>> {
+        let url = params.text_document.uri;
+        let range = params.range;
+        let clones = self.state.get_clone_pairs_for_file(url.as_str()).await;
+        let hints = generate_inlay_hints(&url, &range, &clones);
+        if hints.is_empty() {
+            Ok(None)
+        } else {
+            Ok(Some(hints))
         }
     }
 

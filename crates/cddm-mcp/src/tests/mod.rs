@@ -37,6 +37,29 @@ async fn test_mcp_initialize() {
     let res = resp.result.unwrap();
     assert_eq!(res["protocolVersion"], MCP_PROTOCOL_VERSION);
     assert_eq!(res["serverInfo"]["name"], SERVER_NAME);
+    assert!(res["capabilities"]["sampling"].is_object());
+}
+
+#[tokio::test]
+async fn test_mcp_sampling_create_message() {
+    let resp = handle_mcp_request(make_test_req(
+        15,
+        mcp_methods::SAMPLING_CREATE_MESSAGE,
+        Some(json!({
+            "messages": [{"role": "user", "content": {"type": "text", "text": "test"}}]
+        })),
+    ))
+    .await
+    .expect("Expected response");
+    assert_eq!(resp.id, Some(json!(15)));
+    let res = resp.result.unwrap();
+    assert_eq!(res["role"], "assistant");
+    assert!(
+        res["content"]["text"]
+            .as_str()
+            .unwrap()
+            .contains("sampling")
+    );
 }
 
 #[tokio::test]

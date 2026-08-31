@@ -254,3 +254,22 @@ To ensure high-throughput execution, real-time live watch subscriptions, and cle
    - `IncrementalQueryEngine`: Query-memoized computation engine providing sub-millisecond tokenization and Winnowing fingerprinting.
    - `QueryMemoCache`: Thread-safe in-memory cache keyed by `QueryKey(file_path, content_blake3_hash)` with early cutoff for unmodified files.
    - `IncrementalDeltaReport`: Fine-grained snapshot diff reporting across repository revisions.
+
+---
+
+## 12. Modern Core Engine & Protocol Capabilities (2026 Standards)
+
+1. **Tree-Sitter Incremental Delta Parsing (`cddm-core::ast`)**:
+   - Reuses existing CST subtrees using `tree_sitter::InputEdit` byte/row coordinate offsets, achieving sub-millisecond re-parsing on single-file code edits.
+
+2. **Pure-Rust HNSW Multi-Layer Vector Index (`cddm-core::neural::hnsw`)**:
+   - High-speed $O(N \log N)$ indexing and $O(\log N)$ approximate nearest neighbor cosine search for dense code embeddings across multi-language codebases.
+
+3. **Strongly-Typed Domain Error Hierarchy (`cddm-core::error`)**:
+   - Comprehensive domain error taxonomy with `thiserror`, separating scan, parse, refactoring, policy violation, cache, and neural errors.
+
+4. **LSP 3.18 CodeLens & Inlay Hints (`cddm-lsp`)**:
+   - Interactive code lenses for clone counterpart navigation and non-intrusive inline clone percentage badges.
+
+5. **MCP 2026 Agentic Sampling Protocol (`cddm-mcp`)**:
+   - Sampling elicitation (`sampling/createMessage`) enabling AI coding assistants to leverage server-side reasoning loops.

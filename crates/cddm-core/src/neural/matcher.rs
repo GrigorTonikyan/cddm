@@ -6,6 +6,7 @@ use std::path::Path;
 
 use super::constants::*;
 use super::embedder::NeuralCodeEmbedder;
+use super::hnsw::{HnswConfig, HnswVectorIndex};
 use super::types::{
     CodeEmbeddingVector, EquivalenceConfidence, NeuralClonePair, NeuralEmbeddingConfig,
     NeuralScanResult,
@@ -16,6 +17,31 @@ use super::types::{
 pub struct NeuralMatcher;
 
 impl NeuralMatcher {
+    /// Scans a workspace directory using the fast HNSW index for O(N log N) vector retrieval.
+    pub fn scan_workspace_hnsw(
+        workspace_root: &Path,
+        config: &NeuralEmbeddingConfig,
+        hnsw_config: Option<HnswConfig>,
+    ) -> Result<NeuralScanResult, String> {
+        let mut vectors: Vec<CodeEmbeddingVector> = Vec::new();
+        Self::collect_embeddings_recursive(workspace_root, workspace_root, config, &mut vectors)?;
+
+        let total_blocks = vectors.len();
+        let pairs =
+            HnswVectorIndex::find_all_pairs(&vectors, hnsw_config, config.similarity_threshold);
+        let high_count = pairs
+            .iter()
+            .filter(|p| p.confidence == EquivalenceConfidence::High)
+            .count();
+        let total_pairs = pairs.len();
+
+        Ok(NeuralScanResult {
+            total_blocks_embedded: total_blocks,
+            total_neural_pairs: total_pairs,
+            high_confidence_count: high_count,
+            pairs,
+        })
+    }
     /// Scans a workspace directory or compares file vectors for neural algorithmic equivalence.
     pub fn scan_workspace(
         workspace_root: &Path,

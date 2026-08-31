@@ -142,6 +142,37 @@ impl IncrementalQueryEngine {
         Some(summary)
     }
 
+    /// Incrementally updates or computes an AST summary for a modified file given an old Tree.
+    pub async fn get_or_compute_ast_summary_incremental(
+        &self,
+        file_path: &str,
+        content: &str,
+        extension: &str,
+        old_tree: &tree_sitter::Tree,
+    ) -> Option<CachedAstSummary> {
+        let content_hash = compute_blake3_hash(content);
+        let key = QueryKey {
+            file_path: file_path.to_string(),
+            content_hash,
+        };
+
+        if let Some(cached) = self.memo.get_ast(&key).await {
+            return Some(cached);
+        }
+
+        let tree = crate::ast::parser::parse_ast_tree_incremental(content, extension, old_tree)?;
+        let root = tree.root_node();
+        let summary = CachedAstSummary {
+            extension: extension.to_string(),
+            root_kind: root.kind().to_string(),
+            child_count: root.child_count(),
+            content_hash,
+        };
+
+        self.memo.insert_ast(key, summary.clone()).await;
+        Some(summary)
+    }
+
     /// Retrieves or computes a unified Code Property Graph (CPG) with memoization.
     pub async fn get_or_compute_cpg(
         &self,
@@ -233,5 +264,72 @@ impl IncrementalQueryEngine {
     /// Clears the memoization cache.
     pub async fn clear(&self) {
         self.memo.clear().await;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_query_engine_tokens_and_fingerprints() {
+        let engine = IncrementalQueryEngine::new();
+        let code = "fn add(a: i32, b: i32) -> i32 { a + b }";
+
+        let tokens = engine.get_or_compute_tokens("src/calc.rs", code).await;
+        assert!(tokens.is_some());
+        assert_eq!(tokens.unwrap().language, "Rust");
+
+        let stats1 = engine.stats().await;
+        assert_eq!(stats1.misses, 1);
+
+        // Second query should hit cache
+        let tokens2 = engine.get_or_compute_tokens("src/calc.rs", code).await;
+        assert!(tokens2.is_some());
+        let stats2 = engine.stats().await;
+        assert_eq!(stats2.hits, 1);
+    }
+
+    #[tokio::test]
+    async fn test_query_engine_incremental_ast_summary() {
+        let engine = IncrementalQueryEngine::new();
+        let code1 = "fn multiply(x: i32) -> i32 { x * 2 }";
+        let tree1 = crate::ast::parser::parse_ast_tree(code1, "rs").unwrap();
+
+        let ast1 = engine
+            .get_or_compute_ast_summary("src/math.rs", code1, "rs")
+            .await;
+        assert!(ast1.is_some());
+        assert_eq!(ast1.unwrap().root_kind, "source_file");
+
+        let code2 = "fn multiply(x: i32, y: i32) -> i32 { x * y }";
+        let ast2 = engine
+            .get_or_compute_ast_summary_incremental("src/math.rs", code2, "rs", &tree1)
+            .await;
+        assert!(ast2.is_some());
+        assert_eq!(ast2.unwrap().root_kind, "source_file");
+    }
+
+    #[test]
+    fn test_compute_incremental_delta() {
+        let engine = IncrementalQueryEngine::new();
+        let hash_a = compute_blake3_hash("content a");
+        let hash_b = compute_blake3_hash("content b");
+        let hash_c = compute_blake3_hash("content c");
+
+        let mut old_manifest = HashMap::new();
+        old_manifest.insert("file1.rs".to_string(), hash_a);
+        old_manifest.insert("file2.rs".to_string(), hash_b);
+
+        let mut new_manifest = HashMap::new();
+        new_manifest.insert("file1.rs".to_string(), hash_a); // unmodified
+        new_manifest.insert("file2.rs".to_string(), hash_c); // modified
+        new_manifest.insert("file3.rs".to_string(), hash_b); // added
+
+        let delta = engine.compute_incremental_delta(&old_manifest, &new_manifest);
+        assert_eq!(delta.unmodified_files, 1);
+        assert_eq!(delta.modified_files, 1);
+        assert_eq!(delta.added_files, 1);
+        assert_eq!(delta.removed_files, 0);
     }
 }

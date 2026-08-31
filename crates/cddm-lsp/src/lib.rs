@@ -1,8 +1,10 @@
 #![forbid(unsafe_code)]
 
 pub mod code_actions;
+pub mod code_lens;
 pub mod diagnostics;
 pub mod hover;
+pub mod inlay_hints;
 pub mod server;
 pub mod state;
 pub mod utils;

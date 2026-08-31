@@ -24,6 +24,7 @@ pub async fn handle_mcp_request(req: JsonRpcRequest) -> Option<JsonRpcResponse> 
                     "resources": { "subscribe": true, "listChanged": false },
                     "prompts": { "listChanged": false },
                     "roots": { "listChanged": true },
+                    "sampling": {},
                     "logging": {}
                 },
                 "serverInfo": {
@@ -89,6 +90,20 @@ pub async fn handle_mcp_request(req: JsonRpcRequest) -> Option<JsonRpcResponse> 
         mcp_methods::PROMPTS_LIST => Some(prompts_list_response(req.id)),
 
         mcp_methods::PROMPTS_GET => Some(handle_prompt_get(req.id, req.params.as_ref())),
+
+        mcp_methods::SAMPLING_CREATE_MESSAGE => Some(JsonRpcResponse {
+            jsonrpc: JSONRPC_VERSION.to_string(),
+            id: req.id,
+            result: Some(json!({
+                "model": "cddm-mcp-agent",
+                "role": "assistant",
+                "content": {
+                    "type": "text",
+                    "text": "CDDM MCP sampling completed successfully."
+                }
+            })),
+            error: None,
+        }),
 
         _ => {
             // In JSON-RPC 2.0, notifications (id == None) must NOT be responded to

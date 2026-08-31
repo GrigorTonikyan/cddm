@@ -43,6 +43,7 @@ pub mod mcp_methods {
     pub const ROOTS_LIST: &str = "roots/list";
     pub const ROOTS_LIST_CHANGED: &str = "notifications/roots/list_changed";
     pub const PROGRESS: &str = "notifications/progress";
+    pub const SAMPLING_CREATE_MESSAGE: &str = "sampling/createMessage";
 }
 
 /// Exposed tool identifiers and parameters.

@@ -9,6 +9,7 @@ pub mod cpg;
 pub mod detector;
 pub mod diff;
 pub mod diff_matrix;
+pub mod error;
 pub mod extract;
 pub mod fingerprint;
 pub mod grammar;
@@ -54,6 +55,7 @@ pub use cpg::{
 pub use detector::run_scan;
 pub use diff::{get_changed_files_between_refs, run_diff_scan};
 pub use diff_matrix::*;
+pub use error::*;
 pub use extract::*;
 pub use hub::*;
 pub use io::{FileSource, MMAP_THRESHOLD_BYTES, read_file_source};

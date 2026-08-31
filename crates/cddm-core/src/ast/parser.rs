@@ -1,6 +1,6 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
-use tree_sitter::{Language, Parser, Tree};
+use tree_sitter::{InputEdit, Language, Parser, Point, Tree};
 
 thread_local! {
     static PARSER_CACHE: RefCell<HashMap<&'static str, Parser>> = RefCell::new(HashMap::new());
@@ -82,9 +82,70 @@ pub fn parse_ast_tree(source: &str, extension: &str) -> Option<Tree> {
     })
 }
 
+/// Incrementally re-parses source string into a tree-sitter Tree using an existing edited Tree.
+pub fn parse_ast_tree_incremental(source: &str, extension: &str, old_tree: &Tree) -> Option<Tree> {
+    let key = get_canonical_lang_key(extension)?;
+    let lang = get_tree_sitter_language(extension)?;
+
+    PARSER_CACHE.with(|cache| {
+        let mut map = cache.borrow_mut();
+        let parser = map.entry(key).or_insert_with(|| {
+            let mut p = Parser::new();
+            let _ = p.set_language(&lang);
+            p
+        });
+        parser.parse(source, Some(old_tree))
+    })
+}
+
+/// Applies an edit to a Tree in preparation for incremental re-parsing.
+pub fn apply_tree_edit(
+    tree: &mut Tree,
+    start_byte: usize,
+    old_end_byte: usize,
+    new_end_byte: usize,
+    start_point: (usize, usize),
+    old_end_point: (usize, usize),
+    new_end_point: (usize, usize),
+) {
+    let edit = InputEdit {
+        start_byte,
+        old_end_byte,
+        new_end_byte,
+        start_position: Point {
+            row: start_point.0,
+            column: start_point.1,
+        },
+        old_end_position: Point {
+            row: old_end_point.0,
+            column: old_end_point.1,
+        },
+        new_end_position: Point {
+            row: new_end_point.0,
+            column: new_end_point.1,
+        },
+    };
+    tree.edit(&edit);
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_parse_rust_ast_incremental() {
+        let original_code = "fn calculate() -> i32 { 42 }";
+        let mut tree = parse_ast_tree(original_code, "rs").expect("Initial parse failed");
+
+        let modified_code = "fn calculate(x: i32) -> i32 { x + 42 }";
+        // Edit parameter list "(x: i32)" inserted at byte 13
+        apply_tree_edit(&mut tree, 13, 13, 20, (0, 13), (0, 13), (0, 20));
+        let updated_tree = parse_ast_tree_incremental(modified_code, "rs", &tree)
+            .expect("Incremental parse failed");
+        let root = updated_tree.root_node();
+        assert_eq!(root.kind(), "source_file");
+        assert!(root.to_sexp().contains("parameters"));
+    }
 
     #[test]
     fn test_parse_rust_ast() {
