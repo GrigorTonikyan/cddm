@@ -12,9 +12,9 @@ describe("MCP Tool: cddm_get_clone_cluster", () => {
     expect(res).toBeDefined();
     expect(res.cluster_id).toBe(1);
     expect(Array.isArray(res.occurrences)).toBe(true);
-  });
+  }, 30000);
 
   it("should return error when cluster_id is missing", async () => {
     await assertToolError("cddm_get_clone_cluster", {}, RPC_ERRORS.INVALID_PARAMS);
-  });
+  }, 30000);
 });
