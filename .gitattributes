@@ -1,0 +1,15 @@
+# Set default behavior to automatically normalize line endings to LF
+* text=auto eol=lf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.vsix binary
+*.zip binary
+*.tar.gz binary
+*.wasm binary
+*.db binary
+*.redb binary

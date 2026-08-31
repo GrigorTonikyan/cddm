@@ -57,25 +57,25 @@ jobs:
         working-directory: ./webui
         run: bun install --frozen-lockfile || bun install
 
-      - name: Typecheck TypeScript (vp run check)
+      - name: Typecheck TypeScript (tsc -b)
         working-directory: ./webui
-        run: bunx vp run check
+        run: bun run check
 
       - name: Code Formatting Check (vp fmt --check)
         working-directory: ./webui
-        run: bunx vp run format:check
+        run: bun run format:check
 
       - name: WebUI Linter (vp lint)
         working-directory: ./webui
-        run: bunx vp run lint
+        run: bun run lint
 
-      - name: Run WebUI Vitest Suite (vp run test)
+      - name: Run WebUI Vitest Suite (vitest run)
         working-directory: ./webui
-        run: bunx vp run test
+        run: bun run test
 
-      - name: Build WebUI Bundle (vp run build)
+      - name: Build WebUI Bundle (vp build)
         working-directory: ./webui
-        run: bunx vp run build
+        run: bun run build
 
   workspace-governance-ci:
     name: Workspace Standards & MCP Protocol Gate
@@ -83,6 +83,16 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+        continue-on-error: true
+
+      - name: Build MCP Server Binary
+        run: cargo build -p cddm-mcp
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
