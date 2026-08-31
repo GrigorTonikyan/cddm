@@ -23,6 +23,8 @@ The following rules dictate coding standards, architectural limits, and workflow
   - Details polyglot test architecture, co-location in WebUI, script testing in `scripts/tests/`, Rust unit/integration testing, and E2E standards.
 - [Cross-Interface Feature Parity Mandate](.agents/rules/interface-feature-parity.md)
   - Details strict 4-pillar parity enforcement across CLI, WebUI Studio, MCP Server, and TUI Studio.
+- [Gitea Primary SSoT & GitHub Mirror Governance](.agents/rules/gitea-ssot-mirror-governance.md)
+  - Details Gitea as authoritative Single Source of Truth for issues, branches, PRs, and releases, with GitHub as secondary replica mirror.
 - [MCP Tool Testing Standard](.agents/rules/test.mcp.md)
   - Details the mandatory 1:1 isolated test suite per MCP tool under `tests/mcp/tools/` and dynamic discovery enforcement.
 
