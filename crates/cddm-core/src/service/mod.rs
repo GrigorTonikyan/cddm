@@ -156,6 +156,11 @@ mod tests {
             .await;
         assert!(cpg.is_some());
 
+        let all_cpgs = service
+            .query_all_cpgs("src/math.rs", code, "Rust", &interner)
+            .await;
+        assert_eq!(all_cpgs.len(), 1);
+
         let stats = service.query_cache_stats().await;
         assert!(stats.entries >= 2);
 

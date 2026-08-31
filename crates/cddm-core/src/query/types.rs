@@ -60,3 +60,19 @@ pub struct IncrementalDeltaReport {
     pub removed_files: usize,
     pub short_circuited_count: usize,
 }
+
+/// Options configuring parallel batch query execution in the incremental engine.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct BatchQueryOptions {
+    pub threads: Option<usize>,
+    pub chunk_size: usize,
+}
+
+impl Default for BatchQueryOptions {
+    fn default() -> Self {
+        Self {
+            threads: None,
+            chunk_size: 64,
+        }
+    }
+}

@@ -6,7 +6,7 @@ use crate::semantic_graph::cfg::extract_cfgs_from_source;
 use crate::semantic_graph::pdg::build_pdg_from_cfg;
 use crate::semantic_graph::types::{CfgEdgeType, CfgNodeType};
 
-/// Builds a unified Code Property Graph from AST, CFG, and PDG data for a function.
+/// Builds a unified Code Property Graph from AST, CFG, and PDG data for a single function.
 pub fn build_cpg_from_function(
     file_path: &str,
     code: &str,
@@ -15,6 +15,31 @@ pub fn build_cpg_from_function(
 ) -> Option<CodePropertyGraph> {
     let cfgs = extract_cfgs_from_source(file_path, code, language);
     let cfg = cfgs.into_iter().next()?;
+    build_cpg_from_cfg(file_path, cfg, interner)
+}
+
+/// Builds unified Code Property Graphs for all functions identified in the source text.
+pub fn build_all_cpgs_from_source(
+    file_path: &str,
+    code: &str,
+    language: &str,
+    interner: &SymbolInterner,
+) -> Vec<CodePropertyGraph> {
+    let cfgs = extract_cfgs_from_source(file_path, code, language);
+    let mut cpgs = Vec::with_capacity(cfgs.len());
+    for cfg in cfgs {
+        if let Some(cpg) = build_cpg_from_cfg(file_path, cfg, interner) {
+            cpgs.push(cpg);
+        }
+    }
+    cpgs
+}
+
+fn build_cpg_from_cfg(
+    file_path: &str,
+    cfg: crate::semantic_graph::types::ControlFlowGraph,
+    interner: &SymbolInterner,
+) -> Option<CodePropertyGraph> {
     let pdg = build_pdg_from_cfg(cfg.clone());
 
     let file_path_sym = interner.intern(file_path);
@@ -23,8 +48,9 @@ pub fn build_cpg_from_function(
     let mut nodes = Vec::with_capacity(cfg.nodes.len());
     for node in &cfg.nodes {
         let kind = match node.node_type {
-            CfgNodeType::Entry | CfgNodeType::BasicBlock => CpgNodeKind::BasicBlock,
-            CfgNodeType::Exit => CpgNodeKind::BasicBlock,
+            CfgNodeType::Entry | CfgNodeType::BasicBlock | CfgNodeType::Exit => {
+                CpgNodeKind::BasicBlock
+            }
             CfgNodeType::Branch => CpgNodeKind::BranchCondition,
             CfgNodeType::LoopHeader => CpgNodeKind::LoopHeader,
             CfgNodeType::LoopBody => CpgNodeKind::LoopBody,
@@ -120,5 +146,43 @@ mod tests {
             interner.resolve(cpg.function_name_symbol),
             Some("sum_items".to_string())
         );
+    }
+
+    #[test]
+    fn test_polyglot_all_cpgs_extraction() {
+        let py_code = r#"
+def calculate_area(w, h):
+    area = w * h
+    if area > 100:
+        print("large")
+    return area
+
+def compute_perimeter(w, h):
+    return (w + h) * 2
+"#;
+        let interner = SymbolInterner::new();
+        let cpgs = build_all_cpgs_from_source("calc.py", py_code, "python", &interner);
+        assert_eq!(cpgs.len(), 2);
+        assert_eq!(
+            interner.resolve(cpgs[0].function_name_symbol),
+            Some("calculate_area".to_string())
+        );
+        assert_eq!(
+            interner.resolve(cpgs[1].function_name_symbol),
+            Some("compute_perimeter".to_string())
+        );
+
+        let ts_code = r#"
+export function filterActive(users: any[]) {
+    return users.filter(u => u.active);
+}
+export const calculateTotal = (prices: number[]) => {
+    let sum = 0;
+    for (const p of prices) { sum += p; }
+    return sum;
+};
+"#;
+        let ts_cpgs = build_all_cpgs_from_source("users.ts", ts_code, "typescript", &interner);
+        assert_eq!(ts_cpgs.len(), 2);
     }
 }

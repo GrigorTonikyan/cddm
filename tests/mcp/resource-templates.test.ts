@@ -13,7 +13,12 @@ describe("MCP Dynamic Resource Templates (MCP 2026 Standards)", () => {
     expect(res.jsonrpc).toBe("2.0");
     expect(res.error).toBeUndefined();
     const result = res.result as {
-      resourceTemplates: Array<{ uriTemplate: string; name: string }>;
+      resourceTemplates: Array<{
+        uriTemplate: string;
+        name: string;
+        ttlMs?: number;
+        cacheScope?: string;
+      }>;
     };
     expect(result?.resourceTemplates).toBeDefined();
     expect(result.resourceTemplates.length).toBeGreaterThanOrEqual(3);
@@ -22,6 +27,12 @@ describe("MCP Dynamic Resource Templates (MCP 2026 Standards)", () => {
     expect(templates).toContain("cddm://file/{path}/clones");
     expect(templates).toContain("cddm://cluster/{cluster_id}/details");
     expect(templates).toContain("cddm://file/{path}/tokens");
+
+    // Verify MCP 2026 Cache Annotations
+    for (const t of result.resourceTemplates) {
+      expect(t.ttlMs).toBeGreaterThan(0);
+      expect(t.cacheScope).toBe("workspace");
+    }
   });
 
   it("should read parameterized file tokens template resource", async () => {

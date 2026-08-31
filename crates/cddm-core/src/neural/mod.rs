@@ -4,6 +4,7 @@ pub mod constants;
 pub mod embedder;
 pub mod hnsw;
 pub mod matcher;
+pub mod quantization;
 pub mod tokenizer;
 pub mod types;
 
@@ -11,6 +12,7 @@ pub use constants::*;
 pub use embedder::NeuralCodeEmbedder;
 pub use hnsw::{HnswConfig, HnswVectorIndex};
 pub use matcher::NeuralMatcher;
+pub use quantization::*;
 pub use tokenizer::SubwordTokenizer;
 pub use types::*;
 

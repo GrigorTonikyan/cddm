@@ -1,6 +1,10 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { ClonePair, TreemapNode, TreemapRect } from "../types/cddm-types";
-import { computeTreemapLayoutSync } from "../utils/worker-layout-client";
+import {
+  computeTreemapLayoutSync,
+  computeTreemapLayoutAsync,
+  ComputeLayoutResult,
+} from "../utils/worker-layout-client";
 
 export interface BreadcrumbItem {
   name: string;
@@ -31,8 +35,10 @@ export const useTreemapLayout = ({
   height = 360,
 }: UseTreemapLayoutOptions): UseTreemapLayoutResult => {
   const [currentPath, setCurrentPath] = useState<string>("");
+  const [asyncLayout, setAsyncLayout] = useState<ComputeLayoutResult | null>(null);
 
-  const { fullHierarchy, activeNode, layoutRects } = useMemo(() => {
+  // Synchronous immediate calculation for zero-flicker initial render
+  const syncLayout = useMemo(() => {
     return computeTreemapLayoutSync({
       clonePairs,
       width,
@@ -40,6 +46,32 @@ export const useTreemapLayout = ({
       currentPath,
     });
   }, [clonePairs, width, height, currentPath]);
+
+  // Offload heavy layout calculations to Web Worker when available in browser
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof Worker === "undefined") {
+      return;
+    }
+    let active = true;
+    void computeTreemapLayoutAsync({
+      clonePairs,
+      width,
+      height,
+      currentPath,
+    })
+      .then((result) => {
+        if (active && result) {
+          setAsyncLayout(result);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [clonePairs, width, height, currentPath]);
+
+  const activeResult = asyncLayout || syncLayout;
+  const { fullHierarchy, activeNode, layoutRects } = activeResult;
 
   const breadcrumbs = useMemo(() => {
     if (!currentPath) return [{ name: "Root", path: "" }];

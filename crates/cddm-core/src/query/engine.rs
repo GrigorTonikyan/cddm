@@ -197,6 +197,47 @@ impl IncrementalQueryEngine {
         Some(arc_cpg)
     }
 
+    /// Retrieves or computes all Code Property Graphs (CPGs) for all functions in a file.
+    pub async fn get_or_compute_all_cpgs(
+        &self,
+        file_path: &str,
+        content: &str,
+        language: &str,
+        interner: &crate::cpg::SymbolInterner,
+    ) -> Vec<Arc<crate::cpg::CodePropertyGraph>> {
+        let cpgs = crate::cpg::build_all_cpgs_from_source(file_path, content, language, interner);
+        cpgs.into_iter().map(Arc::new).collect()
+    }
+
+    /// Batch computes or retrieves normalized tokens for multiple file paths in parallel.
+    pub fn get_or_compute_tokens_batch(
+        &self,
+        items: &[(&str, &str)],
+        detect_type2: bool,
+    ) -> Vec<Option<CachedTokenization>> {
+        use rayon::prelude::*;
+        items
+            .par_iter()
+            .map(|&(path, content)| {
+                let grammar = get_grammar_for_path(Path::new(path))?;
+                let content_hash = compute_blake3_hash(content);
+                let raw_tokens = tokenize(content, grammar, detect_type2);
+                let mut tokens = Vec::with_capacity(raw_tokens.len());
+                let mut spans = Vec::with_capacity(raw_tokens.len());
+                for (tok, span) in raw_tokens {
+                    tokens.push(tok);
+                    spans.push(span);
+                }
+                Some(CachedTokenization {
+                    language: grammar.name.to_string(),
+                    tokens,
+                    spans,
+                    content_hash,
+                })
+            })
+            .collect()
+    }
+
     /// Checks if a file's semantic token stream changed, supporting early cutoff for comment/whitespace edits.
     pub async fn is_token_stream_unchanged(&self, file_path: &str, content: &str) -> bool {
         let tokenization = match self.get_or_compute_tokens(file_path, content).await {
@@ -331,5 +372,26 @@ mod tests {
         assert_eq!(delta.modified_files, 1);
         assert_eq!(delta.added_files, 1);
         assert_eq!(delta.removed_files, 0);
+    }
+
+    #[tokio::test]
+    async fn test_query_engine_batch_and_all_cpgs() {
+        let engine = IncrementalQueryEngine::new();
+        let files = [
+            ("src/a.rs", "fn func_a() -> i32 { 10 }"),
+            ("src/b.rs", "fn func_b() -> i32 { 20 }"),
+        ];
+
+        let batch_res = engine.get_or_compute_tokens_batch(&files, true);
+        assert_eq!(batch_res.len(), 2);
+        assert!(batch_res[0].is_some());
+        assert!(batch_res[1].is_some());
+
+        let interner = crate::cpg::SymbolInterner::new();
+        let py_code = "def f1():\n    return 1\ndef f2():\n    return 2\n";
+        let cpgs = engine
+            .get_or_compute_all_cpgs("test.py", py_code, "python", &interner)
+            .await;
+        assert_eq!(cpgs.len(), 2);
     }
 }

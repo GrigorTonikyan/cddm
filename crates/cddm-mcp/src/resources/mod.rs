@@ -22,79 +22,105 @@ pub fn resources_list_response(id: Option<serde_json::Value>) -> JsonRpcResponse
                     "uri": mcp_resources::URI_WORKSPACE_HEALTH,
                     "name": "Workspace DRY Health Score",
                     "description": "Real-time DRY Health Index, file metrics, and language statistics.",
-                    "mimeType": mcp_resources::MIME_APPLICATION_JSON
+                    "mimeType": mcp_resources::MIME_APPLICATION_JSON,
+                    "ttlMs": 5000,
+                    "cacheScope": "workspace"
                 },
                 {
                     "uri": mcp_resources::URI_WORKSPACE_CLONES,
                     "name": "Workspace Code Clones",
                     "description": "Registry of active duplicate code clones across repository files.",
-                    "mimeType": mcp_resources::MIME_APPLICATION_JSON
+                    "mimeType": mcp_resources::MIME_APPLICATION_JSON,
+                    "ttlMs": 5000,
+                    "cacheScope": "workspace"
                 },
                 {
                     "uri": mcp_resources::URI_WORKSPACE_CLUSTERS,
                     "name": "Workspace Code Clone Clusters",
                     "description": "N-way equivalence classes of duplicated logic across repository files.",
-                    "mimeType": mcp_resources::MIME_APPLICATION_JSON
+                    "mimeType": mcp_resources::MIME_APPLICATION_JSON,
+                    "ttlMs": 5000,
+                    "cacheScope": "workspace"
                 },
                 {
                     "uri": mcp_resources::URI_WORKSPACE_TIMELINE,
                     "name": "Workspace Historical Duplication Trend",
                     "description": "Historical DRY Health trajectories and commit snapshots across Git history.",
-                    "mimeType": mcp_resources::MIME_APPLICATION_JSON
+                    "mimeType": mcp_resources::MIME_APPLICATION_JSON,
+                    "ttlMs": 15000,
+                    "cacheScope": "workspace"
                 },
                 {
                     "uri": mcp_resources::URI_WORKSPACE_SUPPRESSIONS,
                     "name": "Workspace Suppression Rules",
                     "description": "Active .cddmignore suppression rules, threshold overrides, and filter directives.",
-                    "mimeType": mcp_resources::MIME_APPLICATION_JSON
+                    "mimeType": mcp_resources::MIME_APPLICATION_JSON,
+                    "ttlMs": 60000,
+                    "cacheScope": "workspace"
                 },
                 {
                     "uri": mcp_resources::URI_WORKSPACE_POLICIES,
                     "name": "Workspace Architectural Policy Rules",
                     "description": "Active .cddmrules.toml boundary and anti-duplication policy rules.",
-                    "mimeType": mcp_resources::MIME_APPLICATION_JSON
+                    "mimeType": mcp_resources::MIME_APPLICATION_JSON,
+                    "ttlMs": 60000,
+                    "cacheScope": "workspace"
                 },
                 {
                     "uri": mcp_resources::URI_WORKSPACE_SEMANTIC_GRAPH,
                     "name": "Workspace Semantic Dependency Graph",
                     "description": "Control Flow and Program Dependence Graph metadata and structural clone isomorphisms.",
-                    "mimeType": mcp_resources::MIME_APPLICATION_JSON
+                    "mimeType": mcp_resources::MIME_APPLICATION_JSON,
+                    "ttlMs": 30000,
+                    "cacheScope": "workspace"
                 },
                 {
                     "uri": mcp_resources::URI_WORKSPACE_CROSS_LANGUAGE_CLONES,
                     "name": "Workspace Cross-Language Clones",
                     "description": "Cross-language semantic clone pairs detected across different programming languages via Weisfeiler-Lehman graph kernels and subword embeddings.",
-                    "mimeType": mcp_resources::MIME_APPLICATION_JSON
+                    "mimeType": mcp_resources::MIME_APPLICATION_JSON,
+                    "ttlMs": 30000,
+                    "cacheScope": "workspace"
                 },
                 {
                     "uri": mcp_resources::URI_WORKSPACE_WATCH_STATUS,
                     "name": "Workspace Live Watch Status",
                     "description": "Real-time status of directory watcher daemon, debounce settings, and incremental delta metrics.",
-                    "mimeType": mcp_resources::MIME_APPLICATION_JSON
+                    "mimeType": mcp_resources::MIME_APPLICATION_JSON,
+                    "ttlMs": 1000,
+                    "cacheScope": "workspace"
                 },
                 {
                     "uri": mcp_resources::URI_WORKSPACE_OVERLAP,
                     "name": "Workspace Ecosystem Library Overlap",
                     "description": "Reimplemented standard and community package utilities detected across workspace files.",
-                    "mimeType": mcp_resources::MIME_APPLICATION_JSON
+                    "mimeType": mcp_resources::MIME_APPLICATION_JSON,
+                    "ttlMs": 60000,
+                    "cacheScope": "workspace"
                 },
                 {
                     "uri": mcp_resources::URI_WORKSPACE_HUB,
                     "name": "Organization Federation Hub",
                     "description": "Multi-repository organization duplication metrics, member repositories, and cross-repo clusters.",
-                    "mimeType": mcp_resources::MIME_APPLICATION_JSON
+                    "mimeType": mcp_resources::MIME_APPLICATION_JSON,
+                    "ttlMs": 30000,
+                    "cacheScope": "workspace"
                 },
                 {
                     "uri": mcp_resources::URI_WORKSPACE_COVERAGE,
                     "name": "Workspace Runtime Coverage Correlation",
                     "description": "Runtime execution hit counts, dead code duplicates, and hot path risk analysis correlated with code clones.",
-                    "mimeType": mcp_resources::MIME_APPLICATION_JSON
+                    "mimeType": mcp_resources::MIME_APPLICATION_JSON,
+                    "ttlMs": 15000,
+                    "cacheScope": "workspace"
                 },
                 {
                     "uri": mcp_resources::URI_WORKSPACE_NEURAL_EMBEDDINGS,
                     "name": "Workspace Neural Code Embeddings & Algorithmic Equivalence",
                     "description": "Dense subword embedding vectors and cross-language algorithmic equivalence clone pairs.",
-                    "mimeType": mcp_resources::MIME_APPLICATION_JSON
+                    "mimeType": mcp_resources::MIME_APPLICATION_JSON,
+                    "ttlMs": 30000,
+                    "cacheScope": "workspace"
                 }
             ]
         })),
@@ -112,19 +138,25 @@ pub fn resources_templates_list_response(id: Option<serde_json::Value>) -> JsonR
                     "uriTemplate": "cddm://file/{path}/clones",
                     "name": "File Code Clones",
                     "description": "Code clone pairs involving a specific repository file path.",
-                    "mimeType": mcp_resources::MIME_APPLICATION_JSON
+                    "mimeType": mcp_resources::MIME_APPLICATION_JSON,
+                    "ttlMs": 5000,
+                    "cacheScope": "workspace"
                 },
                 {
                     "uriTemplate": "cddm://cluster/{cluster_id}/details",
                     "name": "Clone Cluster Details",
                     "description": "Occurrence details and consensus refactoring suggestions for a specific cluster ID.",
-                    "mimeType": mcp_resources::MIME_APPLICATION_JSON
+                    "mimeType": mcp_resources::MIME_APPLICATION_JSON,
+                    "ttlMs": 5000,
+                    "cacheScope": "workspace"
                 },
                 {
                     "uriTemplate": "cddm://file/{path}/tokens",
                     "name": "File Token Spans",
                     "description": "Normalized token breakdown and line spans for a specific file path.",
-                    "mimeType": mcp_resources::MIME_APPLICATION_JSON
+                    "mimeType": mcp_resources::MIME_APPLICATION_JSON,
+                    "ttlMs": 60000,
+                    "cacheScope": "workspace"
                 }
             ]
         })),

@@ -95,6 +95,19 @@ impl WorkspaceService {
             .await
     }
 
+    /// Queries or computes all Code Property Graphs (CPGs) across all functions in a file.
+    pub async fn query_all_cpgs(
+        &self,
+        file_path: &str,
+        content: &str,
+        language: &str,
+        interner: &crate::cpg::SymbolInterner,
+    ) -> Vec<Arc<crate::cpg::CodePropertyGraph>> {
+        self.query_engine
+            .get_or_compute_all_cpgs(file_path, content, language, interner)
+            .await
+    }
+
     /// Retrieves query engine memoization cache statistics.
     pub async fn query_cache_stats(&self) -> crate::query::QueryCacheStats {
         self.query_engine.stats().await
