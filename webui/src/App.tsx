@@ -14,6 +14,7 @@ import {
   Sliders,
   Sparkles,
   Terminal,
+  Trash2,
   X,
 } from "lucide-react";
 import React, { Suspense } from "react";
@@ -30,6 +31,10 @@ import { lazyModal } from "./utils/lazy-modal";
 const CoverageCorrelationModal = lazyModal(
   () => import("./components/CoverageCorrelationModal"),
   "CoverageCorrelationModal",
+);
+const DeadCodeExplorerModal = lazyModal(
+  () => import("./components/DeadCodeExplorerModal"),
+  "DeadCodeExplorerModal",
 );
 const HubFederationModal = lazyModal(
   () => import("./components/HubFederationModal"),
@@ -92,6 +97,8 @@ export const App: React.FC = () => {
     setIsHubModalOpen,
     isCoverageModalOpen,
     setIsCoverageModalOpen,
+    isDeadCodeModalOpen,
+    setIsDeadCodeModalOpen,
     isLiveEventInspectorOpen,
     setIsLiveEventInspectorOpen,
   } = useCDDMStore();
@@ -201,6 +208,15 @@ export const App: React.FC = () => {
           >
             <Activity className="w-3.5 h-3.5 text-emerald-400" />
             <span>Coverage</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsDeadCodeModalOpen(true)}
+            className="px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 hover:bg-slate-800 text-slate-300 flex items-center gap-1.5 transition-colors shadow-sm"
+          >
+            <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+            <span>Dead Code</span>
           </button>
 
           {results && (
@@ -313,6 +329,12 @@ export const App: React.FC = () => {
         <CoverageCorrelationModal
           isOpen={isCoverageModalOpen}
           onClose={() => setIsCoverageModalOpen(false)}
+        />
+
+        {/* Polyglot Dead Code Explorer Modal */}
+        <DeadCodeExplorerModal
+          isOpen={isDeadCodeModalOpen}
+          onClose={() => setIsDeadCodeModalOpen(false)}
         />
 
         {/* Live Watch & Sync Event Inspector Modal */}

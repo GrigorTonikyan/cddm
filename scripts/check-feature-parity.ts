@@ -36,6 +36,7 @@ const RAW_PARITY_MATRIX = [
   "overlap|Ecosystem Library Overlap|commands/overlap.rs|cddm_detect_overlap|/api/overlap|overlap.rs",
   "hub|Organization Federation Hub|commands/hub.rs|cddm_scan_hub|/api/hub|hub.rs",
   "coverage|Runtime Execution & Coverage|commands/coverage.rs|cddm_correlate_coverage|/api/coverage|coverage.rs",
+  "dead_code|Polyglot Dead Code Detection|commands/dead_code.rs|cddm_detect_dead_code|/api/dead-code|dead_code.rs",
   "neural|Neural Embeddings & Algorithmic Clones|commands/semantic.rs|cddm_semantic_neural_scan|/api/semantic/neural|semantic.rs",
 ] as const;
 

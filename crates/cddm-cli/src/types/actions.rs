@@ -124,6 +124,7 @@ pub enum HookAction {
 
 #[derive(ValueEnum, Clone, Copy, Debug, PartialEq, Eq)]
 pub enum PlatformChoice {
+    Gitea,
     Github,
     Gitlab,
     Azure,
@@ -132,6 +133,7 @@ pub enum PlatformChoice {
 impl std::fmt::Display for PlatformChoice {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            Self::Gitea => write!(f, "Gitea Actions"),
             Self::Github => write!(f, "GitHub Actions"),
             Self::Gitlab => write!(f, "GitLab CI"),
             Self::Azure => write!(f, "Azure Pipelines"),
@@ -142,6 +144,7 @@ impl std::fmt::Display for PlatformChoice {
 impl From<PlatformChoice> for cddm_core::WorkflowPlatform {
     fn from(choice: PlatformChoice) -> Self {
         match choice {
+            PlatformChoice::Gitea => cddm_core::WorkflowPlatform::Gitea,
             PlatformChoice::Github => cddm_core::WorkflowPlatform::GitHub,
             PlatformChoice::Gitlab => cddm_core::WorkflowPlatform::GitLab,
             PlatformChoice::Azure => cddm_core::WorkflowPlatform::Azure,

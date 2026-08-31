@@ -132,7 +132,48 @@ export function updateWorkspaceVersions(
     console.log(`\x1b[32m[OK] Updated npm/cddm/package.json -> ${newVersion}\x1b[0m`);
   }
 
-  // 5. README.md badges
+  // 5. editors/vscode/package.json
+  const vscodePkgPath = join(workspaceRoot, "editors", "vscode", "package.json");
+  if (existsSync(vscodePkgPath)) {
+    const pkg = JSON.parse(readFileSync(vscodePkgPath, "utf-8"));
+    pkg.version = newVersion;
+    writeFileSync(vscodePkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf-8");
+    console.log(`\x1b[32m[OK] Updated editors/vscode/package.json -> ${newVersion}\x1b[0m`);
+  }
+
+  // 6. packaging/homebrew/cddm.rb
+  const brewPath = join(workspaceRoot, "packaging", "homebrew", "cddm.rb");
+  if (existsSync(brewPath)) {
+    const brewContent = readFileSync(brewPath, "utf-8");
+    const updatedBrew = brewContent.replace(/version "[^"]+"/, `version "${newVersion}"`);
+    writeFileSync(brewPath, updatedBrew, "utf-8");
+    console.log(`\x1b[32m[OK] Updated packaging/homebrew/cddm.rb -> ${newVersion}\x1b[0m`);
+  }
+
+  // 7. packaging/scoop/cddm.json
+  const scoopPath = join(workspaceRoot, "packaging", "scoop", "cddm.json");
+  if (existsSync(scoopPath)) {
+    const scoopJson = JSON.parse(readFileSync(scoopPath, "utf-8"));
+    scoopJson.version = newVersion;
+    writeFileSync(scoopPath, JSON.stringify(scoopJson, null, 2) + "\n", "utf-8");
+    console.log(`\x1b[32m[OK] Updated packaging/scoop/cddm.json -> ${newVersion}\x1b[0m`);
+  }
+
+  // 8. packaging/winget/GrigorTonikyan.cddm.yaml
+  const wingetPath = join(workspaceRoot, "packaging", "winget", "GrigorTonikyan.cddm.yaml");
+  if (existsSync(wingetPath)) {
+    const wingetContent = readFileSync(wingetPath, "utf-8");
+    const updatedWinget = wingetContent.replace(
+      /PackageVersion:\s*[\d.]+/,
+      `PackageVersion: ${newVersion}`,
+    );
+    writeFileSync(wingetPath, updatedWinget, "utf-8");
+    console.log(
+      `\x1b[32m[OK] Updated packaging/winget/GrigorTonikyan.cddm.yaml -> ${newVersion}\x1b[0m`,
+    );
+  }
+
+  // 9. README.md badges
   const readmePath = join(workspaceRoot, "README.md");
   if (existsSync(readmePath)) {
     const readmeContent = readFileSync(readmePath, "utf-8");
@@ -146,7 +187,7 @@ export function updateWorkspaceVersions(
     console.log(`\x1b[32m[OK] Updated README.md -> ${newVersion}\x1b[0m`);
   }
 
-  // 6. Cargo.lock
+  // 10. Cargo.lock
   Bun.spawnSync(["cargo", "check", "--workspace"], { cwd: workspaceRoot });
 }
 

@@ -17,15 +17,15 @@
     "tree-sitter",
     "winnowing"
   ],
-  "homepage": "https://github.com/GrigorTonikyan/cddm#readme",
+  "homepage": "https://git.gt-web-dev.com/gt-dev/cddm#readme",
   "bugs": {
-    "url": "https://github.com/GrigorTonikyan/cddm/issues"
+    "url": "https://git.gt-web-dev.com/gt-dev/cddm/issues"
   },
   "license": "MIT OR Apache-2.0",
   "author": "Grigor Tonikyan <grigor@tonikyan.com>",
   "repository": {
     "type": "git",
-    "url": "https://github.com/GrigorTonikyan/cddm.git"
+    "url": "https://git.gt-web-dev.com/gt-dev/cddm.git"
   },
   "bin": {
     "cddm": "./bin/cddm.js"

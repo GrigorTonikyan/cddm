@@ -1,7 +1,9 @@
 #![forbid(unsafe_code)]
 
 use crate::types::PlatformChoice;
-use cddm_core::{generate_azure_pipelines, generate_github_workflow, generate_gitlab_ci};
+use cddm_core::{
+    generate_azure_pipelines, generate_gitea_workflow, generate_github_workflow, generate_gitlab_ci,
+};
 use std::fs;
 use std::path::PathBuf;
 
@@ -13,12 +15,14 @@ pub fn run_init_command(
     write: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let content = match platform {
+        PlatformChoice::Gitea => generate_gitea_workflow(fail_threshold, min_tokens),
         PlatformChoice::Github => generate_github_workflow(fail_threshold, min_tokens),
         PlatformChoice::Gitlab => generate_gitlab_ci(fail_threshold, min_tokens),
         PlatformChoice::Azure => generate_azure_pipelines(fail_threshold, min_tokens),
     };
 
     let default_out_path = match platform {
+        PlatformChoice::Gitea => PathBuf::from(".gitea/workflows/cddm.yml"),
         PlatformChoice::Github => PathBuf::from(".github/workflows/cddm.yml"),
         PlatformChoice::Gitlab => PathBuf::from(".gitlab-ci.yml"),
         PlatformChoice::Azure => PathBuf::from("azure-pipelines.yml"),

@@ -266,6 +266,18 @@ test.describe("CDDM WebUI Studio Comprehensive UI/UX Quality Verification", () =
     await snap(page, "21_hub_federation_modal.png");
     await minWin(page);
 
+    // 14.5 Polyglot Dead Code Explorer Modal (Win2xWindow)
+    const deadCodeBtn = page.getByRole("button", { name: /Dead Code/i }).first();
+    if (await deadCodeBtn.isVisible()) {
+      await deadCodeBtn.click();
+      await page.waitForTimeout(600);
+      await expect(page.getByText("Polyglot Dead Code Explorer")).toBeVisible();
+      await expect(page.getByText("Dead Items")).toBeVisible();
+      await expect(page.getByText("Dead Lines")).toBeVisible();
+      await snap(page, "21b_dead_code_explorer_modal.png");
+      await minWin(page);
+    }
+
     // 15. Live Watch HUD & Event Inspector Modal
     const eventsBtn = page.getByRole("button", { name: /Events/i }).first();
     if (await eventsBtn.isVisible()) {

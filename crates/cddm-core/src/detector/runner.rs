@@ -3,11 +3,13 @@
 use super::discovery::{discover_candidate_files, init_policy_engine, init_suppression_engine};
 use super::indexer::index_and_match_clone_pairs;
 use super::types::ParsedFile;
-use crate::cache::{CACHE_SCHEMA_VERSION, CachedFileEntry, DiskFingerprintCache};
+use crate::cache::{
+    CACHE_SCHEMA_VERSION, CachedFileEntry, DiskFingerprintCache, resolve_default_cache_path,
+};
 use crate::fingerprint::{MIN_K_GRAM, WINDOW_OFFSET, winnow};
 use crate::grammar::get_grammar_for_path;
 use crate::tokenizer::tokenize;
-use crate::types::{DEFAULT_CACHE_FILE, ScanConfig, ScanPhase, ScanProgress, ScanResult};
+use crate::types::{ScanConfig, ScanPhase, ScanProgress, ScanResult};
 use rayon::prelude::*;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
@@ -59,12 +61,23 @@ pub async fn run_scan(
         done: AtomicBool::new(false),
     });
 
+    tracing::info!(
+        scan_id = %scan_id,
+        directory = %config.directory,
+        min_tokens = config.min_tokens,
+        "Starting CDDM polyglot code deduplication scan..."
+    );
+
     let suppression_engine = init_suppression_engine(&config);
     let policy_engine = init_policy_engine(&config);
 
     let files_to_process = discover_candidate_files(&config, &suppression_engine, &cancel_flag)?;
     let total_files = files_to_process.len();
     tracker.total_files.store(total_files, Ordering::Relaxed);
+    tracing::debug!(
+        total_files = total_files,
+        "Discovered candidate files for analysis"
+    );
 
     if total_files == 0 {
         let _ = progress_tx
@@ -152,7 +165,7 @@ pub async fn run_scan(
             .cache_dir
             .as_ref()
             .map(PathBuf::from)
-            .unwrap_or_else(|| Path::new(&config.directory).join(DEFAULT_CACHE_FILE));
+            .unwrap_or_else(|| resolve_default_cache_path(Path::new(&config.directory)));
         DiskFingerprintCache::open_or_create(&cache_path).unwrap_or_else(|err| {
             tracing::warn!(
                 "Failed to initialize disk cache: {}; continuing in memory",

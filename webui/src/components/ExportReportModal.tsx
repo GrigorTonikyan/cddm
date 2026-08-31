@@ -37,8 +37,8 @@ export const ExportReportModal: React.FC<ExportReportModalProps> = ({
           tool: {
             driver: {
               name: "CDDM",
-              version: "0.1.0",
-              informationUri: "https://github.com/GrigorTonikyan/cddm",
+              version: "1.9.0",
+              informationUri: "https://git.gt-web-dev.com/gt-dev/cddm",
               rules: [
                 {
                   id: "CDDM001",

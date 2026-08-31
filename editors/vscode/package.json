@@ -17,11 +17,11 @@
     "duplication",
     "refactoring"
   ],
-  "homepage": "https://github.com/GrigorTonikyan/cddm",
+  "homepage": "https://git.gt-web-dev.com/gt-dev/cddm",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/GrigorTonikyan/cddm.git"
+    "url": "https://git.gt-web-dev.com/gt-dev/cddm.git"
   },
   "publisher": "grigortonikyan",
   "main": "./out/extension.js",

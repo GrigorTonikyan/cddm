@@ -107,14 +107,17 @@ pub fn generate_pr_markdown_comment(
     out.push_str("```\n\n");
 
     match platform {
+        WorkflowPlatform::Gitea => {
+            out.push_str("---\n*Generated automatically by [CDDM (Code De-Duplication Meister)](https://git.gt-web-dev.com/gt-dev/cddm) Gitea Action.*\n");
+        }
         WorkflowPlatform::GitHub => {
-            out.push_str("---\n*Generated automatically by [CDDM (Code De-Duplication Meister)](https://github.com/GrigorTonikyan/cddm) GitHub Action.*\n");
+            out.push_str("---\n*Generated automatically by [CDDM (Code De-Duplication Meister)](https://git.gt-web-dev.com/gt-dev/cddm) GitHub Action.*\n");
         }
         WorkflowPlatform::GitLab => {
-            out.push_str("---\n*Generated automatically by [CDDM (Code De-Duplication Meister)](https://github.com/GrigorTonikyan/cddm) GitLab CI Pipeline.*\n");
+            out.push_str("---\n*Generated automatically by [CDDM (Code De-Duplication Meister)](https://git.gt-web-dev.com/gt-dev/cddm) GitLab CI Pipeline.*\n");
         }
         WorkflowPlatform::Azure => {
-            out.push_str("---\n*Generated automatically by [CDDM (Code De-Duplication Meister)](https://github.com/GrigorTonikyan/cddm) Azure DevOps Pipeline.*\n");
+            out.push_str("---\n*Generated automatically by [CDDM (Code De-Duplication Meister)](https://git.gt-web-dev.com/gt-dev/cddm) Azure DevOps Pipeline.*\n");
         }
     }
 

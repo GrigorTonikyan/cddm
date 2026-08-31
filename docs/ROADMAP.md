@@ -1,7 +1,7 @@
 # CDDM Engineering Roadmap & Strategic Enhancement Proposals
 
 > **Document Status**: Active / Living RFC Reference  
-> **Repository**: [GrigorTonikyan/cddm](https://github.com/GrigorTonikyan/cddm)  
+> **Repository**: [gt-dev/cddm](https://git.gt-web-dev.com/gt-dev/cddm)  
 > **Last Updated**: 2026-08-23
 
 ---

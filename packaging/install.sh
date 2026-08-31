@@ -2,13 +2,14 @@
 set -euo pipefail
 
 # CDDM Standalone Cross-Platform Shell Installer
-# Usage: curl -fsSL https://raw.githubusercontent.com/GrigorTonikyan/cddm/main/packaging/install.sh | bash
+# Usage: curl -fsSL https://git.gt-web-dev.com/gt-dev/cddm/raw/branch/main/packaging/install.sh | bash
 
-REPO="GrigorTonikyan/cddm"
+GITEA_HOST="${CDDM_GITEA_HOST:-git.gt-web-dev.com}"
+REPO="${CDDM_REPO:-gt-dev/cddm}"
 INSTALL_DIR="${CDDM_INSTALL_DIR:-$HOME/.cddm/bin}"
 VERSION="${CDDM_VERSION:-latest}"
 
-echo "--> Initializing CDDM Installer..."
+echo "--> Initializing CDDM Installer (host: ${GITEA_HOST})..."
 
 OS="$(uname -s | tr '[:upper:]' '[:lower:]')"
 ARCH="$(uname -m)"
@@ -29,16 +30,16 @@ esac
 TARGET="${TARGET_ARCH}-${TARGET_OS}"
 
 if [ "$VERSION" = "latest" ]; then
-  RELEASE_TAG=$(curl -s "https://api.github.com/repos/${REPO}/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+  RELEASE_TAG=$(curl -s "https://${GITEA_HOST}/api/v1/repos/${REPO}/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
   if [ -z "$RELEASE_TAG" ]; then
-    RELEASE_TAG="v1.7.0"
+    RELEASE_TAG="v1.9.0"
   fi
 else
   RELEASE_TAG="$VERSION"
 fi
 
 TARBALL="cddm-${RELEASE_TAG}-${TARGET}.tar.gz"
-DOWNLOAD_URL="https://github.com/${REPO}/releases/download/${RELEASE_TAG}/${TARBALL}"
+DOWNLOAD_URL="https://${GITEA_HOST}/${REPO}/releases/download/${RELEASE_TAG}/${TARBALL}"
 
 echo "--> Downloading CDDM ${RELEASE_TAG} for ${TARGET}..."
 TMP_DIR=$(mktemp -d)

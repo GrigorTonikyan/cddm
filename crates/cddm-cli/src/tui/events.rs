@@ -81,6 +81,7 @@ pub fn handle_key_event(app: &mut TuiApp, key: KeyEvent) {
         (KeyCode::Char('9'), _) => app.active_tab = TuiTab::Overlap,
         (KeyCode::Char('0'), _) => app.active_tab = TuiTab::Hub,
         (KeyCode::Char('C'), _) | (KeyCode::Char('v'), _) => app.active_tab = TuiTab::Coverage,
+        (KeyCode::Char('D'), _) | (KeyCode::Char('d'), _) => app.active_tab = TuiTab::DeadCode,
 
         // Tab Switching
         (KeyCode::Tab, KeyModifiers::NONE) | (KeyCode::Char('l'), KeyModifiers::NONE) => {

@@ -6,6 +6,7 @@ pub mod cache;
 pub mod cluster;
 pub mod coverage;
 pub mod cpg;
+pub mod dead_code;
 pub mod detector;
 pub mod diff;
 pub mod diff_matrix;
@@ -15,6 +16,7 @@ pub mod fingerprint;
 pub mod grammar;
 pub mod hub;
 pub mod io;
+pub mod logging;
 pub mod monorepo;
 pub mod neural;
 pub mod overlap;
@@ -45,13 +47,16 @@ pub use ai::{
 };
 pub use ai_prompt::*;
 pub use cache::pack::*;
-pub use cache::{CachedFileEntry, DiskFingerprintCache};
+pub use cache::{
+    CachedFileEntry, DiskFingerprintCache, find_workspace_root, resolve_default_cache_path,
+};
 pub use cluster::cluster_clone_pairs;
 pub use coverage::*;
 pub use cpg::{
     CodePropertyGraph, CpgEdge, CpgEdgeKind, CpgNode, CpgNodeKind, SymbolId, SymbolInterner,
     build_all_cpgs_from_source, build_cpg_from_function,
 };
+pub use dead_code::*;
 pub use detector::run_scan;
 pub use diff::{get_changed_files_between_refs, run_diff_scan};
 pub use diff_matrix::*;
@@ -59,6 +64,7 @@ pub use error::*;
 pub use extract::*;
 pub use hub::*;
 pub use io::{FileSource, MMAP_THRESHOLD_BYTES, read_file_source};
+pub use logging::*;
 pub use monorepo::*;
 pub use neural::*;
 pub use overlap::*;

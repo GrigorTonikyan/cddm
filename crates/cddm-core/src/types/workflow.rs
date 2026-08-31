@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 /// Target CI/CD workflow platform for automated script generation.
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
 pub enum WorkflowPlatform {
+    Gitea,
     GitHub,
     GitLab,
     Azure,
@@ -13,6 +14,7 @@ pub enum WorkflowPlatform {
 impl std::fmt::Display for WorkflowPlatform {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            Self::Gitea => write!(f, "Gitea Actions"),
             Self::GitHub => write!(f, "GitHub Actions"),
             Self::GitLab => write!(f, "GitLab CI"),
             Self::Azure => write!(f, "Azure Pipelines"),

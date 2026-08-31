@@ -35,7 +35,7 @@ pub async fn run_scan_command(
     if clear_cache {
         let path_to_clear = cache_dir
             .clone()
-            .unwrap_or_else(|| directory.join(cddm_core::DEFAULT_CACHE_FILE));
+            .unwrap_or_else(|| cddm_core::resolve_default_cache_path(&directory));
         if path_to_clear.exists() {
             let _ = fs::remove_file(&path_to_clear);
             eprintln!("Cleared cache database at '{}'", path_to_clear.display());

@@ -51,6 +51,8 @@ define_api_routes! {
     ROUTE_API_HUB_EXTRACT => "/api/hub/extract",
     ROUTE_API_COVERAGE_INGEST => "/api/coverage/ingest",
     ROUTE_API_COVERAGE_CORRELATE => "/api/coverage/correlate",
+    ROUTE_API_DEAD_CODE_SCAN => "/api/dead-code/scan",
+    ROUTE_API_DEAD_CODE => "/api/dead-code",
 }
 
 /// Default localhost IPv4 binding.
@@ -325,4 +327,16 @@ pub struct SemanticNeuralRequest {
     pub threshold: Option<f32>,
     pub dimension: Option<usize>,
     pub max_subwords: Option<usize>,
+}
+
+/// Request payload for running dead code analysis.
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Default)]
+pub struct DeadCodeScanRequest {
+    pub directory: Option<String>,
+    pub min_tokens: Option<usize>,
+    pub static_only: Option<bool>,
+    pub report_path: Option<String>,
+    pub report_content: Option<String>,
+    pub languages: Option<Vec<String>>,
+    pub ignore: Option<Vec<String>>,
 }

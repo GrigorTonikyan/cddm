@@ -2,6 +2,52 @@ use crate::types::HookStatus;
 use std::fs;
 use std::path::{Path, PathBuf};
 
+/// Generates a turnkey Gitea Actions workflow configuration.
+pub fn generate_gitea_workflow(fail_threshold: f64, min_tokens: usize) -> String {
+    format!(
+        r#"name: CDDM Code Duplication & DRY Health
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  cddm-scan:
+    name: Code Clone Detection & Modularity Health
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install CDDM Engine
+        run: cargo install cddm
+
+      - name: Execute CDDM Duplicate Code Scan
+        run: |
+          cddm scan . \
+            --min-tokens {min_tokens} \
+            --fail-threshold {fail_threshold:.1} \
+            --format sarif \
+            --output cddm-results.sarif
+
+      - name: Generate PR Markdown Summary Report
+        if: gitea.event_name == 'pull_request'
+        run: |
+          cddm scan . \
+            --min-tokens {min_tokens} \
+            --format markdown > cddm-summary.md
+"#
+    )
+}
+
 /// Generates a turnkey GitHub Actions workflow configuration.
 pub fn generate_github_workflow(fail_threshold: f64, min_tokens: usize) -> String {
     format!(

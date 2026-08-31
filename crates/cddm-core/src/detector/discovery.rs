@@ -1,5 +1,6 @@
 #![forbid(unsafe_code)]
 
+use crate::cache::find_workspace_root;
 use crate::grammar::get_grammar_for_path;
 use crate::policy::PolicyEngine;
 use crate::suppression::SuppressionEngine;
@@ -19,10 +20,20 @@ pub fn init_suppression_engine(config: &ScanConfig) -> SuppressionEngine {
         )
         .unwrap_or_else(|_| SuppressionEngine::default_engine())
     } else {
-        let root_cddmignore = Path::new(&config.directory).join(".cddmignore");
-        if root_cddmignore.exists() {
+        let dir_path = Path::new(&config.directory);
+        let root_cddmignore = dir_path.join(".cddmignore");
+        let ws_cddmignore = find_workspace_root(dir_path).join(".cddmignore");
+        let cddmignore_file = if root_cddmignore.exists() {
+            Some(root_cddmignore)
+        } else if ws_cddmignore.exists() {
+            Some(ws_cddmignore)
+        } else {
+            None
+        };
+
+        if let Some(path) = cddmignore_file {
             SuppressionEngine::from_file(
-                &root_cddmignore,
+                &path,
                 config.ignore_tests,
                 config.ignore_mocks,
                 config.ignore_generated,
@@ -45,9 +56,19 @@ pub fn init_policy_engine(config: &ScanConfig) -> PolicyEngine {
     if let Some(path_str) = &config.rules_path {
         PolicyEngine::from_file(Path::new(path_str)).unwrap_or_else(|_| PolicyEngine::empty())
     } else {
-        let root_rules = Path::new(&config.directory).join(DEFAULT_RULES_FILE);
-        if root_rules.exists() {
-            PolicyEngine::from_file(&root_rules).unwrap_or_else(|_| PolicyEngine::empty())
+        let dir_path = Path::new(&config.directory);
+        let root_rules = dir_path.join(DEFAULT_RULES_FILE);
+        let ws_rules = find_workspace_root(dir_path).join(DEFAULT_RULES_FILE);
+        let rules_file = if root_rules.exists() {
+            Some(root_rules)
+        } else if ws_rules.exists() {
+            Some(ws_rules)
+        } else {
+            None
+        };
+
+        if let Some(path) = rules_file {
+            PolicyEngine::from_file(&path).unwrap_or_else(|_| PolicyEngine::empty())
         } else {
             PolicyEngine::empty()
         }

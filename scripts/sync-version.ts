@@ -63,7 +63,42 @@ if (await vscodePkgFile.exists()) {
   console.log(`\x1b[32m[OK] Updated editors/vscode/package.json -> ${newVersion}\x1b[0m`);
 }
 
-// 6. Update README.md badges
+// 6. Sync packaging/homebrew/cddm.rb
+const brewPath = join(workspaceRoot, "packaging", "homebrew", "cddm.rb");
+const brewFile = Bun.file(brewPath);
+if (await brewFile.exists()) {
+  const brewContent = await brewFile.text();
+  const updatedBrew = brewContent.replace(/version "[^"]+"/, `version "${newVersion}"`);
+  await Bun.write(brewPath, updatedBrew);
+  console.log(`\x1b[32m[OK] Updated packaging/homebrew/cddm.rb -> ${newVersion}\x1b[0m`);
+}
+
+// 7. Sync packaging/scoop/cddm.json
+const scoopPath = join(workspaceRoot, "packaging", "scoop", "cddm.json");
+const scoopFile = Bun.file(scoopPath);
+if (await scoopFile.exists()) {
+  const scoopJson = await scoopFile.json();
+  scoopJson.version = newVersion;
+  await Bun.write(scoopPath, JSON.stringify(scoopJson, null, 2) + "\n");
+  console.log(`\x1b[32m[OK] Updated packaging/scoop/cddm.json -> ${newVersion}\x1b[0m`);
+}
+
+// 8. Sync packaging/winget/GrigorTonikyan.cddm.yaml
+const wingetPath = join(workspaceRoot, "packaging", "winget", "GrigorTonikyan.cddm.yaml");
+const wingetFile = Bun.file(wingetPath);
+if (await wingetFile.exists()) {
+  const wingetContent = await wingetFile.text();
+  const updatedWinget = wingetContent.replace(
+    /PackageVersion:\s*[\d.]+/,
+    `PackageVersion: ${newVersion}`,
+  );
+  await Bun.write(wingetPath, updatedWinget);
+  console.log(
+    `\x1b[32m[OK] Updated packaging/winget/GrigorTonikyan.cddm.yaml -> ${newVersion}\x1b[0m`,
+  );
+}
+
+// 9. Update README.md badges
 const readmePath = join(workspaceRoot, "README.md");
 const readmeFile = Bun.file(readmePath);
 if (await readmeFile.exists()) {

@@ -140,4 +140,15 @@ describe("Workspace Cleaner & Reset Engine", () => {
       expect(existsSync(join(fixtureDir, "crates/cddm-core/src/lib.rs"))).toBe(true);
     });
   });
+
+  describe("Workspace .cddm Isolation Verification", () => {
+    it("should guarantee no .cddm directories exist in subdirectories of workspace", () => {
+      const glob = new Bun.Glob("**/.cddm");
+      const matches = Array.from(glob.scanSync({ cwd: process.cwd(), onlyFiles: false }));
+      for (const match of matches) {
+        const normalized = match.replace(/\\/g, "/");
+        expect(normalized).toBe(".cddm");
+      }
+    });
+  });
 });

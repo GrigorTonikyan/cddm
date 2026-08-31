@@ -75,6 +75,7 @@ pub mod mcp_tools {
     pub const EXTRACT_HUB_PACKAGE: &str = "cddm_extract_hub_package";
     pub const CORRELATE_COVERAGE: &str = "cddm_correlate_coverage";
     pub const DETECT_DEAD_CLONES: &str = "cddm_detect_dead_clones";
+    pub const DETECT_DEAD_CODE: &str = "cddm_detect_dead_code";
     pub const SEMANTIC_NEURAL_SCAN: &str = "cddm_semantic_neural_scan";
     pub const DIFF_MATRIX: &str = "cddm_diff_matrix";
 
@@ -125,6 +126,7 @@ pub mod mcp_resources {
         URI_WORKSPACE_OVERLAP => "cddm://workspace/overlap",
         URI_WORKSPACE_HUB => "cddm://workspace/hub",
         URI_WORKSPACE_COVERAGE => "cddm://workspace/coverage",
+        URI_WORKSPACE_DEAD_CODE => "cddm://workspace/dead_code",
         URI_WORKSPACE_NEURAL_EMBEDDINGS => "cddm://workspace/neural_embeddings",
         MIME_APPLICATION_JSON => "application/json",
     }

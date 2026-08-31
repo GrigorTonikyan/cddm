@@ -2,11 +2,12 @@
 
 use super::actions::{CacheAction, HookAction, IgnoreAction, RulesAction};
 use super::commands::{
-    CommentArgs, CoverageArgs, DiffArgs, ExtractArgs, HealArgs, HubArgs, InitArgs, LspArgs,
-    MonorepoArgs, OverlapArgs, RefactorArgs, ScanArgs, SemanticArgs, ServeArgs, TrendArgs, TuiArgs,
-    WatchArgs,
+    CommentArgs, CoverageArgs, DeadCodeArgs, DiffArgs, ExtractArgs, HealArgs, HubArgs, InitArgs,
+    LspArgs, MonorepoArgs, OverlapArgs, RefactorArgs, ScanArgs, SemanticArgs, ServeArgs, TrendArgs,
+    TuiArgs, WatchArgs,
 };
 use clap::{Parser, Subcommand};
+use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
 #[command(
@@ -19,6 +20,22 @@ use clap::{Parser, Subcommand};
                   scores, and generates actionable structural reports."
 )]
 pub struct Cli {
+    /// Enable verbose debug logging output (-v for debug, -vv for trace)
+    #[arg(short = 'v', long, global = true, action = clap::ArgAction::Count)]
+    pub verbose: u8,
+
+    /// Suppress all non-error output and diagnostics
+    #[arg(short = 'q', long, global = true)]
+    pub quiet: bool,
+
+    /// Explicitly set the logging verbosity level (trace, debug, info, warn, error, off)
+    #[arg(long, global = true, env = "CDDM_LOG_LEVEL")]
+    pub log_level: Option<String>,
+
+    /// Write structured logs to a dedicated log file
+    #[arg(long, global = true, env = "CDDM_LOG_FILE")]
+    pub log_file: Option<PathBuf>,
+
     #[command(subcommand)]
     pub command: Commands,
 }
@@ -27,6 +44,10 @@ pub struct Cli {
 pub enum Commands {
     /// Scan target directory for code duplication & DRY health score
     Scan(ScanArgs),
+
+    /// Detect unreferenced functions, unreachable blocks, and dead code duplicates
+    #[command(alias = "dead")]
+    DeadCode(DeadCodeArgs),
 
     /// Differential duplication scan comparing current changes against a Git base revision
     Diff(DiffArgs),

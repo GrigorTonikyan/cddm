@@ -14,7 +14,7 @@ pub const SARIF_VERSION: &str = "2.1.0";
 pub const TOOL_NAME: &str = "CDDM";
 
 /// Tool project homepage and information URI.
-pub const TOOL_INFORMATION_URI: &str = "https://github.com/GrigorTonikyan/cddm";
+pub const TOOL_INFORMATION_URI: &str = "https://git.gt-web-dev.com/gt-dev/cddm";
 
 /// SARIF Rule identifiers for duplicate code classifications.
 pub mod sarif_rules {

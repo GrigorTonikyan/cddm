@@ -258,6 +258,7 @@ mod tests {
     #[test]
     fn test_workflow_platform_display_and_serde() {
         let platforms = [
+            WorkflowPlatform::Gitea,
             WorkflowPlatform::GitHub,
             WorkflowPlatform::GitLab,
             WorkflowPlatform::Azure,
@@ -265,6 +266,7 @@ mod tests {
         for platform in platforms {
             assert_serde_roundtrip(&platform);
         }
+        assert_eq!(WorkflowPlatform::Gitea.to_string(), "Gitea Actions");
         assert_eq!(WorkflowPlatform::GitHub.to_string(), "GitHub Actions");
         assert_eq!(WorkflowPlatform::GitLab.to_string(), "GitLab CI");
         assert_eq!(WorkflowPlatform::Azure.to_string(), "Azure Pipelines");

@@ -114,7 +114,7 @@ pub async fn cache_export_handler(
 ) -> Result<Json<cddm_core::CachePackSummary>, (StatusCode, String)> {
     let db_path = req
         .cache_dir
-        .unwrap_or_else(|| std::path::PathBuf::from(".cddm/cache.db"));
+        .unwrap_or_else(|| cddm_core::resolve_default_cache_path(std::path::Path::new(".")));
     let out_path = req
         .output_pack_path
         .unwrap_or_else(|| std::path::PathBuf::from("cddm-cache.cddmpack"));
@@ -128,7 +128,7 @@ pub async fn cache_import_handler(
 ) -> Result<Json<cddm_core::CachePackSummary>, (StatusCode, String)> {
     let target_dir = req
         .target_cache_dir
-        .unwrap_or_else(|| std::path::PathBuf::from(".cddm"));
+        .unwrap_or_else(|| cddm_core::find_workspace_root(std::path::Path::new(".")).join(".cddm"));
     cddm_core::import_cache_pack(&req.pack_file, &target_dir)
         .map(Json)
         .map_err(|e| (StatusCode::BAD_REQUEST, e))

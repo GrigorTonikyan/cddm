@@ -172,3 +172,35 @@ pub struct CoverageArgs {
     #[arg(long)]
     pub risk_threshold: Option<f64>,
 }
+
+/// CLI Arguments for `cddm dead-code`
+#[derive(Args, Debug, Clone)]
+pub struct DeadCodeArgs {
+    /// Directory path to scan (default: current directory)
+    #[arg(default_value = cddm_core::DEFAULT_DIRECTORY)]
+    pub directory: PathBuf,
+
+    /// Minimum token count threshold for dead code items
+    #[arg(short, long, default_value_t = 30)]
+    pub min_tokens: usize,
+
+    /// Output report format (console, json, markdown, sarif)
+    #[arg(short, long, default_value = "console")]
+    pub format: String,
+
+    /// Restrict analysis to static AST & symbol analysis only
+    #[arg(long, default_value_t = false)]
+    pub static_only: bool,
+
+    /// Path to optional coverage report file (e.g. lcov.info, coverage.xml)
+    #[arg(short, long)]
+    pub coverage: Option<PathBuf>,
+
+    /// Filter by target programming languages
+    #[arg(short, long, value_delimiter = ',')]
+    pub languages: Option<Vec<String>>,
+
+    /// Custom file or path ignore patterns
+    #[arg(short, long, value_delimiter = ',')]
+    pub ignore: Option<Vec<String>>,
+}

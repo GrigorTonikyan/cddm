@@ -99,10 +99,12 @@ pub fn handle_export_cache_pack(
     id: Option<serde_json::Value>,
     args: Option<&serde_json::Value>,
 ) -> JsonRpcResponse {
+    let default_db_path = cddm_core::resolve_default_cache_path(Path::new("."));
+    let default_db_str = default_db_path.to_string_lossy();
     let db_path_str = args
         .and_then(|a| a.get("cache_dir"))
         .and_then(|v| v.as_str())
-        .unwrap_or(".cddm/cache.db");
+        .unwrap_or(&default_db_str);
     let out_path_str = args
         .and_then(|a| a.get("output_pack_path"))
         .and_then(|v| v.as_str())
@@ -122,10 +124,12 @@ pub fn handle_import_cache_pack(
         .and_then(|a| a.get("pack_file"))
         .and_then(|v| v.as_str())
     {
+        let default_target_dir = cddm_core::find_workspace_root(Path::new(".")).join(".cddm");
+        let default_target_str = default_target_dir.to_string_lossy();
         let target_dir_str = args
             .and_then(|a| a.get("target_cache_dir"))
             .and_then(|v| v.as_str())
-            .unwrap_or(".cddm");
+            .unwrap_or(&default_target_str);
 
         match cddm_core::import_cache_pack(Path::new(pack_str), Path::new(target_dir_str)) {
             Ok(summary) => make_json_payload_response(id, &summary),

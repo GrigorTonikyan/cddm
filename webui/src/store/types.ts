@@ -237,4 +237,14 @@ export interface CDDMStoreState {
   correlateCoverage: (
     req?: import("../types/cddm-types").CoverageCorrelateRequest,
   ) => Promise<import("../types/cddm-types").CoverageCorrelationSummary>;
+
+  /** Polyglot Dead Code Detection */
+  isDeadCodeModalOpen: boolean;
+  deadCodeSummary: import("../types/dead-code-types").DeadCodeSummary | null;
+  isDeadCodeLoading: boolean;
+  deadCodeError: string | null;
+  setIsDeadCodeModalOpen: (open: boolean) => void;
+  scanDeadCode: (
+    req?: import("../types/dead-code-types").DeadCodeScanRequest,
+  ) => Promise<import("../types/dead-code-types").DeadCodeSummary>;
 }

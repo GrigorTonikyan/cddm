@@ -3,6 +3,7 @@
 pub mod cache_pack;
 pub mod comment;
 pub mod coverage;
+pub mod dead_code;
 pub mod diff;
 pub mod extract;
 pub mod heal;
@@ -24,6 +25,7 @@ pub mod watch;
 pub use cache_pack::{run_cache_export_command, run_cache_import_command};
 pub use comment::run_comment_command;
 pub use coverage::handle_coverage_command;
+pub use dead_code::run_dead_code_command;
 pub use diff::run_diff_command;
 pub use extract::run_extract_command;
 pub use heal::{HealCliArgs, run_heal_command};

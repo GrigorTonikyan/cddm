@@ -1,7 +1,7 @@
 # CDDM Language Server Protocol (LSP) Setup & Configuration Guide
 
 > **Document Status**: Living Setup Reference  
-> **Repository**: [GrigorTonikyan/cddm](https://github.com/GrigorTonikyan/cddm)  
+> **Repository**: [gt-dev/cddm](https://git.gt-web-dev.com/gt-dev/cddm)  
 > **Protocol Specification**: LSP 3.17 over JSON-RPC 2.0 (Stdio)
 
 ---

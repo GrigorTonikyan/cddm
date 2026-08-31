@@ -49,6 +49,8 @@ export const API_ROUTES = {
   HUB_EXTRACT: "/api/hub/extract",
   COVERAGE_INGEST: "/api/coverage/ingest",
   COVERAGE_CORRELATE: "/api/coverage/correlate",
+  DEAD_CODE_SCAN: "/api/dead-code/scan",
+  DEAD_CODE: "/api/dead-code",
 } as const;
 
 /**

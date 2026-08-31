@@ -93,11 +93,11 @@ fn test_tui_tab_lifecycle() {
     let tab = TuiTab::Overview;
     assert_eq!(tab.title(), "[1] Overview");
     assert_eq!(tab.next(), TuiTab::Clones);
-    assert_eq!(tab.prev(), TuiTab::Coverage);
+    assert_eq!(tab.prev(), TuiTab::DeadCode);
 
-    let last_tab = TuiTab::Coverage;
+    let last_tab = TuiTab::DeadCode;
     assert_eq!(last_tab.next(), TuiTab::Overview);
-    assert_eq!(last_tab.title(), "[C] Coverage");
+    assert_eq!(last_tab.title(), "[D] Dead Code");
 }
 
 #[test]

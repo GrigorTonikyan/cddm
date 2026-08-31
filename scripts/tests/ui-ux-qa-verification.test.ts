@@ -37,4 +37,16 @@ describe("WebUI Studio UI/UX Verification Configuration & Suite Registry", () =>
     expect(content).toContain("consoleErrors");
     expect(content).toContain("expect(consoleErrors).toEqual([])");
   });
+
+  it("should enforce that 100% of WebUI modal components use Win2xWindow", () => {
+    const glob = new Bun.Glob("webui/src/components/**/*Modal.tsx");
+    const modalFiles = Array.from(glob.scanSync({ cwd: process.cwd(), onlyFiles: true }));
+    expect(modalFiles.length).toBeGreaterThanOrEqual(15);
+
+    for (const file of modalFiles) {
+      const content = readFileSync(join(process.cwd(), file), "utf-8");
+      expect(content).toContain("Win2xWindow");
+      expect(content).toContain("<Win2xWindow");
+    }
+  });
 });

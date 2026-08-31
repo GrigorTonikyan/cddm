@@ -171,4 +171,89 @@ test.describe("Windows 11 Desktop-Class Window Management System (win2x-manager)
     const pills = page.locator("[data-win2x-minimized-pill]");
     await expect(pills.first()).toBeVisible();
   });
+
+  test("should open Polyglot Dead Code Explorer modal with Win2xWindow, KPIs, filtering, and zero console errors", async ({
+    page,
+  }) => {
+    const consoleErrors: string[] = [];
+    page.on("console", (msg) => {
+      if (msg.type() === "error") consoleErrors.push(msg.text());
+    });
+    page.on("pageerror", (err) => consoleErrors.push(`[PageError] ${err.message}`));
+
+    // 1. Open Dead Code Explorer from header
+    const deadCodeBtn = page.getByRole("button", { name: /Dead Code/i }).first();
+    await expect(deadCodeBtn).toBeVisible();
+    await deadCodeBtn.click();
+    await page.waitForTimeout(500);
+
+    // 2. Verify Win2xWindow header
+    const windowLocator = page.locator("[data-win2x-window]");
+    await expect(windowLocator).toBeVisible();
+    await expect(page.getByText("Polyglot Dead Code Explorer")).toBeVisible();
+
+    // 3. Verify all 5 KPI Telemetry cards
+    await expect(windowLocator.getByText("Dead Items", { exact: true })).toBeVisible();
+    await expect(windowLocator.getByText("Unreferenced", { exact: true })).toBeVisible();
+    await expect(windowLocator.getByText("Unreachable", { exact: true })).toBeVisible();
+    await expect(windowLocator.getByText("Dead Clones", { exact: true })).toBeVisible();
+    await expect(windowLocator.getByText("Dead Lines", { exact: true })).toBeVisible();
+
+    // 4. Verify Toolbar & Filter Tabs
+    const allTab = page.getByRole("button", { name: /^All \(/i });
+    const functionsTab = page.getByRole("button", { name: /^Functions \(/i });
+    const unreachableTab = page.getByRole("button", { name: /^Unreachable \(/i });
+    const deadClonesTab = page.getByRole("button", { name: /^Dead Clones \(/i });
+    const uncoveredTab = page.getByRole("button", { name: /^Uncovered \(/i });
+
+    await expect(allTab).toBeVisible();
+    await expect(functionsTab).toBeVisible();
+    await expect(unreachableTab).toBeVisible();
+    await expect(deadClonesTab).toBeVisible();
+    await expect(uncoveredTab).toBeVisible();
+
+    // Test switching filter tabs
+    await functionsTab.click();
+    await page.waitForTimeout(200);
+    await unreachableTab.click();
+    await page.waitForTimeout(200);
+    await deadClonesTab.click();
+    await page.waitForTimeout(200);
+    await allTab.click();
+    await page.waitForTimeout(200);
+
+    // 5. Test Search input filtering
+    const searchInput = page.locator('input[placeholder*="Search file, symbol..."]');
+    await expect(searchInput).toBeVisible();
+    await searchInput.fill("test_query_nonexistent");
+    await page.waitForTimeout(200);
+    await searchInput.fill("");
+    await page.waitForTimeout(200);
+
+    // 6. Test Rescan button
+    const rescanBtn = page.getByRole("button", { name: /Rescan/i });
+    await expect(rescanBtn).toBeVisible();
+    await rescanBtn.click();
+    await page.waitForTimeout(600);
+
+    // 7. Test Win2xWindow minimization and restoration
+    const minBtn = page.locator('[title="Minimize"]').first();
+    await minBtn.click();
+    await page.waitForTimeout(300);
+    await expect(windowLocator).toHaveCount(0);
+
+    const pill = page.locator("[data-win2x-minimized-pill]").first();
+    await expect(pill).toBeVisible();
+    await pill.click();
+    await page.waitForTimeout(300);
+    await expect(windowLocator).toBeVisible();
+
+    // 8. Close window via Escape
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(300);
+    await expect(windowLocator).toHaveCount(0);
+
+    // 9. Verify 0 console errors
+    expect(consoleErrors).toEqual([]);
+  });
 });

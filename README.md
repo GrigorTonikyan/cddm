@@ -2,7 +2,7 @@
 
 > **High-Performance Polyglot Code Clone Detection, DRY Health Analysis, AST Subtree Hasher & Embedded Studio WebUI.**
 
-[![CI](https://github.com/GrigorTonikyan/cddm/actions/workflows/ci.yml/badge.svg)](https://github.com/GrigorTonikyan/cddm/actions/workflows/ci.yml)
+[![CI](https://git.gt-web-dev.com/gt-dev/cddm/actions/workflows/ci.yml/badge.svg)](https://git.gt-web-dev.com/gt-dev/cddm/actions/workflows/ci.yml)
 [![License: MIT / Apache 2.0](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)](LICENSE)
 [![Rust](https://img.shields.io/badge/rust-2024%20edition-orange.svg)](https://www.rust-lang.org)
 [![Vite Plus](https://img.shields.io/badge/vite%2B-0.2.9-purple.svg)](https://viteplus.dev)
@@ -94,7 +94,7 @@ npm install -g cddm
 ### From Source
 
 ```bash
-git clone https://github.com/GrigorTonikyan/cddm.git
+git clone https://git.gt-web-dev.com/gt-dev/cddm.git
 cd cddm
 cargo build --release
 ```

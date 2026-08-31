@@ -38,7 +38,7 @@ For a deep dive into internal design, read [docs/ARCHITECTURE.md](docs/ARCHITECT
 1. **Clone the repository**:
 
    ```bash
-   git clone https://github.com/GrigorTonikyan/cddm.git
+   git clone https://git.gt-web-dev.com/gt-dev/cddm.git
    cd cddm
    ```
 

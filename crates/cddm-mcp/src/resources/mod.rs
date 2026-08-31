@@ -115,6 +115,14 @@ pub fn resources_list_response(id: Option<serde_json::Value>) -> JsonRpcResponse
                     "cacheScope": "workspace"
                 },
                 {
+                    "uri": mcp_resources::URI_WORKSPACE_DEAD_CODE,
+                    "name": "Workspace Dead Code Inventory",
+                    "description": "Detected unreferenced functions, unreachable code blocks, and dead duplicate clones.",
+                    "mimeType": mcp_resources::MIME_APPLICATION_JSON,
+                    "ttlMs": 30000,
+                    "cacheScope": "workspace"
+                },
+                {
                     "uri": mcp_resources::URI_WORKSPACE_NEURAL_EMBEDDINGS,
                     "name": "Workspace Neural Code Embeddings & Algorithmic Equivalence",
                     "description": "Dense subword embedding vectors and cross-language algorithmic equivalence clone pairs.",
@@ -359,6 +367,14 @@ pub async fn handle_resource_read(
             }
         }
 
+        mcp_resources::URI_WORKSPACE_DEAD_CODE => {
+            let config = cddm_core::dead_code::DeadCodeConfig::default();
+            match cddm_core::dead_code::run_dead_code_detection(config).await {
+                Ok(summary) => make_resource_json_response(id, uri, &summary),
+                Err(e) => make_error_response(id, rpc_errors::INTERNAL_ERROR, e.to_string()),
+            }
+        }
+
         mcp_resources::URI_WORKSPACE_NEURAL_EMBEDDINGS => {
             let config = cddm_core::NeuralEmbeddingConfig::default();
             match cddm_core::scan_neural_clones(Path::new("."), &config) {
@@ -456,25 +472,15 @@ fn urlencoding_decode(input: &str) -> String {
     let mut chars = input.chars().peekable();
     while let Some(ch) = chars.next() {
         if ch == '%' {
-            let h1 = chars.next();
-            let h2 = chars.next();
-            if let (Some(c1), Some(c2)) = (h1, h2) {
-                let hex_str = format!("{}{}", c1, c2);
+            if let (Some(c1), Some(c2)) = (chars.next(), chars.next()) {
+                let hex_str = format!("{c1}{c2}");
                 if let Ok(byte) = u8::from_str_radix(&hex_str, 16) {
                     result.push(byte as char);
-                    continue;
                 } else {
-                    result.push('%');
-                    result.push(c1);
-                    result.push(c2);
-                    continue;
+                    result.push_str(&format!("%{c1}{c2}"));
                 }
             } else {
                 result.push('%');
-                if let Some(c1) = h1 {
-                    result.push(c1);
-                }
-                continue;
             }
         } else {
             result.push(ch);

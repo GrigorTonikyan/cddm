@@ -2,6 +2,7 @@
 
 pub mod assets;
 pub mod coverage_handlers;
+pub mod dead_code_handlers;
 pub mod extract_handlers;
 pub mod hub_handlers;
 pub mod overlap_handlers;
@@ -22,6 +23,7 @@ use axum::{
 };
 use cddm_core::{CddmWatcher, ScanConfig};
 use coverage_handlers::*;
+use dead_code_handlers::*;
 use extract_handlers::*;
 use hub_handlers::*;
 use overlap_handlers::*;
@@ -114,6 +116,8 @@ pub fn build_app_with_state(state: AppState) -> Router {
             ROUTE_API_COVERAGE_CORRELATE,
             post(coverage_correlate_handler),
         )
+        .route(ROUTE_API_DEAD_CODE_SCAN, post(dead_code_scan_handler))
+        .route(ROUTE_API_DEAD_CODE, get(dead_code_get_handler))
         .fallback(static_asset_handler)
         .layer(CorsLayer::permissive())
         .with_state(state)

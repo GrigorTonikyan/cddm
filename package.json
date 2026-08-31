@@ -41,7 +41,9 @@
     "clean": "bun scripts/clean.ts",
     "reset": "bun scripts/reset.ts",
     "package:vscode": "bun scripts/package-vscode.ts",
-    "package:distribution": "bun scripts/package-distribution.ts"
+    "package:distribution": "bun scripts/package-distribution.ts",
+    "release:publish": "bun scripts/publish-release.ts",
+    "release:dry-run": "bun scripts/publish-release.ts --dry-run"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.2",

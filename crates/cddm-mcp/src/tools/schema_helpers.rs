@@ -15,6 +15,7 @@ pub fn tool_def(
         || name.contains("overlap")
         || name.contains("coverage")
         || name.contains("dead_clones")
+        || name.contains("dead_code")
         || name.contains("graph")
     {
         "detection"
@@ -132,4 +133,17 @@ pub fn coverage_schema(include_extra: bool) -> serde_json::Value {
         "type": "object",
         "properties": props
     })
+}
+
+pub fn dead_code_schema() -> serde_json::Value {
+    obj_schema(
+        json!({
+            "directory": { "type": "string", "description": "Target workspace directory path (default: .)" },
+            "min_tokens": { "type": "number", "description": "Minimum token threshold (default: 30)" },
+            "static_only": { "type": "boolean", "description": "Restrict analysis to static AST & symbols only (default: false)" },
+            "report_path": { "type": "string", "description": "Path to optional coverage report file (e.g. lcov.info)" },
+            "report_content": { "type": "string", "description": "Optional raw coverage report string content" }
+        }),
+        &[],
+    )
 }

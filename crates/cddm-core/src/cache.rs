@@ -282,6 +282,62 @@ impl DiskFingerprintCache {
     }
 }
 
+/// Traverses directory ancestors from `start_path` to find the root of the workspace.
+///
+/// Discovers repository markers (`.git`), workspace descriptors (`Cargo.toml` with `[workspace]`,
+/// `pnpm-workspace.yaml`, `.cddm`), or falls back to `start_path` or current working directory.
+pub fn find_workspace_root(start_path: &Path) -> PathBuf {
+    let canonical = if start_path.is_relative() {
+        std::env::current_dir()
+            .map(|cwd| cwd.join(start_path))
+            .unwrap_or_else(|_| start_path.to_path_buf())
+    } else {
+        start_path.to_path_buf()
+    };
+
+    let mut current = if canonical.is_file() {
+        canonical.parent().map(|p| p.to_path_buf())
+    } else {
+        Some(canonical)
+    };
+
+    let mut best_root = None;
+
+    while let Some(dir) = current {
+        if dir.join(".git").exists() {
+            return dir;
+        }
+        if dir.join(".cddm").exists() {
+            best_root = Some(dir.clone());
+        }
+        let cargo_toml = dir.join("Cargo.toml");
+        if cargo_toml.exists()
+            && let Ok(content) = fs::read_to_string(&cargo_toml)
+            && content.contains("[workspace]")
+        {
+            return dir;
+        }
+        if dir.join("pnpm-workspace.yaml").exists() {
+            return dir;
+        }
+        current = dir.parent().map(|p| p.to_path_buf());
+    }
+
+    best_root.unwrap_or_else(|| {
+        if start_path.as_os_str().is_empty() || start_path == Path::new(".") {
+            std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."))
+        } else {
+            start_path.to_path_buf()
+        }
+    })
+}
+
+/// Resolves the canonical cache database path (`.cddm/cache.db`) anchored at the workspace root.
+pub fn resolve_default_cache_path(target_path: &Path) -> PathBuf {
+    let root = find_workspace_root(target_path);
+    root.join(crate::types::DEFAULT_CACHE_FILE)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -403,5 +459,31 @@ mod tests {
         // open_or_create should self-heal and succeed
         let cache = DiskFingerprintCache::open_or_create(&db_path).unwrap();
         assert!(cache.is_enabled());
+    }
+
+    #[test]
+    fn test_find_workspace_root_git() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let sub = temp_dir.path().join("a").join("b").join("c");
+        fs::create_dir_all(&sub).unwrap();
+        fs::create_dir_all(temp_dir.path().join(".git")).unwrap();
+
+        let root = find_workspace_root(&sub);
+        assert_eq!(root, temp_dir.path());
+        let cache_path = resolve_default_cache_path(&sub);
+        assert_eq!(
+            cache_path,
+            temp_dir.path().join(crate::types::DEFAULT_CACHE_FILE)
+        );
+    }
+
+    #[test]
+    fn test_find_workspace_root_fallback() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let sub = temp_dir.path().join("custom");
+        fs::create_dir_all(&sub).unwrap();
+
+        let root = find_workspace_root(&sub);
+        assert_eq!(root, sub);
     }
 }

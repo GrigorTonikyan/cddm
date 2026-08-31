@@ -1,0 +1,114 @@
+name: Gitea Continuous Integration
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  rust-ci:
+    name: Rust Quality Gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+        continue-on-error: true
+
+      - name: Verify Rust Formatting
+        run: cargo fmt --check
+
+      - name: Cargo Typecheck
+        run: cargo check --workspace --all-targets
+
+      - name: Clippy Linter (-D warnings)
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Run Unit & Integration Tests
+        run: cargo test --workspace
+
+      - name: CDDM Dogfooding Quality Gate
+        run: cargo run -p cddm-cli -- scan . --min-tokens 50 --fail-threshold 15.0
+
+  webui-ci:
+    name: WebUI Frontend Quality Gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install WebUI Dependencies
+        working-directory: ./webui
+        run: bun install --frozen-lockfile || bun install
+
+      - name: Typecheck TypeScript (vp run check)
+        working-directory: ./webui
+        run: bunx vp run check
+
+      - name: Code Formatting Check (vp fmt --check)
+        working-directory: ./webui
+        run: bunx vp run format:check
+
+      - name: WebUI Linter (vp lint)
+        working-directory: ./webui
+        run: bunx vp run lint
+
+      - name: Run WebUI Vitest Suite (vp run test)
+        working-directory: ./webui
+        run: bunx vp run test
+
+      - name: Build WebUI Bundle (vp run build)
+        working-directory: ./webui
+        run: bunx vp run build
+
+  workspace-governance-ci:
+    name: Workspace Standards & MCP Protocol Gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install Dependencies
+        run: bun install --frozen-lockfile || bun install
+
+      - name: Validate Formatting, Lints & TypeScript (vp check)
+        run: bunx vp check
+
+      - name: Run Script Test Suites (bun test)
+        run: bun test scripts/tests scripts/lib
+
+      - name: Run MCP Protocol Per-Tool Test Suites (bun test)
+        run: bun test tests/mcp
+
+      - name: Validate 4-Pillar Feature Parity
+        run: bun scripts/check-feature-parity.ts
+
+      - name: Validate File Length Limits (<= 500 lines)
+        run: bun scripts/check-file-length.ts
+
+      - name: Validate Zero-Emoji Policy
+        run: bun scripts/check-no-emojis.ts
+
+      - name: Validate Documentation Integrity & Synchronization
+        run: bun scripts/check-docs.ts

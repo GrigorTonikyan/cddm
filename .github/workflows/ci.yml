@@ -24,6 +24,7 @@ jobs:
 
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
+        continue-on-error: true
 
       - name: Verify Rust Formatting
         run: cargo fmt --check
@@ -34,7 +35,7 @@ jobs:
       - name: Clippy Linter (-D warnings)
         run: cargo clippy --workspace --all-targets -- -D warnings
 
-      - name: Run Unit & Integration Tests (37 tests)
+      - name: Run Unit & Integration Tests
         run: cargo test --workspace
 
       - name: CDDM Dogfooding Self-Scan (Mandatory Quality Gate)
@@ -76,8 +77,8 @@ jobs:
         working-directory: ./webui
         run: bunx vp run build
 
-  package-and-hooks-ci:
-    name: Package & Integration Validation
+  workspace-governance-ci:
+    name: Workspace Standards & MCP Protocol Gate
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -88,24 +89,26 @@ jobs:
         with:
           bun-version: latest
 
+      - name: Install Dependencies
+        run: bun install --frozen-lockfile || bun install
+
       - name: Validate Workspace Formatting, Lints & Types (vp check)
         run: bunx vp check
 
       - name: Run Repository Scripts Unit Tests (bun test)
-        run: bun test scripts/tests
+        run: bun test scripts/tests scripts/lib
 
       - name: Run MCP Protocol Per-Tool Test Suites (bun test)
         run: bun test tests/mcp
 
+      - name: Validate 4-Pillar Feature Parity
+        run: bun scripts/check-feature-parity.ts
+
+      - name: Validate File Length Limits (<= 500 lines)
+        run: bun scripts/check-file-length.ts
+
+      - name: Validate Zero-Emoji Policy
+        run: bun scripts/check-no-emojis.ts
+
       - name: Validate Documentation Integrity & Synchronization
         run: bun scripts/check-docs.ts
-
-      - name: Validate Vite+ Git Hooks Setup
-        run: |
-          bunx vp config
-          chmod +x .vite-hooks/* 2>/dev/null || true
-          git status
-
-      - name: Validate npm Distribution Package
-        run: |
-          node -e "const pkg = require('./npm/cddm/package.json'); console.log('Package validated:', pkg.name, pkg.version);"

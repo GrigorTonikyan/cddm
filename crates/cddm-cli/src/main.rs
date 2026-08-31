@@ -12,16 +12,36 @@ use commands::*;
 use types::*;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    tracing_subscriber::fmt::init();
+    let cli = Cli::parse();
+
+    let mut log_config = cddm_core::logging::LogConfig::new()
+        .with_verbose(cli.verbose > 0)
+        .with_quiet(cli.quiet);
+
+    if let Some(ref lvl_str) = cli.log_level {
+        if let Ok(lvl) = lvl_str.parse() {
+            log_config = log_config.with_level(lvl);
+        }
+    } else if cli.verbose >= 2 {
+        log_config = log_config.with_level(cddm_core::logging::LogLevel::Trace);
+    } else if cli.verbose == 1 {
+        log_config = log_config.with_level(cddm_core::logging::LogLevel::Debug);
+    }
+
+    if let Some(ref log_file) = cli.log_file {
+        log_config = log_config.with_log_file(log_file.clone());
+    }
+
+    let _ = cddm_core::logging::init_logging(&log_config);
 
     let res = std::thread::Builder::new()
         .stack_size(8 * 1024 * 1024)
-        .spawn(|| {
+        .spawn(move || {
             let rt = tokio::runtime::Builder::new_multi_thread()
                 .enable_all()
                 .build()
                 .expect("Failed to build Tokio runtime");
-            match rt.block_on(run_app()) {
+            match rt.block_on(run_app(cli)) {
                 Ok(()) => Ok(()),
                 Err(e) => Err(e.to_string()),
             }
@@ -35,9 +55,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 }
 
-async fn run_app() -> Result<(), Box<dyn std::error::Error>> {
-    let cli = Cli::parse();
-
+async fn run_app(cli: Cli) -> Result<(), Box<dyn std::error::Error>> {
     match cli.command {
         Commands::Scan(args) => {
             let enable_cross_lang = args.cross_language && !args.no_cross_language;
@@ -65,6 +83,10 @@ async fn run_app() -> Result<(), Box<dyn std::error::Error>> {
                 args.threads,
             )
             .await?;
+        }
+
+        Commands::DeadCode(args) => {
+            run_dead_code_command(args).await?;
         }
 
         Commands::Diff(args) => {

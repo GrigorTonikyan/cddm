@@ -341,6 +341,12 @@ pub fn get_tool_definitions() -> Vec<serde_json::Value> {
             coverage_schema(false),
         ),
         tool_def(
+            mcp_tools::DETECT_DEAD_CODE,
+            "Polyglot dead code detector finding unreferenced functions, unreachable blocks, \
+             uncovered items, and dead clone duplicates.",
+            dead_code_schema(),
+        ),
+        tool_def(
             mcp_tools::SEMANTIC_NEURAL_SCAN,
             "In-process local neural code embedding & algorithmic equivalence scan using subword \
              projections and cosine similarity.",

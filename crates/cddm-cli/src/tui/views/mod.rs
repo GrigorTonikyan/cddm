@@ -2,6 +2,7 @@
 
 pub mod clones;
 pub mod coverage;
+pub mod dead_code;
 pub mod extract;
 pub mod helpers;
 pub mod hub;
@@ -32,5 +33,6 @@ pub fn render_main_content(frame: &mut Frame, app: &TuiApp, area: Rect) {
         TuiTab::Overlap => overlap::render_overlap_view(frame, app, area),
         TuiTab::Hub => hub::render_hub_view(frame, app, area),
         TuiTab::Coverage => coverage::render_coverage_view(frame, app, area),
+        TuiTab::DeadCode => dead_code::render_dead_code_view(frame, app, area),
     }
 }

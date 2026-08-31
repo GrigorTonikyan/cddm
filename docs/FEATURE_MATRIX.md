@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-27 | Rust: 309 #[test] units | WebUI: 219 tests across 62 suites | Scripts & MCP: 133 tests across 45 suites | CI Workflows: PASS
+> Last verified: 2026-08-27 | Rust: 320 #[test] units | WebUI: 222 tests across 63 suites | Scripts & MCP: 141 tests across 47 suites | CI Workflows: PASS
 
 ---
 
@@ -358,7 +358,7 @@
 
 ---
 
-## 2. WebUI Frontend — React 19 + TypeScript + Vitest (219 unit tests across 62 suites)
+## 2. WebUI Frontend — React 19 + TypeScript + Vitest (222 unit tests across 63 suites)
 
 | Module                      | Test Suite File                                                                       | Test Cases | Status |
 | :-------------------------- | :------------------------------------------------------------------------------------ | :--------- | :----- |
@@ -367,6 +367,7 @@
 | Clone Pair Card             | `webui/src/components/ClonePairCard.test.tsx`                                         | 2 tests    | PASS   |
 | Clone Pair Diff Modal       | `webui/src/components/ClonePairDiffModal.test.tsx`                                    | 3 tests    | PASS   |
 | Coverage Correlation Modal  | `webui/src/components/CoverageCorrelationModal.test.tsx`                              | 3 tests    | PASS   |
+| Dead Code Explorer Modal    | `webui/src/components/DeadCodeExplorerModal.test.tsx`                                 | 3 tests    | PASS   |
 | Diff Viewer                 | `webui/src/components/DiffViewer.test.tsx`                                            | 3 tests    | PASS   |
 | Duplication Treemap         | `webui/src/components/DuplicationTreemap.test.tsx`                                    | 3 tests    | PASS   |
 | Export Report Modal         | `webui/src/components/ExportReportModal.test.tsx`                                     | 3 tests    | PASS   |
@@ -427,7 +428,7 @@
 
 ---
 
-## 3. Repository Scripts & MCP Protocol — Bun Test Suites (133 tests across 45 suites)
+## 3. Repository Scripts & MCP Protocol — Bun Test Suites (141 tests across 47 suites)
 
 ### Repository Tooling & Automation Suites
 
@@ -437,7 +438,7 @@
 | test-matrix-generator         | `scripts/lib/test-matrix-generator.test.ts`   | 3 tests    | PASS   |
 | version-updater               | `scripts/lib/version-updater.test.ts`         | 2 tests    | PASS   |
 | bun-only                      | `scripts/tests/bun-only.test.ts`              | 2 tests    | PASS   |
-| Workspace Engine & Reset      | `scripts/tests/clean-reset.test.ts`           | 9 tests    | PASS   |
+| Workspace Engine & Reset      | `scripts/tests/clean-reset.test.ts`           | 10 tests   | PASS   |
 | Documentation Integrity       | `scripts/tests/docs.test.ts`                  | 5 tests    | PASS   |
 | Feature Matrix Synchronizer   | `scripts/tests/feature-matrix.test.ts`        | 4 tests    | PASS   |
 | 4-Pillar Feature Parity       | `scripts/tests/feature-parity.test.ts`        | 2 tests    | PASS   |
@@ -445,7 +446,8 @@
 | mcp-manual-audit              | `scripts/tests/mcp-manual-audit.test.ts`      | 4 tests    | PASS   |
 | Zero-Emoji Policy             | `scripts/tests/no-emojis.test.ts`             | 7 tests    | PASS   |
 | VSIX Packaging Pipeline       | `scripts/tests/package-vscode.test.ts`        | 5 tests    | PASS   |
-| ui-ux-qa-verification         | `scripts/tests/ui-ux-qa-verification.test.ts` | 3 tests    | PASS   |
+| publish-release               | `scripts/tests/publish-release.test.ts`       | 4 tests    | PASS   |
+| ui-ux-qa-verification         | `scripts/tests/ui-ux-qa-verification.test.ts` | 4 tests    | PASS   |
 | Semantic Versioning & Commits | `scripts/tests/version.test.ts`               | 9 tests    | PASS   |
 | Polyglot Language Matrix      | `scripts/tests/vscode-extension.test.ts`      | 2 tests    | PASS   |
 
@@ -461,6 +463,7 @@
 | Tool: cddm_compare_semantic_graphs  | `tests/mcp/tools/compare-semantic-graphs.test.ts`  | 2 tests    | PASS   |
 | Tool: cddm_correlate_coverage       | `tests/mcp/tools/correlate-coverage.test.ts`       | 3 tests    | PASS   |
 | Tool: cddm_detect_dead_clones       | `tests/mcp/tools/detect-dead-clones.test.ts`       | 2 tests    | PASS   |
+| Tool: cddm_detect_dead_code         | `tests/mcp/tools/detect-dead-code.test.ts`         | 2 tests    | PASS   |
 | Tool: cddm_detect_overlap           | `tests/mcp/tools/detect-overlap.test.ts`           | 3 tests    | PASS   |
 | Tool: cddm_diff_matrix              | `tests/mcp/tools/diff-matrix.test.ts`              | 3 tests    | PASS   |
 | Tool: cddm_diff_scan                | `tests/mcp/tools/diff-scan.test.ts`                | 2 tests    | PASS   |
