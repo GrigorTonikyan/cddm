@@ -29,6 +29,11 @@ jobs:
       - name: Verify Rust Formatting
         run: cargo fmt --check
 
+      - name: Ensure Embedded WebUI Assets Placeholder
+        run: |
+          mkdir -p webui/dist
+          test -f webui/dist/index.html || echo '<!DOCTYPE html><html><head><title>CDDM</title></head><body><div id="root"></div></body></html>' > webui/dist/index.html
+
       - name: Cargo Typecheck
         run: cargo check --workspace --all-targets
 

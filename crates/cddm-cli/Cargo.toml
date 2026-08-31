@@ -2,6 +2,7 @@
 name = "cddm-cli"
 version.workspace = true
 edition.workspace = true
+build = "build.rs"
 description = "CDDM CLI Binary — Code De-Duplication Meister"
 documentation.workspace = true
 readme = "../../README.md"

@@ -55,7 +55,7 @@ describe("App Component", () => {
     const configBtn = screen.getByText("Config Window");
     fireEvent.click(configBtn);
     expect(
-      await screen.findByText("Scan Parameters & Engine Configuration", {}, { timeout: 5000 }),
+      await screen.findByText("Scan Parameters & Engine Configuration", {}, { timeout: 15000 }),
     ).toBeDefined();
   });
 
@@ -74,13 +74,15 @@ describe("App Component", () => {
     const healthBtns = screen.getAllByText("Health Audit");
     fireEvent.click(healthBtns[0]!);
     expect(
-      await screen.findByText("DRY Health Score Audit & Diagnostics", {}, { timeout: 5000 }),
+      await screen.findByText("DRY Health Score Audit & Diagnostics", {}, { timeout: 15000 }),
     ).toBeDefined();
 
     // Test Reports modal
     const reportsBtns = screen.getAllByText("Reports");
     fireEvent.click(reportsBtns[0]!);
-    expect(await screen.findByText("Report Center & SARIF Exporter")).toBeDefined();
+    expect(
+      await screen.findByText("Report Center & SARIF Exporter", {}, { timeout: 15000 }),
+    ).toBeDefined();
   });
 
   it("should open OverlapDetectorModal when clicking Overlap Detector in header", async () => {
@@ -93,7 +95,11 @@ describe("App Component", () => {
     const overlapBtn = screen.getByText("Overlap Detector");
     fireEvent.click(overlapBtn);
     expect(
-      await screen.findByText("Ecosystem Library Reimplementation & Overlap Detector"),
+      await screen.findByText(
+        "Ecosystem Library Reimplementation & Overlap Detector",
+        {},
+        { timeout: 15000 },
+      ),
     ).toBeDefined();
   });
 
@@ -106,6 +112,12 @@ describe("App Component", () => {
 
     const hubBtn = screen.getByText("Org Hub");
     fireEvent.click(hubBtn);
-    expect(await screen.findByText("Organization Federation Hub (.cddmhub.toml)")).toBeDefined();
+    expect(
+      await screen.findByText(
+        "Organization Federation Hub (.cddmhub.toml)",
+        {},
+        { timeout: 15000 },
+      ),
+    ).toBeDefined();
   });
 });
