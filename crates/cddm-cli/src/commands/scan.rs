@@ -28,6 +28,7 @@ pub async fn run_scan_command(
     enforce_policies: bool,
     cross_language: bool,
     detect_type3: bool,
+    detect_type4: bool,
     threads: Option<usize>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let cache_path = cache_dir.as_ref().map(|p| p.to_string_lossy().to_string());
@@ -58,6 +59,7 @@ pub async fn run_scan_command(
         enforce_policies,
         cross_language,
         detect_type3,
+        detect_type4,
         threads,
     );
 
@@ -124,6 +126,7 @@ pub fn build_cli_scan_config(
     enforce_policies: bool,
     cross_language: bool,
     detect_type3: bool,
+    detect_type4: bool,
     threads: Option<usize>,
 ) -> ScanConfig {
     ScanConfig {
@@ -137,6 +140,7 @@ pub fn build_cli_scan_config(
         },
         detect_type2: true,
         detect_type3,
+        detect_type4,
         scan_self: true,
         enable_git_blame: git_blame,
         cache_dir: cache_path,

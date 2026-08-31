@@ -40,4 +40,21 @@ describe("MCP Tool: scan_codebase", () => {
     expect(resWithout).toBeDefined();
     expect(resWithout.total_files).toBe(resWith.total_files);
   });
+
+  it("should support detect_type4 toggle in scan_codebase", async () => {
+    const resWith = await executeTool("scan_codebase", {
+      directory: "crates/cddm-lsp",
+      min_tokens: 50,
+      detect_type4: true,
+    });
+    const resWithout = await executeTool("scan_codebase", {
+      directory: "crates/cddm-lsp",
+      min_tokens: 50,
+      detect_type4: false,
+    });
+
+    expect(resWith).toBeDefined();
+    expect(resWithout).toBeDefined();
+    expect(resWithout.total_files).toBe(resWith.total_files);
+  });
 });

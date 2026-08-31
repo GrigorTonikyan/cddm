@@ -43,9 +43,10 @@ mod tests {
         assert_eq!(config.ignore_patterns.len(), DEFAULT_IGNORE_PATTERNS.len());
         assert!(config.detect_type2);
         assert!(config.detect_type3);
+        assert!(!config.detect_type4);
         assert!(config.scan_self);
         assert!(!config.enable_git_blame);
-        assert!(config.cross_language);
+        assert!(!config.cross_language);
         assert!(config.ignore_tests);
         assert!(config.ignore_mocks);
     }

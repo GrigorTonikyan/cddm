@@ -39,6 +39,7 @@ pub async fn run_watch_command(
         ignore_patterns: ignore_patterns.clone(),
         detect_type2: true,
         detect_type3: true,
+        detect_type4: true,
         scan_self: true,
         enable_git_blame: git_blame,
         cache_dir: cache_path,

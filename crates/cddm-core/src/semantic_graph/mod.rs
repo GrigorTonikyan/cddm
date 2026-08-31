@@ -12,6 +12,7 @@ pub use cfg::extract_cfgs_from_source;
 pub use cross_language::{
     ExtractedCfgItem, extract_workspace_cfgs, extract_workspace_cfgs_parallel,
     scan_cross_language_workspace, scan_cross_language_workspace_with_progress,
+    scan_semantic_workspace, scan_semantic_workspace_with_progress,
 };
 pub use embedding::{
     SparseTfVector, calculate_embedding_similarity, compute_hybrid_similarity,

@@ -63,6 +63,7 @@ export interface ScanConfig {
   ignore_patterns: string[];
   detect_type2: boolean;
   detect_type3?: boolean;
+  detect_type4?: boolean;
   scan_self: boolean;
   enable_git_blame?: boolean;
   cddmignore_path?: string;

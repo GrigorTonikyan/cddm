@@ -59,6 +59,7 @@ async fn run_app(cli: Cli) -> Result<(), Box<dyn std::error::Error>> {
     match cli.command {
         Commands::Scan(args) => {
             let enable_cross_lang = args.cross_language && !args.no_cross_language;
+            let enable_type4 = args.detect_type4 && !args.no_type4;
             let effective_ignore_tests = args.ignore_tests && !args.no_ignore_tests;
             let effective_ignore_mocks = args.ignore_mocks && !args.no_ignore_mocks;
             run_scan_command(
@@ -80,6 +81,7 @@ async fn run_app(cli: Cli) -> Result<(), Box<dyn std::error::Error>> {
                 args.enforce_policies,
                 enable_cross_lang,
                 !args.no_type3,
+                enable_type4,
                 args.threads,
             )
             .await?;

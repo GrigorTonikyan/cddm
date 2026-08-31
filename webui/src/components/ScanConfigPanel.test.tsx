@@ -51,4 +51,22 @@ describe("ScanConfigPanel Component", () => {
       expect(useCDDMStore.getState().config.detect_type3).toBe(false);
     }
   });
+
+  it("should render Type-4 semantic toggle and update config state", () => {
+    render(<ScanConfigPanel />);
+    const type4Label = screen.getByText("Type-4 (Semantic Clones)");
+    expect(type4Label).toBeDefined();
+
+    const checkboxes = screen.getAllByRole("checkbox") as HTMLInputElement[];
+    const type4Checkbox = checkboxes.find((cb) =>
+      cb.parentElement?.textContent?.includes("Type-4 (Semantic Clones)"),
+    );
+    expect(type4Checkbox).toBeDefined();
+    expect(type4Checkbox?.checked).toBe(false);
+
+    if (type4Checkbox) {
+      fireEvent.click(type4Checkbox);
+      expect(useCDDMStore.getState().config.detect_type4).toBe(true);
+    }
+  });
 });
