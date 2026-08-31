@@ -1,4 +1,3 @@
-import { existsSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { GITEA_REPO, GITEA_TOKEN, giteaFetch, sleep } from "./gitea-client";
 
@@ -67,7 +66,9 @@ export async function syncPullRequests(
   labelMap: Map<string, number>,
 ): Promise<void> {
   console.log("\x1b[36m--> Synchronizing Pull Requests...\x1b[0m");
-  const { data: existing } = await giteaFetch<any[]>(`/repos/${GITEA_REPO}/pulls?state=all`);
+  const { data: existing } = await giteaFetch<{ title: string }[]>(
+    `/repos/${GITEA_REPO}/pulls?state=all`,
+  );
   const existingTitles = new Set((existing || []).map((p) => p.title.toLowerCase()));
 
   for (const pr of SEED_PRS) {
@@ -80,11 +81,6 @@ export async function syncPullRequests(
       Bun.spawnSync(["git", "checkout", "-B", pr.branch], { cwd: process.cwd() });
 
       const rfcDir = resolve(process.cwd(), "docs", "rfc");
-      if (!existsSync(rfcDir)) {
-        Bun.spawnSync(["pwsh", "-Command", "New-Item -ItemType Directory -Force -Path docs/rfc"], {
-          cwd: process.cwd(),
-        });
-      }
       const rfcFileName = `${pr.branch.replace(/[^a-zA-Z0-9_-]/g, "-")}.md`;
       const rfcFilePath = join(rfcDir, rfcFileName);
       await Bun.write(
@@ -93,7 +89,7 @@ export async function syncPullRequests(
       );
 
       Bun.spawnSync(["git", "add", "docs/rfc/"], { cwd: process.cwd() });
-      Bun.spawnSync(["git", "commit", "-m", pr.title, "--no-verify"], { cwd: process.cwd() });
+      Bun.spawnSync(["git", "commit", "-m", pr.title], { cwd: process.cwd() });
 
       const authPushUrl = `https://${GITEA_TOKEN}@git.gt-web-dev.com/${GITEA_REPO}.git`;
       const pushRes = Bun.spawnSync(
@@ -102,7 +98,6 @@ export async function syncPullRequests(
           "-c",
           "credential.helper=",
           "push",
-          "--no-verify",
           "-u",
           authPushUrl,
           `${pr.branch}:${pr.branch}`,
@@ -128,7 +123,7 @@ export async function syncPullRequests(
       .map((l) => labelMap.get(l.toLowerCase()))
       .filter((id): id is number => id !== undefined);
 
-    const res = await giteaFetch<any>(`/repos/${GITEA_REPO}/pulls`, {
+    const res = await giteaFetch<{ number: number }>(`/repos/${GITEA_REPO}/pulls`, {
       method: "POST",
       body: JSON.stringify({
         head: pr.branch,

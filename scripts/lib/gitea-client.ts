@@ -38,7 +38,7 @@ export async function giteaFetch<T>(
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       const res = await fetch(url, { ...options, headers });
-      let data: any = null;
+      let data: T | null = null;
       const contentType = res.headers.get("content-type") || "";
       if (contentType.includes("application/json")) {
         try {
@@ -47,10 +47,10 @@ export async function giteaFetch<T>(
           data = null;
         }
       } else {
-        data = await res.text();
+        data = (await res.text()) as unknown as T;
       }
 
-      return { status: res.status, ok: res.ok, data };
+      return { status: res.status, ok: res.ok, data: data as T };
     } catch (err) {
       if (attempt === retries) {
         throw err;
