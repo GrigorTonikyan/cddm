@@ -96,12 +96,13 @@ export const DEFAULT_SCAN_CONFIG: ScanConfig = {
   ],
   detect_type2: true,
   detect_type3: true,
+  detect_type4: false,
   scan_self: true,
   enable_git_blame: true,
   ignore_tests: false,
   ignore_mocks: false,
   ignore_generated: true,
-  cross_language: true,
+  cross_language: false,
 };
 
 /**

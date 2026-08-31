@@ -79,8 +79,8 @@ pub struct ScanArgs {
     #[arg(long, default_value_t = false)]
     pub enforce_policies: bool,
 
-    /// Detect cross-language semantic clones across different programming languages (default: true)
-    #[arg(long, default_value_t = true, action = clap::ArgAction::Set)]
+    /// Detect cross-language semantic clones across different programming languages
+    #[arg(long, default_value_t = false, action = clap::ArgAction::Set)]
     pub cross_language: bool,
 
     /// Disable cross-language semantic clone detection
@@ -90,6 +90,14 @@ pub struct ScanArgs {
     /// Disable Type-3 near-miss modified statement clone detection
     #[arg(long, default_value_t = false)]
     pub no_type3: bool,
+
+    /// Detect Type-4 semantic clones using AST/CFG Weisfeiler-Lehman graph analysis
+    #[arg(long, default_value_t = false, action = clap::ArgAction::Set)]
+    pub detect_type4: bool,
+
+    /// Disable Type-4 semantic AST/CFG clone detection
+    #[arg(long, default_value_t = false)]
+    pub no_type4: bool,
 
     /// Maximum number of parallel worker threads to utilize (default: all logical cores)
     #[arg(short = 'j', long)]

@@ -138,6 +138,11 @@ pub fn index_and_match_clone_pairs(
         merged_pairs.retain(|pair| pair.clone_type != crate::types::CloneType::NearMiss);
     }
 
+    // Filter out clone pairs if detect_type4 is disabled
+    if !config.detect_type4 {
+        merged_pairs.retain(|pair| pair.clone_type != crate::types::CloneType::Semantic);
+    }
+
     // Filter out clone pairs matching suppression type exclusions or custom thresholds
     merged_pairs.retain(|pair| {
         !suppression_engine.is_clone_type_ignored(Path::new(&pair.file_a), &pair.clone_type)

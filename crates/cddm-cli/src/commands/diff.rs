@@ -67,6 +67,7 @@ pub async fn run_diff_command(
         enforce_policies,
         cross_language,
         true,
+        true,
         None,
     );
 

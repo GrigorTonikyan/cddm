@@ -32,6 +32,7 @@ pub async fn run_monorepo_command(
         ignore_patterns: vec![],
         detect_type2: true,
         detect_type3: true,
+        detect_type4: true,
         scan_self: false,
         enable_git_blame: false,
         cache_dir: None,

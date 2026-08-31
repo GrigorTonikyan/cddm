@@ -4,6 +4,7 @@ import {
   Folder,
   GitBranch,
   Layers,
+  Network,
   Play,
   RotateCcw,
   Shield,
@@ -153,6 +154,19 @@ export const ScanConfigPanel: React.FC<ScanConfigPanelProps> = ({ className = ""
           <label className="flex items-center gap-2 text-xs font-medium text-slate-300 cursor-pointer select-none">
             <input
               type="checkbox"
+              checked={config.detect_type4 ?? false}
+              onChange={(e) => setConfig({ detect_type4: e.target.checked })}
+              className="w-4 h-4 rounded border-slate-700 bg-slate-950 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-slate-900"
+            />
+            <span className="flex items-center gap-1 text-cyan-300">
+              <Network className="w-3.5 h-3.5 text-cyan-400" />
+              Type-4 (Semantic Clones)
+            </span>
+          </label>
+
+          <label className="flex items-center gap-2 text-xs font-medium text-slate-300 cursor-pointer select-none">
+            <input
+              type="checkbox"
               checked={config.scan_self}
               onChange={(e) => setConfig({ scan_self: e.target.checked })}
               className="w-4 h-4 rounded border-slate-700 bg-slate-950 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-slate-900"
@@ -182,7 +196,7 @@ export const ScanConfigPanel: React.FC<ScanConfigPanelProps> = ({ className = ""
             />
             <span className="flex items-center gap-1 text-purple-300">
               <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-              Cross-Language (Type-4)
+              Cross-Language (Polyglot)
             </span>
           </label>
         </div>

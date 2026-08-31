@@ -47,9 +47,11 @@ Execute a code duplication scan asynchronously.
 | `languages`        | `string[]` | No       | `[]`      | Filter by language names (empty = all)           |
 | `ignore_patterns`  | `string[]` | No       | See above | Glob patterns to exclude                         |
 | `detect_type2`     | `boolean`  | No       | `true`    | Enable Type-2 (renamed) identifier normalization |
+| `detect_type3`     | `boolean`  | No       | `true`    | Enable Type-3 (near-miss modified statements)    |
+| `detect_type4`     | `boolean`  | No       | `true`    | Enable Type-4 (semantic AST/CFG graph matching)  |
 | `scan_self`        | `boolean`  | No       | `true`    | Find intra-file self-overlapping duplicates      |
 | `enable_git_blame` | `boolean`  | No       | `false`   | Annotate clone pairs with `gix` git author       |
-| `cross_language`   | `boolean`  | No       | `false`   | Detect cross-language Type-4 semantic clones     |
+| `cross_language`   | `boolean`  | No       | `true`    | Detect cross-language Type-4 semantic clones     |
 | `threads`          | `number`   | No       | `null`    | Maximum worker thread ceiling (default: all)     |
 
 **Response** (`200 OK`):

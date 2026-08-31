@@ -172,6 +172,8 @@ pub struct ScanConfig {
     pub detect_type2: bool,
     /// Whether to detect Type-3 clones (near-miss modified statements)
     pub detect_type3: bool,
+    /// Whether to detect Type-4 clones (semantic AST/CFG Weisfeiler-Lehman graph matching)
+    pub detect_type4: bool,
     /// Whether to find clones within the exact same file
     pub scan_self: bool,
     /// Whether to annotate clone pairs with in-process git blame author information
@@ -210,6 +212,7 @@ impl Default for ScanConfig {
                 .collect(),
             detect_type2: true,
             detect_type3: true,
+            detect_type4: false,
             scan_self: true,
             enable_git_blame: false,
             cache_dir: None,
@@ -220,7 +223,7 @@ impl Default for ScanConfig {
             ignore_generated: true,
             rules_path: None,
             enforce_policies: false,
-            cross_language: true,
+            cross_language: false,
             threads: None,
         }
     }

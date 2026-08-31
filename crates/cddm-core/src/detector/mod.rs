@@ -4,9 +4,11 @@ pub mod discovery;
 pub mod indexer;
 pub mod runner;
 pub mod scoring;
+pub mod semantic;
 pub mod types;
 
 pub use scoring::compute_scan_scoring;
+pub use semantic::evaluate_and_merge_semantic_clones;
 
 pub use discovery::{discover_candidate_files, init_policy_engine, init_suppression_engine};
 pub use indexer::index_and_match_clone_pairs;
@@ -29,6 +31,7 @@ mod tests {
             ignore_patterns: vec![],
             detect_type2: true,
             detect_type3: true,
+            detect_type4: false,
             scan_self: false,
             enable_git_blame: false,
             cache_dir: None,
@@ -423,5 +426,49 @@ severity = "error"
                 .iter()
                 .any(|v| v.rule_name == "auth-protection")
         );
+    }
+
+    #[tokio::test]
+    async fn test_scan_with_semantic_type4_clones() {
+        use tempfile::tempdir;
+        let dir = tempdir().unwrap();
+
+        let code_a = r#"
+            pub fn compute_tax(income: f64, is_resident: bool) -> f64 {
+                let mut rate = 0.15;
+                if is_resident {
+                    rate = 0.25;
+                }
+                let tax = income * rate;
+                tax
+            }
+        "#;
+
+        let code_b = r#"
+def compute_tax(income: float, is_resident: bool) -> float:
+    rate = 0.15
+    if is_resident:
+        rate = 0.25
+    tax = income * rate
+    return tax
+        "#;
+
+        write_test_file(dir.path().join("a.rs"), code_a);
+        write_test_file(dir.path().join("b.py"), code_b);
+
+        // 1. With detect_type4: false and cross_language: false -> no clones detected
+        let mut config_disabled = make_test_config(&dir.path().to_string_lossy(), 10);
+        config_disabled.detect_type4 = false;
+        config_disabled.cross_language = false;
+        let res_disabled = run_test_scan(config_disabled).await.unwrap();
+        assert_eq!(res_disabled.total_clones, 0);
+
+        // 2. With detect_type4: true and cross_language: true -> Type-4 Semantic clone is discovered
+        let mut config_enabled = make_test_config(&dir.path().to_string_lossy(), 10);
+        config_enabled.detect_type4 = true;
+        config_enabled.cross_language = true;
+        let res_enabled = run_test_scan(config_enabled).await.unwrap();
+        assert!(res_enabled.total_clones >= 1);
+        assert_eq!(res_enabled.clone_pairs[0].clone_type, CloneType::Semantic);
     }
 }

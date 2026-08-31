@@ -347,87 +347,36 @@ pub async fn run_scan(
                     &suppression_engine_clone,
                 );
 
-                if config_clone.cross_language {
+                if config_clone.detect_type4 || config_clone.cross_language {
                     if let Ok(mut msg_guard) = tracker_clone.message.write() {
-                        *msg_guard = "Extracting cross-language control flow graphs...".to_string();
+                        *msg_guard = "Extracting semantic control flow graphs...".to_string();
                     }
                     tracker_clone.progress_scaled.store(6500, Ordering::Relaxed);
 
                     let tracker_cb = Arc::clone(&tracker_clone);
-                    let scan_res =
-                        crate::semantic_graph::scan_cross_language_workspace_with_progress(
-                            &config_clone,
-                            0.85,
-                            Some(
-                                move |evaluated: usize, total_candidates: usize, _msg: &str| {
-                                    let p = 0.65
-                                        + 0.25
-                                            * (evaluated as f64 / total_candidates.max(1) as f64);
-                                    tracker_cb
-                                        .progress_scaled
-                                        .store((p * 10000.0) as u64, Ordering::Relaxed);
-                                    if let Ok(mut msg_guard) = tracker_cb.message.write() {
-                                        *msg_guard = format!(
-                                            "Evaluating cross-language semantic pairs ({}/{} \
-                                             evaluated)...",
-                                            evaluated, total_candidates
-                                        );
-                                    }
-                                },
-                            ),
-                        );
-
-                    if let Ok(cross_pairs) = scan_res {
-                        for cp in cross_pairs {
-                            let path_a = std::path::Path::new(&cp.file_a);
-                            let path_b = std::path::Path::new(&cp.file_b);
-                            if suppression_engine_clone.is_path_ignored(path_a, None)
-                                || suppression_engine_clone.is_path_ignored(path_b, None)
-                            {
-                                continue;
-                            }
-                            if suppression_engine_clone
-                                .is_clone_type_ignored(path_a, &crate::types::CloneType::Semantic)
-                                || suppression_engine_clone.is_clone_type_ignored(
-                                    path_b,
-                                    &crate::types::CloneType::Semantic,
-                                )
-                            {
-                                continue;
-                            }
-                            let eff_a = suppression_engine_clone
-                                .get_effective_min_tokens(path_a, config_clone.min_tokens);
-                            let eff_b = suppression_engine_clone
-                                .get_effective_min_tokens(path_b, config_clone.min_tokens);
-                            let req_min = eff_a.max(eff_b);
-                            if config_clone.min_tokens < req_min {
-                                continue;
-                            }
-
-                            let fragment_hash = format!(
-                                "cross-lang-{}:{}-{}:{}-{}",
-                                cp.file_a,
-                                cp.lines_a.0,
-                                cp.file_b,
-                                cp.lines_b.0,
-                                (cp.hybrid_score * 10000.0) as u64
-                            );
-                            pairs.push(crate::types::ClonePair {
-                                file_a: cp.file_a,
-                                start_line_a: cp.lines_a.0,
-                                end_line_a: cp.lines_a.1,
-                                file_b: cp.file_b,
-                                start_line_b: cp.lines_b.0,
-                                end_line_b: cp.lines_b.1,
-                                token_count: config_clone.min_tokens,
-                                similarity: cp.hybrid_score,
-                                fragment_hash,
-                                clone_type: crate::types::CloneType::Semantic,
-                                author_a: Some(format!("Language: {}", cp.language_a)),
-                                author_b: Some(format!("Language: {}", cp.language_b)),
-                            });
-                        }
-                    }
+                    super::semantic::evaluate_and_merge_semantic_clones(
+                        &mut pairs,
+                        &parsed_files_clone,
+                        &config_clone,
+                        &suppression_engine_clone,
+                        Some(
+                            move |evaluated: usize, total_candidates: usize, msg: &str| {
+                                let p = 0.65
+                                    + 0.25 * (evaluated as f64 / total_candidates.max(1) as f64);
+                                tracker_cb
+                                    .progress_scaled
+                                    .store((p * 10000.0) as u64, Ordering::Relaxed);
+                                if let Ok(mut msg_guard) = tracker_cb.message.write() {
+                                    *msg_guard = format!(
+                                        "{} ({}/{} evaluated)...",
+                                        msg.trim_end_matches("..."),
+                                        evaluated,
+                                        total_candidates
+                                    );
+                                }
+                            },
+                        ),
+                    );
                 }
 
                 (pairs, total)

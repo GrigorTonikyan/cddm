@@ -147,6 +147,13 @@ fn render_config_summary(frame: &mut Frame, app: &TuiApp, area: Rect) {
                 "Disabled"
             }),
             Span::raw(" | "),
+            Span::styled("Type-4: ", Style::default().fg(Color::Cyan)),
+            Span::raw(if app.config.detect_type4 {
+                "Active"
+            } else {
+                "Disabled"
+            }),
+            Span::raw(" | "),
             Span::styled("Watch Mode: ", Style::default().fg(Color::Cyan)),
             Span::raw(if app.watch_mode { "Active" } else { "Disabled" }),
         ]),

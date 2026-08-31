@@ -85,6 +85,10 @@ pub async fn run_scan_from_mcp_args(
         .and_then(|a| a.get("detect_type3"))
         .and_then(|b| b.as_bool())
         .unwrap_or(true);
+    let detect_type4 = args
+        .and_then(|a| a.get("detect_type4"))
+        .and_then(|b| b.as_bool())
+        .unwrap_or(true);
     let threads = args
         .and_then(|a| a.get("threads"))
         .and_then(|v| v.as_u64())
@@ -96,6 +100,7 @@ pub async fn run_scan_from_mcp_args(
         enable_git_blame,
         cross_language,
         detect_type3,
+        detect_type4,
         threads,
         ..Default::default()
     };

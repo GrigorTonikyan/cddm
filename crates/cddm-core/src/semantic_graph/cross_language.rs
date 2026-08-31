@@ -77,10 +77,12 @@ pub fn extract_workspace_cfgs(
         .collect()
 }
 
-/// Scans workspace files for cross-language semantic clone pairs with optional fine-grained progress callback.
-pub fn scan_cross_language_workspace_with_progress<F>(
+/// Scans workspace files for semantic clone pairs with optional same-language and cross-language flags and progress callback.
+pub fn scan_semantic_workspace_with_progress<F>(
     config: &ScanConfig,
     similarity_threshold: f64,
+    allow_same_language: bool,
+    allow_cross_language: bool,
     progress_callback: Option<F>,
 ) -> Result<Vec<CrossLanguageClonePair>, String>
 where
@@ -98,7 +100,24 @@ where
             let item_a = &extracted[i];
             let item_b = &extracted[j];
 
-            if item_a.language == item_b.language {
+            let is_cross = item_a.language != item_b.language;
+            if is_cross && !allow_cross_language {
+                continue;
+            }
+            if !is_cross && !allow_same_language {
+                continue;
+            }
+
+            // Skip identical function span in the same file to prevent self-cloning
+            if item_a.cfg.file_path == item_b.cfg.file_path
+                && item_a.cfg.line_start == item_b.cfg.line_start
+                && item_a.cfg.line_end == item_b.cfg.line_end
+            {
+                continue;
+            }
+
+            // If same file and scan_self is disabled, skip
+            if item_a.cfg.file_path == item_b.cfg.file_path && !config.scan_self {
                 continue;
             }
 
@@ -110,7 +129,7 @@ where
                 continue;
             }
 
-            candidate_pairs.push((i, j));
+            candidate_pairs.push((i, j, is_cross));
         }
     }
 
@@ -123,7 +142,7 @@ where
 
     let mut clone_pairs: Vec<CrossLanguageClonePair> = candidate_pairs
         .par_iter()
-        .filter_map(|&(i, j)| {
+        .filter_map(|&(i, j, is_cross)| {
             let item_a = &extracted[i];
             let item_b = &extracted[j];
 
@@ -132,7 +151,7 @@ where
                 &item_a.tf_vector,
                 &item_b.cfg,
                 &item_b.tf_vector,
-                true,
+                is_cross,
             );
 
             let current = evaluated_count.fetch_add(1, Ordering::Relaxed) + 1;
@@ -142,7 +161,11 @@ where
                 cb(
                     current,
                     total_candidates,
-                    "Evaluating cross-language semantic pairs...",
+                    if is_cross {
+                        "Evaluating cross-language semantic pairs..."
+                    } else {
+                        "Evaluating semantic AST/CFG pairs..."
+                    },
                 );
             }
 
@@ -175,6 +198,40 @@ where
     });
 
     Ok(clone_pairs)
+}
+
+/// Scans workspace files for cross-language semantic clone pairs with optional fine-grained progress callback.
+pub fn scan_cross_language_workspace_with_progress<F>(
+    config: &ScanConfig,
+    similarity_threshold: f64,
+    progress_callback: Option<F>,
+) -> Result<Vec<CrossLanguageClonePair>, String>
+where
+    F: Fn(usize, usize, &str) + Send + Sync,
+{
+    scan_semantic_workspace_with_progress(
+        config,
+        similarity_threshold,
+        false,
+        true,
+        progress_callback,
+    )
+}
+
+/// Scans workspace files for semantic clone pairs (both same-language and cross-language).
+pub fn scan_semantic_workspace(
+    config: &ScanConfig,
+    similarity_threshold: f64,
+    allow_same_language: bool,
+    allow_cross_language: bool,
+) -> Result<Vec<CrossLanguageClonePair>, String> {
+    scan_semantic_workspace_with_progress::<fn(usize, usize, &str)>(
+        config,
+        similarity_threshold,
+        allow_same_language,
+        allow_cross_language,
+        None,
+    )
 }
 
 /// Scans workspace files for cross-language semantic clone pairs across different programming languages.
