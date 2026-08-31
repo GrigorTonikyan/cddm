@@ -96,12 +96,14 @@ test.describe("CDDM WebUI Studio Comprehensive UI/UX Quality Verification", () =
 
     // Switch back to Pairwise and expand clone pair card #1
     await page.getByRole("button", { name: /Pairwise/i }).click();
-    await page.waitForTimeout(300);
-    await page.getByText("#1", { exact: true }).first().click();
     await page.waitForTimeout(400);
+    const diffInspectorBtn = page.getByRole("button", { name: /Diff Inspector/i }).first();
+    if (!(await diffInspectorBtn.isVisible())) {
+      await page.getByText("#1", { exact: true }).first().click();
+      await page.waitForTimeout(400);
+    }
 
     // 5. Split Diff Viewer / Diff Inspector Modal
-    const diffInspectorBtn = page.getByRole("button", { name: /Diff Inspector/i }).first();
     await expect(diffInspectorBtn).toBeVisible();
     await diffInspectorBtn.click();
     await page.waitForTimeout(600);
