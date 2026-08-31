@@ -118,18 +118,18 @@ pub fn generate_unit_test_files(
         "cs" => {
             let file_path = ctx.resolve_dotnet_path(target_kind, "Tests");
             let content = format!(
-                    "using Xunit;\nusing {};\n\nnamespace {}.Tests\n{{\n    public class \
+                "using Xunit;\nusing {};\n\nnamespace {}.Tests\n{{\n    public class \
                      {}UtilsTests\n    {{\n        [Fact]\n        public void \
                      Test{}Execution()\n        {{\n            {}Utils.{}({});\n        }}\n    \
                      }}\n}}\n",
-                    ctx.pascal_target,
-                    ctx.pascal_target,
-                    ctx.pascal_target,
-                    ctx.pascal_fn,
-                    ctx.pascal_target,
-                    function_name,
-                    ctx.args_joined
-                );
+                ctx.pascal_target,
+                ctx.pascal_target,
+                ctx.pascal_target,
+                ctx.pascal_fn,
+                ctx.pascal_target,
+                function_name,
+                ctx.args_joined
+            );
             test_files.push(ExtractedFile::new(file_path, content));
         }
         _ => {

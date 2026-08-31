@@ -53,9 +53,10 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Install WebUI Dependencies
-        working-directory: ./webui
-        run: bun install --frozen-lockfile || bun install
+      - name: Install Dependencies
+        run: |
+          bun install --frozen-lockfile || bun install
+          bun install --cwd webui
 
       - name: Typecheck TypeScript (tsc -b)
         working-directory: ./webui
@@ -100,7 +101,10 @@ jobs:
           bun-version: latest
 
       - name: Install Dependencies
-        run: bun install --frozen-lockfile || bun install
+        run: |
+          bun install --frozen-lockfile || bun install
+          bun install --cwd webui
+          bun install --cwd editors/vscode
 
       - name: Validate Workspace Formatting, Lints & Types (vp check)
         run: bunx vp check

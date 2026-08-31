@@ -146,12 +146,12 @@ pub fn generate_extracted_target_files(
             }
             "java" => {
                 let pom_xml = format!(
-                        "<project xmlns=\"http://maven.apache.org/POM/4.0.0\">\n    \
+                    "<project xmlns=\"http://maven.apache.org/POM/4.0.0\">\n    \
                          <modelVersion>4.0.0</modelVersion>\n    \
                          <groupId>com.cddm.shared</groupId>\n    <artifactId>{}</artifactId>\n    \
                          <version>0.1.0</version>\n</project>\n",
-                        target_name.to_lowercase()
-                    );
+                    target_name.to_lowercase()
+                );
                 files.push(ExtractedFile {
                     file_path: format!("{}/pom.xml", norm_target.trim_end_matches('/')),
                     content: pom_xml,
