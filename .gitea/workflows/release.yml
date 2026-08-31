@@ -9,31 +9,19 @@ on:
 jobs:
   build-binaries:
     name: Build (${{ matrix.target }})
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         include:
-          - target: x86_64-pc-windows-msvc
-            os: windows-latest
-            artifact_prefix: cddm-windows-amd64
-            archive_ext: ".zip"
-            exe_ext: ".exe"
           - target: x86_64-unknown-linux-gnu
-            os: ubuntu-latest
             artifact_prefix: cddm-linux-amd64
             archive_ext: ".tar.gz"
             exe_ext: ""
-          - target: x86_64-apple-darwin
-            os: macos-latest
-            artifact_prefix: cddm-darwin-amd64
-            archive_ext: ".tar.gz"
-            exe_ext: ""
-          - target: aarch64-apple-darwin
-            os: macos-latest
-            artifact_prefix: cddm-darwin-arm64
-            archive_ext: ".tar.gz"
-            exe_ext: ""
+          - target: x86_64-pc-windows-gnu
+            artifact_prefix: cddm-windows-amd64
+            archive_ext: ".zip"
+            exe_ext: ".exe"
 
     steps:
       - name: Checkout Source Code
@@ -43,6 +31,14 @@ jobs:
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
+
+      - name: Install System Dependencies
+        run: |
+          apt-get update || sudo apt-get update
+          apt-get install -y zip tar || sudo apt-get install -y zip tar
+          if [ "${{ matrix.target }}" = "x86_64-pc-windows-gnu" ]; then
+            apt-get install -y gcc-mingw-w64-x86-64 || sudo apt-get install -y gcc-mingw-w64-x86-64
+          fi
 
       - name: Build WebUI Distribution Assets
         working-directory: ./webui
@@ -74,7 +70,7 @@ jobs:
           fi
 
       - name: Upload Target Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.artifact_prefix }}-archive
           path: cddm-*.*
@@ -91,13 +87,17 @@ jobs:
         with:
           bun-version: latest
 
+      - name: Install Extension Dependencies
+        working-directory: ./editors/vscode
+        run: bun install
+
       - name: Build and Package Extension
         run: |
           bun install --frozen-lockfile || bun install
           bun scripts/package-vscode.ts
 
       - name: Upload VSIX Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: vscode-vsix
           path: packaging/vscode/*.vsix
@@ -116,14 +116,14 @@ jobs:
           bun-version: latest
 
       - name: Download All Build Artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v3
         with:
           path: ./downloaded-artifacts
 
       - name: Collect Assets & Generate SHA256 Checksums
         run: |
           mkdir -p dist-release
-          find ./downloaded-artifacts -type f -exec cp {} ./dist-release/ \;
+          find ./downloaded-artifacts -type f \( -name "*.tar.gz" -o -name "*.zip" -o -name "*.vsix" \) -exec cp {} ./dist-release/ \;
           cd ./dist-release
           sha256sum * > SHA256SUMS.txt
           cat SHA256SUMS.txt

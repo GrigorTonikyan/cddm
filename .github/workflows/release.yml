@@ -94,6 +94,10 @@ jobs:
         with:
           bun-version: latest
 
+      - name: Install Extension Dependencies
+        working-directory: ./editors/vscode
+        run: bun install
+
       - name: Build and Package Extension
         run: |
           bun install --frozen-lockfile || bun install

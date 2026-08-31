@@ -95,6 +95,13 @@ export function getChangelogForVersion(version: string, rootDir = process.cwd())
   return content.slice(startIndex, nextSectionIndex).trim();
 }
 
+export function getAuthHeader(token: string): string {
+  if (token.startsWith("Basic ") || token.startsWith("Bearer ") || token.startsWith("token ")) {
+    return token;
+  }
+  return token.includes(".") ? `Bearer ${token}` : `token ${token}`;
+}
+
 export async function createOrGetGiteaRelease(
   options: ReleaseOptions,
 ): Promise<GiteaReleaseResponse | null> {
@@ -117,7 +124,7 @@ export async function createOrGetGiteaRelease(
 
   const checkRes = await fetch(`${apiUrl}/tags/${options.tag}`, {
     headers: {
-      Authorization: `token ${options.token}`,
+      Authorization: getAuthHeader(options.token),
       Accept: "application/json",
     },
   });
@@ -131,7 +138,7 @@ export async function createOrGetGiteaRelease(
   const createRes = await fetch(apiUrl, {
     method: "POST",
     headers: {
-      Authorization: `token ${options.token}`,
+      Authorization: getAuthHeader(options.token),
       "Content-Type": "application/json",
       Accept: "application/json",
     },
@@ -173,7 +180,7 @@ export async function uploadAssetToGitea(
   const res = await fetch(uploadUrl, {
     method: "POST",
     headers: {
-      Authorization: `token ${options.token}`,
+      Authorization: getAuthHeader(options.token),
     },
     body: formData,
   });

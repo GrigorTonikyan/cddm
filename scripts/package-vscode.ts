@@ -116,6 +116,19 @@ export async function packageVscodeExtension(options: PackageOptions = {}): Prom
   const pkg = JSON.parse(readFileSync(pkgJsonPath, "utf-8"));
   const version = pkg.version || "1.7.0";
 
+  // Ensure dependencies in editors/vscode are installed
+  if (!existsSync(join(vscodeDir, "node_modules"))) {
+    console.log("\x1b[36m--> Installing VS Code extension dependencies...\x1b[0m");
+    const installProc = Bun.spawnSync(["bun", "install"], {
+      cwd: vscodeDir,
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+    if (installProc.exitCode !== 0) {
+      throw new Error(`VS Code dependency installation failed:\n${installProc.stderr.toString()}`);
+    }
+  }
+
   // Build TypeScript files
   console.log("\x1b[36m--> Compiling VS Code extension TypeScript...\x1b[0m");
   const proc = Bun.spawnSync(["bunx", "tsc", "-p", join(vscodeDir, "tsconfig.json")], {
@@ -125,7 +138,8 @@ export async function packageVscodeExtension(options: PackageOptions = {}): Prom
   });
 
   if (proc.exitCode !== 0) {
-    throw new Error(`TypeScript compilation failed:\n${proc.stderr.toString()}`);
+    const errOut = proc.stderr.toString() || proc.stdout.toString();
+    throw new Error(`TypeScript compilation failed:\n${errOut}`);
   }
   console.log("\x1b[32m[PASS] Extension TypeScript compilation succeeded\x1b[0m");
 
