@@ -46,10 +46,16 @@ export const SandboxHeaderControls: React.FC<SandboxHeaderControlsProps> = ({
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <div className="space-y-1">
-          <label className="text-[11px] text-slate-400 block font-medium">
+          <label
+            htmlFor="sandbox-custom-fn-name"
+            className="text-[11px] text-slate-400 block font-medium"
+          >
             Extracted Function Name
           </label>
           <input
+            id="sandbox-custom-fn-name"
+            name="custom_function_name"
+            aria-label="Extracted Function Name"
             type="text"
             value={customFunctionName}
             onChange={(e) => onFunctionNameChange(e.target.value)}
@@ -59,10 +65,16 @@ export const SandboxHeaderControls: React.FC<SandboxHeaderControlsProps> = ({
         </div>
 
         <div className="space-y-1">
-          <label className="text-[11px] text-slate-400 block font-medium">
+          <label
+            htmlFor="sandbox-target-module-path"
+            className="text-[11px] text-slate-400 block font-medium"
+          >
             Destination Module Path (Optional)
           </label>
           <input
+            id="sandbox-target-module-path"
+            name="target_module_path"
+            aria-label="Destination Module Path"
             type="text"
             value={targetModulePath}
             onChange={(e) => onTargetModuleChange(e.target.value)}
@@ -72,10 +84,16 @@ export const SandboxHeaderControls: React.FC<SandboxHeaderControlsProps> = ({
         </div>
 
         <div className="space-y-1">
-          <label className="text-[11px] text-slate-400 block font-medium">
+          <label
+            htmlFor="sandbox-branch-name"
+            className="text-[11px] text-slate-400 block font-medium"
+          >
             Dedicated Git Branch Name
           </label>
           <input
+            id="sandbox-branch-name"
+            name="branch_name"
+            aria-label="Dedicated Git Branch Name"
             type="text"
             value={branchName}
             onChange={(e) => onBranchNameChange(e.target.value)}

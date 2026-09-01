@@ -160,6 +160,9 @@ export const DeadCodeExplorerModal: React.FC<DeadCodeExplorerModalProps> = ({
             <div className="relative w-48 sm:w-56">
               <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
               <input
+                id="dead-code-search-query"
+                name="dead_code_search"
+                aria-label="Search dead code items by file or symbol"
                 type="text"
                 placeholder="Search file, symbol..."
                 value={searchQuery}

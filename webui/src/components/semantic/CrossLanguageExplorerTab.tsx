@@ -90,12 +90,17 @@ export const CrossLanguageExplorerTab: React.FC<CrossLanguageExplorerTabProps> =
         <div className="flex items-center gap-4 flex-1 min-w-[280px]">
           <div className="flex-1 space-y-1">
             <div className="flex justify-between text-xs font-mono text-slate-300">
-              <span>{activeSubMode === "hybrid" ? "Hybrid Cutoff:" : "Neural Cosine Cutoff:"}</span>
+              <label htmlFor="cross-lang-cutoff-slider" className="cursor-pointer">
+                {activeSubMode === "hybrid" ? "Hybrid Cutoff:" : "Neural Cosine Cutoff:"}
+              </label>
               <span className="text-purple-300 font-bold">
                 {((activeSubMode === "hybrid" ? threshold : neuralThreshold) * 100).toFixed(0)}%
               </span>
             </div>
             <input
+              id="cross-lang-cutoff-slider"
+              name="cutoff_threshold"
+              aria-label="Similarity Cutoff Threshold Percentage"
               type="range"
               min={activeSubMode === "hybrid" ? "0.50" : "0.70"}
               max="0.98"
@@ -130,6 +135,9 @@ export const CrossLanguageExplorerTab: React.FC<CrossLanguageExplorerTabProps> =
         <div className="relative min-w-[220px]">
           <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
+            id="cross-lang-search-input"
+            name="search_query"
+            aria-label="Search cross-language clones"
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}

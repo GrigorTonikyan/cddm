@@ -47,6 +47,9 @@ export const BranchDriftMatrixSection: React.FC<BranchDriftMatrixSectionProps> =
         <div className="flex items-center gap-2 flex-1 min-w-[260px]">
           <GitBranch className="w-4 h-4 text-indigo-400 shrink-0" />
           <input
+            id="branch-drift-input"
+            name="branch_drift_names"
+            aria-label="Git branch names for drift matrix comparison"
             type="text"
             value={branchesInput}
             onChange={(e) => setBranchesInput(e.target.value)}

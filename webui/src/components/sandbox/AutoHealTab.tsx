@@ -116,8 +116,13 @@ export const AutoHealTab: React.FC<AutoHealTabProps> = ({
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2">
           <div>
-            <label className="text-zinc-400 block mb-1">Provider</label>
+            <label htmlFor="autoheal-provider" className="text-zinc-400 block mb-1">
+              Provider
+            </label>
             <select
+              id="autoheal-provider"
+              name="heal_provider"
+              aria-label="AI Surgeon Provider"
               value={form.provider}
               onChange={(e) => updateField("provider", e.target.value as AiProviderKind)}
               className="w-full bg-zinc-950 border border-zinc-800 rounded px-2 py-1 text-zinc-200"
@@ -131,8 +136,13 @@ export const AutoHealTab: React.FC<AutoHealTabProps> = ({
           </div>
 
           <div>
-            <label className="text-zinc-400 block mb-1">Model ID</label>
+            <label htmlFor="autoheal-model-id" className="text-zinc-400 block mb-1">
+              Model ID
+            </label>
             <input
+              id="autoheal-model-id"
+              name="heal_model_id"
+              aria-label="Model ID"
               type="text"
               placeholder={
                 form.provider === "Ollama"
@@ -150,8 +160,13 @@ export const AutoHealTab: React.FC<AutoHealTabProps> = ({
           </div>
 
           <div>
-            <label className="text-zinc-400 block mb-1">API Key / Token</label>
+            <label htmlFor="autoheal-api-key" className="text-zinc-400 block mb-1">
+              API Key / Token
+            </label>
             <input
+              id="autoheal-api-key"
+              name="heal_api_key"
+              aria-label="API Key or Token"
               type="password"
               placeholder="env var or key"
               value={form.apiKey}
@@ -161,8 +176,13 @@ export const AutoHealTab: React.FC<AutoHealTabProps> = ({
           </div>
 
           <div>
-            <label className="text-zinc-400 block mb-1">Max Iterations</label>
+            <label htmlFor="autoheal-max-iterations" className="text-zinc-400 block mb-1">
+              Max Iterations
+            </label>
             <input
+              id="autoheal-max-iterations"
+              name="heal_max_iterations"
+              aria-label="Max Iterations"
               type="number"
               min={1}
               max={10}
@@ -175,8 +195,13 @@ export const AutoHealTab: React.FC<AutoHealTabProps> = ({
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
           <div>
-            <label className="text-zinc-400 block mb-1">Custom Endpoint URL</label>
+            <label htmlFor="autoheal-endpoint-url" className="text-zinc-400 block mb-1">
+              Custom Endpoint URL
+            </label>
             <input
+              id="autoheal-endpoint-url"
+              name="heal_endpoint_url"
+              aria-label="Custom Endpoint URL"
               type="text"
               placeholder={`e.g. ${DEFAULT_HEAL_CONFIG.default_ollama_endpoint}`}
               value={form.endpoint}
@@ -185,8 +210,13 @@ export const AutoHealTab: React.FC<AutoHealTabProps> = ({
             />
           </div>
           <div>
-            <label className="text-zinc-400 block mb-1">Test Command</label>
+            <label htmlFor="autoheal-test-cmd" className="text-zinc-400 block mb-1">
+              Test Command
+            </label>
             <input
+              id="autoheal-test-cmd"
+              name="heal_test_command"
+              aria-label="Verification Test Command"
               type="text"
               placeholder="e.g. cargo test, bun test"
               value={form.testCmd}
@@ -195,8 +225,13 @@ export const AutoHealTab: React.FC<AutoHealTabProps> = ({
             />
           </div>
           <div>
-            <label className="text-zinc-400 block mb-1">Target Branch</label>
+            <label htmlFor="autoheal-target-branch" className="text-zinc-400 block mb-1">
+              Target Branch
+            </label>
             <input
+              id="autoheal-target-branch"
+              name="heal_target_branch"
+              aria-label="Target Branch Name"
               type="text"
               value={form.branch}
               onChange={(e) => updateField("branch", e.target.value)}
@@ -206,8 +241,14 @@ export const AutoHealTab: React.FC<AutoHealTabProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
-          <label className="flex items-center gap-2 text-zinc-300 text-xs cursor-pointer">
+          <label
+            htmlFor="autoheal-verify-checkbox"
+            className="flex items-center gap-2 text-zinc-300 text-xs cursor-pointer"
+          >
             <input
+              id="autoheal-verify-checkbox"
+              name="heal_verify_enabled"
+              aria-label="Run closed-loop test suite verification on each iteration"
               type="checkbox"
               checked={form.verify}
               onChange={(e) => updateField("verify", e.target.checked)}
@@ -218,8 +259,13 @@ export const AutoHealTab: React.FC<AutoHealTabProps> = ({
         </div>
 
         <div>
-          <label className="text-zinc-400 block mb-1">Custom Architectural Instructions</label>
+          <label htmlFor="autoheal-custom-instructions" className="text-zinc-400 block mb-1">
+            Custom Architectural Instructions
+          </label>
           <input
+            id="autoheal-custom-instructions"
+            name="heal_custom_instructions"
+            aria-label="Custom Architectural Instructions"
             type="text"
             placeholder="e.g. Use async functions, prefer immutable data structures"
             value={form.customInstructions}

@@ -117,15 +117,20 @@ export const OverlapDetectorModal: React.FC<OverlapDetectorModalProps> = ({
 
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 text-xs text-slate-400">
-              <span>Threshold:</span>
+              <label htmlFor="overlap-threshold-input" className="cursor-pointer">
+                Threshold:
+              </label>
               <input
+                id="overlap-threshold-input"
+                name="overlap_threshold"
+                aria-label="Overlap detection similarity threshold"
                 type="range"
                 min="0.1"
                 max="0.9"
                 step="0.05"
                 value={threshold}
                 onChange={(e) => setThreshold(parseFloat(e.target.value))}
-                className="w-24 accent-amber-500"
+                className="w-24 accent-amber-500 cursor-pointer"
               />
               <span className="font-mono text-slate-200">{(threshold * 100).toFixed(0)}%</span>
             </div>

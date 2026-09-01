@@ -72,8 +72,11 @@ export const SemanticGraphModal: React.FC<SemanticGraphModalProps> = ({ isOpen, 
   const footerContent = (
     <>
       <div className="flex items-center gap-3 text-xs font-mono text-slate-400">
-        <label className="flex items-center gap-2 cursor-pointer">
+        <label htmlFor="semantic-show-pdg-edges" className="flex items-center gap-2 cursor-pointer">
           <input
+            id="semantic-show-pdg-edges"
+            name="show_pdg_edges"
+            aria-label="Show PDG Data Dependencies (Def-Use Chains)"
             type="checkbox"
             checked={showPdgDataEdges}
             onChange={(e) => setShowPdgDataEdges(e.target.checked)}
@@ -231,11 +234,17 @@ export const SemanticGraphModal: React.FC<SemanticGraphModalProps> = ({ isOpen, 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                  <label
+                    htmlFor="semantic-sandbox-lang-a"
+                    className="text-xs font-bold text-slate-300 flex items-center gap-1.5"
+                  >
                     <FileCode2 className="w-3.5 h-3.5 text-indigo-400" />
                     <span>Implementation A:</span>
                   </label>
                   <select
+                    id="semantic-sandbox-lang-a"
+                    name="sandbox_lang_a"
+                    aria-label="Implementation A Language"
                     value={sandboxLangA}
                     onChange={(e) => setSandboxLangA(e.target.value)}
                     className="bg-slate-950 border border-slate-800 text-[11px] rounded-lg px-2 py-0.5 text-slate-200 font-mono"
@@ -249,6 +258,9 @@ export const SemanticGraphModal: React.FC<SemanticGraphModalProps> = ({ isOpen, 
                   </select>
                 </div>
                 <textarea
+                  id="semantic-sandbox-code-a"
+                  name="sandbox_code_a"
+                  aria-label="Implementation A Source Code"
                   value={sandboxCodeA}
                   onChange={(e) => setSandboxCodeA(e.target.value)}
                   rows={8}
@@ -258,11 +270,17 @@ export const SemanticGraphModal: React.FC<SemanticGraphModalProps> = ({ isOpen, 
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                  <label
+                    htmlFor="semantic-sandbox-lang-b"
+                    className="text-xs font-bold text-slate-300 flex items-center gap-1.5"
+                  >
                     <FileCode2 className="w-3.5 h-3.5 text-purple-400" />
                     <span>Implementation B:</span>
                   </label>
                   <select
+                    id="semantic-sandbox-lang-b"
+                    name="sandbox_lang_b"
+                    aria-label="Implementation B Language"
                     value={sandboxLangB}
                     onChange={(e) => setSandboxLangB(e.target.value)}
                     className="bg-slate-950 border border-slate-800 text-[11px] rounded-lg px-2 py-0.5 text-slate-200 font-mono"
@@ -276,6 +294,9 @@ export const SemanticGraphModal: React.FC<SemanticGraphModalProps> = ({ isOpen, 
                   </select>
                 </div>
                 <textarea
+                  id="semantic-sandbox-code-b"
+                  name="sandbox_code_b"
+                  aria-label="Implementation B Source Code"
                   value={sandboxCodeB}
                   onChange={(e) => setSandboxCodeB(e.target.value)}
                   rows={8}

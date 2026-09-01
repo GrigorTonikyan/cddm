@@ -14,15 +14,23 @@ cddm/
 ├── .vscode/            # Aligned IDE settings, formatters, tasks, and debug profiles
 ├── crates/
 │   ├── cddm-core/      # Core algorithm library (Winnowing M61, Tree-sitter AST, gix blame)
-│   ├── cddm-cli/       # CLI application & Axum embedded WebUI server
+│   ├── cddm-cli/       # CLI application, TUI dashboard & Axum embedded WebUI server
+│   ├── cddm-lsp/       # Language Server Protocol 3.17 daemon for IDE diagnostics
 │   └── cddm-mcp/       # Model Context Protocol stdio server for AI agents
 ├── webui/              # React 19 + Vite Plus + Tailwind CSS studio frontend
 ├── npm/                # npm cross-platform binary package distribution
 ├── scripts/            # Setup and verification automation scripts
-└── docs/               # Architecture, API, Requirements & Feature Matrix docs
+└── docs/               # Interface references (CLI, MCP, WebUI, TUI), Architecture & Feature Matrix
 ```
 
-For a deep dive into internal design, read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/API.md](docs/API.md).
+For comprehensive manuals on specific interaction surfaces, consult:
+
+- [docs/CLI.md](docs/CLI.md) — CLI Command Reference & Flags
+- [docs/MCP.md](docs/MCP.md) — Model Context Protocol AI Agent Tools & Resources
+- [docs/WEBUI.md](docs/WEBUI.md) — Embedded React 19 Studio WebUI Guide
+- [docs/TUI.md](docs/TUI.md) — Terminal UI Keyboard Shortcuts & Views
+- [docs/FEATURE_PARITY.md](docs/FEATURE_PARITY.md) — 4-Pillar Cross-Interface Feature Parity Matrix
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — System Architecture & Crate Breakdown
 
 ---
 
@@ -31,7 +39,7 @@ For a deep dive into internal design, read [docs/ARCHITECTURE.md](docs/ARCHITECT
 ### Prerequisites
 
 - **Rust**: 2024 edition (1.85+ recommended). Install via [rustup.rs](https://rustup.rs).
-- **Vite Plus**: `0.2.9` via [viteplus.dev](https://viteplus.dev) or **Bun**: `1.4.0` via [bun.sh](https://bun.sh).
+- **Vite Plus**: `0.3.0` via [viteplus.dev](https://viteplus.dev) or **Bun**: `1.4.0` via [bun.sh](https://bun.sh).
 
 ### Setting Up Development Workspace
 
