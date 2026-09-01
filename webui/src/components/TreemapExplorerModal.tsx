@@ -71,6 +71,9 @@ export const TreemapExplorerModal: React.FC<TreemapExplorerModalProps> = ({
           <div className="flex items-center gap-2 flex-1 relative">
             <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
+              id="treemap-filter-input"
+              name="treemap_filter"
+              aria-label="Filter treemap by directory or file path"
               type="text"
               value={internalFilter}
               onChange={(e) => handleSelectPath(e.target.value)}

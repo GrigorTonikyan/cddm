@@ -164,6 +164,9 @@ export const CoverageCorrelationModal: React.FC<CoverageCorrelationModalProps> =
             </summary>
             <div className="mt-3 space-y-2">
               <textarea
+                id="coverage-raw-tracefile"
+                name="raw_tracefile"
+                aria-label="Coverage report tracefile content"
                 value={rawTracefile}
                 onChange={(e) => setRawTracefile(e.target.value)}
                 placeholder="Paste lcov.info, coverage.xml, or istanbul.json content here..."

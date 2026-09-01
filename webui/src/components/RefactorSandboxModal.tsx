@@ -353,6 +353,9 @@ export const RefactorSandboxModal: React.FC<RefactorSandboxModalProps> = ({ isOp
 
           <div className="flex items-center gap-2">
             <input
+              id="sandbox-test-command"
+              name="test_command"
+              aria-label="Verification test command"
               type="text"
               value={testCommand}
               onChange={(e) => setTestCommand(e.target.value)}

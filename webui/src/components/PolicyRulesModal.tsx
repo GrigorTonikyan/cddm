@@ -272,6 +272,9 @@ export const PolicyRulesModal: React.FC<PolicyRulesModalProps> = ({ isOpen, onCl
               </div>
             </div>
             <textarea
+              id="policy-rules-raw-editor"
+              name="policy_rules_raw"
+              aria-label="Policy rules TOML configuration"
               value={rawContent}
               onChange={(e) => setRawContent(e.target.value)}
               placeholder="# Enter architectural policy rules in TOML format..."

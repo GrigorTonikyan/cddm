@@ -49,6 +49,9 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
         <div className="relative flex-1">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
+            id="clones-search-input"
+            name="clones_search"
+            aria-label="Search clone pairs by file name or path"
             type="text"
             value={searchTerm}
             onChange={(e) => onSearchChange(e.target.value)}
@@ -61,8 +64,13 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
         <div className="flex flex-wrap items-center gap-3">
           {/* Min Similarity Slider */}
           <div className="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800 text-xs font-mono">
-            <span className="text-slate-400">Min Match:</span>
+            <label htmlFor="clones-min-similarity" className="text-slate-400 cursor-pointer">
+              Min Match:
+            </label>
             <input
+              id="clones-min-similarity"
+              name="min_similarity"
+              aria-label="Minimum Similarity Match Percentage"
               type="range"
               min="0"
               max="100"
@@ -78,6 +86,9 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
           <div className="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800 text-xs font-mono">
             <Filter className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
             <select
+              id="clones-language-filter"
+              name="language_filter"
+              aria-label="Filter clones by language"
               value={selectedLang}
               onChange={(e) => onSelectedLangChange(e.target.value)}
               className="bg-transparent text-slate-200 focus:outline-none cursor-pointer"
@@ -97,6 +108,9 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
           <div className="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800 text-xs font-mono">
             <ArrowUpDown className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
             <select
+              id="clones-sort-by"
+              name="sort_by"
+              aria-label="Sort clone pairs by"
               value={sortBy}
               onChange={(e) => onSortByChange(e.target.value as "similarity" | "tokens" | "name")}
               className="bg-transparent text-slate-200 focus:outline-none cursor-pointer"

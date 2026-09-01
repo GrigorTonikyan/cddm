@@ -142,17 +142,23 @@ export const TimelineExplorerModal: React.FC<TimelineExplorerModalProps> = ({
             {/* Controls and Summary Cards */}
             <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-900/60 p-3.5 rounded-xl border border-slate-800/80">
               <div className="flex items-center gap-3">
-                <label className="flex items-center gap-2 text-xs text-slate-300 font-medium">
+                <label
+                  htmlFor="timeline-sample-points"
+                  className="flex items-center gap-2 text-xs text-slate-300 font-medium"
+                >
                   <Sliders className="w-3.5 h-3.5 text-indigo-400" />
                   <span>Sample Points:</span>
                   <select
+                    id="timeline-sample-points"
+                    name="sample_points"
+                    aria-label="Timeline History Sample Points"
                     value={maxSamples}
                     onChange={(e) => {
                       const val = Number(e.target.value);
                       setMaxSamples(val);
                       void fetchTimeline(undefined, val);
                     }}
-                    className="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-mono"
+                    className="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-mono cursor-pointer"
                   >
                     <option value={5}>5 Commits</option>
                     <option value={10}>10 Commits</option>

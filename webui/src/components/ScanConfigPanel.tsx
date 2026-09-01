@@ -45,11 +45,17 @@ export const ScanConfigPanel: React.FC<ScanConfigPanelProps> = ({ className = ""
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Directory Input */}
         <div>
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-300 mb-2 flex items-center gap-2">
+          <label
+            htmlFor="scan-target-directory"
+            className="text-xs font-bold uppercase tracking-wider text-slate-300 mb-2 flex items-center gap-2"
+          >
             <Folder className="w-4 h-4 text-indigo-400" />
             Target Repository Directory
           </label>
           <input
+            id="scan-target-directory"
+            name="target_directory"
+            aria-label="Target Repository Directory"
             type="text"
             value={config.directory}
             onChange={(e) => setConfig({ directory: e.target.value })}
@@ -60,7 +66,10 @@ export const ScanConfigPanel: React.FC<ScanConfigPanelProps> = ({ className = ""
 
         {/* Minimum Tokens Slider */}
         <div>
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-300 mb-2 flex items-center justify-between">
+          <label
+            htmlFor="scan-min-tokens"
+            className="text-xs font-bold uppercase tracking-wider text-slate-300 mb-2 flex items-center justify-between"
+          >
             <span className="flex items-center gap-2">
               <Code className="w-4 h-4 text-indigo-400" />
               Minimum Token Threshold
@@ -70,6 +79,9 @@ export const ScanConfigPanel: React.FC<ScanConfigPanelProps> = ({ className = ""
             </span>
           </label>
           <input
+            id="scan-min-tokens"
+            name="min_tokens"
+            aria-label="Minimum Token Threshold"
             type="range"
             min="10"
             max="200"
@@ -87,11 +99,17 @@ export const ScanConfigPanel: React.FC<ScanConfigPanelProps> = ({ className = ""
 
         {/* Ignore Patterns */}
         <div>
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-300 mb-2 flex items-center gap-2">
+          <label
+            htmlFor="scan-ignore-patterns"
+            className="text-xs font-bold uppercase tracking-wider text-slate-300 mb-2 flex items-center gap-2"
+          >
             <Shield className="w-4 h-4 text-indigo-400" />
             Ignore Patterns (comma-separated)
           </label>
           <input
+            id="scan-ignore-patterns"
+            name="ignore_patterns"
+            aria-label="Ignore Patterns"
             type="text"
             value={config.ignore_patterns.join(", ")}
             onChange={(e) =>
@@ -109,11 +127,17 @@ export const ScanConfigPanel: React.FC<ScanConfigPanelProps> = ({ className = ""
 
         {/* Preferred IDE Editor Deeplinks */}
         <div>
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-300 mb-2 flex items-center gap-2">
+          <label
+            htmlFor="scan-preferred-editor"
+            className="text-xs font-bold uppercase tracking-wider text-slate-300 mb-2 flex items-center gap-2"
+          >
             <AppWindow className="w-4 h-4 text-indigo-400" />
             Preferred IDE Deeplink Target
           </label>
           <select
+            id="scan-preferred-editor"
+            name="preferred_editor"
+            aria-label="Preferred IDE Deeplink Target"
             value={preferredEditor}
             onChange={(e) => setPreferredEditor(e.target.value as SupportedEditor)}
             className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm font-mono text-slate-100 focus:outline-none focus:border-indigo-500 transition-colors shadow-inner cursor-pointer"
@@ -128,8 +152,14 @@ export const ScanConfigPanel: React.FC<ScanConfigPanelProps> = ({ className = ""
 
         {/* Checkbox Toggles */}
         <div className="flex flex-wrap items-center gap-6 pt-2 md:col-span-2">
-          <label className="flex items-center gap-2 text-xs font-medium text-slate-300 cursor-pointer select-none">
+          <label
+            htmlFor="scan-toggle-type2"
+            className="flex items-center gap-2 text-xs font-medium text-slate-300 cursor-pointer select-none"
+          >
             <input
+              id="scan-toggle-type2"
+              name="detect_type2"
+              aria-label="Type-2 Renamed Clones"
               type="checkbox"
               checked={config.detect_type2}
               onChange={(e) => setConfig({ detect_type2: e.target.checked })}
@@ -138,8 +168,14 @@ export const ScanConfigPanel: React.FC<ScanConfigPanelProps> = ({ className = ""
             <span>Type-2 (Renamed Clones)</span>
           </label>
 
-          <label className="flex items-center gap-2 text-xs font-medium text-slate-300 cursor-pointer select-none">
+          <label
+            htmlFor="scan-toggle-type3"
+            className="flex items-center gap-2 text-xs font-medium text-slate-300 cursor-pointer select-none"
+          >
             <input
+              id="scan-toggle-type3"
+              name="detect_type3"
+              aria-label="Type-3 Near-Miss Clones"
               type="checkbox"
               checked={config.detect_type3 ?? true}
               onChange={(e) => setConfig({ detect_type3: e.target.checked })}
@@ -151,8 +187,14 @@ export const ScanConfigPanel: React.FC<ScanConfigPanelProps> = ({ className = ""
             </span>
           </label>
 
-          <label className="flex items-center gap-2 text-xs font-medium text-slate-300 cursor-pointer select-none">
+          <label
+            htmlFor="scan-toggle-type4"
+            className="flex items-center gap-2 text-xs font-medium text-slate-300 cursor-pointer select-none"
+          >
             <input
+              id="scan-toggle-type4"
+              name="detect_type4"
+              aria-label="Type-4 Semantic Clones"
               type="checkbox"
               checked={config.detect_type4 ?? false}
               onChange={(e) => setConfig({ detect_type4: e.target.checked })}
@@ -164,8 +206,14 @@ export const ScanConfigPanel: React.FC<ScanConfigPanelProps> = ({ className = ""
             </span>
           </label>
 
-          <label className="flex items-center gap-2 text-xs font-medium text-slate-300 cursor-pointer select-none">
+          <label
+            htmlFor="scan-toggle-intrafile"
+            className="flex items-center gap-2 text-xs font-medium text-slate-300 cursor-pointer select-none"
+          >
             <input
+              id="scan-toggle-intrafile"
+              name="scan_self"
+              aria-label="Intra-file Duplication"
               type="checkbox"
               checked={config.scan_self}
               onChange={(e) => setConfig({ scan_self: e.target.checked })}
@@ -174,8 +222,14 @@ export const ScanConfigPanel: React.FC<ScanConfigPanelProps> = ({ className = ""
             <span>Intra-file Duplication</span>
           </label>
 
-          <label className="flex items-center gap-2 text-xs font-medium text-slate-300 cursor-pointer select-none">
+          <label
+            htmlFor="scan-toggle-gitblame"
+            className="flex items-center gap-2 text-xs font-medium text-slate-300 cursor-pointer select-none"
+          >
             <input
+              id="scan-toggle-gitblame"
+              name="enable_git_blame"
+              aria-label="Git Blame Authors"
               type="checkbox"
               checked={config.enable_git_blame ?? false}
               onChange={(e) => setConfig({ enable_git_blame: e.target.checked })}
@@ -187,8 +241,14 @@ export const ScanConfigPanel: React.FC<ScanConfigPanelProps> = ({ className = ""
             </span>
           </label>
 
-          <label className="flex items-center gap-2 text-xs font-medium text-slate-300 cursor-pointer select-none">
+          <label
+            htmlFor="scan-toggle-crosslanguage"
+            className="flex items-center gap-2 text-xs font-medium text-slate-300 cursor-pointer select-none"
+          >
             <input
+              id="scan-toggle-crosslanguage"
+              name="cross_language"
+              aria-label="Cross-Language Polyglot Clones"
               type="checkbox"
               checked={config.cross_language ?? false}
               onChange={(e) => setConfig({ cross_language: e.target.checked })}

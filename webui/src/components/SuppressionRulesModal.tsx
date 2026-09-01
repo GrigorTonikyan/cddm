@@ -186,8 +186,14 @@ export const SuppressionRulesModal: React.FC<SuppressionRulesModalProps> = ({
                 Automatic Category Filters
               </span>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <label className="flex items-center gap-2.5 p-2.5 rounded-lg bg-slate-950/60 border border-slate-800/80 cursor-pointer hover:border-slate-700 transition-colors">
+                <label
+                  htmlFor="suppression-ignore-tests"
+                  className="flex items-center gap-2.5 p-2.5 rounded-lg bg-slate-950/60 border border-slate-800/80 cursor-pointer hover:border-slate-700 transition-colors"
+                >
                   <input
+                    id="suppression-ignore-tests"
+                    name="ignore_tests"
+                    aria-label="Ignore Tests (tests/, *_test.*, *.spec.*)"
                     type="checkbox"
                     checked={ignoreTests}
                     onChange={(e) => setIgnoreTests(e.target.checked)}
@@ -199,8 +205,14 @@ export const SuppressionRulesModal: React.FC<SuppressionRulesModalProps> = ({
                   </div>
                 </label>
 
-                <label className="flex items-center gap-2.5 p-2.5 rounded-lg bg-slate-950/60 border border-slate-800/80 cursor-pointer hover:border-slate-700 transition-colors">
+                <label
+                  htmlFor="suppression-ignore-mocks"
+                  className="flex items-center gap-2.5 p-2.5 rounded-lg bg-slate-950/60 border border-slate-800/80 cursor-pointer hover:border-slate-700 transition-colors"
+                >
                   <input
+                    id="suppression-ignore-mocks"
+                    name="ignore_mocks"
+                    aria-label="Ignore Mocks (mocks/, fixtures/, stubs/)"
                     type="checkbox"
                     checked={ignoreMocks}
                     onChange={(e) => setIgnoreMocks(e.target.checked)}
@@ -212,8 +224,14 @@ export const SuppressionRulesModal: React.FC<SuppressionRulesModalProps> = ({
                   </div>
                 </label>
 
-                <label className="flex items-center gap-2.5 p-2.5 rounded-lg bg-slate-950/60 border border-slate-800/80 cursor-pointer hover:border-slate-700 transition-colors">
+                <label
+                  htmlFor="suppression-ignore-generated"
+                  className="flex items-center gap-2.5 p-2.5 rounded-lg bg-slate-950/60 border border-slate-800/80 cursor-pointer hover:border-slate-700 transition-colors"
+                >
                   <input
+                    id="suppression-ignore-generated"
+                    name="ignore_generated"
+                    aria-label="Ignore Generated (@generated, DO NOT EDIT)"
                     type="checkbox"
                     checked={ignoreGenerated}
                     onChange={(e) => setIgnoreGenerated(e.target.checked)}
@@ -277,10 +295,13 @@ export const SuppressionRulesModal: React.FC<SuppressionRulesModalProps> = ({
         {activeTab === "editor" && (
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-slate-400 text-xs flex items-center gap-1.5">
+              <label
+                htmlFor="suppression-raw-editor"
+                className="text-slate-400 text-xs flex items-center gap-1.5"
+              >
                 <Hash className="w-3.5 h-3.5 text-indigo-400" />
                 Root workspace configuration (<code className="text-slate-200">.cddmignore</code>)
-              </span>
+              </label>
               <button
                 type="button"
                 onClick={handleResetDefault}
@@ -291,6 +312,9 @@ export const SuppressionRulesModal: React.FC<SuppressionRulesModalProps> = ({
               </button>
             </div>
             <textarea
+              id="suppression-raw-editor"
+              name="suppression_raw_content"
+              aria-label="Raw .cddmignore glob configuration"
               value={rawContent}
               onChange={(e) => setRawContent(e.target.value)}
               rows={16}

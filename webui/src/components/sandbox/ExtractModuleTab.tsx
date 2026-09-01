@@ -170,8 +170,12 @@ export const ExtractModuleTab: React.FC<ExtractModuleTabProps> = ({
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 pt-1">
           <div>
-            <label className="block text-[11px] text-slate-400 mb-1">Target Path / Name</label>
+            <label htmlFor="extract-target-path" className="block text-[11px] text-slate-400 mb-1">
+              Target Path / Name
+            </label>
             <input
+              id="extract-target-path"
+              name="target_path"
               type="text"
               aria-label="Target Path"
               value={form.targetPath}
@@ -182,8 +186,15 @@ export const ExtractModuleTab: React.FC<ExtractModuleTabProps> = ({
           </div>
 
           <div>
-            <label className="block text-[11px] text-slate-400 mb-1">Custom Function Name</label>
+            <label
+              htmlFor="extract-custom-fn-name"
+              className="block text-[11px] text-slate-400 mb-1"
+            >
+              Custom Function Name
+            </label>
             <input
+              id="extract-custom-fn-name"
+              name="custom_fn_name"
               type="text"
               aria-label="Function Name"
               value={form.customFnName}
@@ -194,8 +205,15 @@ export const ExtractModuleTab: React.FC<ExtractModuleTabProps> = ({
           </div>
 
           <div>
-            <label className="block text-[11px] text-slate-400 mb-1">Packaging Strategy</label>
+            <label
+              htmlFor="extract-packaging-strategy"
+              className="block text-[11px] text-slate-400 mb-1"
+            >
+              Packaging Strategy
+            </label>
             <select
+              id="extract-packaging-strategy"
+              name="packaging_strategy"
               aria-label="Packaging Strategy"
               value={form.strategy}
               onChange={(e) => updateField("strategy", e.target.value as ExtractTargetKind)}
@@ -210,8 +228,13 @@ export const ExtractModuleTab: React.FC<ExtractModuleTabProps> = ({
         </div>
 
         <div className="flex flex-wrap items-center gap-4 pt-0.5">
-          <label className="flex items-center gap-2 text-[11px] text-slate-300 cursor-pointer select-none">
+          <label
+            htmlFor="extract-generate-tests"
+            className="flex items-center gap-2 text-[11px] text-slate-300 cursor-pointer select-none"
+          >
             <input
+              id="extract-generate-tests"
+              name="generate_tests"
               type="checkbox"
               aria-label="Generate Unit Tests"
               checked={form.generateTests}
@@ -224,8 +247,13 @@ export const ExtractModuleTab: React.FC<ExtractModuleTabProps> = ({
             </span>
           </label>
 
-          <label className="flex items-center gap-2 text-[11px] text-slate-300 cursor-pointer select-none">
+          <label
+            htmlFor="extract-generate-benchmarks"
+            className="flex items-center gap-2 text-[11px] text-slate-300 cursor-pointer select-none"
+          >
             <input
+              id="extract-generate-benchmarks"
+              name="generate_benchmarks"
               type="checkbox"
               aria-label="Generate Micro-Benchmarks"
               checked={form.generateBenchmarks}

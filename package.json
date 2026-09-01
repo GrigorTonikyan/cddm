@@ -18,6 +18,8 @@
     "check:emojis": "bun scripts/check-no-emojis.ts",
     "check:file-lengths": "bun scripts/check-file-length.ts",
     "check:parity": "bun scripts/check-feature-parity.ts",
+    "sync:docs": "bun scripts/sync-docs.ts",
+    "sync:wiki": "bun scripts/sync-wiki.ts",
     "check": "cargo check --workspace --all-targets && vp check && bunx tsc -p tsconfig.json && bun scripts/check-docs.ts && bun scripts/check-no-emojis.ts && bun scripts/check-file-length.ts && bun scripts/check-feature-parity.ts",
     "test:rust": "cargo test --workspace",
     "test:webui": "vp -C webui run test",

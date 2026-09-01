@@ -11,6 +11,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { syncFeatureMatrixFile } from "./lib/test-matrix-generator";
+import { syncInterfaceDocs } from "./sync-docs";
 
 export interface DocCheckError {
   file: string;
@@ -34,10 +35,16 @@ export const REQUIRED_DOC_FILES = [
   "CHANGELOG.md",
   "docs/API.md",
   "docs/ARCHITECTURE.md",
+  "docs/CLI.md",
   "docs/FEATURE_MATRIX.md",
+  "docs/FEATURE_PARITY.md",
+  "docs/LSP_SETUP.md",
+  "docs/MCP.md",
   "docs/REQUIREMENTS.md",
   "docs/ROADMAP.md",
   "docs/TODO.md",
+  "docs/TUI.md",
+  "docs/WEBUI.md",
 ] as const;
 
 /**
@@ -253,6 +260,23 @@ export async function validateDocumentation(
     allErrors.push({
       file: "docs/FEATURE_MATRIX.md",
       message: `Failed to validate feature matrix synchronization: ${err instanceof Error ? err.message : String(err)}`,
+    });
+  }
+
+  // 5. Interface documentation zero-drift synchronization check
+  try {
+    const hasInterfaceChanges = await syncInterfaceDocs(workspaceRoot, false);
+    if (hasInterfaceChanges) {
+      allErrors.push({
+        file: "docs/CLI.md",
+        message:
+          "Interface documentation tables (CLI, MCP, WebUI, TUI) are out of sync with codebase. Run `bun scripts/sync-docs.ts` to update.",
+      });
+    }
+  } catch (err) {
+    allErrors.push({
+      file: "docs/CLI.md",
+      message: `Failed to validate interface documentation synchronization: ${err instanceof Error ? err.message : String(err)}`,
     });
   }
 
