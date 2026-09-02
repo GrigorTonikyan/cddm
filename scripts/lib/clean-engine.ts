@@ -54,7 +54,14 @@ export function isProtectedPath(relPath: string): boolean {
     return true;
   }
 
-  // Known artifacts/caches are never protected, even if residing in a subdirectory
+  // Strictly protect all source code, docs, and repository infrastructure directories first
+  for (const prefix of PROTECTED_PREFIXES) {
+    if (normalized === prefix || normalized.startsWith(`${prefix}/`)) {
+      return true;
+    }
+  }
+
+  // Known artifacts/caches are cleanable when outside protected prefixes
   const base = normalized.split("/").pop() ?? "";
   if (
     base === ".cddm" ||
@@ -83,11 +90,6 @@ export function isProtectedPath(relPath: string): boolean {
     return false;
   }
 
-  for (const prefix of PROTECTED_PREFIXES) {
-    if (normalized === prefix || normalized.startsWith(`${prefix}/`)) {
-      return true;
-    }
-  }
   return false;
 }
 

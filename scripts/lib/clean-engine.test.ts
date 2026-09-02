@@ -23,7 +23,12 @@ describe("Clean Engine Core Library", () => {
       expect(isProtectedPath(".vscode/settings.json")).toBe(true);
       expect(isProtectedPath(".vite-hooks/pre-commit")).toBe(true);
       expect(isProtectedPath("crates/cddm-core/src/lib.rs")).toBe(true);
+      expect(isProtectedPath("crates/cddm-core/src/coverage")).toBe(true);
+      expect(isProtectedPath("crates/cddm-core/src/coverage/parser.rs")).toBe(true);
+      expect(isProtectedPath("crates/cddm-core/src/coverage/types.rs")).toBe(true);
+      expect(isProtectedPath("tests/mcp/tools/correlate-coverage.test.ts")).toBe(true);
       expect(isProtectedPath("webui/src/App.tsx")).toBe(true);
+      expect(isProtectedPath("webui/src/coverage/helper.ts")).toBe(true);
       expect(isProtectedPath("webui/public/favicon.svg")).toBe(true);
       expect(isProtectedPath("scripts/clean.ts")).toBe(true);
       expect(isProtectedPath("docs/API.md")).toBe(true);

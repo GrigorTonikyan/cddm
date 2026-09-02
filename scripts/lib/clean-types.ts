@@ -106,6 +106,10 @@ export const NEVER_TRAVERSE_DIRS = new Set([
   ".gitea",
   ".vscode",
   ".vite-hooks",
+  "crates",
+  "tests",
+  "docs",
+  "scripts",
 ]);
 
 export const PROTECTED_PREFIXES = new Set([
@@ -116,6 +120,7 @@ export const PROTECTED_PREFIXES = new Set([
   ".vscode",
   ".vite-hooks",
   "crates",
+  "tests",
   "webui/src",
   "webui/public",
   "scripts",

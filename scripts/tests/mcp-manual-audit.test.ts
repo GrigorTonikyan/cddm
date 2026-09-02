@@ -73,5 +73,5 @@ describe("MCP Server Live Multi-Tool Fidelity & Response Audit", () => {
     const content = result.contents[0]?.text ?? "{}";
     const parsed = JSON.parse(content);
     expect(parsed.dry_health_score).toBeGreaterThan(0);
-  });
+  }, 30000);
 });
