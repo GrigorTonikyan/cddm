@@ -97,3 +97,31 @@ pub async fn handle_prune_dead_clones(id: Option<Value>, args: Option<&Value>) -
         Err(err) => make_error_response(id, rpc_errors::INTERNAL_ERROR, err.to_string()),
     }
 }
+
+/// Handle tool `cddm_trace_reachability`: computes cross-package call-graph reachability for polyglot monorepos.
+pub async fn handle_trace_reachability(id: Option<Value>, args: Option<&Value>) -> JsonRpcResponse {
+    let directory = args
+        .and_then(|a| a.get("directory"))
+        .and_then(|d| d.as_str())
+        .unwrap_or(".");
+    let min_tokens = args
+        .and_then(|a| a.get("min_tokens"))
+        .and_then(|m| m.as_u64())
+        .unwrap_or(30) as usize;
+
+    let config = DeadCodeConfig {
+        directory: directory.to_string(),
+        min_tokens,
+        static_only: false,
+        ..Default::default()
+    };
+
+    match run_dead_code_detection(config).await {
+        Ok(summary) => {
+            let reachability = summary.reachability_summary.unwrap_or_default();
+            let json_str = serde_json::to_string_pretty(&reachability).unwrap_or_default();
+            make_text_response(id, json_str)
+        }
+        Err(err) => make_error_response(id, rpc_errors::INTERNAL_ERROR, err.to_string()),
+    }
+}

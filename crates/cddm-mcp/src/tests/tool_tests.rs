@@ -347,3 +347,21 @@ async fn test_mcp_semantic_neural_scan_tool() {
     .expect("Expected response");
     assert!(resp_pair.error.is_none());
 }
+
+#[tokio::test]
+async fn test_mcp_trace_reachability_tool() {
+    let resp = handle_mcp_request(make_test_req(
+        81,
+        mcp_methods::TOOLS_CALL,
+        Some(json!({
+            "name": mcp_tools::TRACE_REACHABILITY,
+            "arguments": {
+                "directory": ".",
+                "min_tokens": 50
+            }
+        })),
+    ))
+    .await
+    .expect("Expected response");
+    assert!(resp.error.is_none());
+}

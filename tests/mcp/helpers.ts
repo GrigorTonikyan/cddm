@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { expect } from "bun:test";
 
@@ -25,8 +25,17 @@ export function getMcpBinaryPath(): string {
   const exeName = process.platform === "win32" ? "cddm-mcp.exe" : "cddm-mcp";
   const releasePath = join(import.meta.dir, "../../target/release", exeName);
   const debugPath = join(import.meta.dir, "../../target/debug", exeName);
-  if (existsSync(releasePath)) return releasePath;
-  if (existsSync(debugPath)) return debugPath;
+  const releaseExists = existsSync(releasePath);
+  const debugExists = existsSync(debugPath);
+
+  if (releaseExists && debugExists) {
+    const releaseMtime = statSync(releasePath).mtimeMs;
+    const debugMtime = statSync(debugPath).mtimeMs;
+    return debugMtime >= releaseMtime ? debugPath : releasePath;
+  }
+  if (debugExists) return debugPath;
+  if (releaseExists) return releasePath;
+
   throw new Error(
     `cddm-mcp binary not found at ${releasePath} or ${debugPath}. Please run 'cargo build -p cddm-mcp'.`,
   );

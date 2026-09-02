@@ -80,6 +80,7 @@ pub async fn dispatch_tool_call(
         mcp_tools::DETECT_DEAD_CLONES => coverage_tools::handle_detect_dead_clones(id, args).await,
         mcp_tools::DETECT_DEAD_CODE => dead_code_tools::handle_detect_dead_code(id, args).await,
         mcp_tools::PRUNE_DEAD_CLONES => dead_code_tools::handle_prune_dead_clones(id, args).await,
+        mcp_tools::TRACE_REACHABILITY => dead_code_tools::handle_trace_reachability(id, args).await,
         mcp_tools::SEMANTIC_NEURAL_SCAN => semantic_tools::handle_semantic_neural_scan(id, args),
 
         mcp_tools::DIFF_MATRIX => scan_tools::handle_diff_matrix(id, args).await,

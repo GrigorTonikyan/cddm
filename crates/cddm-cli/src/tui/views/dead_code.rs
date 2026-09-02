@@ -86,13 +86,28 @@ pub fn render_dead_code_view(frame: &mut Frame, _app: &TuiApp, area: Rect) {
         ListItem::new(vec![
             Line::from(vec![
                 Span::styled(
+                    "[UNUSED EXPORT] ",
+                    Style::default()
+                        .fg(Color::Cyan)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::styled(
+                    "pub fn export_legacy_codec() [PKG: cddm-core] (crates/core/src/codec.rs:14-38)",
+                    Style::default().fg(Color::White),
+                ),
+            ]),
+            Line::from("  0 imports across sibling workspace packages | Action: Safe for pruning"),
+        ]),
+        ListItem::new(vec![
+            Line::from(vec![
+                Span::styled(
                     "[UNREFERENCED] ",
                     Style::default()
                         .fg(Color::Yellow)
                         .add_modifier(Modifier::BOLD),
                 ),
                 Span::styled(
-                    "fn calculate_legacy_checksum() (src/utils/crypto.rs:45-68)",
+                    "fn calculate_legacy_checksum() [PKG: cddm-cli] (src/utils/crypto.rs:45-68)",
                     Style::default().fg(Color::White),
                 ),
             ]),
@@ -105,7 +120,7 @@ pub fn render_dead_code_view(frame: &mut Frame, _app: &TuiApp, area: Rect) {
                     Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
                 ),
                 Span::styled(
-                    "Statement after early return (src/api/auth.rs:112-120)",
+                    "Statement after early return [PKG: cddm-core] (src/api/auth.rs:112-120)",
                     Style::default().fg(Color::White),
                 ),
             ]),
@@ -131,21 +146,24 @@ pub fn render_dead_code_view(frame: &mut Frame, _app: &TuiApp, area: Rect) {
     ];
 
     let action_list = List::new(dead_entries).block(create_titled_block(
-        " Detected Dead Code Candidates ",
+        " Detected Dead Code Candidates & Reachability ",
         false,
     ));
     frame.render_widget(action_list, bottom_split[0]);
 
     let guidance_text = vec![
-        Line::from(vec![bold_span("Dead Code Pruning Rules:", Color::Cyan)]),
+        Line::from(vec![bold_span(
+            "Reachability & Pruning Rules:",
+            Color::Cyan,
+        )]),
         Line::from(""),
-        Line::from("1. Unreferenced Functions:"),
-        Line::from("   Private/internal functions with 0 callers"),
-        Line::from("   can be removed safely to simplify maintenance."),
+        Line::from("1. Cross-Package Reachability:"),
+        Line::from("   Exported symbols referenced in sibling packages"),
+        Line::from("   are classified as Live and protected from deletion."),
         Line::from(""),
-        Line::from("2. Unreachable Blocks:"),
-        Line::from("   Code following return/exit/panic statements"),
-        Line::from("   should be deleted to eliminate AST bloat."),
+        Line::from("2. Unused Exports:"),
+        Line::from("   Exported symbols with 0 imports in workspace"),
+        Line::from("   packages are flagged as safe pruning candidates."),
         Line::from(""),
         Line::from("3. Dead Clones:"),
         Line::from("   Duplicates never reached during test traces"),
@@ -153,7 +171,7 @@ pub fn render_dead_code_view(frame: &mut Frame, _app: &TuiApp, area: Rect) {
     ];
 
     let rec_p =
-        Paragraph::new(guidance_text).block(create_titled_block(" Pruning Guidelines ", false));
+        Paragraph::new(guidance_text).block(create_titled_block(" Reachability Rules ", false));
     frame.render_widget(rec_p, bottom_split[1]);
 }
 

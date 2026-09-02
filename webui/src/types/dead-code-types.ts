@@ -9,6 +9,35 @@ export type DeadCodeKind =
   | "uncovered_function"
   | "dead_branch";
 
+export type ReachabilityStatus =
+  | "live_cross_package"
+  | "live_internal"
+  | "unused_export"
+  | "dead_internal";
+
+export interface SymbolReachability {
+  symbol_name: string;
+  declaring_package: string;
+  declaring_file: string;
+  is_exported: boolean;
+  status: ReachabilityStatus;
+  direct_callers: string[];
+  transitive_callers: string[];
+  caller_packages: string[];
+  total_references: number;
+}
+
+export interface CrossPackageReachabilitySummary {
+  total_packages: number;
+  packages: string[];
+  live_cross_package_symbols: number;
+  live_internal_symbols: number;
+  unused_exported_symbols: number;
+  dead_internal_symbols: number;
+  total_cross_package_calls: number;
+  symbol_traces: SymbolReachability[];
+}
+
 export interface DeadCodeItem {
   id: number;
   file_path: string;
@@ -20,6 +49,9 @@ export interface DeadCodeItem {
   estimated_lines_saved: number;
   reason: string;
   confidence: number;
+  package_name?: string;
+  is_exported?: boolean;
+  cross_package_callers?: string[];
 }
 
 export interface DeadCodeSummary {
@@ -31,6 +63,7 @@ export interface DeadCodeSummary {
   total_dead_lines: number;
   estimated_savings_pct: number;
   items: DeadCodeItem[];
+  reachability_summary?: CrossPackageReachabilitySummary;
 }
 
 export interface DeadCodeScanRequest {

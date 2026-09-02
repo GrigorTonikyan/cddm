@@ -353,6 +353,11 @@ pub fn get_tool_definitions() -> Vec<serde_json::Value> {
             dead_clone_prune_schema(),
         ),
         tool_def(
+            mcp_tools::TRACE_REACHABILITY,
+            "Trace cross-repository and cross-package call-graph reachability across polyglot monorepo packages.",
+            dead_code_schema(),
+        ),
+        tool_def(
             mcp_tools::SEMANTIC_NEURAL_SCAN,
             "In-process local neural code embedding & algorithmic equivalence scan using subword \
              projections and cosine similarity.",

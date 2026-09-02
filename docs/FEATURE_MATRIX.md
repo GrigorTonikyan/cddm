@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-27 | Rust: 328 #[test] units | WebUI: 225 tests across 63 suites | Scripts & MCP: 168 tests across 51 suites | CI Workflows: PASS
+> Last verified: 2026-08-27 | Rust: 331 #[test] units | WebUI: 226 tests across 63 suites | Scripts & MCP: 170 tests across 52 suites | CI Workflows: PASS
 
 ---
 
@@ -358,7 +358,7 @@
 
 ---
 
-## 2. WebUI Frontend — React 19 + TypeScript + Vitest (225 unit tests across 63 suites)
+## 2. WebUI Frontend — React 19 + TypeScript + Vitest (226 unit tests across 63 suites)
 
 | Module                      | Test Suite File                                                                       | Test Cases | Status |
 | :-------------------------- | :------------------------------------------------------------------------------------ | :--------- | :----- |
@@ -367,7 +367,7 @@
 | Clone Pair Card             | `webui/src/components/ClonePairCard.test.tsx`                                         | 2 tests    | PASS   |
 | Clone Pair Diff Modal       | `webui/src/components/ClonePairDiffModal.test.tsx`                                    | 3 tests    | PASS   |
 | Coverage Correlation Modal  | `webui/src/components/CoverageCorrelationModal.test.tsx`                              | 3 tests    | PASS   |
-| Dead Code Explorer Modal    | `webui/src/components/DeadCodeExplorerModal.test.tsx`                                 | 5 tests    | PASS   |
+| Dead Code Explorer Modal    | `webui/src/components/DeadCodeExplorerModal.test.tsx`                                 | 6 tests    | PASS   |
 | Diff Viewer                 | `webui/src/components/DiffViewer.test.tsx`                                            | 3 tests    | PASS   |
 | Duplication Treemap         | `webui/src/components/DuplicationTreemap.test.tsx`                                    | 3 tests    | PASS   |
 | Export Report Modal         | `webui/src/components/ExportReportModal.test.tsx`                                     | 3 tests    | PASS   |
@@ -428,7 +428,7 @@
 
 ---
 
-## 3. Repository Scripts & MCP Protocol — Bun Test Suites (168 tests across 51 suites)
+## 3. Repository Scripts & MCP Protocol — Bun Test Suites (170 tests across 52 suites)
 
 ### Repository Tooling & Automation Suites
 
@@ -489,6 +489,7 @@
 | Tool: cddm_semantic_neural_scan     | `tests/mcp/tools/semantic-neural-scan.test.ts`     | 3 tests    | PASS   |
 | Tool: cddm_suggest_cluster_refactor | `tests/mcp/tools/suggest-cluster-refactor.test.ts` | 2 tests    | PASS   |
 | Tool: cddm_suggest_refactor         | `tests/mcp/tools/suggest-refactor.test.ts`         | 2 tests    | PASS   |
+| Tool: cddm_trace_reachability       | `tests/mcp/tools/trace-reachability.test.ts`       | 2 tests    | PASS   |
 | Tool: cddm_verify_refactor          | `tests/mcp/tools/verify-refactor.test.ts`          | 1 tests    | PASS   |
 
 ---

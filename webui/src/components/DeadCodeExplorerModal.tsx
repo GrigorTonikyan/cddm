@@ -34,6 +34,7 @@ export const DeadCodeExplorerModal: React.FC<DeadCodeExplorerModalProps> = ({
   } = useCDDMStore();
 
   const [activeFilter, setActiveFilter] = useState<"all" | DeadCodeKind>("all");
+  const [selectedPackage, setSelectedPackage] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [dryRun, setDryRun] = useState(true);
@@ -45,19 +46,33 @@ export const DeadCodeExplorerModal: React.FC<DeadCodeExplorerModalProps> = ({
     }
   }, [isOpen, deadCodeSummary, isDeadCodeLoading, scanDeadCode]);
 
+  const packagesList = useMemo(() => {
+    if (!deadCodeSummary?.items) return [];
+    const pkgs = new Set<string>();
+    for (const item of deadCodeSummary.items) {
+      if (item.package_name) pkgs.add(item.package_name);
+    }
+    return Array.from(pkgs).sort();
+  }, [deadCodeSummary]);
+
   const filteredItems = useMemo(() => {
     if (!deadCodeSummary?.items) return [];
     return deadCodeSummary.items.filter((item: DeadCodeItem) => {
       const matchesKind = activeFilter === "all" || item.kind === activeFilter;
+      const matchesPkg =
+        selectedPackage === "all" ||
+        item.package_name === selectedPackage ||
+        (!item.package_name && selectedPackage === "root");
       const q = searchQuery.toLowerCase().trim();
       const matchesSearch =
         !q ||
         item.file_path.toLowerCase().includes(q) ||
         item.symbol_name.toLowerCase().includes(q) ||
-        item.reason.toLowerCase().includes(q);
-      return matchesKind && matchesSearch;
+        item.reason.toLowerCase().includes(q) ||
+        (item.package_name && item.package_name.toLowerCase().includes(q));
+      return matchesKind && matchesPkg && matchesSearch;
     });
-  }, [deadCodeSummary, activeFilter, searchQuery]);
+  }, [deadCodeSummary, activeFilter, selectedPackage, searchQuery]);
 
   const handleToggleSelectAll = () => {
     if (selectedIds.size === filteredItems.length && filteredItems.length > 0) {
@@ -189,7 +204,24 @@ export const DeadCodeExplorerModal: React.FC<DeadCodeExplorerModalProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="relative w-48 sm:w-56">
+            {packagesList.length > 0 && (
+              <select
+                id="dead-code-package-filter"
+                aria-label="Filter dead code by workspace package"
+                value={selectedPackage}
+                onChange={(e) => setSelectedPackage(e.target.value)}
+                className="px-2 py-1 bg-slate-900 border border-slate-700 rounded text-xs text-slate-300 focus:outline-hidden focus:border-indigo-500 font-mono"
+              >
+                <option value="all">All Packages ({packagesList.length})</option>
+                {packagesList.map((pkg) => (
+                  <option key={pkg} value={pkg}>
+                    {pkg}
+                  </option>
+                ))}
+              </select>
+            )}
+
+            <div className="relative w-40 sm:w-48">
               <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
               <input
                 id="dead-code-search-query"
@@ -353,6 +385,21 @@ export const DeadCodeExplorerModal: React.FC<DeadCodeExplorerModalProps> = ({
                       <span className="text-[9px] font-mono text-emerald-400 bg-emerald-950/60 border border-emerald-800/50 px-1.5 py-0.5 rounded">
                         +{item.estimated_lines_saved} LOC saved
                       </span>
+                      {item.package_name && (
+                        <span className="text-[9px] font-mono text-indigo-300 bg-indigo-950/70 border border-indigo-800/60 px-1.5 py-0.5 rounded">
+                          {item.package_name}
+                        </span>
+                      )}
+                      {item.is_exported && (
+                        <span className="text-[9px] font-mono text-amber-300 bg-amber-950/60 border border-amber-800/50 px-1.5 py-0.5 rounded">
+                          Exported
+                        </span>
+                      )}
+                      {item.cross_package_callers && item.cross_package_callers.length > 0 && (
+                        <span className="text-[9px] font-mono text-cyan-300 bg-cyan-950/60 border border-cyan-800/50 px-1.5 py-0.5 rounded">
+                          {item.cross_package_callers.length} callers
+                        </span>
+                      )}
                     </div>
                     <div className="text-[11px] font-mono text-slate-400 truncate mt-0.5">
                       {item.file_path}:{item.line_start}-{item.line_end}

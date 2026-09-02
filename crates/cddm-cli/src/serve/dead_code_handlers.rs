@@ -97,3 +97,25 @@ pub async fn dead_code_get_handler(
 
     Ok((StatusCode::OK, Json(summary)))
 }
+
+/// Handler for GET /api/dead-code/reachability: retrieves cross-package reachability graph.
+pub async fn dead_code_reachability_handler(
+    State(_state): State<AppState>,
+) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
+    let config = DeadCodeConfig {
+        directory: ".".to_string(),
+        min_tokens: 30,
+        static_only: false,
+        ..Default::default()
+    };
+
+    let summary = run_dead_code_detection(config).await.map_err(|err| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({ "error": format!("Reachability analysis failed: {err}") })),
+        )
+    })?;
+
+    let reachability = summary.reachability_summary.unwrap_or_default();
+    Ok((StatusCode::OK, Json(reachability)))
+}
