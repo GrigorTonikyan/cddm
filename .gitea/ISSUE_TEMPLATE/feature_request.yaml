@@ -1,0 +1,58 @@
+name: "Feature Request"
+description: "Suggest an idea, algorithm enhancement, or interface capability for CDDM"
+title: "[FEAT] "
+labels: ["enhancement", "priority: medium"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please outline the proposed feature, architectural rationale, and cross-interface impact.
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: "Feature Category"
+      description: "Primary domain for this feature"
+      options:
+        - "Clone Detection Algorithm (Type 1-4, SIMD, Near-Miss)"
+        - "AST Refactoring & AI Surgeon"
+        - "Dead Code & Reachability Analysis"
+        - "Monorepo Federation & Multi-Repo Scanning"
+        - "WebUI Studio & Visualization"
+        - "MCP Protocol Tools & AI Integration"
+        - "TUI Studio (Ratatui Terminal Dashboard)"
+        - "CI/CD & Developer Tooling"
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: "Problem Statement"
+      description: "What problem does this feature solve? What limitation exists today?"
+      placeholder: "Detecting semantic clones across languages requires subword tokenization..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: specification
+    attributes:
+      label: "Proposed Specification & Architecture"
+      description: "How should this feature work in the core engine and across the 4 pillars?"
+      placeholder: |
+        1. Core Engine: Add vector cosine similarity evaluator in cddm-core.
+        2. CLI: Add `cddm semantic --neural` flag.
+        3. WebUI: Add neural cluster visualizer modal.
+        4. MCP Server: Register `cddm_semantic_neural_scan` tool.
+        5. TUI: Add neural clone inspection tab.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: parity_acknowledgment
+    attributes:
+      label: "Cross-Interface Feature Parity Enforcement"
+      description: "All core features must adhere to CDDM's 4-Pillar Parity standard"
+      options:
+        - label: "I understand this feature must be accessible across CLI, WebUI, MCP Server, and TUI Studio"
+          required: true

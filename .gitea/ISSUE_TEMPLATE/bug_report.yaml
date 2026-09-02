@@ -1,0 +1,87 @@
+name: "Bug Report"
+description: "File an issue for unexpected behavior, scan error, or crash in CDDM"
+title: "[BUG] "
+labels: ["bug", "priority: medium"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting an issue! Please provide as much detail as possible to help reproduce and fix the issue.
+
+  - type: dropdown
+    id: pillar
+    attributes:
+      label: "Affected Interface Pillar"
+      description: "Which CDDM interaction surface is affected?"
+      options:
+        - "Core Engine (crates/cddm-core: AST, Hasher, SIMD)"
+        - "CLI Engine (crates/cddm-cli: scan, diff, semantic, heal, tui)"
+        - "WebUI Studio (webui/: React 19, Monaco diffs, Treemap, Modals)"
+        - "MCP Server (crates/cddm-mcp: Model Context Protocol tools & resources)"
+        - "TUI Studio (Ratatui terminal dashboard)"
+        - "VS Code Extension (editors/vscode)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: language
+    attributes:
+      label: "Programming Language"
+      description: "Language of the scanned codebase"
+      options:
+        - "Rust"
+        - "TypeScript / JavaScript"
+        - "Python"
+        - "Go"
+        - "Java / Kotlin"
+        - "C / C++"
+        - "C#"
+        - "PHP"
+        - "Ruby"
+        - "Swift"
+        - "Cross-Language / Polyglot"
+        - "Other / Not Applicable"
+
+  - type: textarea
+    id: description
+    attributes:
+      label: "Describe the Bug"
+      description: "A clear and concise description of what the problem is."
+      placeholder: "When running 'cddm scan .' on a monorepo with 500k LOC, memory usage..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: "Steps to Reproduce & Code Sample"
+      description: "Provide minimal reproduction steps or code snippet."
+      placeholder: |
+        1. Run command 'cddm scan ./src --min-tokens 50'
+        2. See error output...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: "Expected Behavior"
+      description: "What did you expect to happen?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: "Command Output & Terminal Logs"
+      description: "Paste command line output, panic stack trace, or browser console logs."
+      render: text
+
+  - type: input
+    id: environment
+    attributes:
+      label: "Environment Details"
+      description: "CDDM version (`cddm --version`), OS version, and Rust/Bun versions."
+      placeholder: "CDDM v3.3.0, Ubuntu 24.04 / Windows 11, Bun v1.4.0"
+    validations:
+      required: true
