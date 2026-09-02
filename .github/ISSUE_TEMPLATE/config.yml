@@ -1,5 +1,5 @@
 blank_issues_enabled: false
 contact_links:
-  - name: 🚀 Open an Issue on Gitea (Primary SSoT)
-    url: https://git.gt-web-dev.com/gt-dev/cddm/issues/new
+  - name: Open an Issue on Gitea (Primary SSoT)
+    url: https://git.gt-web-dev.com/gt-dev/cddm/issues/new/choose
     about: CDDM development, bug reports, and roadmaps are tracked on our primary self-hosted Gitea portal.

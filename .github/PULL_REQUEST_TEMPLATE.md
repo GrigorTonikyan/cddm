@@ -4,7 +4,7 @@
 > **CDDM is developed on a self-hosted Gitea forge (Primary SSoT).**
 > This GitHub repository serves as a downstream read-only replica mirror.
 > Please open and manage your Pull Request on our primary portal:
-> **👉 https://git.gt-web-dev.com/gt-dev/cddm/pulls**
+> **https://git.gt-web-dev.com/gt-dev/cddm/pulls**
 
 ## Description
 
