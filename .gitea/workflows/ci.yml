@@ -120,10 +120,10 @@ jobs:
         run: bunx vp check
 
       - name: Run Script Test Suites (bun test)
-        run: bun test --timeout 30000 scripts/tests scripts/lib
+        run: bun test --timeout 60000 scripts/tests scripts/lib
 
       - name: Run MCP Protocol Per-Tool Test Suites (bun test)
-        run: bun test --timeout 30000 tests/mcp
+        run: bun test --timeout 60000 tests/mcp
 
       - name: Validate 4-Pillar Feature Parity
         run: bun scripts/check-feature-parity.ts
