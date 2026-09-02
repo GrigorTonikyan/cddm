@@ -45,6 +45,9 @@ jobs:
       - name: Run Unit & Integration Tests
         run: cargo test --workspace
 
+      - name: Build CLI Binary
+        run: cargo build -p cddm-cli
+
       - name: CDDM Dogfooding Quality Gate
         run: ./target/debug/cddm scan . --min-tokens 50 --fail-threshold 15.0
 
