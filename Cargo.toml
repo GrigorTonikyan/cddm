@@ -79,3 +79,9 @@ style = { level = "warn", priority = -1 }
 [workspace.lints.rust]
 missing_debug_implementations = "deny"
 unsafe_code = "deny"
+
+[profile.dev]
+debug = 0
+
+[profile.test]
+debug = 0

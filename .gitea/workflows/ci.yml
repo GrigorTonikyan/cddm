@@ -8,8 +8,9 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  CARGO_BUILD_JOBS: 2
+  CARGO_BUILD_JOBS: 1
   CARGO_INCREMENTAL: 0
+  RUSTFLAGS: "-C debuginfo=0"
 
 jobs:
   rust-ci:
@@ -53,6 +54,7 @@ jobs:
 
   webui-ci:
     name: WebUI Frontend Quality Gate
+    needs: [rust-ci]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -90,6 +92,7 @@ jobs:
 
   workspace-governance-ci:
     name: Workspace Standards & MCP Protocol Gate
+    needs: [webui-ci]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
