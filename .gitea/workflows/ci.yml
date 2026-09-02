@@ -8,6 +8,8 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  CARGO_BUILD_JOBS: 2
+  CARGO_INCREMENTAL: 0
 
 jobs:
   rust-ci:
@@ -44,7 +46,7 @@ jobs:
         run: cargo test --workspace
 
       - name: CDDM Dogfooding Quality Gate
-        run: cargo run -p cddm-cli -- scan . --min-tokens 50 --fail-threshold 15.0
+        run: ./target/debug/cddm scan . --min-tokens 50 --fail-threshold 15.0
 
   webui-ci:
     name: WebUI Frontend Quality Gate
