@@ -177,12 +177,12 @@ For comprehensive technical manuals on each interaction surface, explore our ded
 
 CDDM evaluates codebase modularity health using a continuous mathematical scoring function:
 
-$$\text{Score} = \max\left(0, \min\left(100, (100 - 1.5 \times \text{Duplication\_Percentage}) \times (1 - 0.25 \times \text{Cross\_Module\_Ratio})\right)\right)$$
+$$\text{Score} = \max\left(0, \min\left(100, (100 - 1.5 \times \text{Duplication Percentage}) \times (1 - 0.25 \times \text{Cross Module Ratio})\right)\right)$$
 
 Where:
 
-- **Duplication_Percentage**: Ratio of duplicate clone tokens to total workspace tokens ($\frac{\text{Clone Tokens}}{\text{Total Tokens}} \times 100$).
-- **Cross_Module_Ratio**: Proportion of clone pairs spanning distinct top-level directories.
+- **Duplication Percentage**: Ratio of duplicate clone tokens to total workspace tokens ($\frac{\text{Clone Tokens}}{\text{Total Tokens}} \times 100$).
+- **Cross Module Ratio**: Proportion of clone pairs spanning distinct top-level directories.
 
 ---
 
