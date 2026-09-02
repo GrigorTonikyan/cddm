@@ -31,6 +31,8 @@ The following rules dictate coding standards, architectural limits, and workflow
   - Details the mandatory 1:1 isolated test suite per MCP tool under `tests/mcp/tools/` and dynamic discovery enforcement.
 - [Permanent Workspace Tooling & Reusability Standard](.agents/rules/workspace-tooling-reusability.md)
   - Details the strict ban on ad-hoc scratch scripts and mandates continuous enhancement and reuse of canonical tools under `scripts/`.
+- [Protected Branch & Mandatory Pull Request Governance](.agents/rules/protected-branch-pr-enforcement.md)
+  - Details absolute ban on direct commits/pushes to `main` without explicit user approval and mandates Gitea branch/PR workflow.
 
 ## 2. Workspace Skills (`.agents/skills/`)
 
