@@ -1,4 +1,4 @@
-name: Continuous Integration
+name: Gitea Continuous Integration
 
 on:
   push:
@@ -8,16 +8,19 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  CARGO_BUILD_JOBS: 1
+  CARGO_INCREMENTAL: 0
+  RUSTFLAGS: "-C debuginfo=0"
 
 jobs:
   rust-ci:
-    name: Rust Backend Quality Gate
+    name: Rust Quality Gate
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Install Rust Toolchain (stable)
+      - name: Install Rust Toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy, rustfmt
@@ -43,11 +46,15 @@ jobs:
       - name: Run Unit & Integration Tests
         run: cargo test --workspace
 
-      - name: CDDM Dogfooding Self-Scan (Mandatory Quality Gate)
-        run: cargo run -p cddm-cli -- scan . --min-tokens 50 --fail-threshold 15.0
+      - name: Build CLI Binary
+        run: cargo build -p cddm-cli
+
+      - name: CDDM Dogfooding Quality Gate
+        run: ./target/debug/cddm scan . --min-tokens 50 --fail-threshold 15.0
 
   webui-ci:
     name: WebUI Frontend Quality Gate
+    needs: [rust-ci]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -85,6 +92,7 @@ jobs:
 
   workspace-governance-ci:
     name: Workspace Standards & MCP Protocol Gate
+    needs: [webui-ci]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -111,14 +119,14 @@ jobs:
           bun install --cwd webui
           bun install --cwd editors/vscode
 
-      - name: Validate Workspace Formatting, Lints & Types (vp check)
+      - name: Validate Formatting, Lints & TypeScript (vp check)
         run: bunx vp check
 
       - name: Run Script Test Suites (bun test)
-        run: bun test --timeout 30000 scripts/tests scripts/lib
+        run: bun test --timeout 60000 scripts/tests scripts/lib
 
       - name: Run MCP Protocol Per-Tool Test Suites (bun test)
-        run: bun test --timeout 30000 tests/mcp
+        run: bun test --timeout 60000 tests/mcp
 
       - name: Validate 4-Pillar Feature Parity
         run: bun scripts/check-feature-parity.ts
