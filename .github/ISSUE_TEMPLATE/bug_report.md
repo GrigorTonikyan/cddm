@@ -6,6 +6,9 @@ labels: "bug"
 assignees: ""
 ---
 
+> [!NOTE]
+> **Authoritative Issue Tracker**: Development is tracked on our primary Gitea portal at [git.gt-web-dev.com/gt-dev/cddm/issues](https://git.gt-web-dev.com/gt-dev/cddm/issues).
+
 ## Describe the Bug
 
 A clear and concise description of what the bug is.

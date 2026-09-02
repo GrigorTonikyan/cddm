@@ -11,6 +11,9 @@
 [![npm version](https://img.shields.io/badge/npm-3.3.0-red.svg)](https://www.npmjs.com/package/cddm)
 [![crates.io](https://img.shields.io/badge/crates.io-3.3.0-brightgreen.svg)](https://crates.io/crates/cddm)
 
+> [!NOTE]
+> **Primary Upstream SSoT**: All development, issues, pull requests, and automated testing are managed on our self-hosted Gitea portal at [git.gt-web-dev.com/gt-dev/cddm](https://git.gt-web-dev.com/gt-dev/cddm). The GitHub repository is an automated read-only downstream replica mirror.
+
 ---
 
 ## Table of Contents

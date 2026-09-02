@@ -6,6 +6,9 @@ labels: "enhancement"
 assignees: ""
 ---
 
+> [!NOTE]
+> **Authoritative Issue Tracker**: Feature requests and roadmaps are tracked on our primary Gitea portal at [git.gt-web-dev.com/gt-dev/cddm/issues](https://git.gt-web-dev.com/gt-dev/cddm/issues).
+
 ## Is your feature request related to a problem? Please describe
 
 A clear and concise description of what the problem is. Ex. "I'm frustrated when scanning Go code because..."
