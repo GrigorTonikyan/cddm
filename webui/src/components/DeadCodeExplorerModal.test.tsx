@@ -3,7 +3,33 @@ import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 import { DeadCodeExplorerModal } from "./DeadCodeExplorerModal";
 import { useCDDMStore } from "../store/cddm-store";
 import { expectDefinedTexts, renderAsyncWithWin2x, renderWithWin2x } from "../test/test-helpers";
-import type { DeadClonePruneResult, DeadCodeSummary } from "../types/dead-code-types";
+import type { DeadClonePruneResult, DeadCodeItem, DeadCodeSummary } from "../types/dead-code-types";
+
+const mockItem1: DeadCodeItem = {
+  id: 1,
+  file_path: "src/utils/math.rs",
+  symbol_name: "unused_calculator",
+  kind: "unreferenced_function",
+  line_start: 12,
+  line_end: 28,
+  token_count: 45,
+  estimated_lines_saved: 17,
+  reason: "Function has 0 references",
+  confidence: 0.95,
+};
+
+const mockItem2: DeadCodeItem = {
+  id: 2,
+  file_path: "src/api/handler.rs",
+  symbol_name: "<unreachable_statement>",
+  kind: "unreachable_block",
+  line_start: 50,
+  line_end: 64,
+  token_count: 30,
+  estimated_lines_saved: 15,
+  reason: "Statement follows return",
+  confidence: 0.98,
+};
 
 const mockDeadCodeSummary: DeadCodeSummary = {
   total_dead_items: 2,
@@ -13,32 +39,7 @@ const mockDeadCodeSummary: DeadCodeSummary = {
   uncovered_items: 0,
   total_dead_lines: 32,
   estimated_savings_pct: 4.5,
-  items: [
-    {
-      id: 1,
-      file_path: "src/utils/math.rs",
-      symbol_name: "unused_calculator",
-      kind: "unreferenced_function",
-      line_start: 12,
-      line_end: 28,
-      token_count: 45,
-      estimated_lines_saved: 17,
-      reason: "Function has 0 references",
-      confidence: 0.95,
-    },
-    {
-      id: 2,
-      file_path: "src/api/handler.rs",
-      symbol_name: "<unreachable_statement>",
-      kind: "unreachable_block",
-      line_start: 50,
-      line_end: 64,
-      token_count: 30,
-      estimated_lines_saved: 15,
-      reason: "Statement follows return",
-      confidence: 0.98,
-    },
-  ],
+  items: [mockItem1, mockItem2],
 };
 
 const mockPruneResult: DeadClonePruneResult = {
@@ -147,5 +148,43 @@ describe("DeadCodeExplorerModal Component with Win2xWindow", () => {
 
     expect(screen.getByText(/\[DRY RUN\]/i)).toBeDefined();
     expect(screen.getByText(/Pruned 2 items \(32 LOC saved\)/i)).toBeDefined();
+  });
+
+  it("filters items by workspace package and renders reachability badges", async () => {
+    const summaryWithPackages: DeadCodeSummary = {
+      ...mockDeadCodeSummary,
+      items: [
+        {
+          ...mockItem1,
+          package_name: "core",
+          is_exported: true,
+          cross_package_callers: ["cli", "mcp"],
+        },
+        {
+          ...mockItem2,
+          package_name: "webui",
+        },
+      ],
+    };
+
+    useCDDMStore.setState({
+      deadCodeSummary: summaryWithPackages,
+      isDeadCodeLoading: false,
+      deadCodeError: null,
+      lastPruneResult: null,
+    });
+
+    await renderAsyncWithWin2x(<DeadCodeExplorerModal isOpen={true} onClose={vi.fn()} />);
+
+    expect(screen.getAllByText("core").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("Exported")).toBeDefined();
+    expect(screen.getByText("2 callers")).toBeDefined();
+    expect(screen.getAllByText("webui").length).toBeGreaterThanOrEqual(1);
+
+    const pkgFilter = screen.getByLabelText("Filter dead code by workspace package");
+    fireEvent.change(pkgFilter, { target: { value: "core" } });
+
+    expect(screen.getByText("unused_calculator")).toBeDefined();
+    expect(screen.queryByText("<unreachable_statement>")).toBeNull();
   });
 });

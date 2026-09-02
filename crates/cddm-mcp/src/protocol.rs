@@ -77,6 +77,7 @@ pub mod mcp_tools {
     pub const DETECT_DEAD_CLONES: &str = "cddm_detect_dead_clones";
     pub const DETECT_DEAD_CODE: &str = "cddm_detect_dead_code";
     pub const PRUNE_DEAD_CLONES: &str = "cddm_prune_dead_clones";
+    pub const TRACE_REACHABILITY: &str = "cddm_trace_reachability";
     pub const SEMANTIC_NEURAL_SCAN: &str = "cddm_semantic_neural_scan";
     pub const DIFF_MATRIX: &str = "cddm_diff_matrix";
 

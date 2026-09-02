@@ -45,9 +45,30 @@ fn render_console_report(summary: &DeadCodeSummary) -> String {
         summary.total_dead_lines
     ));
     out.push_str(&format!(
-        "Estimated Line Savings:  {:.2}%\n\n",
+        "Estimated Line Savings:  {:.2}%\n",
         summary.estimated_savings_pct
     ));
+
+    if let Some(ref reach) = summary.reachability_summary {
+        out.push_str(&format!(
+            "Workspace Packages:      {} ({})\n",
+            reach.total_packages,
+            reach.packages.join(", ")
+        ));
+        out.push_str(&format!(
+            "Live Cross-Package Calls: {}\n",
+            reach.total_cross_package_calls
+        ));
+        out.push_str(&format!(
+            "Live Cross-Pkg Symbols:  {}\n",
+            reach.live_cross_package_symbols
+        ));
+        out.push_str(&format!(
+            "Unused Exported Symbols: {}\n",
+            reach.unused_exported_symbols
+        ));
+    }
+    out.push('\n');
 
     if summary.items.is_empty() {
         out.push_str("No dead code items detected in the analyzed scope.\n");
@@ -206,6 +227,9 @@ mod tests {
             estimated_lines_saved: 16,
             reason: "Unreferenced function".to_string(),
             confidence: 0.95,
+            package_name: Some("core".to_string()),
+            is_exported: false,
+            cross_package_callers: Vec::new(),
         };
 
         let summary = DeadCodeSummary {
@@ -217,6 +241,7 @@ mod tests {
             total_dead_lines: 16,
             estimated_savings_pct: 5.2,
             items: vec![item],
+            reachability_summary: None,
         };
 
         let console_res = format_dead_code_report(&summary, "console").unwrap();

@@ -118,6 +118,10 @@ pub fn build_app_with_state(state: AppState) -> Router {
         )
         .route(ROUTE_API_DEAD_CODE_SCAN, post(dead_code_scan_handler))
         .route(ROUTE_API_DEAD_CODE_PRUNE, post(dead_code_prune_handler))
+        .route(
+            ROUTE_API_DEAD_CODE_REACHABILITY,
+            get(dead_code_reachability_handler),
+        )
         .route(ROUTE_API_DEAD_CODE, get(dead_code_get_handler))
         .fallback(static_asset_handler)
         .layer(CorsLayer::permissive())

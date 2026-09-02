@@ -80,6 +80,9 @@ pub fn analyze_static_dead_code(
                     func.name, ref_count
                 ),
                 confidence,
+                package_name: None,
+                is_exported: func.is_public,
+                cross_package_callers: Vec::new(),
             });
             next_id += 1;
         }
@@ -225,6 +228,9 @@ fn detect_unreachable_in_node(
                     reason: "Statement follows unconditional termination in control flow block"
                         .to_string(),
                     confidence: 0.98,
+                    package_name: None,
+                    is_exported: false,
+                    cross_package_callers: Vec::new(),
                 });
                 *next_id += 1;
             }

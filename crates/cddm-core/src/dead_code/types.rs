@@ -40,6 +40,68 @@ impl DeadCodeKind {
     }
 }
 
+/// Cross-package reachability status for a symbol.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum ReachabilityStatus {
+    /// Symbol is private/internal and unreferenced
+    #[default]
+    DeadInternal,
+    /// Symbol is exported and called across workspace package boundaries
+    LiveCrossPackage,
+    /// Symbol is referenced internally within its declaring package
+    LiveInternal,
+    /// Symbol is exported but unreferenced across all workspace packages
+    UnusedExport,
+}
+
+impl ReachabilityStatus {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            ReachabilityStatus::LiveCrossPackage => "live_cross_package",
+            ReachabilityStatus::LiveInternal => "live_internal",
+            ReachabilityStatus::UnusedExport => "unused_export",
+            ReachabilityStatus::DeadInternal => "dead_internal",
+        }
+    }
+
+    pub fn display_label(&self) -> &'static str {
+        match self {
+            ReachabilityStatus::LiveCrossPackage => "Live (Cross-Package)",
+            ReachabilityStatus::LiveInternal => "Live (Internal)",
+            ReachabilityStatus::UnusedExport => "Unused Export",
+            ReachabilityStatus::DeadInternal => "Dead Internal",
+        }
+    }
+}
+
+/// Call-graph reachability trace for an exported or internal symbol.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+pub struct SymbolReachability {
+    pub symbol_name: String,
+    pub declaring_package: String,
+    pub declaring_file: String,
+    pub is_exported: bool,
+    pub status: ReachabilityStatus,
+    pub direct_callers: Vec<String>,
+    pub transitive_callers: Vec<String>,
+    pub caller_packages: Vec<String>,
+    pub total_references: usize,
+}
+
+/// Aggregated cross-package call-graph reachability report.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+pub struct CrossPackageReachabilitySummary {
+    pub total_packages: usize,
+    pub packages: Vec<String>,
+    pub live_cross_package_symbols: usize,
+    pub live_internal_symbols: usize,
+    pub unused_exported_symbols: usize,
+    pub dead_internal_symbols: usize,
+    pub total_cross_package_calls: usize,
+    pub symbol_traces: Vec<SymbolReachability>,
+}
+
 /// A specific dead code entity detected by static analysis or coverage telemetry.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct DeadCodeItem {
@@ -53,6 +115,12 @@ pub struct DeadCodeItem {
     pub estimated_lines_saved: usize,
     pub reason: String,
     pub confidence: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub package_name: Option<String>,
+    #[serde(default)]
+    pub is_exported: bool,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub cross_package_callers: Vec<String>,
 }
 
 /// High-level summary of dead code analysis across a codebase.
@@ -66,6 +134,8 @@ pub struct DeadCodeSummary {
     pub total_dead_lines: usize,
     pub estimated_savings_pct: f64,
     pub items: Vec<DeadCodeItem>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reachability_summary: Option<CrossPackageReachabilitySummary>,
 }
 
 /// Configuration parameters for running dead code detection.

@@ -4,7 +4,8 @@ use std::fs;
 use tempfile::tempdir;
 
 use super::super::dead_code_handlers::{
-    dead_code_get_handler, dead_code_prune_handler, dead_code_scan_handler,
+    dead_code_get_handler, dead_code_prune_handler, dead_code_reachability_handler,
+    dead_code_scan_handler,
 };
 use super::super::types::{DeadCodePruneRequest, DeadCodeScanRequest};
 use axum::extract::State;
@@ -17,6 +18,9 @@ async fn test_dead_code_scan_and_get_handlers() {
 
     let get_res = dead_code_get_handler(State(state.clone())).await;
     assert!(get_res.is_ok());
+
+    let reach_res = dead_code_reachability_handler(State(state.clone())).await;
+    assert!(reach_res.is_ok());
 
     let scan_req = DeadCodeScanRequest {
         directory: Some(".".to_string()),

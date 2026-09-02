@@ -5,7 +5,6 @@ use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
 use tokio::sync::mpsc;
 
-use super::static_analyzer::analyze_static_dead_code;
 use super::types::{DeadCodeConfig, DeadCodeItem, DeadCodeKind, DeadCodeSummary};
 use crate::coverage::{CoverageFormat, load_coverage_report, parse_coverage_data};
 use crate::detector::discovery::{discover_candidate_files, init_suppression_engine};
@@ -59,8 +58,12 @@ pub async fn run_dead_code_detection(config: DeadCodeConfig) -> Result<DeadCodeS
         }
     }
 
-    // 1. Static Dead Code Analysis (Unreferenced Functions & Unreachable Blocks)
-    let mut items = analyze_static_dead_code(&files_content, config.min_tokens);
+    // 1. Cross-Package Call-Graph Reachability & Static Dead Code Analysis
+    let (mut items, reachability_summary) = super::reachability::trace_cross_package_reachability(
+        &files_content,
+        &config.directory,
+        config.min_tokens,
+    );
     let mut next_id = items.len() + 1;
 
     // 2. Dead Duplicate Clones Detection
@@ -103,6 +106,9 @@ pub async fn run_dead_code_detection(config: DeadCodeConfig) -> Result<DeadCodeS
                         pair.file_b
                     ),
                     confidence: 0.92,
+                    package_name: None,
+                    is_exported: false,
+                    cross_package_callers: Vec::new(),
                 });
                 next_id += 1;
             }
@@ -142,6 +148,9 @@ pub async fn run_dead_code_detection(config: DeadCodeConfig) -> Result<DeadCodeS
                                  executions in test suite"
                             ),
                             confidence: 0.90,
+                            package_name: None,
+                            is_exported: false,
+                            cross_package_callers: Vec::new(),
                         });
                         next_id += 1;
                     }
@@ -185,6 +194,7 @@ pub async fn run_dead_code_detection(config: DeadCodeConfig) -> Result<DeadCodeS
         total_dead_lines,
         estimated_savings_pct,
         items,
+        reachability_summary: Some(reachability_summary),
     };
 
     tracing::info!(

@@ -53,6 +53,7 @@ define_api_routes! {
     ROUTE_API_COVERAGE_CORRELATE => "/api/coverage/correlate",
     ROUTE_API_DEAD_CODE_SCAN => "/api/dead-code/scan",
     ROUTE_API_DEAD_CODE_PRUNE => "/api/dead-code/prune",
+    ROUTE_API_DEAD_CODE_REACHABILITY => "/api/dead-code/reachability",
     ROUTE_API_DEAD_CODE => "/api/dead-code",
 }
 
