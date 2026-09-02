@@ -91,6 +91,10 @@ async fn run_app(cli: Cli) -> Result<(), Box<dyn std::error::Error>> {
             run_dead_code_command(args).await?;
         }
 
+        Commands::Prune(args) => {
+            run_prune_command(args).await?;
+        }
+
         Commands::Diff(args) => {
             run_diff_command(
                 args.base_ref,

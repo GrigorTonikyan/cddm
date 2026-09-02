@@ -1,6 +1,7 @@
 #![forbid(unsafe_code)]
 
 mod coverage_tests;
+mod dead_code_tests;
 mod semantic_tests;
 mod watch_tests;
 

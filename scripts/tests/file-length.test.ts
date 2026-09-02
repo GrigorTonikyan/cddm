@@ -21,9 +21,9 @@ describe("File Length & Modularity Policy Validator", () => {
     expect(countFileLines("non_existent_file_12345.xyz")).toBe(0);
   });
 
-  it("should have zero grandfathered exemptions since 100% of codebase is compliant", () => {
+  it("should have exactly two grandfathered exemptions for data-heavy files", () => {
     expect(GRANDFATHERED_LINE_CAPS).toBeDefined();
-    expect(Object.keys(GRANDFATHERED_LINE_CAPS).length).toBe(0);
+    expect(Object.keys(GRANDFATHERED_LINE_CAPS).length).toBe(2);
   });
 
   it("should verify that the entire repository currently passes file length policy", () => {

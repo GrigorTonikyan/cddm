@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 import { DeadCodeExplorerModal } from "./DeadCodeExplorerModal";
 import { useCDDMStore } from "../store/cddm-store";
 import { expectDefinedTexts, renderAsyncWithWin2x, renderWithWin2x } from "../test/test-helpers";
-import type { DeadCodeSummary } from "../types/dead-code-types";
+import type { DeadClonePruneResult, DeadCodeSummary } from "../types/dead-code-types";
 
 const mockDeadCodeSummary: DeadCodeSummary = {
   total_dead_items: 2,
@@ -41,6 +41,28 @@ const mockDeadCodeSummary: DeadCodeSummary = {
   ],
 };
 
+const mockPruneResult: DeadClonePruneResult = {
+  total_candidates: 2,
+  pruned_items: 2,
+  skipped_items: 0,
+  total_lines_removed: 32,
+  dry_run: true,
+  files_affected: ["src/utils/math.rs", "src/api/handler.rs"],
+  items: [
+    {
+      id: 1,
+      file_path: "src/utils/math.rs",
+      symbol_name: "unused_calculator",
+      line_start: 12,
+      line_end: 28,
+      lines_removed: 17,
+      status: "dry_run_pruned",
+      confidence: 0.95,
+      reason: "Function has 0 references",
+    },
+  ],
+};
+
 describe("DeadCodeExplorerModal Component with Win2xWindow", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -58,15 +80,18 @@ describe("DeadCodeExplorerModal Component with Win2xWindow", () => {
       deadCodeSummary: mockDeadCodeSummary,
       isDeadCodeLoading: false,
       deadCodeError: null,
+      lastPruneResult: null,
     });
 
     await renderAsyncWithWin2x(<DeadCodeExplorerModal isOpen={true} onClose={vi.fn()} />);
 
     expectDefinedTexts([
-      "Polyglot Dead Code Explorer",
+      "Polyglot Dead Code Explorer & Safe Pruner",
       "unused_calculator",
       "<unreachable_statement>",
       "src/utils/math.rs:12-28",
+      "Dry Run Preview",
+      "Strict Safe-Only (≥90%)",
     ]);
   });
 
@@ -75,6 +100,7 @@ describe("DeadCodeExplorerModal Component with Win2xWindow", () => {
       deadCodeSummary: mockDeadCodeSummary,
       isDeadCodeLoading: false,
       deadCodeError: null,
+      lastPruneResult: null,
     });
 
     await renderAsyncWithWin2x(<DeadCodeExplorerModal isOpen={true} onClose={vi.fn()} />);
@@ -84,5 +110,42 @@ describe("DeadCodeExplorerModal Component with Win2xWindow", () => {
 
     expect(screen.getByText("unused_calculator")).toBeDefined();
     expect(screen.queryByText("<unreachable_statement>")).toBeNull();
+  });
+
+  it("handles item selection and pruning execution", async () => {
+    const pruneMock = vi.fn().mockResolvedValue(mockPruneResult);
+    useCDDMStore.setState({
+      deadCodeSummary: mockDeadCodeSummary,
+      isDeadCodeLoading: false,
+      deadCodeError: null,
+      isDeadCodePruning: false,
+      lastPruneResult: null,
+      pruneDeadCode: pruneMock,
+    });
+
+    await renderAsyncWithWin2x(<DeadCodeExplorerModal isOpen={true} onClose={vi.fn()} />);
+
+    const selectAllBtn = screen.getByText("Select All");
+    fireEvent.click(selectAllBtn);
+
+    const pruneBtn = screen.getByRole("button", { name: /Preview Pruning/i });
+    expect(pruneBtn).toBeDefined();
+    fireEvent.click(pruneBtn);
+
+    expect(pruneMock).toHaveBeenCalled();
+  });
+
+  it("displays last prune result notification banner", async () => {
+    useCDDMStore.setState({
+      deadCodeSummary: mockDeadCodeSummary,
+      isDeadCodeLoading: false,
+      deadCodeError: null,
+      lastPruneResult: mockPruneResult,
+    });
+
+    await renderAsyncWithWin2x(<DeadCodeExplorerModal isOpen={true} onClose={vi.fn()} />);
+
+    expect(screen.getByText(/\[DRY RUN\]/i)).toBeDefined();
+    expect(screen.getByText(/Pruned 2 items \(32 LOC saved\)/i)).toBeDefined();
   });
 });

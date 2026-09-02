@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-27 | Rust: 321 #[test] units | WebUI: 223 tests across 63 suites | Scripts & MCP: 167 tests across 50 suites | CI Workflows: PASS
+> Last verified: 2026-08-27 | Rust: 328 #[test] units | WebUI: 225 tests across 63 suites | Scripts & MCP: 168 tests across 51 suites | CI Workflows: PASS
 
 ---
 
@@ -358,7 +358,7 @@
 
 ---
 
-## 2. WebUI Frontend — React 19 + TypeScript + Vitest (223 unit tests across 63 suites)
+## 2. WebUI Frontend — React 19 + TypeScript + Vitest (225 unit tests across 63 suites)
 
 | Module                      | Test Suite File                                                                       | Test Cases | Status |
 | :-------------------------- | :------------------------------------------------------------------------------------ | :--------- | :----- |
@@ -367,7 +367,7 @@
 | Clone Pair Card             | `webui/src/components/ClonePairCard.test.tsx`                                         | 2 tests    | PASS   |
 | Clone Pair Diff Modal       | `webui/src/components/ClonePairDiffModal.test.tsx`                                    | 3 tests    | PASS   |
 | Coverage Correlation Modal  | `webui/src/components/CoverageCorrelationModal.test.tsx`                              | 3 tests    | PASS   |
-| Dead Code Explorer Modal    | `webui/src/components/DeadCodeExplorerModal.test.tsx`                                 | 3 tests    | PASS   |
+| Dead Code Explorer Modal    | `webui/src/components/DeadCodeExplorerModal.test.tsx`                                 | 5 tests    | PASS   |
 | Diff Viewer                 | `webui/src/components/DiffViewer.test.tsx`                                            | 3 tests    | PASS   |
 | Duplication Treemap         | `webui/src/components/DuplicationTreemap.test.tsx`                                    | 3 tests    | PASS   |
 | Export Report Modal         | `webui/src/components/ExportReportModal.test.tsx`                                     | 3 tests    | PASS   |
@@ -428,7 +428,7 @@
 
 ---
 
-## 3. Repository Scripts & MCP Protocol — Bun Test Suites (167 tests across 50 suites)
+## 3. Repository Scripts & MCP Protocol — Bun Test Suites (168 tests across 51 suites)
 
 ### Repository Tooling & Automation Suites
 
@@ -441,7 +441,7 @@
 | version-updater               | `scripts/lib/version-updater.test.ts`          | 2 tests    | PASS   |
 | bun-only                      | `scripts/tests/bun-only.test.ts`               | 2 tests    | PASS   |
 | Workspace Engine & Reset      | `scripts/tests/clean-reset.test.ts`            | 10 tests   | PASS   |
-| Documentation Integrity       | `scripts/tests/docs.test.ts`                   | 5 tests    | PASS   |
+| Documentation Integrity       | `scripts/tests/docs.test.ts`                   | 4 tests    | PASS   |
 | Feature Matrix Synchronizer   | `scripts/tests/feature-matrix.test.ts`         | 4 tests    | PASS   |
 | 4-Pillar Feature Parity       | `scripts/tests/feature-parity.test.ts`         | 2 tests    | PASS   |
 | File Length Cap & Modularity  | `scripts/tests/file-length.test.ts`            | 7 tests    | PASS   |
@@ -481,6 +481,7 @@
 | Tool: cddm_get_timeline             | `tests/mcp/tools/get-timeline.test.ts`             | 1 tests    | PASS   |
 | Tool: cddm_heal_refactor            | `tests/mcp/tools/heal-refactor.test.ts`            | 1 tests    | PASS   |
 | Tool: cddm_import_cache_pack        | `tests/mcp/tools/import-cache-pack.test.ts`        | 2 tests    | PASS   |
+| Tool: cddm_prune_dead_clones        | `tests/mcp/tools/prune-dead-clones.test.ts`        | 2 tests    | PASS   |
 | Tool: cddm_scan_codebase            | `tests/mcp/tools/scan-codebase.test.ts`            | 4 tests    | PASS   |
 | Tool: cddm_scan_cross_language      | `tests/mcp/tools/scan-cross-language.test.ts`      | 2 tests    | PASS   |
 | Tool: cddm_scan_hub                 | `tests/mcp/tools/scan-hub.test.ts`                 | 3 tests    | PASS   |

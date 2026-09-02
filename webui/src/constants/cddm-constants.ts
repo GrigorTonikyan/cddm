@@ -50,6 +50,7 @@ export const API_ROUTES = {
   COVERAGE_INGEST: "/api/coverage/ingest",
   COVERAGE_CORRELATE: "/api/coverage/correlate",
   DEAD_CODE_SCAN: "/api/dead-code/scan",
+  DEAD_CODE_PRUNE: "/api/dead-code/prune",
   DEAD_CODE: "/api/dead-code",
 } as const;
 

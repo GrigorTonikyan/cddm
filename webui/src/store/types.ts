@@ -238,13 +238,19 @@ export interface CDDMStoreState {
     req?: import("../types/cddm-types").CoverageCorrelateRequest,
   ) => Promise<import("../types/cddm-types").CoverageCorrelationSummary>;
 
-  /** Polyglot Dead Code Detection */
+  /** Polyglot Dead Code Detection & Safe Deletion Synthesizer */
   isDeadCodeModalOpen: boolean;
   deadCodeSummary: import("../types/dead-code-types").DeadCodeSummary | null;
   isDeadCodeLoading: boolean;
   deadCodeError: string | null;
+  isDeadCodePruning: boolean;
+  lastPruneResult: import("../types/dead-code-types").DeadClonePruneResult | null;
+  deadCodePruneError: string | null;
   setIsDeadCodeModalOpen: (open: boolean) => void;
   scanDeadCode: (
     req?: import("../types/dead-code-types").DeadCodeScanRequest,
   ) => Promise<import("../types/dead-code-types").DeadCodeSummary>;
+  pruneDeadCode: (
+    req?: import("../types/dead-code-types").DeadClonePruneRequest,
+  ) => Promise<import("../types/dead-code-types").DeadClonePruneResult>;
 }

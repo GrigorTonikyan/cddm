@@ -74,7 +74,7 @@ async fn test_mcp_ping() {
 #[tokio::test]
 async fn test_mcp_tools_list() {
     let tools = list_mcp_items(mcp_methods::TOOLS_LIST, "tools").await;
-    assert_eq!(tools.len(), 30);
+    assert_eq!(tools.len(), 31);
     let tool_names: Vec<&str> = tools.iter().map(|t| t["name"].as_str().unwrap()).collect();
     for expected in [
         mcp_tools::SCAN_CODEBASE,
@@ -105,6 +105,7 @@ async fn test_mcp_tools_list() {
         mcp_tools::CORRELATE_COVERAGE,
         mcp_tools::DETECT_DEAD_CLONES,
         mcp_tools::DETECT_DEAD_CODE,
+        mcp_tools::PRUNE_DEAD_CLONES,
         mcp_tools::SEMANTIC_NEURAL_SCAN,
         mcp_tools::DIFF_MATRIX,
     ] {

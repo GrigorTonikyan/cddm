@@ -72,7 +72,21 @@ export const CLI_COMMANDS_CATALOG: CliCommandMetadata[] = [
     keyFlags: ["--min-tokens", "--format", "--coverage", "--static-only", "--languages"],
   },
   {
+    name: "prune",
+    summary: "Automatically prune unreachable dead clone clusters and unreferenced code",
+    usage: "cddm prune [OPTIONS] [DIRECTORY]",
+    keyFlags: [
+      "--dry-run",
+      "--safe-only",
+      "--threshold",
+      "--min-tokens",
+      "--format",
+      "--languages",
+    ],
+  },
+  {
     name: "diff",
+
     summary: "Differential clone scan comparing working tree against Git base revisions",
     usage: "cddm diff [OPTIONS] <BASE_REF> [TARGET_REF]",
     keyFlags: ["--matrix", "--cross-language", "--fail-threshold", "--git-blame", "--rules"],

@@ -3,12 +3,14 @@
 pub mod dead_code;
 pub mod diff;
 pub mod policy;
+pub mod prune;
 pub mod refactor;
 pub mod scan;
 pub mod semantic;
 pub mod trend;
 
 pub use dead_code::format_dead_code_report;
+pub use prune::format_prune_report;
 
 pub use diff::{
     print_branch_matrix_console_report, print_diff_console_report, print_diff_markdown_report,

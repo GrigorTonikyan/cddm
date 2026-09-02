@@ -94,6 +94,82 @@ impl Default for DeadCodeConfig {
     }
 }
 
+/// Configuration parameters for running dead clone cluster pruning.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct DeadClonePruneConfig {
+    pub directory: String,
+    pub min_tokens: usize,
+    pub dry_run: bool,
+    pub safe_only: bool,
+    pub confidence_threshold: f64,
+    pub item_ids: Option<Vec<usize>>,
+    pub languages: Option<Vec<String>>,
+    pub ignore: Option<Vec<String>>,
+}
+
+impl Default for DeadClonePruneConfig {
+    fn default() -> Self {
+        Self {
+            directory: ".".to_string(),
+            min_tokens: 30,
+            dry_run: false,
+            safe_only: true,
+            confidence_threshold: 0.90,
+            item_ids: None,
+            languages: None,
+            ignore: None,
+        }
+    }
+}
+
+/// Status outcome for an individual pruned candidate.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum PruneActionStatus {
+    Pruned,
+    DryRunPruned,
+    SkippedUnsafe,
+    Failed,
+}
+
+impl PruneActionStatus {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            PruneActionStatus::Pruned => "pruned",
+            PruneActionStatus::DryRunPruned => "dry_run_pruned",
+            PruneActionStatus::SkippedUnsafe => "skipped_unsafe",
+            PruneActionStatus::Failed => "failed",
+        }
+    }
+}
+
+/// Record of a specific pruned dead clone item.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct PrunedItem {
+    pub id: usize,
+    pub file_path: String,
+    pub symbol_name: String,
+    pub line_start: usize,
+    pub line_end: usize,
+    pub lines_removed: usize,
+    pub status: PruneActionStatus,
+    pub confidence: f64,
+    pub reason: String,
+    pub diff_preview: Option<String>,
+}
+
+/// High-level result of executing dead clone cluster pruning.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+pub struct DeadClonePruneResult {
+    pub total_candidates: usize,
+    pub pruned_items: usize,
+    pub skipped_items: usize,
+    pub total_lines_removed: usize,
+    pub dry_run: bool,
+    pub files_affected: Vec<String>,
+    pub items: Vec<PrunedItem>,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -118,5 +194,23 @@ mod tests {
         assert_eq!(summary.total_dead_items, 0);
         assert_eq!(summary.total_dead_lines, 0);
         assert!(summary.items.is_empty());
+    }
+
+    #[test]
+    fn test_dead_clone_prune_config_default() {
+        let config = DeadClonePruneConfig::default();
+        assert_eq!(config.directory, ".");
+        assert_eq!(config.min_tokens, 30);
+        assert!(!config.dry_run);
+        assert!(config.safe_only);
+        assert_eq!(config.confidence_threshold, 0.90);
+    }
+
+    #[test]
+    fn test_prune_action_status() {
+        assert_eq!(PruneActionStatus::Pruned.as_str(), "pruned");
+        assert_eq!(PruneActionStatus::DryRunPruned.as_str(), "dry_run_pruned");
+        assert_eq!(PruneActionStatus::SkippedUnsafe.as_str(), "skipped_unsafe");
+        assert_eq!(PruneActionStatus::Failed.as_str(), "failed");
     }
 }

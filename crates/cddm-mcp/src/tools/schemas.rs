@@ -348,6 +348,11 @@ pub fn get_tool_definitions() -> Vec<serde_json::Value> {
             dead_code_schema(),
         ),
         tool_def(
+            mcp_tools::PRUNE_DEAD_CLONES,
+            "Safely prune dead clone clusters and unreferenced code with Program Dependence Graph (PDG) and closed-loop reachability verification.",
+            dead_clone_prune_schema(),
+        ),
+        tool_def(
             mcp_tools::SEMANTIC_NEURAL_SCAN,
             "In-process local neural code embedding & algorithmic equivalence scan using subword \
              projections and cosine similarity.",

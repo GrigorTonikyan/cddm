@@ -42,3 +42,39 @@ export interface DeadCodeScanRequest {
   languages?: string[];
   ignore?: string[];
 }
+
+export type PruneActionStatus = "pruned" | "dry_run_pruned" | "skipped_unsafe" | "failed";
+
+export interface PrunedItem {
+  id: number;
+  file_path: string;
+  symbol_name: string;
+  line_start: number;
+  line_end: number;
+  lines_removed: number;
+  status: PruneActionStatus;
+  confidence: number;
+  reason: string;
+  diff_preview?: string;
+}
+
+export interface DeadClonePruneResult {
+  total_candidates: number;
+  pruned_items: number;
+  skipped_items: number;
+  total_lines_removed: number;
+  dry_run: boolean;
+  files_affected: string[];
+  items: PrunedItem[];
+}
+
+export interface DeadClonePruneRequest {
+  directory?: string;
+  min_tokens?: number;
+  dry_run?: boolean;
+  safe_only?: boolean;
+  threshold?: number;
+  item_ids?: number[];
+  languages?: string[];
+  ignore?: string[];
+}

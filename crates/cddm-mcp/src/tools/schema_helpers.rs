@@ -147,3 +147,17 @@ pub fn dead_code_schema() -> serde_json::Value {
         &[],
     )
 }
+
+pub fn dead_clone_prune_schema() -> serde_json::Value {
+    obj_schema(
+        json!({
+            "directory": { "type": "string", "description": "Target workspace directory path (default: .)" },
+            "min_tokens": { "type": "number", "description": "Minimum token threshold (default: 30)" },
+            "dry_run": { "type": "boolean", "description": "Preview without writing changes to disk (default: false)" },
+            "safe_only": { "type": "boolean", "description": "Enforce strict closed-loop safety threshold (default: true)" },
+            "threshold": { "type": "number", "description": "Confidence threshold from 0.0 to 1.0 (default: 0.90)" },
+            "item_ids": { "type": "array", "items": { "type": "number" }, "description": "Optional list of specific dead code item IDs to prune" }
+        }),
+        &[],
+    )
+}

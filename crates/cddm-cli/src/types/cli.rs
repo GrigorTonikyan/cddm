@@ -3,8 +3,8 @@
 use super::actions::{CacheAction, HookAction, IgnoreAction, RulesAction};
 use super::commands::{
     CommentArgs, CoverageArgs, DeadCodeArgs, DiffArgs, ExtractArgs, HealArgs, HubArgs, InitArgs,
-    LspArgs, MonorepoArgs, OverlapArgs, RefactorArgs, ScanArgs, SemanticArgs, ServeArgs, TrendArgs,
-    TuiArgs, WatchArgs,
+    LspArgs, MonorepoArgs, OverlapArgs, PruneArgs, RefactorArgs, ScanArgs, SemanticArgs, ServeArgs,
+    TrendArgs, TuiArgs, WatchArgs,
 };
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
@@ -48,6 +48,9 @@ pub enum Commands {
     /// Detect unreferenced functions, unreachable blocks, and dead code duplicates
     #[command(alias = "dead")]
     DeadCode(DeadCodeArgs),
+
+    /// Automatically prune unreachable dead clone clusters and unreferenced code
+    Prune(PruneArgs),
 
     /// Differential duplication scan comparing current changes against a Git base revision
     Diff(DiffArgs),

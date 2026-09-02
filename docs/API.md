@@ -16,7 +16,7 @@ Health check endpoint for monitoring and studio readiness.
 {
   "status": "ok",
   "service": "CDDM Studio",
-  "version": "0.6.0"
+  "version": "1.10.0"
 }
 ```
 

@@ -16,8 +16,8 @@ import {
 } from "./interface-docs-mcp-webui";
 
 describe("Interface Documentation Generator", () => {
-  test("CLI commands catalog contains all 22 subcommands", () => {
-    expect(CLI_COMMANDS_CATALOG.length).toBe(22);
+  test("CLI commands catalog contains all 23 subcommands", () => {
+    expect(CLI_COMMANDS_CATALOG.length).toBe(23);
     const names = CLI_COMMANDS_CATALOG.map((c) => c.name);
     expect(names).toContain("scan");
     expect(names).toContain("diff");
@@ -26,6 +26,7 @@ describe("Interface Documentation Generator", () => {
     expect(names).toContain("extract");
     expect(names).toContain("heal");
     expect(names).toContain("dead-code");
+    expect(names).toContain("prune");
     expect(names).toContain("monorepo");
     expect(names).toContain("overlap");
     expect(names).toContain("hub");
@@ -41,8 +42,8 @@ describe("Interface Documentation Generator", () => {
     expect(TUI_TABS_CATALOG[11]?.title).toBe("Dead Code");
   });
 
-  test("MCP catalog contains 30 tools and 14 resources", () => {
-    expect(MCP_TOOLS_CATALOG.length).toBe(30);
+  test("MCP catalog contains 31 tools and 14 resources", () => {
+    expect(MCP_TOOLS_CATALOG.length).toBe(31);
     expect(MCP_RESOURCES_CATALOG.length).toBe(14);
   });
 

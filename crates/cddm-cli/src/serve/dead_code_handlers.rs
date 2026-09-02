@@ -7,11 +7,48 @@ use axum::response::IntoResponse;
 use cddm_core::dead_code::{DeadCodeConfig, run_dead_code_detection};
 use serde_json::json;
 
-use super::types::{AppState, DeadCodeScanRequest};
+use super::types::{AppState, DeadCodePruneRequest, DeadCodeScanRequest};
+
+/// Handler for POST /api/dead-code/prune: executes safe dead clone cluster pruning.
+pub async fn dead_code_prune_handler(
+    State(_state): State<AppState>,
+    Json(payload): Json<DeadCodePruneRequest>,
+) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
+    tracing::info!(
+        directory = ?payload.directory,
+        dry_run = ?payload.dry_run,
+        safe_only = ?payload.safe_only,
+        threshold = ?payload.threshold,
+        "Received REST request for dead code prune"
+    );
+
+    let config = cddm_core::dead_code::DeadClonePruneConfig {
+        directory: payload.directory.unwrap_or_else(|| ".".to_string()),
+        min_tokens: payload.min_tokens.unwrap_or(30),
+        dry_run: payload.dry_run.unwrap_or(false),
+        safe_only: payload.safe_only.unwrap_or(true),
+        confidence_threshold: payload.threshold.unwrap_or(0.90),
+        item_ids: payload.item_ids,
+        languages: payload.languages,
+        ignore: payload.ignore,
+    };
+
+    let result = cddm_core::dead_code::prune_dead_clone_clusters(config)
+        .await
+        .map_err(|err| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({ "error": format!("Dead clone pruning failed: {err}") })),
+            )
+        })?;
+
+    Ok((StatusCode::OK, Json(result)))
+}
 
 /// Handler for POST /api/dead-code/scan: performs on-demand polyglot dead code analysis.
 pub async fn dead_code_scan_handler(
     State(_state): State<AppState>,
+
     Json(payload): Json<DeadCodeScanRequest>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
     tracing::info!(

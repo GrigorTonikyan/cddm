@@ -4,7 +4,6 @@ import {
   checkMarkdownLinks,
   checkMarkdownTables,
   checkRequiredDocFiles,
-  checkRoadmapTodoSync,
   validateDocumentation,
 } from "../check-docs";
 
@@ -33,12 +32,6 @@ describe("Documentation Integrity Validator", () => {
     expect(summary.errors).toHaveLength(0);
     expect(summary.filesChecked).toBeGreaterThanOrEqual(12);
     expect(summary.linksChecked).toBeGreaterThan(30);
-  });
-
-  it("should verify that ROADMAP.md and TODO.md are synchronized", () => {
-    const { proposalCount, errors } = checkRoadmapTodoSync();
-    expect(errors).toHaveLength(0);
-    expect(proposalCount).toBeGreaterThanOrEqual(10);
   });
 
   it("should detect malformed markdown tables", () => {

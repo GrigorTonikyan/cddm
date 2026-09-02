@@ -191,7 +191,14 @@ export const MCP_TOOLS_CATALOG: McpToolDef[] = [
     keyParams: "directory, min_tokens, static_only",
   },
   {
+    name: "cddm_prune_dead_clones",
+    category: "Dead Code",
+    summary: "Safely prunes unreachable dead clone clusters and unreferenced code",
+    keyParams: "directory, min_tokens, dry_run, safe_only, threshold, item_ids",
+  },
+  {
     name: "cddm_semantic_neural_scan",
+
     category: "Neural",
     summary: "Dense subword embedding scan for algorithmic equivalence clones",
     keyParams: "directory, neural_threshold",

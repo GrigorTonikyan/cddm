@@ -204,3 +204,39 @@ pub struct DeadCodeArgs {
     #[arg(short, long, value_delimiter = ',')]
     pub ignore: Option<Vec<String>>,
 }
+
+/// CLI Arguments for `cddm prune`
+#[derive(Args, Debug, Clone)]
+pub struct PruneArgs {
+    /// Directory path to scan (default: current directory)
+    #[arg(default_value = cddm_core::DEFAULT_DIRECTORY)]
+    pub directory: PathBuf,
+
+    /// Dry run preview without modifying files on disk
+    #[arg(long, default_value_t = false)]
+    pub dry_run: bool,
+
+    /// Only prune dead clones meeting strict closed-loop safety verification (default: true)
+    #[arg(long, default_value_t = true)]
+    pub safe_only: bool,
+
+    /// Confidence threshold for safe removal (0.0 to 1.0)
+    #[arg(short, long, default_value_t = 0.90)]
+    pub threshold: f64,
+
+    /// Minimum token count threshold for dead clone items
+    #[arg(short, long, default_value_t = 30)]
+    pub min_tokens: usize,
+
+    /// Output report format (console, json, markdown, sarif)
+    #[arg(short, long, default_value = "console")]
+    pub format: String,
+
+    /// Filter by target programming languages
+    #[arg(short, long, value_delimiter = ',')]
+    pub languages: Option<Vec<String>>,
+
+    /// Custom file or path ignore patterns
+    #[arg(short, long, value_delimiter = ',')]
+    pub ignore: Option<Vec<String>>,
+}

@@ -5,6 +5,39 @@ All notable changes to **CDDM** (_Code De-Duplication Meister_) will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.0] - 2026-09-01
+
+### Features
+
+- **clean**: enhance workspace cleanup engine with Windows resilience and target discovery (`c91f0ac`)
+- **ci**: implement Gitea portal content populator and complete documentation sync (`3830d9e`)
+- **webui**: React 19 Feature-Sliced Studio with Monaco diff visualizer (`aeff948`)
+- **mcp**: Model Context Protocol server with 27 tools and dynamic discovery (`8f08de7`)
+- **ai-surgeon**: automated AST clone cluster refactoring surgeon [EP-35] (#13) (`4bdd9a4`)
+- **ai-surgeon**: automated AST clone cluster refactoring surgeon [EP-35] (`2903f1d`)
+- **hub**: federation hub and multi-repository clone correlation matrix [EP-36] (#14) (`65aa1c8`)
+- **hub**: federation hub and multi-repository clone correlation matrix [EP-36] (`d66f5ea`)
+
+### Bug Fixes
+
+- **webui**: resolve form field accessibility labels and id attributes (`22d4e18`)
+- **engine**: fix Type-4 semantic clone detection and 4-pillar parity (`ebff82f`)
+
+### Documentation
+
+- integrate planning and contribution docs into Gitea SSoT lifecycle (`64c946c`)
+- **rfc**: update AI refactor surgeon RFC with issue #6 and v1.11.0 milestone (`01d1a50`)
+- **rfc**: update federation hub RFC with issue #7 and v1.11.0 milestone (`ac32f2b`)
+
+### Tooling & Maintenance
+
+- **governance**: enforce Gitea as primary SSoT and codify issue-release lifecycle (#18) (`52d2bb7`)
+- **governance**: codify issue-to-release lifecycle and API merge standards (`66f8cbe`)
+- **governance**: enforce Gitea as primary SSoT and GitHub as mirror (`99e382b`)
+- **release**: v1.10.0 (`e4466c4`)
+- **scripts**: enforce strict TS and zero bypasses for PR 15 (`649e4bd`)
+- **gitea**: automated Gitea Actions CI/CD matrix and cross-compilation (`1ba81df`)
+
 ## [1.9.0] - 2026-08-30
 
 ### Features

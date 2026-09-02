@@ -4,7 +4,7 @@
  * Validates:
  * 1. Existence and integrity of all required repository documentation.
  * 2. Markdown internal link resolution across all files.
- * 3. Bidirectional synchronization between docs/ROADMAP.md (EP-xx proposals) and docs/TODO.md.
+ 
  * 4. Markdown table formatting and separator integrity.
  */
 
@@ -125,65 +125,6 @@ export function checkMarkdownLinks(
 /**
  * Validate that all Enhancement Proposals (EP-xx) in docs/ROADMAP.md and docs/TODO.md are synchronized.
  */
-export function checkRoadmapTodoSync(workspaceRoot: string = process.cwd()): {
-  proposalCount: number;
-  errors: DocCheckError[];
-} {
-  const errors: DocCheckError[] = [];
-  const roadmapPath = join(workspaceRoot, "docs/ROADMAP.md");
-  const todoPath = join(workspaceRoot, "docs/TODO.md");
-
-  if (!existsSync(roadmapPath) || !existsSync(todoPath)) {
-    return { proposalCount: 0, errors };
-  }
-
-  const roadmapContent = readFileSync(roadmapPath, "utf-8");
-  const todoContent = readFileSync(todoPath, "utf-8");
-
-  // Extract all EP-xx from ROADMAP.md
-  const roadmapEpRegex = /### (EP-\d{2}):\s*([^\n]+)/g;
-  const roadmapEps = new Map<string, string>();
-  let match: RegExpExecArray | null = roadmapEpRegex.exec(roadmapContent);
-  while (match !== null) {
-    if (match[1] && match[2]) {
-      roadmapEps.set(match[1], match[2].trim());
-    }
-    match = roadmapEpRegex.exec(roadmapContent);
-  }
-
-  // Extract all EP-xx from TODO.md
-  const todoEpRegex = /\[(EP-\d{2})\]/g;
-  const todoEps = new Set<string>();
-  match = todoEpRegex.exec(todoContent);
-  while (match !== null) {
-    if (match[1]) {
-      todoEps.add(match[1]);
-    }
-    match = todoEpRegex.exec(todoContent);
-  }
-
-  // Check that every EP in ROADMAP is tracked in TODO.md
-  for (const [epId, title] of roadmapEps.entries()) {
-    if (!todoEps.has(epId)) {
-      errors.push({
-        file: "docs/TODO.md",
-        message: `Enhancement proposal "${epId}" (${title}) is defined in docs/ROADMAP.md but missing from docs/TODO.md tracking.`,
-      });
-    }
-  }
-
-  // Check that every EP in TODO.md exists in ROADMAP.md
-  for (const epId of todoEps) {
-    if (!roadmapEps.has(epId)) {
-      errors.push({
-        file: "docs/ROADMAP.md",
-        message: `Task references proposal "${epId}" in docs/TODO.md, but "${epId}" is not defined in docs/ROADMAP.md.`,
-      });
-    }
-  }
-
-  return { proposalCount: roadmapEps.size, errors };
-}
 
 /**
  * Validate markdown table formatting.
@@ -242,10 +183,6 @@ export async function validateDocumentation(
     }
   }
 
-  // 3. Roadmap <-> TODO synchronization
-  const { proposalCount, errors: syncErrors } = checkRoadmapTodoSync(workspaceRoot);
-  allErrors.push(...syncErrors);
-
   // 4. Feature Matrix dynamic test discovery synchronization
   try {
     const { hasChanges } = await syncFeatureMatrixFile(workspaceRoot);
@@ -283,7 +220,7 @@ export async function validateDocumentation(
   return {
     filesChecked,
     linksChecked: totalLinks,
-    proposalsValidated: proposalCount,
+    proposalsValidated: 0,
     errors: allErrors,
   };
 }

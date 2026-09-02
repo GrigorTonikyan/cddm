@@ -52,6 +52,7 @@ define_api_routes! {
     ROUTE_API_COVERAGE_INGEST => "/api/coverage/ingest",
     ROUTE_API_COVERAGE_CORRELATE => "/api/coverage/correlate",
     ROUTE_API_DEAD_CODE_SCAN => "/api/dead-code/scan",
+    ROUTE_API_DEAD_CODE_PRUNE => "/api/dead-code/prune",
     ROUTE_API_DEAD_CODE => "/api/dead-code",
 }
 
@@ -337,6 +338,19 @@ pub struct DeadCodeScanRequest {
     pub static_only: Option<bool>,
     pub report_path: Option<String>,
     pub report_content: Option<String>,
+    pub languages: Option<Vec<String>>,
+    pub ignore: Option<Vec<String>>,
+}
+
+/// Request payload for running dead clone cluster pruning.
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Default)]
+pub struct DeadCodePruneRequest {
+    pub directory: Option<String>,
+    pub min_tokens: Option<usize>,
+    pub dry_run: Option<bool>,
+    pub safe_only: Option<bool>,
+    pub threshold: Option<f64>,
+    pub item_ids: Option<Vec<usize>>,
     pub languages: Option<Vec<String>>,
     pub ignore: Option<Vec<String>>,
 }
