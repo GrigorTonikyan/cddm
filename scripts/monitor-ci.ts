@@ -34,6 +34,8 @@ export interface MonitorOptions {
   limit?: number;
   intervalMs?: number;
   maxCycles?: number;
+  jobLogsId?: number;
+  tail?: number;
 }
 
 export async function fetchRecentRuns(limit = 10): Promise<WorkflowRun[]> {
@@ -46,6 +48,28 @@ export async function fetchRunJobs(runId: number): Promise<WorkflowJob[]> {
   const path = `/repos/${GITEA_REPO}/actions/runs/${runId}/jobs`;
   const res = await giteaFetch<{ jobs: WorkflowJob[] }>(path);
   return res.data?.jobs || [];
+}
+
+export async function fetchJobLogs(jobId: number): Promise<string | null> {
+  const path = `/repos/${GITEA_REPO}/actions/jobs/${jobId}/logs`;
+  try {
+    const res = await giteaFetch<string>(path);
+    return res.data;
+  } catch {
+    return null;
+  }
+}
+
+export async function displayJobLogs(jobId: number, tailLines = 100): Promise<void> {
+  console.log(`\n=== Gitea Actions Job #${jobId} Logs ===`);
+  const logs = await fetchJobLogs(jobId);
+  if (!logs) {
+    console.error(`Could not retrieve logs for job #${jobId}`);
+    return;
+  }
+  const lines = logs.split("\n");
+  const slice = tailLines > 0 ? lines.slice(-tailLines) : lines;
+  console.log(slice.join("\n"));
 }
 
 export function formatStatusBadge(status: string, conclusion: string | null): string {
@@ -112,12 +136,25 @@ if (import.meta.main) {
       ["--watch, -w", "Continuously poll and stream live CI status until completion"],
       ["--limit <n>, -l <n>", "Limit the number of recent workflow runs displayed (default: 5)"],
       ["--interval <sec>, -i <sec>", "Polling interval in seconds for --watch (default: 10s)"],
+      ["--logs <jobId>, -L <jobId>", "Fetch and print log output for a specific job ID"],
+      ["--tail <n>, -t <n>", "Number of trailing log lines to show (default: 100, 0 for all)"],
       ["--help, -h", "Show this help message"],
     ]);
     process.exit(0);
   }
 
   printScriptBanner("CDDM Gitea Actions CI/CD Monitor");
+
+  const logsIdx = args.indexOf("--logs") !== -1 ? args.indexOf("--logs") : args.indexOf("-L");
+  if (logsIdx !== -1 && args[logsIdx + 1]) {
+    const jobId = Number.parseInt(args[logsIdx + 1]!, 10);
+    const tailIdx = args.indexOf("--tail") !== -1 ? args.indexOf("--tail") : args.indexOf("-t");
+    const tail =
+      tailIdx !== -1 && args[tailIdx + 1] ? Number.parseInt(args[tailIdx + 1]!, 10) : 100;
+    await displayJobLogs(jobId, tail);
+    process.exit(0);
+  }
+
   const isWatch = args.includes("--watch") || args.includes("-w");
   const limitIdx = args.indexOf("--limit") !== -1 ? args.indexOf("--limit") : args.indexOf("-l");
   const limitArg = limitIdx !== -1 ? args[limitIdx + 1] : undefined;
