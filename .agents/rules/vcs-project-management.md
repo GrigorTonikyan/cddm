@@ -22,5 +22,22 @@ This rule governs the exclusive use of Gitea as the Single Source of Truth (SSoT
 ## 3. Project Management Workflow
 
 1. **Discovery & Planning**: When planning new features or analyzing requirements, query Gitea (\git.gt-web-dev.com/api/v1/repos/gt-dev/cddm/issues\) to retrieve the canonical state.
-2. **Documentation Pointers**: Files like \docs/ROADMAP.md\ or \docs/TODO.md\ MUST only contain high-level strategic summaries and absolute links pointing directly to the Gitea Milestone and Issue Tracker endpoints.
+2. **Documentation Pointers**: Files like `docs/ROADMAP.md` or `docs/TODO.md` MUST only contain high-level strategic summaries and absolute links pointing directly to the Gitea Milestone and Issue Tracker endpoints.
 3. **Continuous Sync**: If the roadmap changes, update the Gitea Milestone/Issue first. Do not update a local markdown file as a substitute.
+
+## 4. Automagic Milestone Releases & Agent Enforcement
+
+1. **Strict 100% Milestone Assignment**:
+   - Every issue in Gitea MUST be assigned to an active milestone corresponding to its target release.
+   - Verified automatically in CI and local verification via `bun scripts/check-milestones.ts` (`vp run verify`).
+   - Run `bun scripts/sync-milestones.ts` to automatically synchronize issue milestone assignments based on metadata, proposals, and active version phases.
+2. **Automagic Milestone Versioning & Release**:
+   - Workspace versions are determined strictly by milestones.
+   - When all assigned issues in an active milestone reach 100% completion (zero open issues remaining), the release MUST be executed via `bun scripts/milestone-release.ts` (or `vp run release:milestone`).
+   - The engine automatically:
+     1. Synchronizes all 10 manifests (`Cargo.toml`, `package.json`, `webui/package.json`, etc.) to the milestone's target semantic version via `bun scripts/sync-version.ts`.
+     2. Commits the release manifests (`chore(release): vX.Y.Z [skip ci]`).
+     3. Tags the release `vX.Y.Z`.
+     4. Pushes the commit and tag to Gitea `origin` (which automatically push-mirrors to GitHub).
+     5. Closes the milestone on Gitea (`state: "closed"`).
+     6. Creates the authoritative Gitea release with auto-generated release notes.

@@ -55,10 +55,10 @@ This rule governs repository tracking, issue management, branching nomenclature,
 
 ## 5. Milestone & Release Lifecycle
 
-1. **Milestone Assignment**: Every issue and PR must be assigned to an active Gitea milestone (e.g. `v1.11.0`).
-2. **Milestone Closure**: When all assigned issues and PRs for a milestone reach 100% completion, the milestone is closed simultaneously with the version release.
-3. **Automated Semantic Releases**:
-   - Releases must be executed using `vp run version:release` or `vp run bump`.
-   - The release command automatically runs `bun scripts/sync-version.ts` to synchronize all 10 project manifests (`package.json`, `Cargo.toml`, `webui/package.json`, NPM packages, VS Code VSIX, Homebrew, Scoop, Winget, and README badges).
-   - Generates the signed semantic Git tag `vX.Y.Z` and triggers the Gitea Actions automated multi-platform compilation and release artifact publishing pipeline.
-4. **Downstream Mirror Sync**: Release tags and published assets are automatically mirrored to the downstream GitHub repository.
+1. **Mandatory Milestone Assignment**: Every issue and PR must be assigned to an active Gitea milestone (e.g. `v3.4.0`). Verified in `vp run verify` via `bun scripts/check-milestones.ts`. Run `bun scripts/sync-milestones.ts` to auto-assign unassigned issues.
+2. **Milestone Closure & Automagic Release**:
+   - Workspace versions are determined strictly by milestones.
+   - When all assigned issues and PRs for a milestone reach 100% completion (0 open issues remaining), the release MUST be triggered via `bun scripts/milestone-release.ts` (or `vp run release:milestone`).
+   - The engine automatically synchronizes all 10 project manifests (`package.json`, `Cargo.toml`, `webui/package.json`, NPM packages, VS Code VSIX, Homebrew, Scoop, Winget, and README badges) via `bun scripts/sync-version.ts`.
+   - Generates the commit `chore(release): vX.Y.Z [skip ci]`, creates the signed semantic Git tag `vX.Y.Z`, pushes to Gitea `origin` (auto-mirrored to GitHub), closes the milestone, and publishes the Gitea release.
+3. **Downstream Mirror Sync**: Release commits, tags, and assets pushed to Gitea `origin` are automatically mirrored downstream to GitHub via Gitea's server-side push mirror (`sync_on_commit: true`). Never push manually to `github`.
