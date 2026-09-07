@@ -5,6 +5,35 @@ All notable changes to **CDDM** (_Code De-Duplication Meister_) will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.0] - 2026-09-07
+
+### Features
+
+- **governance**: implement automagic milestone release engine (`1aa7ce6`)
+- **core**: auto-detect Bun, pnpm, Python uv and Go monorepo ecosystems (`0accecf`)
+- **tooling**: add permanent Gitea CI monitor script and governance rule (`52e0311`)
+
+### Bug Fixes
+
+- **core**: default cache database to OS user cache directory (`c7122da`)
+- **core**: filter closing braces and punctuation from unreachable block dead code (`fe68a2f`)
+- **webui**: remove high-memory typeAware from linter config (`1441ad7`)
+- **ci**: resolve emoji policy failure and codify protected branch PR governance (`28dcd76`)
+- **scripts**: protect source code directories from clean deletion (`61c491c`)
+
+### Performance Improvements
+
+- **ci**: optimize compilation memory footprint and sequence pipeline jobs (`d4a18fc`)
+
+### Documentation
+
+- **readme**: fix KaTeX LaTeX underscore rendering error in DRY health formula (`79e19b3`)
+
+### Tooling & Maintenance
+
+- **templates**: add comprehensive Gitea issue forms and enforce GitHub mirror redirection (`8e5b341`)
+- **github**: configure downstream mirror routing templates and README notice (`b871b98`)
+
 ## [3.3.0] - 2026-09-02
 
 ### Features
