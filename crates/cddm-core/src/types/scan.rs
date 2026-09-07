@@ -178,8 +178,10 @@ pub struct ScanConfig {
     pub scan_self: bool,
     /// Whether to annotate clone pairs with in-process git blame author information
     pub enable_git_blame: bool,
-    /// Custom path for the persistent disk cache database (default: ".cddm/cache.db")
+    /// Custom path for the persistent disk cache database (default: OS user cache)
     pub cache_dir: Option<String>,
+    /// Whether to store persistent cache in-tree (.cddm/cache.db) instead of user cache (default: false)
+    pub in_tree_cache: bool,
     /// Whether to use the persistent disk cache (default: true)
     pub enable_cache: bool,
     /// Custom path to .cddmignore file (default: None, loads from root directory if present)
@@ -216,6 +218,7 @@ impl Default for ScanConfig {
             scan_self: true,
             enable_git_blame: false,
             cache_dir: None,
+            in_tree_cache: false,
             enable_cache: true,
             cddmignore_path: None,
             ignore_tests: true,

@@ -67,6 +67,7 @@ pub async fn run_refactor_command(
         enforce_policies: false,
         cross_language: false,
         threads: None,
+        in_tree_cache: false,
     };
 
     let (tx, _rx) = mpsc::channel(100);

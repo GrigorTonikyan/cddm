@@ -4,7 +4,7 @@ use super::discovery::{discover_candidate_files, init_policy_engine, init_suppre
 use super::indexer::index_and_match_clone_pairs;
 use super::types::ParsedFile;
 use crate::cache::{
-    CACHE_SCHEMA_VERSION, CachedFileEntry, DiskFingerprintCache, resolve_default_cache_path,
+    CACHE_SCHEMA_VERSION, CachedFileEntry, DiskFingerprintCache, resolve_cache_path,
 };
 use crate::fingerprint::{MIN_K_GRAM, WINDOW_OFFSET, winnow};
 use crate::grammar::get_grammar_for_path;
@@ -165,7 +165,9 @@ pub async fn run_scan(
             .cache_dir
             .as_ref()
             .map(PathBuf::from)
-            .unwrap_or_else(|| resolve_default_cache_path(Path::new(&config.directory)));
+            .unwrap_or_else(|| {
+                resolve_cache_path(Path::new(&config.directory), config.in_tree_cache)
+            });
         DiskFingerprintCache::open_or_create(&cache_path).unwrap_or_else(|err| {
             tracing::warn!(
                 "Failed to initialize disk cache: {}; continuing in memory",

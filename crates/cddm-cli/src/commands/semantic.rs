@@ -145,6 +145,7 @@ pub fn run_semantic_command(
         enforce_policies: false,
         cross_language: true,
         threads,
+        in_tree_cache: false,
     };
 
     let pairs = scan_cross_language_workspace(&config, threshold)

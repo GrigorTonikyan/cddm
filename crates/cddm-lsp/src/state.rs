@@ -51,6 +51,7 @@ impl ServerStateInner {
             scan_self: true,
             enable_git_blame: false,
             cache_dir: None,
+            in_tree_cache: false,
             enable_cache: true,
             cddmignore_path: None,
             ignore_tests: false,

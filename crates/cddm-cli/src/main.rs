@@ -71,6 +71,7 @@ async fn run_app(cli: Cli) -> Result<(), Box<dyn std::error::Error>> {
                 args.ignore,
                 args.git_blame,
                 args.cache_dir,
+                args.in_tree_cache,
                 args.no_cache,
                 args.clear_cache,
                 args.cddmignore,

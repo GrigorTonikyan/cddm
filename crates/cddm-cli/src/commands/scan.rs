@@ -18,6 +18,7 @@ pub async fn run_scan_command(
     ignore: Vec<String>,
     git_blame: bool,
     cache_dir: Option<PathBuf>,
+    in_tree_cache: bool,
     no_cache: bool,
     clear_cache: bool,
     cddmignore: Option<PathBuf>,
@@ -36,14 +37,14 @@ pub async fn run_scan_command(
     if clear_cache {
         let path_to_clear = cache_dir
             .clone()
-            .unwrap_or_else(|| cddm_core::resolve_default_cache_path(&directory));
+            .unwrap_or_else(|| cddm_core::resolve_cache_path(&directory, in_tree_cache));
         if path_to_clear.exists() {
             let _ = fs::remove_file(&path_to_clear);
             eprintln!("Cleared cache database at '{}'", path_to_clear.display());
         }
     }
 
-    let config = build_cli_scan_config(
+    let mut config = build_cli_scan_config(
         &directory,
         min_tokens,
         languages,
@@ -62,6 +63,7 @@ pub async fn run_scan_command(
         detect_type4,
         threads,
     );
+    config.in_tree_cache = in_tree_cache;
 
     let (tx, rx) = mpsc::channel::<cddm_core::ScanProgress>(100);
     let cancel_flag = Arc::new(AtomicBool::new(false));
@@ -144,6 +146,7 @@ pub fn build_cli_scan_config(
         scan_self: true,
         enable_git_blame: git_blame,
         cache_dir: cache_path,
+        in_tree_cache: false,
         enable_cache,
         cddmignore_path: cddmignore.map(|p| p.to_string_lossy().to_string()),
         ignore_tests,

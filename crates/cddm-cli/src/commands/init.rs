@@ -40,6 +40,23 @@ pub fn run_init_command(
             platform,
             target_path.display()
         );
+
+        let gitignore_path = PathBuf::from(".gitignore");
+        if gitignore_path.exists()
+            && let Ok(gi_content) = fs::read_to_string(&gitignore_path)
+            && !gi_content.lines().any(|l| {
+                let trimmed = l.trim();
+                trimmed == ".cddm" || trimmed == ".cddm/" || trimmed == ".cddm/**"
+            })
+        {
+            let mut updated = gi_content;
+            if !updated.ends_with('\n') && !updated.is_empty() {
+                updated.push('\n');
+            }
+            updated.push_str("\n# CDDM runtime cache\n.cddm/\n");
+            let _ = fs::write(&gitignore_path, updated);
+            println!("[PASS] Appended .cddm/ to .gitignore");
+        }
     } else {
         println!("{}", content);
     }

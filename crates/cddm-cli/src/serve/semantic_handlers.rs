@@ -194,6 +194,7 @@ pub async fn semantic_scan_handler(
         enforce_policies: false,
         cross_language: true,
         threads: req.threads,
+        in_tree_cache: false,
     };
 
     scan_cross_language_workspace(&config, threshold)

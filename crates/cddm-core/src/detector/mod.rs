@@ -35,6 +35,7 @@ mod tests {
             scan_self: false,
             enable_git_blame: false,
             cache_dir: None,
+            in_tree_cache: false,
             enable_cache: false,
             cddmignore_path: None,
             ignore_tests: false,
