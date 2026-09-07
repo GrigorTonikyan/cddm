@@ -8,14 +8,14 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  CARGO_BUILD_JOBS: 1
+  CARGO_BUILD_JOBS: 4
   CARGO_INCREMENTAL: 0
   RUSTFLAGS: "-C debuginfo=0"
 
 jobs:
   rust-ci:
     name: Rust Quality Gate
-    runs-on: ubuntu-latest
+    runs-on: highperf
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -54,7 +54,6 @@ jobs:
 
   webui-ci:
     name: WebUI Frontend Quality Gate
-    needs: [rust-ci]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -92,8 +91,8 @@ jobs:
 
   workspace-governance-ci:
     name: Workspace Standards & MCP Protocol Gate
-    needs: [webui-ci]
-    runs-on: ubuntu-latest
+    needs: [rust-ci, webui-ci]
+    runs-on: highperf
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -107,8 +106,7 @@ jobs:
 
       - name: Build MCP Server & CLI Binaries
         run: |
-          cargo build -p cddm-mcp
-          cargo build -p cddm-cli
+          cargo build -p cddm-mcp -p cddm-cli
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
