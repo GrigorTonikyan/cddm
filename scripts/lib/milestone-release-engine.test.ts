@@ -10,10 +10,10 @@ describe("milestone-release-engine", () => {
   });
 
   it("should reject release when open issues remain without force flag", async () => {
-    // Milestone 34 currently has open issues
+    // Dynamic query of current open milestone with open issues (e.g. Milestone 35)
     const res = await checkAndTriggerMilestoneRelease({
       dryRun: true,
-      specificMilestoneId: 34,
+      specificMilestoneId: 35,
       force: false,
     });
     expect(res.triggered).toBe(false);

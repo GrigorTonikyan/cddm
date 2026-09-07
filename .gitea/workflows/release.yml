@@ -6,6 +6,12 @@ on:
       - "v*"
   workflow_dispatch:
 
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_BUILD_JOBS: 1
+  CARGO_INCREMENTAL: 0
+  RUSTFLAGS: "-C debuginfo=0"
+
 jobs:
   build-binaries:
     name: Build (${{ matrix.target }})
@@ -53,7 +59,9 @@ jobs:
 
       - name: Build Standalone Binaries (CLI, MCP, LSP)
         run: |
-          cargo build --release --target ${{ matrix.target }} --bin cddm --bin cddm-mcp --bin cddm-lsp
+          cargo build --release --target ${{ matrix.target }} -p cddm-cli --bin cddm
+          cargo build --release --target ${{ matrix.target }} -p cddm-mcp --bin cddm-mcp
+          cargo build --release --target ${{ matrix.target }} -p cddm-lsp --bin cddm-lsp
 
       - name: Package Target Archive
         shell: bash
