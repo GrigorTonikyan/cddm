@@ -60,6 +60,7 @@ impl ServerStateInner {
             rules_path: None,
             enforce_policies: false,
             cross_language: false,
+            include_ignored: false,
             threads: None,
         }
     }

@@ -213,6 +213,7 @@ pub struct DeadCodeConfig {
     pub report_content: Option<String>,
     pub languages: Option<Vec<String>>,
     pub ignore: Option<Vec<String>>,
+    pub include_ignored: Option<bool>,
 }
 
 impl Default for DeadCodeConfig {
@@ -225,6 +226,7 @@ impl Default for DeadCodeConfig {
             report_content: None,
             languages: None,
             ignore: None,
+            include_ignored: None,
         }
     }
 }

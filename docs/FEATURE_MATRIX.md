@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-27 | Rust: 345 #[test] units | WebUI: 226 tests across 63 suites | Scripts & MCP: 188 tests across 57 suites | CI Workflows: PASS
+> Last verified: 2026-08-27 | Rust: 347 #[test] units | WebUI: 226 tests across 63 suites | Scripts & MCP: 192 tests across 57 suites | CI Workflows: PASS
 
 ---
 
@@ -428,7 +428,7 @@
 
 ---
 
-## 3. Repository Scripts & MCP Protocol — Bun Test Suites (188 tests across 57 suites)
+## 3. Repository Scripts & MCP Protocol — Bun Test Suites (192 tests across 57 suites)
 
 ### Repository Tooling & Automation Suites
 
@@ -471,10 +471,10 @@
 | Tool: cddm_compare_semantic_graphs  | `tests/mcp/tools/compare-semantic-graphs.test.ts`  | 2 tests    | PASS   |
 | Tool: cddm_correlate_coverage       | `tests/mcp/tools/correlate-coverage.test.ts`       | 3 tests    | PASS   |
 | Tool: cddm_detect_dead_clones       | `tests/mcp/tools/detect-dead-clones.test.ts`       | 2 tests    | PASS   |
-| Tool: cddm_detect_dead_code         | `tests/mcp/tools/detect-dead-code.test.ts`         | 4 tests    | PASS   |
+| Tool: cddm_detect_dead_code         | `tests/mcp/tools/detect-dead-code.test.ts`         | 5 tests    | PASS   |
 | Tool: cddm_detect_overlap           | `tests/mcp/tools/detect-overlap.test.ts`           | 3 tests    | PASS   |
 | Tool: cddm_diff_matrix              | `tests/mcp/tools/diff-matrix.test.ts`              | 3 tests    | PASS   |
-| Tool: cddm_diff_scan                | `tests/mcp/tools/diff-scan.test.ts`                | 2 tests    | PASS   |
+| Tool: cddm_diff_scan                | `tests/mcp/tools/diff-scan.test.ts`                | 3 tests    | PASS   |
 | Tool: cddm_export_cache_pack        | `tests/mcp/tools/export-cache-pack.test.ts`        | 2 tests    | PASS   |
 | Tool: cddm_export_sarif             | `tests/mcp/tools/export-sarif.test.ts`             | 1 tests    | PASS   |
 | Tool: cddm_extract_hub_package      | `tests/mcp/tools/extract-hub-package.test.ts`      | 3 tests    | PASS   |
@@ -487,10 +487,10 @@
 | Tool: cddm_heal_refactor            | `tests/mcp/tools/heal-refactor.test.ts`            | 1 tests    | PASS   |
 | Tool: cddm_import_cache_pack        | `tests/mcp/tools/import-cache-pack.test.ts`        | 2 tests    | PASS   |
 | Tool: cddm_prune_dead_clones        | `tests/mcp/tools/prune-dead-clones.test.ts`        | 2 tests    | PASS   |
-| Tool: cddm_scan_codebase            | `tests/mcp/tools/scan-codebase.test.ts`            | 5 tests    | PASS   |
+| Tool: cddm_scan_codebase            | `tests/mcp/tools/scan-codebase.test.ts`            | 6 tests    | PASS   |
 | Tool: cddm_scan_cross_language      | `tests/mcp/tools/scan-cross-language.test.ts`      | 2 tests    | PASS   |
 | Tool: cddm_scan_hub                 | `tests/mcp/tools/scan-hub.test.ts`                 | 3 tests    | PASS   |
-| Tool: cddm_scan_monorepo            | `tests/mcp/tools/scan-monorepo.test.ts`            | 3 tests    | PASS   |
+| Tool: cddm_scan_monorepo            | `tests/mcp/tools/scan-monorepo.test.ts`            | 4 tests    | PASS   |
 | Tool: cddm_semantic_neural_scan     | `tests/mcp/tools/semantic-neural-scan.test.ts`     | 3 tests    | PASS   |
 | Tool: cddm_suggest_cluster_refactor | `tests/mcp/tools/suggest-cluster-refactor.test.ts` | 2 tests    | PASS   |
 | Tool: cddm_suggest_refactor         | `tests/mcp/tools/suggest-refactor.test.ts`         | 2 tests    | PASS   |

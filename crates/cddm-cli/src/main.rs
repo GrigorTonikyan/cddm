@@ -84,6 +84,7 @@ async fn run_app(cli: Cli) -> Result<(), Box<dyn std::error::Error>> {
                 enable_cross_lang,
                 !args.no_type3,
                 enable_type4,
+                args.include_ignored,
                 args.threads,
             )
             .await?;
@@ -117,6 +118,7 @@ async fn run_app(cli: Cli) -> Result<(), Box<dyn std::error::Error>> {
                 args.rules,
                 args.enforce_policies,
                 args.cross_language,
+                args.include_ignored,
                 args.matrix,
             )
             .await?;

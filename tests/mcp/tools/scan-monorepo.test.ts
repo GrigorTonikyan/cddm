@@ -47,4 +47,15 @@ describe("MCP Tool: cddm_scan_monorepo", () => {
     expect(Array.isArray(res.top_clusters)).toBe(true);
     expect(res.scan_result).toBeUndefined();
   });
+
+  it("should support include_ignored toggle in monorepo scan", async () => {
+    const res = await executeTool("cddm_scan_monorepo", {
+      directory: ".",
+      min_tokens: 50,
+      include_ignored: true,
+    });
+
+    expect(res).toBeDefined();
+    expect(typeof res.total_workspaces).toBe("number");
+  });
 });

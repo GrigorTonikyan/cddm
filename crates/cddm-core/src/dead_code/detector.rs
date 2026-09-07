@@ -27,6 +27,7 @@ pub async fn run_dead_code_detection(config: DeadCodeConfig) -> Result<DeadCodeS
         min_tokens: config.min_tokens,
         languages: config.languages.clone().unwrap_or_default(),
         ignore_patterns: config.ignore.clone().unwrap_or_default(),
+        include_ignored: config.include_ignored.unwrap_or(false),
         ..Default::default()
     };
 

@@ -23,6 +23,10 @@ pub struct ScanArgs {
     #[arg(long, default_value_t = false)]
     pub summary: bool,
 
+    /// Include files and directories ignored by .gitignore
+    #[arg(long, default_value_t = false, alias = "no-ignore")]
+    pub include_ignored: bool,
+
     /// Exit with non-zero status code if duplication percentage exceeds threshold (0-100)
     #[arg(long)]
     pub fail_threshold: Option<f64>,
@@ -156,6 +160,10 @@ pub struct DiffArgs {
     /// Bypass persistent disk cache and force full re-scan
     #[arg(long, default_value_t = false)]
     pub no_cache: bool,
+
+    /// Include files and directories ignored by .gitignore
+    #[arg(long, default_value_t = false, alias = "no-ignore")]
+    pub include_ignored: bool,
 
     /// Custom path to .cddmignore configuration file
     #[arg(long)]

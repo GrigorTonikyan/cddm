@@ -65,6 +65,7 @@ pub async fn dead_code_scan_handler(
         report_content: payload.report_content,
         languages: payload.languages,
         ignore: payload.ignore,
+        include_ignored: payload.include_ignored,
     };
 
     let summary = run_dead_code_detection(config).await.map_err(|err| {

@@ -198,6 +198,8 @@ pub struct ScanConfig {
     pub enforce_policies: bool,
     /// Detect cross-language semantic clones across different programming languages (default: true)
     pub cross_language: bool,
+    /// Whether to include files and directories ignored by .gitignore (default: false)
+    pub include_ignored: bool,
     /// Maximum number of parallel worker threads (default: None, utilizes all logical CPU cores)
     pub threads: Option<usize>,
 }
@@ -227,6 +229,7 @@ impl Default for ScanConfig {
             rules_path: None,
             enforce_policies: false,
             cross_language: false,
+            include_ignored: false,
             threads: None,
         }
     }

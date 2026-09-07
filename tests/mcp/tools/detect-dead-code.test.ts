@@ -74,4 +74,16 @@ describe("MCP Tool: cddm_detect_dead_code", () => {
     expect(Array.isArray(res.top_items)).toBe(true);
     expect(res.items).toBeUndefined();
   }, 30000);
+
+  it("should support include_ignored toggle in dead code detection", async () => {
+    const res = await executeTool("cddm_detect_dead_code", {
+      directory: "crates/cddm-lsp",
+      min_tokens: 50,
+      static_only: true,
+      include_ignored: true,
+    });
+
+    expect(res).toBeDefined();
+    expect(typeof res.total_dead_items).toBe("number");
+  }, 30000);
 });

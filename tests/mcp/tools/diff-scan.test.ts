@@ -17,6 +17,19 @@ describe("MCP Tool: cddm_diff_scan", () => {
     expect(typeof res.duration_ms).toBe("number");
   });
 
+  it("should support include_ignored toggle in differential scan", async () => {
+    const res = await executeTool("cddm_diff_scan", {
+      base_ref: "HEAD",
+      target_ref: "HEAD",
+      directory: ".",
+      min_tokens: 50,
+      include_ignored: true,
+    });
+
+    expect(res).toBeDefined();
+    expect(res.scan_id).toBeDefined();
+  });
+
   it("should reject diff scan when base_ref is missing", async () => {
     await assertToolError("cddm_diff_scan", {}, RPC_ERRORS.INVALID_PARAMS);
   });

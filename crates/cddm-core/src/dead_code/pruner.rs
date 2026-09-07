@@ -32,6 +32,7 @@ pub async fn prune_dead_clone_clusters(
         report_content: None,
         languages: config.languages.clone(),
         ignore: config.ignore.clone(),
+        include_ignored: None,
     };
 
     let summary = run_dead_code_detection(detect_config).await?;

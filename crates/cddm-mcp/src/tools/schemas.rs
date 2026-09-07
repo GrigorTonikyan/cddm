@@ -20,6 +20,7 @@ pub fn get_tool_definitions() -> Vec<serde_json::Value> {
                     mcp_tools::PARAM_ENABLE_GIT_BLAME: { "type": "boolean", "description": "Annotate duplicate lines with in-process git blame author metadata" },
                     "detect_type3": { "type": "boolean", "description": "Enable Type-3 (near-miss modified statements) clone detection (default: true)" },
                     "detect_type4": { "type": "boolean", "description": "Enable Type-4 (semantic AST/CFG graph matching) clone detection (default: true)" },
+                    "include_ignored": { "type": "boolean", "description": "Include files and directories ignored by .gitignore (default: false)" },
                     "summary_only": { "type": "boolean", "description": "When true, returns aggregate metrics and top 5 clusters to conserve agent context tokens" },
                     "detail_level": { "type": "string", "enum": ["summary", "compact", "full"], "description": "Response detail level: 'summary' or 'compact' preserves AI context tokens" }
                 }),
@@ -83,7 +84,8 @@ pub fn get_tool_definitions() -> Vec<serde_json::Value> {
                     mcp_tools::PARAM_BASE_REF: { "type": "string", "description": "Base git reference or commit SHA" },
                     mcp_tools::PARAM_TARGET_REF: { "type": "string", "description": "Target git reference or commit SHA (optional, defaults to working tree)" },
                     mcp_tools::PARAM_DIRECTORY: { "type": "string", "description": "Target repository directory path (default: current directory)" },
-                    mcp_tools::PARAM_MIN_TOKENS: { "type": "number", "description": format!("Minimum token threshold (default: {})", DEFAULT_MIN_TOKENS) }
+                    mcp_tools::PARAM_MIN_TOKENS: { "type": "number", "description": format!("Minimum token threshold (default: {})", DEFAULT_MIN_TOKENS) },
+                    "include_ignored": { "type": "boolean", "description": "Include files and directories ignored by .gitignore (default: false)" }
                 }),
                 &[mcp_tools::PARAM_BASE_REF],
             ),
