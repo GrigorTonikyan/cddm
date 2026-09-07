@@ -278,4 +278,32 @@ fn test_cli_subcommands_parsing() {
         },
         _ => panic!("expected Rules command"),
     }
+
+    let cli_scan_no_ignore =
+        Cli::try_parse_from(["cddm", "scan", "--no-ignore"]).expect("parse scan no-ignore");
+    match cli_scan_no_ignore.command {
+        Commands::Scan(args) => assert!(args.include_ignored),
+        _ => panic!("expected Scan command"),
+    }
+
+    let cli_scan_include_ignored = Cli::try_parse_from(["cddm", "scan", "--include-ignored"])
+        .expect("parse scan include-ignored");
+    match cli_scan_include_ignored.command {
+        Commands::Scan(args) => assert!(args.include_ignored),
+        _ => panic!("expected Scan command"),
+    }
+
+    let cli_diff_no_ignore =
+        Cli::try_parse_from(["cddm", "diff", "main", "--no-ignore"]).expect("parse diff no-ignore");
+    match cli_diff_no_ignore.command {
+        Commands::Diff(args) => assert!(args.include_ignored),
+        _ => panic!("expected Diff command"),
+    }
+
+    let cli_dead_no_ignore =
+        Cli::try_parse_from(["cddm", "dead", "--no-ignore"]).expect("parse dead no-ignore");
+    match cli_dead_no_ignore.command {
+        Commands::DeadCode(args) => assert!(args.include_ignored),
+        _ => panic!("expected DeadCode command"),
+    }
 }

@@ -30,6 +30,7 @@ pub async fn run_diff_command(
     rules: Option<PathBuf>,
     enforce_policies: bool,
     cross_language: bool,
+    include_ignored: bool,
     matrix: Vec<String>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     if !matrix.is_empty() {
@@ -68,6 +69,7 @@ pub async fn run_diff_command(
         cross_language,
         true,
         true,
+        include_ignored,
         None,
     );
 

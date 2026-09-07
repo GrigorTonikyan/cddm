@@ -80,6 +80,7 @@ pub fn dir_and_tokens_schema() -> serde_json::Value {
         json!({
             mcp_tools::PARAM_DIRECTORY: { "type": "string", "description": "Target directory path (default: current directory)" },
             mcp_tools::PARAM_MIN_TOKENS: { "type": "number", "description": format!("Minimum token threshold (default: {})", DEFAULT_MIN_TOKENS) },
+            "include_ignored": { "type": "boolean", "description": "Include files and directories ignored by .gitignore (default: false)" },
             "summary_only": { "type": "boolean", "description": "When true, returns aggregate metrics and top items to preserve AI context tokens (default: false)" },
             "detail_level": { "type": "string", "enum": ["summary", "compact", "full"], "description": "Response detail level: 'summary' or 'compact' preserves AI context tokens" }
         }),
@@ -145,6 +146,7 @@ pub fn dead_code_schema() -> serde_json::Value {
             "static_only": { "type": "boolean", "description": "Restrict analysis to static AST & symbols only (default: false)" },
             "report_path": { "type": "string", "description": "Path to optional coverage report file (e.g. lcov.info)" },
             "report_content": { "type": "string", "description": "Optional raw coverage report string content" },
+            "include_ignored": { "type": "boolean", "description": "Include files and directories ignored by .gitignore (default: false)" },
             "summary_only": { "type": "boolean", "description": "When true, returns aggregate dead code metrics and top 5 items to preserve AI context tokens (default: false)" },
             "detail_level": { "type": "string", "enum": ["summary", "compact", "full"], "description": "Response detail level: 'summary' or 'compact' preserves AI context tokens" }
         }),

@@ -72,4 +72,16 @@ describe("MCP Tool: scan_codebase", () => {
     expect(Array.isArray(res.top_clusters)).toBe(true);
     expect(res.clone_pairs).toBeUndefined();
   }, 30000);
+
+  it("should support include_ignored toggle in scan_codebase", async () => {
+    const res = await executeTool("scan_codebase", {
+      directory: "crates/cddm-lsp",
+      min_tokens: 50,
+      include_ignored: true,
+    });
+
+    expect(res).toBeDefined();
+    expect(typeof res.total_files).toBe("number");
+    expect(res.total_files).toBeGreaterThan(0);
+  }, 30000);
 });

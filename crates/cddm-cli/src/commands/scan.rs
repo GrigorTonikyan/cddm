@@ -31,6 +31,7 @@ pub async fn run_scan_command(
     cross_language: bool,
     detect_type3: bool,
     detect_type4: bool,
+    include_ignored: bool,
     threads: Option<usize>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let cache_path = cache_dir.as_ref().map(|p| p.to_string_lossy().to_string());
@@ -62,6 +63,7 @@ pub async fn run_scan_command(
         cross_language,
         detect_type3,
         detect_type4,
+        include_ignored,
         threads,
     );
     config.in_tree_cache = in_tree_cache;
@@ -148,6 +150,7 @@ pub fn build_cli_scan_config(
     cross_language: bool,
     detect_type3: bool,
     detect_type4: bool,
+    include_ignored: bool,
     threads: Option<usize>,
 ) -> ScanConfig {
     ScanConfig {
@@ -174,6 +177,7 @@ pub fn build_cli_scan_config(
         rules_path: rules.map(|p| p.to_string_lossy().to_string()),
         enforce_policies,
         cross_language,
+        include_ignored,
         threads,
     }
 }

@@ -27,6 +27,9 @@ pub async fn handle_detect_dead_code(id: Option<Value>, args: Option<&Value>) ->
         .and_then(|a| a.get("report_content"))
         .and_then(|c| c.as_str())
         .map(String::from);
+    let include_ignored = args
+        .and_then(|a| a.get("include_ignored"))
+        .and_then(|b| b.as_bool());
 
     let config = DeadCodeConfig {
         directory: directory.to_string(),
@@ -36,6 +39,7 @@ pub async fn handle_detect_dead_code(id: Option<Value>, args: Option<&Value>) ->
         report_content,
         languages: None,
         ignore: None,
+        include_ignored,
     };
 
     match run_dead_code_detection(config).await {

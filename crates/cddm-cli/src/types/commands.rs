@@ -207,6 +207,10 @@ pub struct DeadCodeArgs {
     /// Custom file or path ignore patterns
     #[arg(short, long, value_delimiter = ',')]
     pub ignore: Option<Vec<String>>,
+
+    /// Include files and directories ignored by .gitignore
+    #[arg(long, default_value_t = false, alias = "no-ignore")]
+    pub include_ignored: bool,
 }
 
 /// CLI Arguments for `cddm prune`

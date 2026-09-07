@@ -45,9 +45,15 @@ pub async fn handle_diff_scan(
             .and_then(|a| a.get(mcp_tools::PARAM_TARGET_REF))
             .and_then(|t| t.as_str());
 
+        let include_ignored = args
+            .and_then(|a| a.get("include_ignored"))
+            .and_then(|b| b.as_bool())
+            .unwrap_or(false);
+
         let config = ScanConfig {
             directory: dir.to_string(),
             min_tokens,
+            include_ignored,
             ..Default::default()
         };
 
@@ -156,12 +162,17 @@ pub async fn handle_scan_monorepo(
     args: Option<&serde_json::Value>,
 ) -> JsonRpcResponse {
     let (dir_str, min_tokens) = crate::tools::helpers::parse_dir_and_tokens(args);
+    let include_ignored = args
+        .and_then(|a| a.get("include_ignored"))
+        .and_then(|b| b.as_bool())
+        .unwrap_or(false);
 
     let config = ScanConfig {
         directory: dir_str.to_string(),
         min_tokens,
         scan_self: false,
         enable_cache: false,
+        include_ignored,
         ..Default::default()
     };
 

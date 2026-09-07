@@ -46,6 +46,7 @@ pub async fn run_monorepo_command(
         cross_language: false,
         threads: None,
         in_tree_cache: false,
+        include_ignored: false,
     };
 
     let summary = run_monorepo_scan(&directory, &scan_config).await?;

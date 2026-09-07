@@ -25,6 +25,7 @@ pub async fn run_dead_code_command(args: DeadCodeArgs) -> Result<(), Box<dyn Err
         report_content: None,
         languages: args.languages,
         ignore: args.ignore,
+        include_ignored: Some(args.include_ignored),
     };
 
     let summary = run_dead_code_detection(config).await?;
