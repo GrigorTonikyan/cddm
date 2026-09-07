@@ -59,4 +59,19 @@ describe("MCP Tool: cddm_detect_dead_code", () => {
       rmSync(tmpDir, { recursive: true, force: true });
     }
   }, 30000);
+
+  it("should return compact dead code summary when summary_only is true", async () => {
+    const res = await executeTool("cddm_detect_dead_code", {
+      directory: ".",
+      min_tokens: 50,
+      static_only: true,
+      summary_only: true,
+    });
+
+    expect(res).toBeDefined();
+    expect(res.summary_mode).toBe(true);
+    expect(typeof res.total_dead_items).toBe("number");
+    expect(Array.isArray(res.top_items)).toBe(true);
+    expect(res.items).toBeUndefined();
+  }, 30000);
 });

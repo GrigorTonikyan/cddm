@@ -79,7 +79,9 @@ pub fn dir_and_tokens_schema() -> serde_json::Value {
     obj_schema(
         json!({
             mcp_tools::PARAM_DIRECTORY: { "type": "string", "description": "Target directory path (default: current directory)" },
-            mcp_tools::PARAM_MIN_TOKENS: { "type": "number", "description": format!("Minimum token threshold (default: {})", DEFAULT_MIN_TOKENS) }
+            mcp_tools::PARAM_MIN_TOKENS: { "type": "number", "description": format!("Minimum token threshold (default: {})", DEFAULT_MIN_TOKENS) },
+            "summary_only": { "type": "boolean", "description": "When true, returns aggregate metrics and top items to preserve AI context tokens (default: false)" },
+            "detail_level": { "type": "string", "enum": ["summary", "compact", "full"], "description": "Response detail level: 'summary' or 'compact' preserves AI context tokens" }
         }),
         &[],
     )
@@ -142,7 +144,9 @@ pub fn dead_code_schema() -> serde_json::Value {
             "min_tokens": { "type": "number", "description": "Minimum token threshold (default: 30)" },
             "static_only": { "type": "boolean", "description": "Restrict analysis to static AST & symbols only (default: false)" },
             "report_path": { "type": "string", "description": "Path to optional coverage report file (e.g. lcov.info)" },
-            "report_content": { "type": "string", "description": "Optional raw coverage report string content" }
+            "report_content": { "type": "string", "description": "Optional raw coverage report string content" },
+            "summary_only": { "type": "boolean", "description": "When true, returns aggregate dead code metrics and top 5 items to preserve AI context tokens (default: false)" },
+            "detail_level": { "type": "string", "enum": ["summary", "compact", "full"], "description": "Response detail level: 'summary' or 'compact' preserves AI context tokens" }
         }),
         &[],
     )

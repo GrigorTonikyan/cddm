@@ -188,6 +188,10 @@ pub struct DeadCodeArgs {
     #[arg(short, long, default_value = "console")]
     pub format: String,
 
+    /// Output compact summary report to conserve terminal/token output
+    #[arg(long, default_value_t = false)]
+    pub summary: bool,
+
     /// Restrict analysis to static AST & symbol analysis only
     #[arg(long, default_value_t = false)]
     pub static_only: bool,

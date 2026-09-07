@@ -134,3 +134,20 @@ pub fn make_json_payload_response<T: serde::Serialize>(
     let text = serde_json::to_string_pretty(payload).unwrap_or_default();
     crate::protocol::make_text_response(id, text)
 }
+
+/// Checks if an MCP tool invocation requested a compact / summary_only response
+/// to conserve AI agent context tokens.
+pub fn is_summary_requested(args: Option<&serde_json::Value>) -> bool {
+    let summary_only = args
+        .and_then(|a| a.get("summary_only"))
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false);
+    let detail_level = args
+        .and_then(|a| a.get("detail_level"))
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_lowercase());
+
+    summary_only
+        || detail_level.as_deref() == Some("compact")
+        || detail_level.as_deref() == Some("summary")
+}

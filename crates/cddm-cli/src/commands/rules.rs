@@ -38,6 +38,7 @@ pub async fn run_rules_command(action: RulesAction) -> Result<(), Box<dyn std::e
             min_tokens,
             format,
             enforce_policies,
+            summary,
         } => {
             let config = ScanConfig {
                 directory: directory.to_string_lossy().to_string(),
@@ -53,20 +54,48 @@ pub async fn run_rules_command(action: RulesAction) -> Result<(), Box<dyn std::e
 
             match format {
                 OutputFormat::Console => {
-                    println!("\n=== CDDM Architectural Policy Evaluation Report ===");
-                    println!("Scanned Target:     {}", directory.display());
-                    println!("Total Violations:   {}", result.policy_violations.len());
-                    println!();
-
-                    if result.policy_violations.is_empty() {
+                    if summary {
                         println!(
-                            "[PASS] All architectural boundary and zero-duplication policies \
-                             verified cleanly."
+                            "\n=== CDDM Architectural Policy Evaluation Report (Summary Mode) ==="
                         );
+                        println!("Scanned Target:     {}", directory.display());
+                        println!("Total Violations:   {}", result.policy_violations.len());
+                        println!();
+
+                        if result.policy_violations.is_empty() {
+                            println!(
+                                "[PASS] All architectural boundary and zero-duplication policies \
+                                 verified cleanly."
+                            );
+                        } else {
+                            println!("--- Top Violations (Showing Top 5) ---");
+                            for (idx, v) in result.policy_violations.iter().take(5).enumerate() {
+                                println!(
+                                    "  #{}: [{:?}] {} ({} vs {})",
+                                    idx + 1,
+                                    v.severity,
+                                    v.rule_name,
+                                    v.file_a,
+                                    v.file_b.as_deref().unwrap_or("none")
+                                );
+                            }
+                        }
                     } else {
-                        crate::formatters::print_policy_violations_console(
-                            &result.policy_violations,
-                        );
+                        println!("\n=== CDDM Architectural Policy Evaluation Report ===");
+                        println!("Scanned Target:     {}", directory.display());
+                        println!("Total Violations:   {}", result.policy_violations.len());
+                        println!();
+
+                        if result.policy_violations.is_empty() {
+                            println!(
+                                "[PASS] All architectural boundary and zero-duplication policies \
+                                 verified cleanly."
+                            );
+                        } else {
+                            crate::formatters::print_policy_violations_console(
+                                &result.policy_violations,
+                            );
+                        }
                     }
                 }
                 OutputFormat::Json => {
@@ -82,7 +111,12 @@ pub async fn run_rules_command(action: RulesAction) -> Result<(), Box<dyn std::e
                         }
                     };
                     let eval_res = engine.evaluate(&result);
-                    println!("{}", serde_json::to_string_pretty(&eval_res)?);
+                    if summary {
+                        let compact = cddm_core::CompactPolicyResult::from_evaluation(&eval_res, 5);
+                        println!("{}", serde_json::to_string_pretty(&compact)?);
+                    } else {
+                        println!("{}", serde_json::to_string_pretty(&eval_res)?);
+                    }
                 }
                 OutputFormat::Markdown => {
                     println!("# CDDM Architectural Policy Evaluation Report\n");

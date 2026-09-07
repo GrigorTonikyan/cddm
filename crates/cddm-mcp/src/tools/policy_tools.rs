@@ -113,7 +113,12 @@ pub async fn handle_check_policies(
                 }
             };
             let eval = engine.evaluate(&res);
-            make_text_response(id, serde_json::to_string_pretty(&eval).unwrap_or_default())
+            if crate::tools::helpers::is_summary_requested(args) {
+                let compact = cddm_core::CompactPolicyResult::from_evaluation(&eval, 5);
+                crate::tools::helpers::make_json_payload_response(id, &compact)
+            } else {
+                make_text_response(id, serde_json::to_string_pretty(&eval).unwrap_or_default())
+            }
         }
         Err(err) => make_error_response(
             id,

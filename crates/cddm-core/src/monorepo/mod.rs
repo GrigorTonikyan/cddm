@@ -38,6 +38,51 @@ pub struct MonorepoScanSummary {
     pub scan_result: ScanResult,
 }
 
+/// Compact representation of monorepo scan summary to conserve AI agent context tokens.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct CompactMonorepoSummary {
+    pub summary_mode: bool,
+    pub total_workspaces: usize,
+    pub total_files: usize,
+    pub total_tokens: usize,
+    pub total_clones: usize,
+    pub cross_workspace_clones: usize,
+    pub average_dry_score: f64,
+    pub duplication_percentage: f64,
+    pub workspaces: Vec<MonorepoWorkspace>,
+    pub top_clusters: Vec<crate::types::CompactClusterSummary>,
+}
+
+impl CompactMonorepoSummary {
+    pub fn from_summary(summary: &MonorepoScanSummary, top_n: usize) -> Self {
+        let mut sorted_clusters = summary.scan_result.clone_clusters.clone();
+        sorted_clusters.sort_by(|a, b| {
+            let weight_b = b.token_count * b.occurrences.len();
+            let weight_a = a.token_count * a.occurrences.len();
+            weight_b.cmp(&weight_a)
+        });
+
+        let top_clusters = sorted_clusters
+            .into_iter()
+            .take(top_n)
+            .map(|c| crate::types::CompactClusterSummary::from_cluster(&c))
+            .collect();
+
+        Self {
+            summary_mode: true,
+            total_workspaces: summary.total_workspaces,
+            total_files: summary.total_files,
+            total_tokens: summary.total_tokens,
+            total_clones: summary.total_clones,
+            cross_workspace_clones: summary.cross_workspace_clones,
+            average_dry_score: summary.average_dry_score,
+            duplication_percentage: summary.scan_result.duplication_percentage,
+            workspaces: summary.workspaces.clone(),
+            top_clusters,
+        }
+    }
+}
+
 /// Detects the manifest file and ecosystem package type for a given package directory.
 pub fn detect_package_in_dir(root: &Path, dir: &Path) -> Option<(String, String)> {
     // 1. Rust (Cargo)

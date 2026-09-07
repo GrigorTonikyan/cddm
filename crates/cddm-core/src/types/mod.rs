@@ -1,6 +1,7 @@
 #![forbid(unsafe_code)]
 
 pub mod clone;
+pub mod compact;
 pub mod diff;
 pub mod policy;
 pub mod refactor;
@@ -10,6 +11,9 @@ pub mod timeline;
 pub mod workflow;
 
 pub use clone::{CloneCluster, CloneLocation, ClonePair, CloneType, deduplicate_clone_pairs};
+pub use compact::{
+    CompactClusterSummary, CompactPolicyResult, CompactPolicyViolation, CompactScanResult,
+};
 pub use diff::{CloneStatus, DiffClonePair, DiffScanResult, DiffSummary};
 pub use policy::{
     BoundaryRule, LimitRule, PolicyConfig, PolicyEvaluationResult, PolicySeverity, PolicyViolation,

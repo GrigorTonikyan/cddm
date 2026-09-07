@@ -174,3 +174,53 @@ pub fn print_sarif_report(result: &ScanResult) -> Result<(), Box<dyn std::error:
     println!("{}", serde_json::to_string_pretty(&sarif_json)?);
     Ok(())
 }
+
+pub fn print_compact_console_report(result: &ScanResult) {
+    println!("\n=== CDDM — Code De-Duplication Meister Report (Summary Mode) ===");
+    for (k, v) in scan_metrics_summary(result) {
+        println!("{:<22} {}", format!("{}:", k), v);
+    }
+    println!();
+
+    if !result.clone_clusters.is_empty() {
+        println!("--- Top Clone Clusters (Showing Top 5) ---");
+        let mut cluster_table = Table::new();
+        cluster_table.set_header(vec![
+            Cell::new("Cluster"),
+            Cell::new("Type"),
+            Cell::new("Occurrences"),
+            Cell::new("Tokens"),
+            Cell::new("Locations"),
+        ]);
+
+        for cluster in result.clone_clusters.iter().take(5) {
+            let locs_str = cluster
+                .occurrences
+                .iter()
+                .map(|loc| format!("{}:{}-{}", loc.file, loc.start_line, loc.end_line))
+                .collect::<Vec<_>>()
+                .join(", ");
+            let locs_truncated = if locs_str.len() > 55 {
+                format!("{}...", &locs_str[..52])
+            } else {
+                locs_str
+            };
+
+            cluster_table.add_row(vec![
+                Cell::new(format!("#{}", cluster.id)),
+                Cell::new(format!("{:?}", cluster.clone_type)),
+                Cell::new(cluster.occurrences.len()),
+                Cell::new(cluster.token_count),
+                Cell::new(locs_truncated),
+            ]);
+        }
+        println!("{}", cluster_table);
+        if result.clone_clusters.len() > 5 {
+            println!(
+                "... and {} more clone clusters omitted in summary mode.",
+                result.clone_clusters.len() - 5
+            );
+        }
+        println!();
+    }
+}

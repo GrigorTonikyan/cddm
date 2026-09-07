@@ -40,8 +40,13 @@ pub async fn handle_detect_dead_code(id: Option<Value>, args: Option<&Value>) ->
 
     match run_dead_code_detection(config).await {
         Ok(summary) => {
-            let json_str = serde_json::to_string_pretty(&summary).unwrap_or_default();
-            make_text_response(id, json_str)
+            if crate::tools::helpers::is_summary_requested(args) {
+                let compact = cddm_core::CompactDeadCodeSummary::from_summary(&summary, 5);
+                crate::tools::helpers::make_json_payload_response(id, &compact)
+            } else {
+                let json_str = serde_json::to_string_pretty(&summary).unwrap_or_default();
+                make_text_response(id, json_str)
+            }
         }
         Err(err) => make_error_response(id, rpc_errors::INTERNAL_ERROR, err.to_string()),
     }

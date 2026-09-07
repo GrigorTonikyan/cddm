@@ -19,6 +19,10 @@ pub struct ScanArgs {
     #[arg(short, long, value_enum, default_value_t = OutputFormat::Console)]
     pub format: OutputFormat,
 
+    /// Output compact summary report to conserve terminal/token output
+    #[arg(long, default_value_t = false)]
+    pub summary: bool,
+
     /// Exit with non-zero status code if duplication percentage exceeds threshold (0-100)
     #[arg(long)]
     pub fail_threshold: Option<f64>,
