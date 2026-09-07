@@ -57,10 +57,12 @@ describe("ExportReportModal Component", () => {
 
   it("should support copying SARIF text to clipboard", () => {
     const writeTextMock = vi.fn().mockResolvedValue(undefined);
-    Object.assign(navigator, {
-      clipboard: {
+    Object.defineProperty(navigator, "clipboard", {
+      value: {
         writeText: writeTextMock,
       },
+      writable: true,
+      configurable: true,
     });
 
     renderWithWin2x(<ExportReportModal isOpen={true} onClose={() => {}} results={mockResult} />);

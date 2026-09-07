@@ -83,10 +83,12 @@ describe("RefactorSandboxModal Component", () => {
 
   it("should render and handle Copy AI Prompt action", async () => {
     const mockGenerateAiPrompt = vi.fn().mockResolvedValue("AI Refactor Prompt markdown");
-    Object.assign(navigator, {
-      clipboard: {
+    Object.defineProperty(navigator, "clipboard", {
+      value: {
         writeText: vi.fn().mockResolvedValue(undefined),
       },
+      writable: true,
+      configurable: true,
     });
 
     useCDDMStore.setState({

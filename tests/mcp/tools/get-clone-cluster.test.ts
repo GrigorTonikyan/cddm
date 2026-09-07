@@ -5,7 +5,7 @@ describe("MCP Tool: cddm_get_clone_cluster", () => {
   it("should fetch cluster details and occurrence locations", async () => {
     const res = await executeTool("cddm_get_clone_cluster", {
       cluster_id: 1,
-      directory: ".",
+      directory: "crates/cddm-lsp",
       min_tokens: 50,
     });
 

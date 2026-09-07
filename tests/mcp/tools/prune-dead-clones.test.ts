@@ -4,7 +4,7 @@ import { executeTool } from "../helpers";
 describe("MCP Tool: cddm_prune_dead_clones", () => {
   it("should run dead clone pruning in dry-run mode on workspace", async () => {
     const res = await executeTool("cddm_prune_dead_clones", {
-      directory: ".",
+      directory: "crates/cddm-lsp",
       min_tokens: 50,
       dry_run: true,
       safe_only: true,
@@ -23,6 +23,7 @@ describe("MCP Tool: cddm_prune_dead_clones", () => {
 
   it("should support default parameters and return valid schema payload", async () => {
     const res = await executeTool("cddm_prune_dead_clones", {
+      directory: "crates/cddm-lsp",
       dry_run: true,
     });
 

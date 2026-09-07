@@ -49,10 +49,12 @@ describe("ClonePairDiffModal Component", () => {
     mockFetchSnippets();
 
     const writeTextMock = vi.fn().mockResolvedValue(undefined);
-    Object.assign(navigator, {
-      clipboard: {
+    Object.defineProperty(navigator, "clipboard", {
+      value: {
         writeText: writeTextMock,
       },
+      writable: true,
+      configurable: true,
     });
 
     renderWithWin2x(<ClonePairDiffModal isOpen={true} onClose={() => {}} pair={mockPair} />);

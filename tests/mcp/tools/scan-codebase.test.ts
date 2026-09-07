@@ -19,7 +19,9 @@ describe("MCP Tool: scan_codebase", () => {
   }, 30000);
 
   it("should handle default directory and token arguments", async () => {
-    const res = await executeTool("scan_codebase", {});
+    const res = await executeTool("scan_codebase", {
+      directory: "crates/cddm-lsp",
+    });
     expect(res).toBeDefined();
     expect(res.total_files).toBeGreaterThan(0);
   }, 30000);

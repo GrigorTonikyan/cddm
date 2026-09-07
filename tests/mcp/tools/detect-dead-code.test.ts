@@ -6,7 +6,7 @@ import { executeTool } from "../helpers";
 describe("MCP Tool: cddm_detect_dead_code", () => {
   it("should run polyglot dead code detection on workspace", async () => {
     const res = await executeTool("cddm_detect_dead_code", {
-      directory: ".",
+      directory: "crates/cddm-lsp",
       min_tokens: 50,
       static_only: true,
     });
@@ -22,7 +22,9 @@ describe("MCP Tool: cddm_detect_dead_code", () => {
   }, 30000);
 
   it("should support running with default parameters", async () => {
-    const res = await executeTool("cddm_detect_dead_code", {});
+    const res = await executeTool("cddm_detect_dead_code", {
+      directory: "crates/cddm-lsp",
+    });
 
     expect(res).toBeDefined();
     expect(typeof res.total_dead_items).toBe("number");
@@ -62,7 +64,7 @@ describe("MCP Tool: cddm_detect_dead_code", () => {
 
   it("should return compact dead code summary when summary_only is true", async () => {
     const res = await executeTool("cddm_detect_dead_code", {
-      directory: ".",
+      directory: "crates/cddm-lsp",
       min_tokens: 50,
       static_only: true,
       summary_only: true,

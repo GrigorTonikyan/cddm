@@ -4,7 +4,7 @@ import { executeTool } from "../helpers";
 describe("MCP Tool: cddm_trace_reachability", () => {
   it("should trace cross-package call-graph reachability across the workspace", async () => {
     const res = await executeTool("cddm_trace_reachability", {
-      directory: ".",
+      directory: "crates/cddm-lsp",
       min_tokens: 50,
     });
 
@@ -20,7 +20,9 @@ describe("MCP Tool: cddm_trace_reachability", () => {
   }, 30000);
 
   it("should support default parameters and return valid reachability payload", async () => {
-    const res = await executeTool("cddm_trace_reachability", {});
+    const res = await executeTool("cddm_trace_reachability", {
+      directory: "crates/cddm-lsp",
+    });
 
     expect(res).toBeDefined();
     expect(typeof res.total_packages).toBe("number");
