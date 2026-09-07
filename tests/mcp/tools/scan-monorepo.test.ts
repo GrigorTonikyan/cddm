@@ -33,4 +33,18 @@ describe("MCP Tool: cddm_scan_monorepo", () => {
     expect(cargoWs.package_type).toBe("Rust (Cargo)");
     expect(cargoWs.manifest_file).toBe("Cargo.toml");
   });
+
+  it("should return compact monorepo summary when detail_level is compact", async () => {
+    const res = await executeTool("cddm_scan_monorepo", {
+      directory: ".",
+      min_tokens: 50,
+      detail_level: "compact",
+    });
+
+    expect(res).toBeDefined();
+    expect(res.summary_mode).toBe(true);
+    expect(typeof res.total_workspaces).toBe("number");
+    expect(Array.isArray(res.top_clusters)).toBe(true);
+    expect(res.scan_result).toBeUndefined();
+  });
 });

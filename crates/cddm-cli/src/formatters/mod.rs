@@ -20,7 +20,10 @@ pub use refactor::{
     print_ast_refactor_recommendation, print_cluster_refactor_recommendation,
     print_refactor_recommendation,
 };
-pub use scan::{print_console_report, print_markdown_report, print_sarif_report};
+pub use scan::{
+    print_compact_console_report, print_console_report, print_markdown_report, print_sarif_report,
+};
+
 pub use semantic::format_semantic_report;
 pub use trend::{print_trend_console_report, print_trend_markdown_report};
 

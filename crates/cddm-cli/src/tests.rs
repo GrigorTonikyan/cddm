@@ -254,4 +254,28 @@ fn test_cli_subcommands_parsing() {
         }
         _ => panic!("expected Semantic command"),
     }
+
+    let cli_scan_summary =
+        Cli::try_parse_from(["cddm", "scan", "--summary"]).expect("parse scan summary");
+    match cli_scan_summary.command {
+        Commands::Scan(args) => assert!(args.summary),
+        _ => panic!("expected Scan command"),
+    }
+
+    let cli_dead_summary =
+        Cli::try_parse_from(["cddm", "dead", "--summary"]).expect("parse dead summary");
+    match cli_dead_summary.command {
+        Commands::DeadCode(args) => assert!(args.summary),
+        _ => panic!("expected DeadCode command"),
+    }
+
+    let cli_rules_check_summary = Cli::try_parse_from(["cddm", "rules", "check", "--summary"])
+        .expect("parse rules check summary");
+    match cli_rules_check_summary.command {
+        Commands::Rules { action } => match action {
+            RulesAction::Check { summary, .. } => assert!(summary),
+            _ => panic!("expected RulesAction::Check"),
+        },
+        _ => panic!("expected Rules command"),
+    }
 }

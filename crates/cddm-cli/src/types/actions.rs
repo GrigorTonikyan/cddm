@@ -81,6 +81,10 @@ pub enum RulesAction {
         /// Exit with non-zero code if any policy violations exist
         #[arg(long, default_value_t = false)]
         enforce_policies: bool,
+
+        /// Output compact summary report to conserve terminal/token output
+        #[arg(long, default_value_t = false)]
+        summary: bool,
     },
 }
 

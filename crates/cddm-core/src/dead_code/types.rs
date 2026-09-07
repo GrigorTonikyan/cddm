@@ -138,6 +138,71 @@ pub struct DeadCodeSummary {
     pub reachability_summary: Option<CrossPackageReachabilitySummary>,
 }
 
+/// Compact representation of an individual dead code item.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct CompactDeadCodeItem {
+    pub id: usize,
+    pub file_path: String,
+    pub symbol_name: String,
+    pub kind: DeadCodeKind,
+    pub line_span: String,
+    pub estimated_lines_saved: usize,
+    pub confidence: f64,
+    pub reason: String,
+}
+
+/// Compact dead code analysis summary to preserve AI agent context tokens.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct CompactDeadCodeSummary {
+    pub summary_mode: bool,
+    pub total_dead_items: usize,
+    pub dead_functions: usize,
+    pub unreachable_blocks: usize,
+    pub dead_clones: usize,
+    pub uncovered_items: usize,
+    pub total_dead_lines: usize,
+    pub estimated_savings_pct: f64,
+    pub top_items: Vec<CompactDeadCodeItem>,
+}
+
+impl CompactDeadCodeSummary {
+    pub fn from_summary(summary: &DeadCodeSummary, top_n: usize) -> Self {
+        let mut sorted_items = summary.items.clone();
+        sorted_items.sort_by(|a, b| {
+            b.estimated_lines_saved
+                .cmp(&a.estimated_lines_saved)
+                .then_with(|| b.token_count.cmp(&a.token_count))
+        });
+
+        let top_items = sorted_items
+            .into_iter()
+            .take(top_n)
+            .map(|item| CompactDeadCodeItem {
+                id: item.id,
+                file_path: item.file_path,
+                symbol_name: item.symbol_name,
+                kind: item.kind,
+                line_span: format!("{}-{}", item.line_start, item.line_end),
+                estimated_lines_saved: item.estimated_lines_saved,
+                confidence: item.confidence,
+                reason: item.reason,
+            })
+            .collect();
+
+        Self {
+            summary_mode: true,
+            total_dead_items: summary.total_dead_items,
+            dead_functions: summary.dead_functions,
+            unreachable_blocks: summary.unreachable_blocks,
+            dead_clones: summary.dead_clones,
+            uncovered_items: summary.uncovered_items,
+            total_dead_lines: summary.total_dead_lines,
+            estimated_savings_pct: summary.estimated_savings_pct,
+            top_items,
+        }
+    }
+}
+
 /// Configuration parameters for running dead code detection.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct DeadCodeConfig {

@@ -66,6 +66,7 @@ async fn run_app(cli: Cli) -> Result<(), Box<dyn std::error::Error>> {
                 args.directory,
                 args.min_tokens,
                 args.format,
+                args.summary,
                 args.fail_threshold,
                 args.languages,
                 args.ignore,

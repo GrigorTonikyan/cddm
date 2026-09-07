@@ -19,7 +19,14 @@ pub async fn handle_scan_codebase(
         .unwrap_or(false);
 
     match run_scan_from_mcp_args(args, git_blame).await {
-        Ok(scan_res) => make_json_payload_response(id, &scan_res),
+        Ok(scan_res) => {
+            if crate::tools::helpers::is_summary_requested(args) {
+                let compact = cddm_core::CompactScanResult::from_scan_result(&scan_res, 5);
+                make_json_payload_response(id, &compact)
+            } else {
+                make_json_payload_response(id, &scan_res)
+            }
+        }
         Err(e) => make_error_response(id, rpc_errors::INTERNAL_ERROR, e),
     }
 }
@@ -160,8 +167,13 @@ pub async fn handle_scan_monorepo(
 
     match cddm_core::run_monorepo_scan(Path::new(dir_str), &config).await {
         Ok(summary) => {
-            let json_str = serde_json::to_string_pretty(&summary).unwrap_or_default();
-            make_text_response(id, json_str)
+            if crate::tools::helpers::is_summary_requested(args) {
+                let compact = cddm_core::CompactMonorepoSummary::from_summary(&summary, 5);
+                make_json_payload_response(id, &compact)
+            } else {
+                let json_str = serde_json::to_string_pretty(&summary).unwrap_or_default();
+                make_text_response(id, json_str)
+            }
         }
         Err(e) => make_error_response(id, rpc_errors::INTERNAL_ERROR, e),
     }

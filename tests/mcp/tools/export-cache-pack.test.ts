@@ -4,6 +4,9 @@ import { assertToolError, executeTool, RPC_ERRORS } from "../helpers";
 
 describe("MCP Tool: cddm_export_cache_pack", () => {
   it("should export incremental cache pack to file", async () => {
+    if (!existsSync(".cddm/cache.db")) {
+      Bun.spawnSync(["target/debug/cddm.exe", "scan", "crates/cddm-lsp", "--in-tree-cache"]);
+    }
     const tempPack = "cddm-test-export.cddmpack";
     try {
       const res = await executeTool("cddm_export_cache_pack", {
