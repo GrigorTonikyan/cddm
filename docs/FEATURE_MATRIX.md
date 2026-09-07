@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-27 | Rust: 337 #[test] units | WebUI: 226 tests across 63 suites | Scripts & MCP: 173 tests across 53 suites | CI Workflows: PASS
+> Last verified: 2026-08-27 | Rust: 343 #[test] units | WebUI: 226 tests across 63 suites | Scripts & MCP: 174 tests across 53 suites | CI Workflows: PASS
 
 ---
 
@@ -428,7 +428,7 @@
 
 ---
 
-## 3. Repository Scripts & MCP Protocol — Bun Test Suites (173 tests across 53 suites)
+## 3. Repository Scripts & MCP Protocol — Bun Test Suites (174 tests across 53 suites)
 
 ### Repository Tooling & Automation Suites
 
@@ -486,7 +486,7 @@
 | Tool: cddm_scan_codebase            | `tests/mcp/tools/scan-codebase.test.ts`            | 4 tests    | PASS   |
 | Tool: cddm_scan_cross_language      | `tests/mcp/tools/scan-cross-language.test.ts`      | 2 tests    | PASS   |
 | Tool: cddm_scan_hub                 | `tests/mcp/tools/scan-hub.test.ts`                 | 3 tests    | PASS   |
-| Tool: cddm_scan_monorepo            | `tests/mcp/tools/scan-monorepo.test.ts`            | 1 tests    | PASS   |
+| Tool: cddm_scan_monorepo            | `tests/mcp/tools/scan-monorepo.test.ts`            | 2 tests    | PASS   |
 | Tool: cddm_semantic_neural_scan     | `tests/mcp/tools/semantic-neural-scan.test.ts`     | 3 tests    | PASS   |
 | Tool: cddm_suggest_cluster_refactor | `tests/mcp/tools/suggest-cluster-refactor.test.ts` | 2 tests    | PASS   |
 | Tool: cddm_suggest_refactor         | `tests/mcp/tools/suggest-refactor.test.ts`         | 2 tests    | PASS   |
