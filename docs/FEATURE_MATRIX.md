@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-27 | Rust: 331 #[test] units | WebUI: 226 tests across 63 suites | Scripts & MCP: 172 tests across 53 suites | CI Workflows: PASS
+> Last verified: 2026-08-27 | Rust: 335 #[test] units | WebUI: 226 tests across 63 suites | Scripts & MCP: 173 tests across 53 suites | CI Workflows: PASS
 
 ---
 
@@ -428,7 +428,7 @@
 
 ---
 
-## 3. Repository Scripts & MCP Protocol — Bun Test Suites (172 tests across 53 suites)
+## 3. Repository Scripts & MCP Protocol — Bun Test Suites (173 tests across 53 suites)
 
 ### Repository Tooling & Automation Suites
 
@@ -467,7 +467,7 @@
 | Tool: cddm_compare_semantic_graphs  | `tests/mcp/tools/compare-semantic-graphs.test.ts`  | 2 tests    | PASS   |
 | Tool: cddm_correlate_coverage       | `tests/mcp/tools/correlate-coverage.test.ts`       | 3 tests    | PASS   |
 | Tool: cddm_detect_dead_clones       | `tests/mcp/tools/detect-dead-clones.test.ts`       | 2 tests    | PASS   |
-| Tool: cddm_detect_dead_code         | `tests/mcp/tools/detect-dead-code.test.ts`         | 2 tests    | PASS   |
+| Tool: cddm_detect_dead_code         | `tests/mcp/tools/detect-dead-code.test.ts`         | 3 tests    | PASS   |
 | Tool: cddm_detect_overlap           | `tests/mcp/tools/detect-overlap.test.ts`           | 3 tests    | PASS   |
 | Tool: cddm_diff_matrix              | `tests/mcp/tools/diff-matrix.test.ts`              | 3 tests    | PASS   |
 | Tool: cddm_diff_scan                | `tests/mcp/tools/diff-scan.test.ts`                | 2 tests    | PASS   |

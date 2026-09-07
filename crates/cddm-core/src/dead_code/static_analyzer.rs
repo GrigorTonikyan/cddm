@@ -2,6 +2,7 @@
 
 use std::collections::HashMap;
 
+use super::reachability::extractor::is_executable_statement;
 use super::types::{DeadCodeItem, DeadCodeKind};
 use crate::ast::parse_ast_tree;
 
@@ -204,8 +205,7 @@ fn detect_unreachable_in_node(
         let mut cursor = node.walk();
 
         for child in node.children(&mut cursor) {
-            let child_kind = child.kind();
-            if child_kind == "{" || child_kind == "}" {
+            if !is_executable_statement(child, source) {
                 continue;
             }
 
@@ -214,7 +214,7 @@ fn detect_unreachable_in_node(
                 let line_end = child.end_position().row + 1;
                 let lines_count = line_end.saturating_sub(line_start) + 1;
                 let snippet = &source[child.byte_range()];
-                let tokens = snippet.split_whitespace().count();
+                let tokens = snippet.split_whitespace().count().max(1);
 
                 out.push(DeadCodeItem {
                     id: *next_id,
@@ -233,6 +233,7 @@ fn detect_unreachable_in_node(
                     cross_package_callers: Vec::new(),
                 });
                 *next_id += 1;
+                continue;
             }
 
             if is_terminal_statement(child, source) {
@@ -256,31 +257,34 @@ fn is_terminal_statement(node: tree_sitter::Node, source: &str) -> bool {
             | "break_statement"
             | "break_expression"
             | "continue_statement"
+            | "continue_expression"
             | "throw_statement"
+            | "raise_statement"
     ) {
         return true;
     }
-    let mut cursor = node.walk();
-    for child in node.children(&mut cursor) {
-        if matches!(
-            child.kind(),
-            "return_expression"
-                | "return_statement"
-                | "break_expression"
-                | "break_statement"
-                | "throw_statement"
-        ) {
-            return true;
+    if kind == "expression_statement" {
+        let mut cursor = node.walk();
+        for child in node.children(&mut cursor) {
+            if matches!(
+                child.kind(),
+                "return_expression"
+                    | "return_statement"
+                    | "break_expression"
+                    | "break_statement"
+                    | "continue_expression"
+                    | "continue_statement"
+                    | "throw_statement"
+            ) {
+                return true;
+            }
         }
+        let text = source[node.byte_range()].trim();
+        return text.contains("panic!")
+            || text.contains("std::process::exit")
+            || text.contains("process.exit");
     }
-    let text = source[node.byte_range()].trim();
-    text.starts_with("return ")
-        || text == "return;"
-        || text.starts_with("break ")
-        || text == "break;"
-        || text.contains("panic!")
-        || text.contains("std::process::exit")
-        || text.contains("process.exit")
+    false
 }
 
 fn is_standard_entrypoint(name: &str) -> bool {
@@ -344,5 +348,32 @@ fn main() {
             .find(|i| i.symbol_name == "unused_helper_routine");
         assert!(dead_func.is_some());
         assert_eq!(dead_func.unwrap().kind, DeadCodeKind::UnreferencedFunction);
+    }
+
+    #[test]
+    fn test_ts_closing_brace_not_flagged_in_static_dead_code() {
+        let code = r#"
+function getPath(dir: string, name: string): string | null {
+    if (dir.length > 0) {
+        return dir + "/" + name;
+    }
+    return null;
+}
+"#;
+        let files = vec![(
+            "src/paths.ts".to_string(),
+            "ts".to_string(),
+            code.to_string(),
+        )];
+        let items = analyze_static_dead_code(&files, 1);
+        let unreach: Vec<_> = items
+            .iter()
+            .filter(|i| i.kind == DeadCodeKind::UnreachableBlock)
+            .collect();
+        assert!(
+            unreach.is_empty(),
+            "Expected zero unreachable blocks for clean TS control flow, found: {:?}",
+            unreach
+        );
     }
 }
