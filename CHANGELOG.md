@@ -5,6 +5,38 @@ All notable changes to **CDDM** (_Code De-Duplication Meister_) will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.0] - 2026-09-07
+
+### Bug Fixes
+
+- **ci**: prevent runner OOM during release compilation and webui vitest execution (`2518fe7`)
+
+### Performance Improvements
+
+- **ci**: optimize pipeline with prebuilt artifacts, happy-dom & scoped mcp (#165) (`335e600`)
+- **ci**: optimize pipeline with prebuilt artifacts, happy-dom & scoped mcp (`6da0ec8`)
+
+### Tooling & Maintenance
+
+- **ci**: route rust and release builds to highperf runner with 4 jobs (#159) (`9c9b308`)
+- **ci**: route rust and release builds to highperf runner with 4 jobs (`67660d3`)
+
+## [3.5.0] - 2026-09-07
+
+### Bug Fixes
+
+- **ci**: prevent runner OOM during release compilation and webui vitest execution (`2518fe7`)
+
+### Performance Improvements
+
+- **ci**: optimize pipeline with prebuilt artifacts, happy-dom & scoped mcp (#165) (`335e600`)
+- **ci**: optimize pipeline with prebuilt artifacts, happy-dom & scoped mcp (`6da0ec8`)
+
+### Tooling & Maintenance
+
+- **ci**: route rust and release builds to highperf runner with 4 jobs (#159) (`9c9b308`)
+- **ci**: route rust and release builds to highperf runner with 4 jobs (`67660d3`)
+
 ## [3.4.0] - 2026-09-07
 
 ### Features

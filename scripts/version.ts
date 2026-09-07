@@ -317,6 +317,7 @@ Options:
     const tagName = `v${nextSemver.raw}`;
     console.log(`\n\x1b[36mCreating release commit and tag ${tagName}...\x1b[0m`);
 
+    Bun.spawnSync(["vp", "fmt"]);
     Bun.spawnSync([
       "git",
       "add",
@@ -325,6 +326,10 @@ Options:
       "package.json",
       "webui/package.json",
       "npm/cddm/package.json",
+      "editors/vscode/package.json",
+      "packaging/homebrew/cddm.rb",
+      "packaging/scoop/cddm.json",
+      "packaging/winget/GrigorTonikyan.cddm.yaml",
       "CHANGELOG.md",
       "README.md",
     ]);
