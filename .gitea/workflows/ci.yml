@@ -105,8 +105,10 @@ jobs:
         uses: Swatinem/rust-cache@v2
         continue-on-error: true
 
-      - name: Build MCP Server Binary
-        run: cargo build -p cddm-mcp
+      - name: Build MCP Server & CLI Binaries
+        run: |
+          cargo build -p cddm-mcp
+          cargo build -p cddm-cli
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2

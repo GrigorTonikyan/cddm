@@ -1,11 +1,35 @@
 import { describe, expect, it } from "bun:test";
 import { existsSync, unlinkSync } from "node:fs";
+import { join } from "node:path";
 import { assertToolError, executeTool, RPC_ERRORS } from "../helpers";
+
+function getCddmCliBinary(): string | null {
+  const exeName = process.platform === "win32" ? "cddm.exe" : "cddm";
+  const debugPath = join(import.meta.dir, "../../../target/debug", exeName);
+  const releasePath = join(import.meta.dir, "../../../target/release", exeName);
+  if (existsSync(debugPath)) return debugPath;
+  if (existsSync(releasePath)) return releasePath;
+  return null;
+}
 
 describe("MCP Tool: cddm_export_cache_pack", () => {
   it("should export incremental cache pack to file", async () => {
     if (!existsSync(".cddm/cache.db")) {
-      Bun.spawnSync(["target/debug/cddm.exe", "scan", "crates/cddm-lsp", "--in-tree-cache"]);
+      const cliBin = getCddmCliBinary();
+      if (cliBin) {
+        Bun.spawnSync([cliBin, "scan", "crates/cddm-lsp", "--in-tree-cache"]);
+      } else {
+        Bun.spawnSync([
+          "cargo",
+          "run",
+          "-p",
+          "cddm-cli",
+          "--",
+          "scan",
+          "crates/cddm-lsp",
+          "--in-tree-cache",
+        ]);
+      }
     }
     const tempPack = "cddm-test-export.cddmpack";
     try {
