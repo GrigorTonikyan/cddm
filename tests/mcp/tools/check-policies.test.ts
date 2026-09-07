@@ -4,7 +4,7 @@ import { executeTool } from "../helpers";
 describe("MCP Tool: cddm_check_policies", () => {
   it("should evaluate duplication quality gate policies", async () => {
     const res = await executeTool("cddm_check_policies", {
-      directory: ".",
+      directory: "crates/cddm-lsp",
       min_tokens: 50,
     });
 
@@ -16,7 +16,7 @@ describe("MCP Tool: cddm_check_policies", () => {
 
   it("should return compact policy evaluation when detail_level is compact", async () => {
     const res = await executeTool("cddm_check_policies", {
-      directory: ".",
+      directory: "crates/cddm-lsp",
       min_tokens: 50,
       detail_level: "compact",
     });

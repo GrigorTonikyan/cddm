@@ -8,10 +8,12 @@ describe("CodeBlock Molecule (Atomic UI)", () => {
 
   beforeEach(() => {
     writeTextMock = vi.fn().mockResolvedValue(undefined);
-    Object.assign(navigator, {
-      clipboard: {
+    Object.defineProperty(navigator, "clipboard", {
+      value: {
         writeText: writeTextMock,
       },
+      writable: true,
+      configurable: true,
     });
   });
 

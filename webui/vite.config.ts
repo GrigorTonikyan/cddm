@@ -23,10 +23,11 @@ export default defineConfig({
     },
   },
   test: {
-    environment: "jsdom",
+    environment: "happy-dom",
     globals: true,
     testTimeout: 60000,
     hookTimeout: 60000,
-    fileParallelism: false,
+    fileParallelism: true,
+    maxWorkers: 2,
   },
 });
