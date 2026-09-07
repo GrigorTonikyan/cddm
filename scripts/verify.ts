@@ -77,6 +77,10 @@ const STEPS: ScriptStep[] = [
     command: ["bun", "scripts/package-vscode.ts"],
   },
   {
+    title: "Milestone governance & issue assignment gate (bun scripts/check-milestones.ts)",
+    command: ["bun", "scripts/check-milestones.ts"],
+  },
+  {
     title: "CDDM Dogfooding Self-Scan (cddm scan .)",
     command: [
       "cargo",
