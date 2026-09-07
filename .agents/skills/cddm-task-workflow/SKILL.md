@@ -48,7 +48,7 @@ Update docs in `docs/` and root as needed.
 
 1. Sync versions if needed: `vp run bump`
 2. Commit with Conventional Commits referencing the primary Gitea issue (`Fixes #<gitea-id>`)
-3. Push to `origin` (Gitea) first (never use `--no-verify`), using strictly ONE canonical branch (`feat/issue-<num>-<desc>`). Then mirror to `github`.
-4. Open the primary Pull Request on Gitea (`https://git.gt-web-dev.com/gt-dev/cddm/pulls`), include `Fixes #<id>`, assign target milestone, and mirror to GitHub secondarily.
+3. Push to `origin` (Gitea) (never use `--no-verify`), using strictly ONE canonical branch (`feat/issue-<num>-<desc>`). Do NOT push manually to `github`—Gitea automatically replicates all branches and commits to GitHub via server-side push mirror (`sync_on_commit: true`).
+4. Open the primary Pull Request on Gitea (`https://git.gt-web-dev.com/gt-dev/cddm/pulls`), include `Fixes #<id>`, and assign target milestone.
 5. Merge PR via Gitea REST API (`POST /repos/{owner}/{repo}/pulls/{id}/merge`) to ensure auto-closure of issues and clean UI state.
 6. For milestone releases, execute `vp run version:release` to synchronize all 10 manifests and publish release artifacts.

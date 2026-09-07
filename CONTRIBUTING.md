@@ -168,7 +168,7 @@ CDDM enforces [Gitea (`git.gt-web-dev.com`)](https://git.gt-web-dev.com/gt-dev/c
 
 ### 3. Pull Requests, Auto-Closing & API Merge
 
-1. Push your branch to `origin` (Gitea) first, then mirror to `github`:
+1. Push your branch to `origin` (Gitea). Note that Gitea automatically replicates all branches and commits to the GitHub mirror (`sync_on_commit: true`), so manual pushing to `github` is never required:
 
    ```bash
    git push origin feat/issue-19-my-feature-description

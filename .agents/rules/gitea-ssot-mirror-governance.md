@@ -43,8 +43,8 @@ This rule governs repository tracking, issue management, branching nomenclature,
 
 ## 4. Pull Request & API Merge Protocol
 
-1. **Gitea-First Push**: Always push working branches to `origin` (Gitea: `https://git.gt-web-dev.com/gt-dev/cddm.git`) first.
-2. **Mirror Push**: Push to secondary remote `github` (`https://github.com/GrigorTonikyan/cddm.git`) after Gitea.
+1. **Gitea Push (Sole Push Target)**: Always push working branches to `origin` (Gitea: `https://git.gt-web-dev.com/gt-dev/cddm.git`).
+2. **Automated Server-Side Mirroring (Zero Manual Push)**: Gitea is configured with automated server-side push mirroring (`sync_on_commit: true`) to GitHub (`https://github.com/GrigorTonikyan/cddm.git`). Never push manually to the `github` remote—doing so causes redundant network traffic, race conditions, and reference lock collisions (e.g. `cannot lock ref ... reference already exists`).
 3. **Primary PR Creation**: Open the primary Pull Request on Gitea (`https://git.gt-web-dev.com/gt-dev/cddm/pulls`) merging into `main`.
 4. **Auto-Closing Issue Citations**: PR descriptions MUST include closing keywords (`Fixes #<id>`, `Closes #<id>`, `Resolves #<id>`) pointing to the primary Gitea issue.
 5. **API-Driven Merge Enforcement**:

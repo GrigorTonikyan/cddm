@@ -24,7 +24,7 @@ For every task, fix, refactor, or feature:
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 3. Implement Changes + Polyglot Tests + Verify (`vp run verify`)             │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 4. Push Issue Branch to Gitea `origin` (and downstream `github`)             │
+│ 4. Push Issue Branch to Gitea `origin` (auto-mirrored to `github`)           │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 5. Open Pull Request on Gitea targeting `main` (with `Fixes #<id>`)          │
 ├─────────────────────────────────────────────────────────────────────────────┤
