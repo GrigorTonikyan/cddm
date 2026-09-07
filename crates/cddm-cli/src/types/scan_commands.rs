@@ -35,9 +35,13 @@ pub struct ScanArgs {
     #[arg(long, default_value_t = false)]
     pub git_blame: bool,
 
-    /// Custom path for persistent redb cache database (default: .cddm/cache.db)
+    /// Custom path for persistent redb cache database (default: OS user cache)
     #[arg(long)]
     pub cache_dir: Option<PathBuf>,
+
+    /// Store persistent redb cache database in workspace (.cddm/cache.db) instead of OS user cache
+    #[arg(long, default_value_t = false)]
+    pub in_tree_cache: bool,
 
     /// Bypass persistent disk cache and force full re-scan
     #[arg(long, default_value_t = false)]

@@ -52,6 +52,7 @@ pub async fn run_watch_command(
         enforce_policies: false,
         cross_language,
         threads: None,
+        in_tree_cache: false,
     };
 
     // Optionally spawn embedded Axum WebUI server

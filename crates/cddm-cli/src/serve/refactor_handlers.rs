@@ -160,6 +160,7 @@ pub async fn monorepo_handler(
         enforce_policies: false,
         cross_language: false,
         threads: None,
+        in_tree_cache: false,
     };
     cddm_core::run_monorepo_scan(&dir, &config)
         .await

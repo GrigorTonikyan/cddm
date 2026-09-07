@@ -48,7 +48,8 @@ pub use ai::{
 pub use ai_prompt::*;
 pub use cache::pack::*;
 pub use cache::{
-    CachedFileEntry, DiskFingerprintCache, find_workspace_root, resolve_default_cache_path,
+    CachedFileEntry, DiskFingerprintCache, find_workspace_root, resolve_cache_path,
+    resolve_default_cache_path, resolve_user_cache_dir,
 };
 pub use cluster::cluster_clone_pairs;
 pub use coverage::*;
