@@ -134,7 +134,10 @@ pub fn detect_unreachable_blocks(
         let mut terminated = false;
         let mut cursor = node.walk();
         for child in node.children(&mut cursor) {
-            let child_kind = child.kind();
+            if !is_executable_statement(child, source) {
+                continue;
+            }
+
             if terminated {
                 let line_start = child.start_position().row + 1;
                 let line_end = child.end_position().row + 1;
@@ -159,10 +162,10 @@ pub fn detect_unreachable_blocks(
                     cross_package_callers: Vec::new(),
                 });
                 *next_id += 1;
-                break;
+                continue;
             }
 
-            if is_terminating_statement(child_kind, child, source) {
+            if is_terminating_statement(child.kind(), child, source) {
                 terminated = true;
             }
         }
@@ -174,14 +177,58 @@ pub fn detect_unreachable_blocks(
     }
 }
 
-fn is_terminating_statement(kind: &str, node: tree_sitter::Node, source: &str) -> bool {
-    matches!(
+/// Returns true if the AST node is a named, non-punctuation candidate executable statement.
+pub fn is_executable_statement(node: tree_sitter::Node, source: &str) -> bool {
+    if !node.is_named() || node.is_extra() {
+        return false;
+    }
+    let kind = node.kind();
+    if matches!(
         kind,
-        "return_statement" | "throw_statement" | "break_statement" | "continue_statement"
-    ) || (kind == "expression_statement" && {
+        "comment" | "line_comment" | "block_comment" | "empty_statement" | ";" | "{" | "}"
+    ) {
+        return false;
+    }
+    let snippet = source[node.byte_range()].trim();
+    !matches!(snippet, "" | "}" | "{" | ";" | ")" | "]")
+}
+
+fn is_terminating_statement(kind: &str, node: tree_sitter::Node, source: &str) -> bool {
+    if matches!(
+        kind,
+        "return_statement"
+            | "return_expression"
+            | "throw_statement"
+            | "raise_statement"
+            | "break_statement"
+            | "break_expression"
+            | "continue_statement"
+            | "continue_expression"
+    ) {
+        return true;
+    }
+
+    if kind == "expression_statement" {
+        let mut cursor = node.walk();
+        for child in node.children(&mut cursor) {
+            if matches!(
+                child.kind(),
+                "return_expression"
+                    | "return_statement"
+                    | "break_expression"
+                    | "break_statement"
+                    | "continue_expression"
+                    | "continue_statement"
+                    | "throw_statement"
+            ) {
+                return true;
+            }
+        }
         let text = &source[node.byte_range()];
-        text.contains("panic!") || text.contains("exit(") || text.contains("process.exit")
-    })
+        return text.contains("panic!") || text.contains("exit(") || text.contains("process.exit");
+    }
+
+    false
 }
 
 fn get_node_identifier(node: tree_sitter::Node, source: &str) -> Option<String> {
