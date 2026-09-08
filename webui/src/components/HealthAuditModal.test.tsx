@@ -25,6 +25,7 @@ describe("HealthAuditModal Component", () => {
     expect(screen.getByText("94.5")).toBeDefined();
     expect(screen.getByText("[PASS] Threshold")).toBeDefined();
     expect(screen.getByText(/3\.50% Duplication/i)).toBeDefined();
+    expect(screen.getByText("AVX-512 Vector Lanes")).toBeDefined();
 
     // Test close button
     const closeBtn = screen.getByText("Close");

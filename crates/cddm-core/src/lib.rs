@@ -76,7 +76,7 @@ pub use refactor::*;
 pub use sarif::*;
 pub use semantic_graph::*;
 pub use service::*;
-pub use simd::compute_kgram_rolling_hashes;
+pub use simd::{compute_kgram_rolling_hashes, get_active_simd_engine};
 pub use suppression::SuppressionEngine;
 pub use timeline::collect_git_timeline;
 pub use types::*;

@@ -28,8 +28,11 @@ fn render_health_gauge(frame: &mut Frame, app: &TuiApp, area: Rect) {
     let tier_label = TuiTheme::dry_score_tier(score);
 
     let title = format!(
-        " DRY Health Score: {:.1} / 100.0  [{}]  (Duplication: {:.1}%) ",
-        score, tier_label, dup_pct
+        " DRY Health Score: {:.1} / 100.0  [{}]  (Duplication: {:.1}%)  [SIMD: {}] ",
+        score,
+        tier_label,
+        dup_pct,
+        cddm_core::get_active_simd_engine()
     );
 
     let block = create_titled_block(&title, false);

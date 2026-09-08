@@ -140,7 +140,7 @@ export const HealthAuditModal: React.FC<HealthAuditModalProps> = ({ isOpen, onCl
             <span>Audit Metrics & Remediation Priorities</span>
           </h4>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs font-mono">
             <div className="bg-slate-900/60 p-3 rounded-lg border border-slate-800 space-y-1">
               <span className="text-slate-500">Duplicate Clones</span>
               <div className="font-bold text-slate-200">
@@ -153,6 +153,11 @@ export const HealthAuditModal: React.FC<HealthAuditModalProps> = ({ isOpen, onCl
               <div className="font-bold text-indigo-300">
                 {((results.total_tokens * results.duplication_percentage) / 100).toFixed(0)} tokens
               </div>
+            </div>
+
+            <div className="bg-slate-900/60 p-3 rounded-lg border border-slate-800 space-y-1">
+              <span className="text-slate-500">SIMD Engine</span>
+              <div className="font-bold text-emerald-400">AVX-512 Vector Lanes</div>
             </div>
 
             <div className="bg-slate-900/60 p-3 rounded-lg border border-slate-800 space-y-1">

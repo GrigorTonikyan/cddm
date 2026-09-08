@@ -8,84 +8,172 @@ use rayon::prelude::*;
 use std::collections::HashMap;
 use std::path::Path;
 
+/// Number of lock-free shards for Swiss table clone indexing.
+pub const NUM_INDEX_SHARDS: usize = 64;
+
+#[inline]
+fn shard_for_hash(hash: (u64, u64)) -> usize {
+    ((hash.0 ^ hash.1) as usize) & (NUM_INDEX_SHARDS - 1)
+}
+
+type ShardMap = HashMap<(u64, u64), Vec<Location>>;
+type ThreadBuckets = Vec<Vec<ShardMap>>;
+
+/// A partitioned, concurrent clone index structure that eliminates lock contention
+/// across Rayon worker threads during large-scale monorepo deduplication.
+#[derive(Debug)]
+pub struct PartitionedCloneIndex {
+    shards: Vec<ShardMap>,
+}
+
+impl Default for PartitionedCloneIndex {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl PartitionedCloneIndex {
+    /// Creates an empty partitioned clone index with `NUM_INDEX_SHARDS` shards.
+    pub fn new() -> Self {
+        Self {
+            shards: (0..NUM_INDEX_SHARDS).map(|_| HashMap::new()).collect(),
+        }
+    }
+
+    /// Parallel builds the partitioned index across Rayon worker threads.
+    pub fn build(parsed_files: &[ParsedFile]) -> (Self, usize) {
+        let total_tokens: usize = parsed_files.par_iter().map(|pf| pf.token_count).sum();
+
+        // Accumulate thread-local partitioned buckets without cross-thread lock contention
+        let thread_buckets: ThreadBuckets = parsed_files
+            .par_iter()
+            .enumerate()
+            .fold(
+                || {
+                    (0..NUM_INDEX_SHARDS)
+                        .map(|_| ShardMap::new())
+                        .collect::<Vec<_>>()
+                },
+                |mut local_shards, (file_idx, pf)| {
+                    for fp in &pf.fingerprints {
+                        let shard_idx = shard_for_hash(fp.hash);
+                        local_shards[shard_idx]
+                            .entry(fp.hash)
+                            .or_default()
+                            .push(Location {
+                                file_idx,
+                                span: fp.span.clone(),
+                            });
+                    }
+                    local_shards
+                },
+            )
+            .collect();
+
+        // Parallel merge all thread buckets per shard independently with zero mutex contention
+        let shards: Vec<HashMap<(u64, u64), Vec<Location>>> = (0..NUM_INDEX_SHARDS)
+            .into_par_iter()
+            .map(|shard_idx| {
+                let mut merged_shard = HashMap::new();
+                for thread_shard in &thread_buckets {
+                    if let Some(bucket) = thread_shard.get(shard_idx) {
+                        for (&hash, locs) in bucket {
+                            merged_shard
+                                .entry(hash)
+                                .or_insert_with(Vec::new)
+                                .extend(locs.iter().cloned());
+                        }
+                    }
+                }
+                merged_shard
+            })
+            .collect();
+
+        (Self { shards }, total_tokens)
+    }
+
+    /// Matches clone pairs across all shards concurrently using Rayon parallel iterators.
+    pub fn match_clone_pairs(
+        &self,
+        parsed_files: &[ParsedFile],
+        config: &ScanConfig,
+        k: usize,
+    ) -> Vec<ClonePair> {
+        let repo_root = Path::new(&config.directory);
+        let default_author = if config.enable_git_blame {
+            crate::blame::get_line_author(repo_root, "", 0)
+        } else {
+            None
+        };
+
+        self.shards
+            .par_iter()
+            .flat_map(|shard| {
+                let mut raw_pairs = Vec::new();
+                for (&hash, locations) in shard {
+                    if locations.len() > 1 {
+                        for i in 0..locations.len() {
+                            for j in (i + 1)..locations.len() {
+                                let loc_a = &locations[i];
+                                let loc_b = &locations[j];
+
+                                if loc_a.file_idx == loc_b.file_idx {
+                                    if !config.scan_self {
+                                        continue;
+                                    }
+                                    let spans_overlap = loc_a.span.line_start
+                                        <= loc_b.span.line_end
+                                        && loc_b.span.line_start <= loc_a.span.line_end;
+                                    if spans_overlap {
+                                        continue;
+                                    }
+                                }
+
+                                let (author_a, author_b) = if config.enable_git_blame {
+                                    (
+                                        default_author.clone().map(|(n, d)| {
+                                            format!("{} (line {}, {})", n, loc_a.span.line_start, d)
+                                        }),
+                                        default_author.clone().map(|(n, d)| {
+                                            format!("{} (line {}, {})", n, loc_b.span.line_start, d)
+                                        }),
+                                    )
+                                } else {
+                                    (None, None)
+                                };
+
+                                raw_pairs.push(ClonePair {
+                                    file_a: parsed_files[loc_a.file_idx].path.clone(),
+                                    start_line_a: loc_a.span.line_start,
+                                    end_line_a: loc_a.span.line_end,
+                                    file_b: parsed_files[loc_b.file_idx].path.clone(),
+                                    start_line_b: loc_b.span.line_start,
+                                    end_line_b: loc_b.span.line_end,
+                                    token_count: k,
+                                    similarity: 1.0,
+                                    fragment_hash: format!("{:x}-{:x}", hash.0, hash.1),
+                                    clone_type: CloneType::Exact,
+                                    author_a,
+                                    author_b,
+                                });
+                            }
+                        }
+                    }
+                }
+                raw_pairs
+            })
+            .collect()
+    }
+}
+
 pub fn index_and_match_clone_pairs(
     parsed_files: &[ParsedFile],
     config: &ScanConfig,
     suppression_engine: &SuppressionEngine,
 ) -> (Vec<ClonePair>, usize) {
-    let mut index: HashMap<(u64, u64), Vec<Location>> = HashMap::new();
-    let mut total_tokens = 0;
-
-    for (file_idx, pf) in parsed_files.iter().enumerate() {
-        total_tokens += pf.token_count;
-        for fp in &pf.fingerprints {
-            index.entry(fp.hash).or_default().push(Location {
-                file_idx,
-                span: fp.span.clone(),
-            });
-        }
-    }
-
-    let mut raw_pairs = Vec::new();
-    let repo_root = Path::new(&config.directory);
-    let default_author = if config.enable_git_blame {
-        crate::blame::get_line_author(repo_root, "", 0)
-    } else {
-        None
-    };
-
     let k = std::cmp::max(MIN_K_GRAM, config.min_tokens / 2);
-
-    for (hash, locations) in index {
-        if locations.len() > 1 {
-            for i in 0..locations.len() {
-                for j in (i + 1)..locations.len() {
-                    let loc_a = &locations[i];
-                    let loc_b = &locations[j];
-
-                    if loc_a.file_idx == loc_b.file_idx {
-                        if !config.scan_self {
-                            continue;
-                        }
-                        // Skip overlapping spans in the same file to prevent self-cloning
-                        let spans_overlap = loc_a.span.line_start <= loc_b.span.line_end
-                            && loc_b.span.line_start <= loc_a.span.line_end;
-                        if spans_overlap {
-                            continue;
-                        }
-                    }
-
-                    let (author_a, author_b) = if config.enable_git_blame {
-                        (
-                            default_author.clone().map(|(n, d)| {
-                                format!("{} (line {}, {})", n, loc_a.span.line_start, d)
-                            }),
-                            default_author.clone().map(|(n, d)| {
-                                format!("{} (line {}, {})", n, loc_b.span.line_start, d)
-                            }),
-                        )
-                    } else {
-                        (None, None)
-                    };
-
-                    raw_pairs.push(ClonePair {
-                        file_a: parsed_files[loc_a.file_idx].path.clone(),
-                        start_line_a: loc_a.span.line_start,
-                        end_line_a: loc_a.span.line_end,
-                        file_b: parsed_files[loc_b.file_idx].path.clone(),
-                        start_line_b: loc_b.span.line_start,
-                        end_line_b: loc_b.span.line_end,
-                        token_count: k,
-                        similarity: 1.0,
-                        fragment_hash: format!("{:x}-{:x}", hash.0, hash.1),
-                        clone_type: CloneType::Exact,
-                        author_a,
-                        author_b,
-                    });
-                }
-            }
-        }
-    }
+    let (index, total_tokens) = PartitionedCloneIndex::build(parsed_files);
+    let raw_pairs = index.match_clone_pairs(parsed_files, config, k);
 
     let mut merged_pairs = merge_overlapping_clone_pairs(raw_pairs, config.min_tokens, k, |path| {
         parsed_files

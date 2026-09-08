@@ -1,8 +1,11 @@
+use cddm_core::detector::indexer::PartitionedCloneIndex;
+use cddm_core::detector::types::ParsedFile;
 use cddm_core::fingerprint::{fast_mod_m61, winnow};
 use cddm_core::io::read_file_source;
+use cddm_core::simd::avx512::{compute_kgram_rolling_hashes_avx512, fast_mod_m61_batch_avx512};
 use cddm_core::simd::scalar::compute_kgram_rolling_hashes_scalar;
 use cddm_core::simd::{compute_kgram_rolling_hashes, compute_kgram_rolling_hashes_avx2};
-use cddm_core::types::{LineSpan, NormalizedToken};
+use cddm_core::types::{LineSpan, NormalizedToken, ScanConfig};
 use criterion::{BenchmarkId, Criterion, black_box, criterion_group, criterion_main};
 use std::io::Write;
 use tempfile::NamedTempFile;
@@ -36,11 +39,18 @@ fn bench_fast_mod_m61(c: &mut Criterion) {
         .map(|i| (i as u128) * 1_000_000_007 + 42)
         .collect();
 
-    group.bench_function("10k_reductions", |b| {
+    group.bench_function("10k_reductions_scalar", |b| {
         b.iter(|| {
             for &val in &test_vals {
                 black_box(fast_mod_m61(black_box(val)));
             }
+        });
+    });
+
+    group.bench_function("10k_reductions_avx512_batch", |b| {
+        let mut out = vec![0u64; test_vals.len()];
+        b.iter(|| {
+            fast_mod_m61_batch_avx512(black_box(&test_vals), black_box(&mut out));
         });
     });
 
@@ -89,6 +99,19 @@ fn bench_rolling_hash(c: &mut Criterion) {
             },
         );
 
+        group.bench_with_input(BenchmarkId::new("avx512", size), &tokens, |b, toks| {
+            b.iter(|| {
+                compute_kgram_rolling_hashes_avx512(
+                    black_box(toks),
+                    black_box(k),
+                    b1,
+                    b2,
+                    b1_k,
+                    b2_k,
+                )
+            });
+        });
+
         group.bench_with_input(
             BenchmarkId::new("auto_dispatch", size),
             &tokens,
@@ -99,6 +122,35 @@ fn bench_rolling_hash(c: &mut Criterion) {
             },
         );
     }
+
+    group.finish();
+}
+
+fn bench_partitioned_clone_merger(c: &mut Criterion) {
+    let mut group = c.benchmark_group("parallel_clone_merger");
+    let tokens = generate_synthetic_tokens(5_000);
+    let k = 25;
+    let w = 30;
+    let fps = winnow(&tokens, k, w);
+
+    let parsed_files: Vec<ParsedFile> = (0..20)
+        .map(|idx| ParsedFile {
+            path: format!("src/module_{}.rs", idx),
+            language: "rust".to_string(),
+            token_count: tokens.len(),
+            fingerprints: fps.clone(),
+            token_spans: Vec::new(),
+        })
+        .collect();
+
+    group.bench_function("build_and_match_20_files_100k_tokens", |b| {
+        let config = ScanConfig::default();
+        b.iter(|| {
+            let (index, total) = PartitionedCloneIndex::build(black_box(&parsed_files));
+            let pairs = index.match_clone_pairs(black_box(&parsed_files), &config, k);
+            black_box((pairs.len(), total));
+        });
+    });
 
     group.finish();
 }
@@ -146,6 +198,7 @@ criterion_group!(
     benches,
     bench_fast_mod_m61,
     bench_rolling_hash,
+    bench_partitioned_clone_merger,
     bench_winnowing,
     bench_file_io
 );

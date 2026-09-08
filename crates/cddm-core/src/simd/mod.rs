@@ -1,10 +1,15 @@
 //! SIMD-accelerated rolling hash and modular reduction engines for Mersenne-61 Winnowing.
 
 pub mod avx2;
+pub mod avx512;
 pub mod neon;
 pub mod scalar;
 
 pub use avx2::{compute_dot_product_f32_avx2, compute_kgram_rolling_hashes_avx2};
+pub use avx512::{
+    compute_dot_product_f32_avx512, compute_kgram_rolling_hashes_avx512, fast_mod_m61_avx512,
+    fast_mod_m61_batch_avx512,
+};
 pub use neon::{compute_dot_product_f32_neon, compute_kgram_rolling_hashes_neon};
 pub use scalar::{
     compute_dot_product_f32_scalar, compute_kgram_rolling_hashes_scalar, compute_l2_norm_f32_scalar,
@@ -12,12 +17,38 @@ pub use scalar::{
 
 use crate::types::{LineSpan, NormalizedToken};
 
+/// Reports the fastest active hardware SIMD acceleration engine detected at runtime.
+#[inline]
+pub fn get_active_simd_engine() -> &'static str {
+    #[cfg(target_arch = "x86_64")]
+    {
+        if is_x86_feature_detected!("avx512f") {
+            "AVX-512"
+        } else if is_x86_feature_detected!("avx2") {
+            "AVX2"
+        } else {
+            "Scalar"
+        }
+    }
+
+    #[cfg(target_arch = "aarch64")]
+    {
+        "NEON"
+    }
+
+    #[cfg(not(any(target_arch = "x86_64", target_arch = "aarch64")))]
+    {
+        "Scalar"
+    }
+}
+
 /// Automatically dispatches rolling hash computation to the fastest available hardware vector engine.
 ///
 /// Priority order:
-/// 1. AVX2 (x86_64 when CPU support is detected at runtime)
-/// 2. ARM NEON (AArch64)
-/// 3. Optimized branch-minimized scalar engine (portable fallback)
+/// 1. AVX-512 (x86_64 when AVX-512F is detected at runtime)
+/// 2. AVX2 (x86_64 when CPU support is detected at runtime)
+/// 3. ARM NEON (AArch64)
+/// 4. Optimized branch-minimized scalar engine (portable fallback)
 #[inline]
 pub fn compute_kgram_rolling_hashes(
     tokens: &[(NormalizedToken, LineSpan)],
@@ -29,6 +60,16 @@ pub fn compute_kgram_rolling_hashes(
 ) -> Vec<((u64, u64), usize, usize, usize)> {
     #[cfg(target_arch = "x86_64")]
     {
+        if is_x86_feature_detected!("avx512f") {
+            return compute_kgram_rolling_hashes_avx512(
+                tokens,
+                k,
+                b1,
+                b2,
+                b1_k_minus_1,
+                b2_k_minus_1,
+            );
+        }
         compute_kgram_rolling_hashes_avx2(tokens, k, b1, b2, b1_k_minus_1, b2_k_minus_1)
     }
 
@@ -48,6 +89,9 @@ pub fn compute_kgram_rolling_hashes(
 pub fn compute_dot_product_f32(a: &[f32], b: &[f32]) -> f32 {
     #[cfg(target_arch = "x86_64")]
     {
+        if is_x86_feature_detected!("avx512f") {
+            return compute_dot_product_f32_avx512(a, b);
+        }
         compute_dot_product_f32_avx2(a, b)
     }
 
