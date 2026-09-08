@@ -132,6 +132,27 @@ pub enum HubSubcommand {
         #[arg(long, default_value_t = false)]
         dry_run: bool,
     },
+    /// Synchronize privacy-preserving fingerprint caches with remote Federation Hub peers
+    Sync {
+        /// Custom configuration file path (default: .cddmhub.toml)
+        #[arg(short, long, default_value = cddm_core::DEFAULT_HUB_CONFIG_FILE)]
+        config: PathBuf,
+        /// Remote peering endpoint URL (HTTPS/gRPC)
+        #[arg(short, long)]
+        endpoint: Option<String>,
+        /// Local repository name (defaults to directory name)
+        #[arg(short, long)]
+        repo: Option<String>,
+        /// Cryptographic privacy salt (shared secret for organization hashing)
+        #[arg(short, long)]
+        salt: Option<String>,
+        /// Output format (console, json)
+        #[arg(short, long, default_value = "console")]
+        format: String,
+        /// Dry run preview without transmitting or saving cache packs
+        #[arg(long, default_value_t = false)]
+        dry_run: bool,
+    },
 }
 
 /// CLI Arguments for `cddm hub`

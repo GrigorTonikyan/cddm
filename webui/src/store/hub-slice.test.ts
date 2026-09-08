@@ -104,4 +104,31 @@ describe("useCDDMStore - Hub Slice", () => {
     expect(result).toEqual(mockExtract);
     expect(useCDDMStore.getState().isHubLoading).toBe(false);
   });
+
+  it("should synchronize hub peering with remote endpoint", async () => {
+    const mockSyncResult = {
+      hub_name: "acme-corp",
+      remote_endpoint: "http://127.0.0.1:8081",
+      local_fingerprints_count: 50,
+      remote_fingerprints_count: 55,
+      matched_fingerprints_count: 10,
+      matched_clones_count: 2,
+      synchronized_at: "2026-09-08T12:00:00Z",
+      manifest_sha256: "sha256-peering-token",
+    };
+
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(mockSyncResult),
+    } as Response);
+
+    const result = await useCDDMStore.getState().syncHubPeering({
+      remote_endpoint: "http://127.0.0.1:8081",
+      salt: "org-salt",
+    });
+
+    expect(result).toEqual(mockSyncResult);
+    expect(useCDDMStore.getState().hubSyncResult).toEqual(mockSyncResult);
+    expect(useCDDMStore.getState().isHubLoading).toBe(false);
+  });
 });

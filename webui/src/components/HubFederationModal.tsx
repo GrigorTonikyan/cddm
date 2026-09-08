@@ -8,8 +8,14 @@ import {
   Sparkles,
   CheckCircle2,
   RefreshCw,
+  Network,
 } from "lucide-react";
-import type { CrossRepoCluster, HubExtractResult, HubScanSummary } from "../types/cddm-types";
+import type {
+  CrossRepoCluster,
+  HubExtractResult,
+  HubScanSummary,
+  HubSyncResult,
+} from "../types/cddm-types";
 import { useCDDMStore } from "../store/cddm-store";
 
 export interface HubFederationModalProps {
@@ -23,10 +29,15 @@ export const HubFederationModal: React.FC<HubFederationModalProps> = ({
   onClose,
   initialSummary = null,
 }) => {
-  const { hubSummary, isHubLoading, runHubScan, extractHubPackage } = useCDDMStore();
-  const [activeTab, setActiveTab] = useState<"repos" | "matrix" | "clusters">("repos");
+  const { hubSummary, isHubLoading, runHubScan, extractHubPackage, syncHubPeering, hubSyncResult } =
+    useCDDMStore();
+  const [activeTab, setActiveTab] = useState<"repos" | "matrix" | "clusters" | "sync">("repos");
   const [extractResult, setExtractResult] = useState<HubExtractResult | null>(null);
   const [extractingClusterId, setExtractingClusterId] = useState<number | null>(null);
+  const [remoteEndpoint, setRemoteEndpoint] = useState<string>("http://127.0.0.1:8081");
+  const [salt, setSalt] = useState<string>("org-cddm-federation-salt");
+  const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const [localSyncResult, setLocalSyncResult] = useState<HubSyncResult | null>(null);
 
   const summary = hubSummary || initialSummary;
 
@@ -53,6 +64,21 @@ export const HubFederationModal: React.FC<HubFederationModalProps> = ({
       // handled by store
     } finally {
       setExtractingClusterId(null);
+    }
+  };
+
+  const handleSync = async () => {
+    setIsSyncing(true);
+    try {
+      const res = await syncHubPeering({
+        remote_endpoint: remoteEndpoint,
+        salt: salt || undefined,
+      });
+      setLocalSyncResult(res);
+    } catch {
+      // handled by store
+    } finally {
+      setIsSyncing(false);
     }
   };
 
@@ -143,6 +169,20 @@ export const HubFederationModal: React.FC<HubFederationModalProps> = ({
             <span className="flex items-center gap-1.5">
               <Package className="w-3.5 h-3.5 text-emerald-400" />
               Cross-Repo Extraction ({summary?.clusters?.length || 0})
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("sync")}
+            className={`px-3 py-1.5 text-xs font-medium rounded-t border-t border-x transition-colors ${
+              activeTab === "sync"
+                ? "bg-[#1e1e1e] text-white border-[#444444]"
+                : "text-gray-400 border-transparent hover:text-gray-200"
+            }`}
+          >
+            <span className="flex items-center gap-1.5">
+              <Network className="w-3.5 h-3.5 text-cyan-400" />
+              Remote Peering & Sync
             </span>
           </button>
         </div>
@@ -285,6 +325,99 @@ export const HubFederationModal: React.FC<HubFederationModalProps> = ({
               {(!summary?.clusters || summary.clusters.length === 0) && (
                 <div className="text-center py-10 text-gray-500">
                   No cross-repository clusters requiring standalone package extraction.
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === "sync" && (
+            <div className="space-y-4">
+              <div className="p-3 bg-[#252526] rounded border border-[#333333] space-y-3">
+                <div className="text-xs font-semibold text-white flex items-center gap-2">
+                  <Network className="w-4 h-4 text-cyan-400" />
+                  Remote Hub Peering Configuration
+                </div>
+                <div className="text-[11px] text-gray-400">
+                  Synchronize cryptographic privacy-preserving blind fingerprints across distributed
+                  federation hubs.
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+                  <div>
+                    <label className="block text-[11px] font-medium text-gray-300 mb-1">
+                      Remote Peer Endpoint
+                    </label>
+                    <input
+                      type="text"
+                      value={remoteEndpoint}
+                      onChange={(e) => setRemoteEndpoint(e.target.value)}
+                      placeholder="http://127.0.0.1:8081"
+                      className="w-full px-2.5 py-1.5 bg-[#1e1e1e] border border-[#444444] rounded text-white text-xs focus:outline-none focus:border-cyan-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-medium text-gray-300 mb-1">
+                      Cryptographic Blind Salt (Keyed BLAKE3)
+                    </label>
+                    <input
+                      type="text"
+                      value={salt}
+                      onChange={(e) => setSalt(e.target.value)}
+                      placeholder="secret-peering-salt"
+                      className="w-full px-2.5 py-1.5 bg-[#1e1e1e] border border-[#444444] rounded text-white text-xs focus:outline-none focus:border-cyan-500"
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end pt-2">
+                  <button
+                    onClick={() => void handleSync()}
+                    disabled={isSyncing || !remoteEndpoint.trim()}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-cyan-700 hover:bg-cyan-600 text-white rounded text-xs font-medium transition-colors disabled:opacity-50"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? "animate-spin" : ""}`} />
+                    {isSyncing ? "Synchronizing..." : "Sync with Remote Peer"}
+                  </button>
+                </div>
+              </div>
+
+              {(localSyncResult || hubSyncResult) && (
+                <div className="p-3 bg-[#252526] rounded border border-cyan-800 space-y-3">
+                  <div className="flex items-center gap-2 font-semibold text-cyan-300 text-xs">
+                    <CheckCircle2 className="w-4 h-4 text-cyan-400" />
+                    Peering Sync Complete: {(localSyncResult || hubSyncResult)?.hub_name} ⇄{" "}
+                    {(localSyncResult || hubSyncResult)?.remote_endpoint}
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-[11px]">
+                    <div className="p-2 bg-[#1e1e1e] rounded border border-[#333]">
+                      <div className="text-gray-400">Local Fingerprints</div>
+                      <div className="text-white font-bold">
+                        {(localSyncResult || hubSyncResult)?.local_fingerprints_count}
+                      </div>
+                    </div>
+                    <div className="p-2 bg-[#1e1e1e] rounded border border-[#333]">
+                      <div className="text-gray-400">Remote Fingerprints</div>
+                      <div className="text-white font-bold">
+                        {(localSyncResult || hubSyncResult)?.remote_fingerprints_count}
+                      </div>
+                    </div>
+                    <div className="p-2 bg-[#1e1e1e] rounded border border-[#333]">
+                      <div className="text-gray-400">Matched Fingerprints</div>
+                      <div className="text-amber-400 font-bold">
+                        {(localSyncResult || hubSyncResult)?.matched_fingerprints_count}
+                      </div>
+                    </div>
+                    <div className="p-2 bg-[#1e1e1e] rounded border border-[#333]">
+                      <div className="text-gray-400">Cross-Repo Clones</div>
+                      <div className="text-emerald-400 font-bold">
+                        {(localSyncResult || hubSyncResult)?.matched_clones_count}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-[10px] text-gray-500 flex justify-between">
+                    <span>
+                      Manifest SHA-256: {(localSyncResult || hubSyncResult)?.manifest_sha256}
+                    </span>
+                    <span>Sync Time: {(localSyncResult || hubSyncResult)?.synchronized_at}</span>
+                  </div>
                 </div>
               )}
             </div>

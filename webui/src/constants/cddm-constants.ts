@@ -47,6 +47,7 @@ export const API_ROUTES = {
   HUB_CONFIG: "/api/hub/config",
   HUB_SCAN: "/api/hub/scan",
   HUB_EXTRACT: "/api/hub/extract",
+  HUB_SYNC: "/api/hub/sync",
   COVERAGE_INGEST: "/api/coverage/ingest",
   COVERAGE_CORRELATE: "/api/coverage/correlate",
   DEAD_CODE_SCAN: "/api/dead-code/scan",

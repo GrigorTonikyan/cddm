@@ -108,3 +108,21 @@ export interface HubExtractResult {
   lines_saved: number;
   summary: string;
 }
+
+export interface HubSyncRequest {
+  remote_endpoint: string;
+  salt?: string;
+  min_tokens?: number;
+  fail_threshold?: number;
+}
+
+export interface HubSyncResult {
+  hub_name: string;
+  remote_endpoint: string;
+  local_fingerprints_count: number;
+  remote_fingerprints_count: number;
+  matched_fingerprints_count: number;
+  matched_clones_count: number;
+  synchronized_at: string;
+  manifest_sha256: string;
+}

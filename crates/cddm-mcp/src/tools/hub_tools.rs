@@ -138,3 +138,52 @@ pub async fn handle_extract_hub_package(
         Err(e) => make_error_response(id, rpc_errors::INVALID_PARAMS, e),
     }
 }
+
+/// Handler for the `cddm_sync_hub` MCP tool.
+pub async fn handle_sync_hub(
+    id: Option<serde_json::Value>,
+    args: Option<&serde_json::Value>,
+) -> JsonRpcResponse {
+    let repo_name = args
+        .and_then(|a| a.get("repo_name"))
+        .and_then(|r| r.as_str())
+        .unwrap_or("local-workspace")
+        .to_string();
+
+    let hub_config = args
+        .and_then(|a| a.get("hub_config"))
+        .and_then(|p| p.as_str())
+        .map(|s| s.to_string());
+
+    let remote_endpoint = args
+        .and_then(|a| a.get("remote_endpoint"))
+        .and_then(|e| e.as_str())
+        .map(|s| s.to_string());
+
+    let org_salt = args
+        .and_then(|a| a.get("org_salt"))
+        .and_then(|s| s.as_str())
+        .map(|s| s.to_string());
+
+    let dry_run = args
+        .and_then(|a| a.get("dry_run"))
+        .and_then(|d| d.as_bool())
+        .unwrap_or(false);
+
+    let request = cddm_core::HubSyncRequest {
+        hub_config,
+        remote_endpoint,
+        repo_name,
+        org_salt,
+        bidirectional: true,
+        dry_run,
+    };
+
+    match cddm_core::sync_hub_peering(&request).await {
+        Ok(res) => {
+            let json_str = serde_json::to_string_pretty(&res).unwrap_or_default();
+            make_text_response(id, json_str)
+        }
+        Err(e) => make_error_response(id, rpc_errors::INTERNAL_ERROR, e),
+    }
+}

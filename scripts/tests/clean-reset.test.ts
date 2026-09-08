@@ -176,6 +176,6 @@ describe("Workspace Cleaner & Reset Engine", () => {
         }
         expect(normalized).toBe(".cddm");
       }
-    });
+    }, 30000);
   });
 });

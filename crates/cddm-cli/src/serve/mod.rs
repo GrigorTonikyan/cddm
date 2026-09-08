@@ -111,6 +111,7 @@ pub fn build_app_with_state(state: AppState) -> Router {
         )
         .route(ROUTE_API_HUB_SCAN, post(hub_scan_handler))
         .route(ROUTE_API_HUB_EXTRACT, post(hub_extract_handler))
+        .route(ROUTE_API_HUB_SYNC, post(hub_sync_handler))
         .route(ROUTE_API_COVERAGE_INGEST, post(coverage_ingest_handler))
         .route(
             ROUTE_API_COVERAGE_CORRELATE,

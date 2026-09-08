@@ -55,6 +55,7 @@ The CDDM MCP Server (`cddm-mcp`) exposes the entire clone analysis, AST refactor
 | **`cddm_detect_overlap`**           | Overlap      | Detects reimplemented standard and third-party library algorithms         | `directory, threshold`                                           |
 | **`cddm_scan_hub`**                 | Federation   | Scans multi-repository Organization Federation Hub for cross-repo clones  | `config_path, targets, min_tokens`                               |
 | **`cddm_extract_hub_package`**      | Federation   | Extracts cross-repository duplicate clusters into federated packages      | `cluster_id, pkg_name, pkg_type, target_dir`                     |
+| **`cddm_sync_hub`**                 | Federation   | Synchronizes blind fingerprints and distributed cache with remote peer    | `remote_endpoint, salt, min_tokens, fail_threshold`              |
 | **`cddm_correlate_coverage`**       | Coverage     | Correlates code clones with runtime test execution hit counts             | `coverage_report, directory, min_tokens`                         |
 | **`cddm_detect_dead_clones`**       | Coverage     | Filters duplicate clones with 0 runtime hits across all sites             | `coverage_report, directory`                                     |
 | **`cddm_detect_dead_code`**         | Dead Code    | Detects unreferenced functions, dead blocks, and orphan clones            | `directory, min_tokens, static_only`                             |

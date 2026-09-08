@@ -215,8 +215,17 @@ export const CLI_COMMANDS_CATALOG: CliCommandMetadata[] = [
   {
     name: "hub",
     summary: "Manage and scan multi-repository Organization Federation Hub (.cddmhub.toml)",
-    usage: "cddm hub <init|scan|extract> [OPTIONS]",
-    keyFlags: ["--config", "--targets", "--cluster", "--pkg-name", "--pkg-type", "--target-dir"],
+    usage: "cddm hub <init|scan|extract|sync> [OPTIONS]",
+    keyFlags: [
+      "--config",
+      "--targets",
+      "--cluster",
+      "--pkg-name",
+      "--pkg-type",
+      "--target-dir",
+      "--remote",
+      "--salt",
+    ],
   },
   {
     name: "coverage",

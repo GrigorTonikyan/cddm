@@ -87,7 +87,11 @@ fn render_hub_repo_table(frame: &mut Frame, area: Rect) {
 fn render_hub_matrix_and_candidates(frame: &mut Frame, area: Rect) {
     let right_chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Length(8), Constraint::Min(6)])
+        .constraints([
+            Constraint::Length(8),
+            Constraint::Min(6),
+            Constraint::Length(5),
+        ])
         .split(area);
 
     let summary_lines = vec![
@@ -188,4 +192,41 @@ fn render_hub_matrix_and_candidates(frame: &mut Frame, area: Rect) {
 
     let candidate_p = Paragraph::new(candidate_lines).block(candidate_block);
     frame.render_widget(candidate_p, right_chunks[1]);
+
+    let peering_lines = vec![
+        Line::from(vec![
+            Span::styled("Remote Peer: ", Style::default().fg(Color::White)),
+            Span::styled(
+                "https://peer.internal.org:8080",
+                Style::default().fg(Color::Cyan),
+            ),
+            Span::styled(" (BLAKE3 Blind Salt)", Style::default().fg(Color::DarkGray)),
+        ]),
+        Line::from(vec![
+            Span::styled("Sync State:  ", Style::default().fg(Color::White)),
+            Span::styled(
+                "Synchronized",
+                Style::default()
+                    .fg(Color::Green)
+                    .add_modifier(Modifier::BOLD),
+            ),
+            Span::styled(
+                " • 12 matched fingerprints • 3 cross-repo clones",
+                Style::default().fg(Color::DarkGray),
+            ),
+        ]),
+    ];
+
+    let peering_block = Block::default()
+        .title(Span::styled(
+            " Remote Peering & Distributed Cache Sync ",
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
+        ))
+        .borders(Borders::ALL)
+        .border_style(Style::default().fg(Color::DarkGray));
+
+    let peering_p = Paragraph::new(peering_lines).block(peering_block);
+    frame.render_widget(peering_p, right_chunks[2]);
 }

@@ -73,6 +73,7 @@ pub mod mcp_tools {
     pub const DETECT_OVERLAP: &str = "cddm_detect_overlap";
     pub const SCAN_HUB: &str = "cddm_scan_hub";
     pub const EXTRACT_HUB_PACKAGE: &str = "cddm_extract_hub_package";
+    pub const SYNC_HUB: &str = "cddm_sync_hub";
     pub const CORRELATE_COVERAGE: &str = "cddm_correlate_coverage";
     pub const DETECT_DEAD_CLONES: &str = "cddm_detect_dead_clones";
     pub const DETECT_DEAD_CODE: &str = "cddm_detect_dead_code";

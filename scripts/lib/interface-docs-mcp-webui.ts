@@ -173,6 +173,12 @@ export const MCP_TOOLS_CATALOG: McpToolDef[] = [
     keyParams: "cluster_id, pkg_name, pkg_type, target_dir",
   },
   {
+    name: "cddm_sync_hub",
+    category: "Federation",
+    summary: "Synchronizes blind fingerprints and distributed cache with remote peer",
+    keyParams: "remote_endpoint, salt, min_tokens, fail_threshold",
+  },
+  {
     name: "cddm_correlate_coverage",
     category: "Coverage",
     summary: "Correlates code clones with runtime test execution hit counts",

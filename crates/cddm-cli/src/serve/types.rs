@@ -49,6 +49,7 @@ define_api_routes! {
     ROUTE_API_HUB_CONFIG => "/api/hub/config",
     ROUTE_API_HUB_SCAN => "/api/hub/scan",
     ROUTE_API_HUB_EXTRACT => "/api/hub/extract",
+    ROUTE_API_HUB_SYNC => "/api/hub/sync",
     ROUTE_API_COVERAGE_INGEST => "/api/coverage/ingest",
     ROUTE_API_COVERAGE_CORRELATE => "/api/coverage/correlate",
     ROUTE_API_DEAD_CODE_SCAN => "/api/dead-code/scan",

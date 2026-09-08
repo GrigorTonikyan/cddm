@@ -4,6 +4,8 @@ import type {
   HubExtractRequest,
   HubExtractResult,
   HubScanSummary,
+  HubSyncRequest,
+  HubSyncResult,
 } from "../../types/cddm-types";
 import { getJson, postJson } from "../../utils/api-client";
 import type { GetStoreState, SetStoreState } from "./scan-slice";
@@ -12,6 +14,7 @@ export const createHubSlice = (set: SetStoreState, _get: GetStoreState) => ({
   isHubModalOpen: false,
   hubConfig: null as HubConfig | null,
   hubSummary: null as HubScanSummary | null,
+  hubSyncResult: null as HubSyncResult | null,
   isHubLoading: false,
   hubError: null as string | null,
 
@@ -81,6 +84,23 @@ export const createHubSlice = (set: SetStoreState, _get: GetStoreState) => ({
       return data;
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to extract Hub shared package";
+      set({ hubError: msg, isHubLoading: false });
+      throw err;
+    }
+  },
+
+  syncHubPeering: async (req: HubSyncRequest): Promise<HubSyncResult> => {
+    set({ isHubLoading: true, hubError: null });
+    try {
+      const data = await postJson<HubSyncResult>(
+        API_ROUTES.HUB_SYNC,
+        req,
+        "Hub remote peering sync failed",
+      );
+      set({ hubSyncResult: data, isHubLoading: false });
+      return data;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to synchronize Hub remote peering";
       set({ hubError: msg, isHubLoading: false });
       throw err;
     }
