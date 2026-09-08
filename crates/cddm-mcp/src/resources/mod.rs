@@ -220,7 +220,8 @@ pub async fn handle_resource_read(
                     "total_tokens": res.total_tokens,
                     "total_clones": res.total_clones,
                     "total_clusters": res.total_clusters,
-                    "language_breakdown": res.language_breakdown
+                    "language_breakdown": res.language_breakdown,
+                    "simd_engine": cddm_core::get_active_simd_engine()
                 });
                 make_resource_json_response(id, uri, &payload)
             }

@@ -3,7 +3,7 @@
 use cddm_core::ScanResult;
 use comfy_table::{Cell, Color, Table};
 
-pub fn scan_metrics_summary(result: &ScanResult) -> [(&'static str, String); 8] {
+pub fn scan_metrics_summary(result: &ScanResult) -> [(&'static str, String); 9] {
     [
         ("Scan ID", result.scan_id.clone()),
         ("Total Files", result.total_files.to_string()),
@@ -17,6 +17,10 @@ pub fn scan_metrics_summary(result: &ScanResult) -> [(&'static str, String); 8] 
         (
             "DRY Health Score",
             format!("{:.1} / 100.0", result.dry_health_score),
+        ),
+        (
+            "SIMD Engine",
+            cddm_core::get_active_simd_engine().to_string(),
         ),
         ("Scan Duration", format!("{} ms", result.duration_ms)),
     ]

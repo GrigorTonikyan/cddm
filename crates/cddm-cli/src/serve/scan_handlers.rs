@@ -25,7 +25,8 @@ pub async fn health_handler() -> impl IntoResponse {
     Json(serde_json::json!({
         "status": STATUS_OK,
         "service": SERVICE_NAME,
-        "version": env!("CARGO_PKG_VERSION")
+        "version": env!("CARGO_PKG_VERSION"),
+        "simd_engine": cddm_core::get_active_simd_engine()
     }))
 }
 

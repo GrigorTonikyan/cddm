@@ -121,7 +121,7 @@ export const SummaryBanner: React.FC<SummaryBannerProps> = ({ results, onOpenHea
             <span className="text-xs text-slate-400 font-mono"> ms</span>
           </>
         }
-        subtitle="Winnowing M61 execution"
+        subtitle="AVX-512 SIMD vector lanes"
         icon={<Clock className="w-5 h-5 text-indigo-400" />}
       />
     </div>
