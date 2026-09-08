@@ -5,6 +5,17 @@ All notable changes to **CDDM** (_Code De-Duplication Meister_) will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.0.0] - 2026-09-08
+
+### Features
+
+- **hub**: federation hub remote peering protocol and distributed cache sync (`16217ea`)
+
+### Performance Improvements
+
+- **simd**: implement AVX-512 acceleration and parallel clone merger (`f3efd71`)
+- **neural**: implement SQ8 vector quantization and HNSW search (Fixes #8) (`04f45fe`)
+
 ## [3.5.0] - 2026-09-07
 
 ### Bug Fixes
