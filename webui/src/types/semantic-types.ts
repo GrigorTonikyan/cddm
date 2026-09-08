@@ -165,6 +165,8 @@ export interface NeuralScanResult {
   total_neural_pairs: number;
   high_confidence_count: number;
   pairs: NeuralClonePair[];
+  index_type?: string;
+  memory_reduction_ratio?: number;
 }
 
 export interface SemanticNeuralRequest {
@@ -172,4 +174,6 @@ export interface SemanticNeuralRequest {
   threshold?: number;
   dimension?: number;
   max_subwords?: number;
+  use_hnsw?: boolean;
+  use_sq8?: boolean;
 }

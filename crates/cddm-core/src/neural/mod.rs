@@ -10,7 +10,7 @@ pub mod types;
 
 pub use constants::*;
 pub use embedder::NeuralCodeEmbedder;
-pub use hnsw::{HnswConfig, HnswVectorIndex};
+pub use hnsw::{HnswConfig, HnswSq8VectorIndex, HnswVectorIndex};
 pub use matcher::NeuralMatcher;
 pub use quantization::*;
 pub use tokenizer::SubwordTokenizer;
@@ -24,6 +24,22 @@ pub fn scan_neural_clones(
     config: &NeuralEmbeddingConfig,
 ) -> Result<NeuralScanResult, String> {
     NeuralMatcher::scan_workspace(workspace_root, config)
+}
+
+/// Scan workspace directory for neural algorithmic equivalence with optional HNSW index and SQ8 quantization.
+pub fn scan_neural_clones_with_options(
+    workspace_root: &Path,
+    config: &NeuralEmbeddingConfig,
+    use_hnsw: bool,
+    use_sq8: bool,
+) -> Result<NeuralScanResult, String> {
+    if use_hnsw && use_sq8 {
+        NeuralMatcher::scan_workspace_hnsw_sq8(workspace_root, config, None)
+    } else if use_hnsw {
+        NeuralMatcher::scan_workspace_hnsw(workspace_root, config, None)
+    } else {
+        NeuralMatcher::scan_workspace(workspace_root, config)
+    }
 }
 
 /// Computes embedding vector for a single code snippet.

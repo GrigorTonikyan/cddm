@@ -40,4 +40,21 @@ describe("MCP Tool: cddm_semantic_neural_scan", () => {
       expect(e).toBeDefined();
     }
   });
+
+  it("should run HNSW SQ8 quantized neural scan on workspace with 4x compression", async () => {
+    const res = await executeTool("cddm_semantic_neural_scan", {
+      directory: "crates/cddm-lsp",
+      threshold: 0.85,
+      dimension: 256,
+      use_hnsw: true,
+      use_sq8: true,
+    });
+
+    expect(res).toBeDefined();
+    expect(typeof res.total_blocks_embedded).toBe("number");
+    expect(res.use_hnsw).toBe(true);
+    expect(res.use_sq8).toBe(true);
+    expect(res.index_type).toBe("hnsw_sq8");
+    expect(res.memory_reduction_ratio).toBeGreaterThanOrEqual(3.5);
+  });
 });

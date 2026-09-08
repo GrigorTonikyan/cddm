@@ -372,6 +372,8 @@ pub fn get_tool_definitions() -> Vec<serde_json::Value> {
                     "directory": { "type": "string", "description": "Target workspace directory path (default: .)" },
                     "threshold": { "type": "number", "description": "Minimum cosine similarity threshold from 0.0 to 1.0 (default: 0.85)" },
                     "dimension": { "type": "number", "description": "Dense embedding vector dimensionality (default: 256)" },
+                    "use_hnsw": { "type": "boolean", "description": "Enable Hierarchical Navigable Small World (HNSW) index for sub-linear logarithmic vector search (default: false)" },
+                    "use_sq8": { "type": "boolean", "description": "Enable 8-bit scalar quantization (SQ8) for 4x vector memory reduction during retrieval (default: false)" },
                     "code_a": { "type": "string", "description": "Optional snippet A for direct pairwise comparison" },
                     "language_a": { "type": "string", "description": "Programming language for snippet A" },
                     "code_b": { "type": "string", "description": "Optional snippet B for direct pairwise comparison" },

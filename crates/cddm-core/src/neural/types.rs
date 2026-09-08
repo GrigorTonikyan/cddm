@@ -65,4 +65,8 @@ pub struct NeuralScanResult {
     pub total_neural_pairs: usize,
     pub high_confidence_count: usize,
     pub pairs: Vec<NeuralClonePair>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub index_type: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub memory_reduction_ratio: Option<f32>,
 }

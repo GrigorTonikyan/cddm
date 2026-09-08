@@ -2,7 +2,7 @@ use crate::formatters::format_semantic_report;
 use crate::types::OutputFormat;
 use cddm_core::{
     DEFAULT_MIN_TOKENS, NeuralEmbeddingConfig, ScanConfig, scan_cross_language_workspace,
-    scan_neural_clones,
+    scan_neural_clones_with_options,
 };
 use comfy_table::{Cell, Color, Table};
 use std::path::PathBuf;
@@ -18,15 +18,19 @@ pub fn run_semantic_command(
     ignore: Vec<String>,
     neural: bool,
     neural_threshold: f32,
+    hnsw: bool,
+    sq8: bool,
     threads: Option<usize>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    if neural {
+    if neural || hnsw || sq8 {
         let neural_config = NeuralEmbeddingConfig {
             similarity_threshold: neural_threshold,
             ..Default::default()
         };
 
-        let result = scan_neural_clones(&directory, &neural_config)
+        let use_hnsw = hnsw || sq8;
+        let use_sq8 = sq8;
+        let result = scan_neural_clones_with_options(&directory, &neural_config, use_hnsw, use_sq8)
             .map_err(|e| format!("Neural code embedding scan failed: {}", e))?;
 
         match format {
@@ -40,6 +44,14 @@ pub fn run_semantic_command(
             }
             OutputFormat::Markdown => {
                 println!("# CDDM Neural Code Embedding & Algorithmic Equivalence Report\n");
+                if let Some(ref idx) = result.index_type {
+                    let mem_str = if let Some(ratio) = result.memory_reduction_ratio {
+                        format!(" ({:.1}x memory compression)", ratio)
+                    } else {
+                        String::new()
+                    };
+                    println!("- Vector Index: **{}**{}", idx, mem_str);
+                }
                 println!(
                     "- Embedded Code Blocks: **{}**",
                     result.total_blocks_embedded
@@ -75,6 +87,14 @@ pub fn run_semantic_command(
             }
             OutputFormat::Console => {
                 println!("\n=== CDDM Neural Algorithmic Equivalence Scan ===");
+                if let Some(ref idx) = result.index_type {
+                    let mem_str = if let Some(ratio) = result.memory_reduction_ratio {
+                        format!(" (Memory Reduction: {:.1}x)", ratio)
+                    } else {
+                        String::new()
+                    };
+                    println!("Index Structure: {}{}\n", idx, mem_str);
+                }
                 println!(
                     "Embedded Blocks: {} | Equivalent Pairs: {} | High Confidence: {}\n",
                     result.total_blocks_embedded,

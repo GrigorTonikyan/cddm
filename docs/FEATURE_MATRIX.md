@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-27 | Rust: 347 #[test] units | WebUI: 226 tests across 63 suites | Scripts & MCP: 192 tests across 57 suites | CI Workflows: PASS
+> Last verified: 2026-08-27 | Rust: 352 #[test] units | WebUI: 227 tests across 63 suites | Scripts & MCP: 193 tests across 57 suites | CI Workflows: PASS
 
 ---
 
@@ -358,7 +358,7 @@
 
 ---
 
-## 2. WebUI Frontend — React 19 + TypeScript + Vitest (226 unit tests across 63 suites)
+## 2. WebUI Frontend — React 19 + TypeScript + Vitest (227 unit tests across 63 suites)
 
 | Module                      | Test Suite File                                                                       | Test Cases | Status |
 | :-------------------------- | :------------------------------------------------------------------------------------ | :--------- | :----- |
@@ -387,7 +387,7 @@
 | Timeline Explorer Modal     | `webui/src/components/TimelineExplorerModal.test.tsx`                                 | 3 tests    | PASS   |
 | Treemap Explorer Modal      | `webui/src/components/TreemapExplorerModal.test.tsx`                                  | 3 tests    | PASS   |
 | Extract Module Tab          | `webui/src/components/sandbox/ExtractModuleTab.test.tsx`                              | 3 tests    | PASS   |
-| Cross Language Explorer Tab | `webui/src/components/semantic/CrossLanguageExplorerTab.test.tsx`                     | 2 tests    | PASS   |
+| Cross Language Explorer Tab | `webui/src/components/semantic/CrossLanguageExplorerTab.test.tsx`                     | 3 tests    | PASS   |
 | Semantic Pairs Table        | `webui/src/components/semantic/SemanticPairsTable.test.tsx`                           | 2 tests    | PASS   |
 | Branch Drift Matrix Section | `webui/src/components/timeline/BranchDriftMatrixSection.test.tsx`                     | 2 tests    | PASS   |
 | Modal Footer                | `webui/src/components/ui/ModalFooter.test.tsx`                                        | 2 tests    | PASS   |
@@ -428,7 +428,7 @@
 
 ---
 
-## 3. Repository Scripts & MCP Protocol — Bun Test Suites (192 tests across 57 suites)
+## 3. Repository Scripts & MCP Protocol — Bun Test Suites (193 tests across 57 suites)
 
 ### Repository Tooling & Automation Suites
 
@@ -491,7 +491,7 @@
 | Tool: cddm_scan_cross_language      | `tests/mcp/tools/scan-cross-language.test.ts`      | 2 tests    | PASS   |
 | Tool: cddm_scan_hub                 | `tests/mcp/tools/scan-hub.test.ts`                 | 3 tests    | PASS   |
 | Tool: cddm_scan_monorepo            | `tests/mcp/tools/scan-monorepo.test.ts`            | 4 tests    | PASS   |
-| Tool: cddm_semantic_neural_scan     | `tests/mcp/tools/semantic-neural-scan.test.ts`     | 3 tests    | PASS   |
+| Tool: cddm_semantic_neural_scan     | `tests/mcp/tools/semantic-neural-scan.test.ts`     | 4 tests    | PASS   |
 | Tool: cddm_suggest_cluster_refactor | `tests/mcp/tools/suggest-cluster-refactor.test.ts` | 2 tests    | PASS   |
 | Tool: cddm_suggest_refactor         | `tests/mcp/tools/suggest-refactor.test.ts`         | 2 tests    | PASS   |
 | Tool: cddm_trace_reachability       | `tests/mcp/tools/trace-reachability.test.ts`       | 2 tests    | PASS   |

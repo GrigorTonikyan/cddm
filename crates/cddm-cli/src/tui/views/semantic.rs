@@ -34,7 +34,10 @@ fn render_semantic_list(frame: &mut Frame, _app: &TuiApp, area: Rect) {
         ])),
     ];
 
-    let block = create_titled_block(" Cross-Language & Neural Algorithmic Clones ", true);
+    let block = create_titled_block(
+        " Cross-Language & Neural Algorithmic Clones [HNSW SQ8 4x Compression] ",
+        true,
+    );
     frame.render_widget(List::new(items).block(block), area);
 }
 
@@ -43,7 +46,7 @@ fn render_semantic_details(frame: &mut Frame, app: &TuiApp, area: Rect) {
 
     // Hybrid Formula & Neural Metric Display
     let block_gauge = create_titled_block(
-        " Neural Embedding Model & Weisfeiler-Lehman Graph Isomorphism ",
+        " Neural Embedding (HNSW Graph | SQ8 4x Quantized) & Weisfeiler-Lehman Graph Isomorphism ",
         false,
     );
 

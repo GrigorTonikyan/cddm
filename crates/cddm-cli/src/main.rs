@@ -134,6 +134,8 @@ async fn run_app(cli: Cli) -> Result<(), Box<dyn std::error::Error>> {
                 args.ignore,
                 args.neural,
                 args.neural_threshold,
+                args.hnsw,
+                args.sq8,
                 args.threads,
             )?;
         }

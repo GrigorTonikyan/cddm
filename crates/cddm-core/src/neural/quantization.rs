@@ -1,6 +1,5 @@
 #![forbid(unsafe_code)]
 
-use super::embedder::NeuralCodeEmbedder;
 use serde::{Deserialize, Serialize};
 
 /// 8-bit Scalar Quantized vector representation for memory-efficient dense embedding indexing.
@@ -65,25 +64,68 @@ impl SQ8Vector {
             .collect()
     }
 
-    /// Computes cosine similarity between two quantized SQ8 vectors.
+    /// Computes cosine similarity between two quantized SQ8 vectors without heap allocation.
     pub fn cosine_similarity(&self, other: &Self) -> f32 {
         if self.values.len() != other.values.len() || self.values.is_empty() {
             return 0.0;
         }
 
-        let dequant_a = self.dequantize();
-        let dequant_b = other.dequantize();
-        NeuralCodeEmbedder::cosine_similarity(&dequant_a, &dequant_b)
+        let range_a = self.max_val - self.min_val;
+        let range_b = other.max_val - other.min_val;
+        let inv_scale_a = range_a / 255.0;
+        let inv_scale_b = range_b / 255.0;
+
+        let mut dot = 0.0f32;
+        let mut norm_a = 0.0f32;
+        let mut norm_b = 0.0f32;
+
+        for (&qa, &qb) in self.values.iter().zip(other.values.iter()) {
+            let va = self.min_val + (qa as f32) * inv_scale_a;
+            let vb = other.min_val + (qb as f32) * inv_scale_b;
+            dot += va * vb;
+            norm_a += va * va;
+            norm_b += vb * vb;
+        }
+
+        let denom = norm_a.sqrt() * norm_b.sqrt();
+        if denom < 1e-7 {
+            0.0
+        } else {
+            (dot / denom).clamp(-1.0, 1.0)
+        }
     }
 
-    /// Computes cosine similarity against an unquantized f32 query vector.
+    /// Computes cosine similarity against an unquantized f32 query vector without heap allocation.
     pub fn cosine_similarity_f32(&self, query: &[f32]) -> f32 {
         if self.values.len() != query.len() || self.values.is_empty() {
             return 0.0;
         }
 
-        let dequant = self.dequantize();
-        NeuralCodeEmbedder::cosine_similarity(&dequant, query)
+        let range_a = self.max_val - self.min_val;
+        let inv_scale_a = range_a / 255.0;
+
+        let mut dot = 0.0f32;
+        let mut norm_a = 0.0f32;
+        let mut norm_q = 0.0f32;
+
+        for (&qa, &vq) in self.values.iter().zip(query.iter()) {
+            let va = self.min_val + (qa as f32) * inv_scale_a;
+            dot += va * vq;
+            norm_a += va * va;
+            norm_q += vq * vq;
+        }
+
+        let denom = norm_a.sqrt() * norm_q.sqrt();
+        if denom < 1e-7 {
+            0.0
+        } else {
+            (dot / denom).clamp(-1.0, 1.0)
+        }
+    }
+
+    /// Returns the exact memory footprint of the quantized vector in bytes.
+    pub fn memory_bytes(&self) -> usize {
+        std::mem::size_of::<Self>() + self.values.capacity()
     }
 
     /// Returns the number of dimensions in the quantized vector.
@@ -110,6 +152,7 @@ pub fn cosine_similarity_sq8(a: &SQ8Vector, b: &SQ8Vector) -> f32 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::neural::embedder::NeuralCodeEmbedder;
 
     #[test]
     fn test_sq8_quantization_and_dequantization() {
@@ -161,5 +204,21 @@ mod tests {
         assert_eq!(q.dimension(), 0);
         assert_eq!(q.dequantize().len(), 0);
         assert_eq!(q.cosine_similarity(&q), 0.0);
+    }
+
+    #[test]
+    fn test_sq8_cosine_similarity_f32_and_memory() {
+        let v1 = vec![0.8, 0.6, 0.0, -0.2, 0.5, 0.1];
+        let v2 = vec![0.75, 0.65, 0.05, -0.18, 0.48, 0.12];
+
+        let q1 = SQ8Vector::quantize(&v1);
+        let sim_f32 = q1.cosine_similarity_f32(&v2);
+        assert!(sim_f32 > 0.95);
+
+        // Memory footprint: SQ8 values are 1 byte per dimension vs 4 bytes per f32
+        let raw_f32_bytes = v1.len() * std::mem::size_of::<f32>();
+        assert_eq!(q1.values.len(), v1.len());
+        assert!(q1.memory_bytes() > 0);
+        assert_eq!(raw_f32_bytes, 24);
     }
 }

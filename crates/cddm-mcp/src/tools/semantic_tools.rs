@@ -311,12 +311,27 @@ pub fn handle_semantic_neural_scan(
         );
     }
 
-    match cddm_core::scan_neural_clones(path, &neural_config) {
+    let use_hnsw_arg = args_obj
+        .get("use_hnsw")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false);
+    let use_sq8_arg = args_obj
+        .get("use_sq8")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false);
+    let use_hnsw = use_hnsw_arg || use_sq8_arg;
+    let use_sq8 = use_sq8_arg;
+
+    match cddm_core::scan_neural_clones_with_options(path, &neural_config, use_hnsw, use_sq8) {
         Ok(result) => {
             let payload = json!({
                 "directory": dir,
                 "threshold": threshold,
                 "dimension": dimension,
+                "use_hnsw": use_hnsw,
+                "use_sq8": use_sq8,
+                "index_type": result.index_type,
+                "memory_reduction_ratio": result.memory_reduction_ratio,
                 "total_blocks_embedded": result.total_blocks_embedded,
                 "total_neural_pairs": result.total_neural_pairs,
                 "high_confidence_count": result.high_confidence_count,

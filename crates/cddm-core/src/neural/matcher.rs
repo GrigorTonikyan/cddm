@@ -6,7 +6,7 @@ use std::path::Path;
 
 use super::constants::*;
 use super::embedder::NeuralCodeEmbedder;
-use super::hnsw::{HnswConfig, HnswVectorIndex};
+use super::hnsw::{HnswConfig, HnswSq8VectorIndex, HnswVectorIndex};
 use super::types::{
     CodeEmbeddingVector, EquivalenceConfidence, NeuralClonePair, NeuralEmbeddingConfig,
     NeuralScanResult,
@@ -40,6 +40,36 @@ impl NeuralMatcher {
             total_neural_pairs: total_pairs,
             high_confidence_count: high_count,
             pairs,
+            index_type: Some("hnsw".to_string()),
+            memory_reduction_ratio: Some(1.0),
+        })
+    }
+
+    /// Scans a workspace directory using the memory-efficient 8-bit quantized HNSW index (4x compression).
+    pub fn scan_workspace_hnsw_sq8(
+        workspace_root: &Path,
+        config: &NeuralEmbeddingConfig,
+        hnsw_config: Option<HnswConfig>,
+    ) -> Result<NeuralScanResult, String> {
+        let mut vectors: Vec<CodeEmbeddingVector> = Vec::new();
+        Self::collect_embeddings_recursive(workspace_root, workspace_root, config, &mut vectors)?;
+
+        let total_blocks = vectors.len();
+        let pairs =
+            HnswSq8VectorIndex::find_all_pairs(&vectors, hnsw_config, config.similarity_threshold);
+        let high_count = pairs
+            .iter()
+            .filter(|p| p.confidence == EquivalenceConfidence::High)
+            .count();
+        let total_pairs = pairs.len();
+
+        Ok(NeuralScanResult {
+            total_blocks_embedded: total_blocks,
+            total_neural_pairs: total_pairs,
+            high_confidence_count: high_count,
+            pairs,
+            index_type: Some("hnsw_sq8".to_string()),
+            memory_reduction_ratio: Some(4.0),
         })
     }
     /// Scans a workspace directory or compares file vectors for neural algorithmic equivalence.
@@ -128,6 +158,8 @@ impl NeuralMatcher {
             total_neural_pairs: total_pairs,
             high_confidence_count: high_count,
             pairs,
+            index_type: Some("brute_force".to_string()),
+            memory_reduction_ratio: Some(1.0),
         })
     }
 

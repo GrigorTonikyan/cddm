@@ -233,6 +233,14 @@ pub struct SemanticArgs {
     #[arg(long, default_value_t = 0.85)]
     pub neural_threshold: f32,
 
+    /// Use Hierarchical Navigable Small World (HNSW) index for sub-linear logarithmic search
+    #[arg(long, default_value_t = false)]
+    pub hnsw: bool,
+
+    /// Use 8-bit scalar quantization (SQ8) for 4x vector memory reduction during search
+    #[arg(long, default_value_t = false)]
+    pub sq8: bool,
+
     /// Maximum number of parallel worker threads to utilize (default: all logical cores)
     #[arg(short = 'j', long)]
     pub threads: Option<usize>,

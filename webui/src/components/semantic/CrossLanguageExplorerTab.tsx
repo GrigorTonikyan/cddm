@@ -23,13 +23,19 @@ export const CrossLanguageExplorerTab: React.FC<CrossLanguageExplorerTabProps> =
   const [activeSubMode, setActiveSubMode] = useState<"hybrid" | "neural">("hybrid");
   const [threshold, setThreshold] = useState<number>(0.7);
   const [neuralThreshold, setNeuralThreshold] = useState<number>(0.85);
+  const [useHnsw, setUseHnsw] = useState<boolean>(false);
+  const [useSq8, setUseSq8] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
 
   const handleScan = () => {
     if (activeSubMode === "hybrid") {
       void scanCrossLanguageClones(threshold);
     } else {
-      void scanNeuralClones({ threshold: neuralThreshold });
+      void scanNeuralClones({
+        threshold: neuralThreshold,
+        use_hnsw: useHnsw || useSq8,
+        use_sq8: useSq8,
+      });
     }
   };
 
@@ -58,31 +64,46 @@ export const CrossLanguageExplorerTab: React.FC<CrossLanguageExplorerTabProps> =
   return (
     <div className="space-y-4">
       {/* Mode Switcher */}
-      <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
-        <button
-          type="button"
-          onClick={() => setActiveSubMode("hybrid")}
-          className={`px-3 py-1.5 rounded-lg text-xs font-mono font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
-            activeSubMode === "hybrid"
-              ? "bg-purple-950/80 text-purple-200 border border-purple-800/80 shadow-sm"
-              : "text-slate-400 hover:text-slate-200 hover:bg-slate-900"
-          }`}
-        >
-          <Network className="w-3.5 h-3.5" />
-          <span>Graph Hybrid (CFG/PDG)</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveSubMode("neural")}
-          className={`px-3 py-1.5 rounded-lg text-xs font-mono font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
-            activeSubMode === "neural"
-              ? "bg-indigo-950/80 text-indigo-200 border border-indigo-800/80 shadow-sm"
-              : "text-slate-400 hover:text-slate-200 hover:bg-slate-900"
-          }`}
-        >
-          <Cpu className="w-3.5 h-3.5" />
-          <span>Local Neural Embeddings</span>
-        </button>
+      <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setActiveSubMode("hybrid")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-mono font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+              activeSubMode === "hybrid"
+                ? "bg-purple-950/80 text-purple-200 border border-purple-800/80 shadow-sm"
+                : "text-slate-400 hover:text-slate-200 hover:bg-slate-900"
+            }`}
+          >
+            <Network className="w-3.5 h-3.5" />
+            <span>Graph Hybrid (CFG/PDG)</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveSubMode("neural")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-mono font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+              activeSubMode === "neural"
+                ? "bg-indigo-950/80 text-indigo-200 border border-indigo-800/80 shadow-sm"
+                : "text-slate-400 hover:text-slate-200 hover:bg-slate-900"
+            }`}
+          >
+            <Cpu className="w-3.5 h-3.5" />
+            <span>Local Neural Embeddings</span>
+          </button>
+        </div>
+
+        {activeSubMode === "neural" && neuralResult?.index_type && (
+          <div className="flex items-center gap-2 text-[11px] font-mono">
+            <span className="px-2 py-0.5 rounded bg-indigo-950/80 text-indigo-300 border border-indigo-800/60">
+              Index: {neuralResult.index_type}
+            </span>
+            {neuralResult.memory_reduction_ratio && neuralResult.memory_reduction_ratio > 1.0 && (
+              <span className="px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-300 border border-emerald-800/60">
+                {neuralResult.memory_reduction_ratio.toFixed(1)}x Memory Compression
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Controls Bar */}
@@ -114,6 +135,34 @@ export const CrossLanguageExplorerTab: React.FC<CrossLanguageExplorerTabProps> =
               className="w-full h-1.5 bg-slate-950 rounded-lg appearance-none cursor-pointer accent-purple-500 border border-slate-800"
             />
           </div>
+
+          {activeSubMode === "neural" && (
+            <div className="flex items-center gap-3 text-xs font-mono text-slate-300 pl-2 border-l border-slate-800">
+              <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  aria-label="HNSW Search"
+                  checked={useHnsw}
+                  onChange={(e) => setUseHnsw(e.target.checked)}
+                  className="rounded bg-slate-950 border-slate-800 text-purple-600 focus:ring-0 cursor-pointer"
+                />
+                <span>HNSW Search</span>
+              </label>
+              <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  aria-label="SQ8 4x"
+                  checked={useSq8}
+                  onChange={(e) => {
+                    setUseSq8(e.target.checked);
+                    if (e.target.checked) setUseHnsw(true);
+                  }}
+                  className="rounded bg-slate-950 border-slate-800 text-indigo-600 focus:ring-0 cursor-pointer"
+                />
+                <span className="text-indigo-300 font-semibold">SQ8 4x</span>
+              </label>
+            </div>
+          )}
 
           <button
             type="button"
