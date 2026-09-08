@@ -4,8 +4,7 @@ version.workspace = true
 edition.workspace = true
 description = "CDDM MCP Server — Model Context Protocol integration for AI Agents"
 documentation.workspace = true
-readme = "../../README.md"
-homepage.workspace = true
+readme.workspace = true
 repository.workspace = true
 license.workspace = true
 keywords.workspace = true
@@ -19,7 +18,6 @@ name = "cddm-mcp"
 path = "src/main.rs"
 
 [dependencies]
-anyhow.workspace = true
 async-trait.workspace = true
 cddm-core = { path = "../cddm-core" }
 serde.workspace = true

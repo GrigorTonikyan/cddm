@@ -5,8 +5,7 @@ edition.workspace = true
 build = "build.rs"
 description = "CDDM CLI Binary — Code De-Duplication Meister"
 documentation.workspace = true
-readme = "../../README.md"
-homepage.workspace = true
+readme.workspace = true
 repository.workspace = true
 license.workspace = true
 keywords.workspace = true
@@ -20,7 +19,6 @@ name = "cddm"
 path = "src/main.rs"
 
 [dependencies]
-anyhow.workspace = true
 async-trait.workspace = true
 axum.workspace = true
 cddm-core = { path = "../cddm-core" }

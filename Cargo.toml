@@ -7,7 +7,6 @@ version = "4.0.0"
 edition = "2024"
 documentation = "https://docs.rs/cddm-core"
 readme = "README.md"
-homepage = "https://git.gt-web-dev.com/gt-dev/cddm"
 repository = "https://git.gt-web-dev.com/gt-dev/cddm"
 license = "MIT OR Apache-2.0"
 keywords = ["ast", "code-quality", "duplication", "mcp", "tree-sitter"]

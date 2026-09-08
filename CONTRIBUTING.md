@@ -38,7 +38,7 @@ For comprehensive manuals on specific interaction surfaces, consult:
 
 ### Prerequisites
 
-- **Rust**: 2024 edition (1.85+ recommended). Install via [rustup.rs](https://rustup.rs).
+- **Rust**: 2024 edition (Rust Nightly 1.100.0+ configured via `rust-toolchain.toml`). Install via [rustup.rs](https://rustup.rs).
 - **Vite Plus**: `0.3.0` via [viteplus.dev](https://viteplus.dev) or **Bun**: `1.4.0` via [bun.sh](https://bun.sh).
 
 ### Setting Up Development Workspace
