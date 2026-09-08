@@ -336,6 +336,20 @@ pub fn get_tool_definitions() -> Vec<serde_json::Value> {
             ),
         ),
         tool_def(
+            mcp_tools::SYNC_HUB,
+            "Synchronize privacy-preserving fingerprint caches with remote Federation Hub peers.",
+            obj_schema(
+                json!({
+                    "repo_name": { "type": "string", "description": "Local repository identifier" },
+                    "hub_config": { "type": "string", "description": "Optional path to .cddmhub.toml configuration file" },
+                    "remote_endpoint": { "type": "string", "description": "Remote peering endpoint URL (HTTPS/gRPC)" },
+                    "org_salt": { "type": "string", "description": "Shared cryptographic privacy salt for organization-wide keyed hashing" },
+                    "dry_run": { "type": "boolean", "description": "Dry run preview without persistent storage (default: false)" }
+                }),
+                &[],
+            ),
+        ),
+        tool_def(
             mcp_tools::CORRELATE_COVERAGE,
             "Correlate test and runtime execution coverage tracefiles (LCOV, Cobertura, Istanbul) \
              with duplicate clone pairs.",

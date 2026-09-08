@@ -76,6 +76,7 @@ pub async fn dispatch_tool_call(
         mcp_tools::DETECT_OVERLAP => overlap_tools::handle_detect_overlap(id, args).await,
         mcp_tools::SCAN_HUB => hub_tools::handle_scan_hub(id, args).await,
         mcp_tools::EXTRACT_HUB_PACKAGE => hub_tools::handle_extract_hub_package(id, args).await,
+        mcp_tools::SYNC_HUB => hub_tools::handle_sync_hub(id, args).await,
         mcp_tools::CORRELATE_COVERAGE => coverage_tools::handle_correlate_coverage(id, args).await,
         mcp_tools::DETECT_DEAD_CLONES => coverage_tools::handle_detect_dead_clones(id, args).await,
         mcp_tools::DETECT_DEAD_CODE => dead_code_tools::handle_detect_dead_code(id, args).await,

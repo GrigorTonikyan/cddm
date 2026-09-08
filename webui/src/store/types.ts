@@ -74,6 +74,7 @@ export interface CDDMStoreState {
   /** Organization Federation Hub state */
   hubConfig: import("../types/cddm-types").HubConfig | null;
   hubSummary: import("../types/cddm-types").HubScanSummary | null;
+  hubSyncResult: import("../types/cddm-types").HubSyncResult | null;
   isHubLoading: boolean;
   hubError: string | null;
 
@@ -226,6 +227,9 @@ export interface CDDMStoreState {
   extractHubPackage: (
     req: import("../types/cddm-types").HubExtractRequest,
   ) => Promise<import("../types/cddm-types").HubExtractResult>;
+  syncHubPeering: (
+    req: import("../types/cddm-types").HubSyncRequest,
+  ) => Promise<import("../types/cddm-types").HubSyncResult>;
 
   /** Runtime Execution & Coverage correlation */
   isCoverageModalOpen: boolean;

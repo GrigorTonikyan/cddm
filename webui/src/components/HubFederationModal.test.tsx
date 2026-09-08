@@ -88,6 +88,18 @@ describe("HubFederationModal Component", () => {
           repo_updates: [],
         });
       }
+      if (url.includes("/api/hub/sync")) {
+        return mockSuccessResponse({
+          hub_name: "Acme Federation Hub",
+          remote_endpoint: "http://127.0.0.1:8081",
+          local_fingerprints_count: 120,
+          remote_fingerprints_count: 140,
+          matched_fingerprints_count: 12,
+          matched_clones_count: 3,
+          synchronized_at: "2026-09-08T12:00:00Z",
+          manifest_sha256: "abc123sha",
+        });
+      }
       return mockSuccessResponse(mockSummary);
     });
   });
@@ -129,5 +141,19 @@ describe("HubFederationModal Component", () => {
     // 3. Trigger extraction
     await clickElementAsync("Extract Shared Package");
     expect(screen.getByText(/Package Extraction Synthesized/)).toBeDefined();
+  });
+
+  it("should switch to sync tab and trigger remote peering synchronization", async () => {
+    await renderAsyncWithWin2x(
+      <HubFederationModal isOpen={true} onClose={vi.fn()} initialSummary={mockSummary} />,
+    );
+
+    await clickElementAsync(/Remote Peering & Sync/);
+    expect(screen.getByText("Remote Hub Peering Configuration")).toBeDefined();
+
+    await clickElementAsync("Sync with Remote Peer");
+    expect(screen.getByText(/Peering Sync Complete/)).toBeDefined();
+    expect(screen.getByText("120")).toBeDefined();
+    expect(screen.getByText("140")).toBeDefined();
   });
 });

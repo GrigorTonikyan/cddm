@@ -95,9 +95,82 @@ pub async fn run_hub_command(args: HubArgs) -> Result<(), Box<dyn std::error::Er
             let result = generate_hub_extraction(&summary, &request)?;
             print_extraction_result(&result, dry_run);
         }
+
+        HubSubcommand::Sync {
+            config,
+            endpoint,
+            repo,
+            salt,
+            format,
+            dry_run,
+        } => {
+            let repo_name = repo.unwrap_or_else(|| {
+                std::env::current_dir()
+                    .ok()
+                    .and_then(|p| p.file_name().map(|s| s.to_string_lossy().to_string()))
+                    .unwrap_or_else(|| "local-repo".to_string())
+            });
+
+            let req = cddm_core::HubSyncRequest {
+                hub_config: if config.is_file() {
+                    Some(config.to_string_lossy().to_string())
+                } else {
+                    None
+                },
+                remote_endpoint: endpoint,
+                repo_name,
+                org_salt: salt,
+                bidirectional: true,
+                dry_run,
+            };
+
+            println!(
+                "\x1b[36m--> Synchronizing privacy-preserving fingerprints with Federation Hub...\x1b[0m"
+            );
+
+            let result = cddm_core::sync_hub_peering(&req)
+                .await
+                .map_err(Box::<dyn std::error::Error>::from)?;
+
+            if format.to_lowercase() == "json" {
+                println!("{}", serde_json::to_string_pretty(&result)?);
+            } else {
+                print_hub_sync_console(&result);
+            }
+        }
     }
 
     Ok(())
+}
+
+fn print_hub_sync_console(res: &cddm_core::HubSyncResult) {
+    println!("\n\x1b[32m=== Federation Hub Peering Sync Status ===\x1b[0m\n");
+    println!("Status:                 {}", res.status);
+    println!("Remote Endpoint:        {}", res.remote_endpoint);
+    println!("Privacy Mode:           {}", res.privacy_mode);
+    println!("Peers Synchronized:     {}", res.peers_synced);
+    println!("Total Remote Tokens:    {}", res.total_remote_tokens);
+    println!("Cross-Repo Matches:     {}", res.cross_repo_matches_found);
+    println!("Duration:               {} ms\n", res.duration_ms);
+
+    if !res.sync_manifest.is_empty() {
+        let mut table = Table::new();
+        table.set_header(colored_header(&[
+            ("Peer Repository", Color::Cyan),
+            ("Status", Color::Green),
+            ("Fingerprints", Color::Yellow),
+            ("Shared Clusters", Color::Magenta),
+        ]));
+        for peer in &res.sync_manifest {
+            table.add_row(Row::from(vec![
+                Cell::new(&peer.repo_name),
+                Cell::new(&peer.status),
+                Cell::new(peer.fingerprints_synced),
+                Cell::new(peer.shared_clusters_detected),
+            ]));
+        }
+        println!("{table}\n");
+    }
 }
 
 fn colored_header(cols: &[(&str, Color)]) -> Vec<Cell> {

@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-27 | Rust: 355 #[test] units | WebUI: 227 tests across 63 suites | Scripts & MCP: 193 tests across 57 suites | CI Workflows: PASS
+> Last verified: 2026-08-27 | Rust: 357 #[test] units | WebUI: 229 tests across 63 suites | Scripts & MCP: 195 tests across 58 suites | CI Workflows: PASS
 
 ---
 
@@ -358,7 +358,7 @@
 
 ---
 
-## 2. WebUI Frontend — React 19 + TypeScript + Vitest (227 unit tests across 63 suites)
+## 2. WebUI Frontend — React 19 + TypeScript + Vitest (229 unit tests across 63 suites)
 
 | Module                      | Test Suite File                                                                       | Test Cases | Status |
 | :-------------------------- | :------------------------------------------------------------------------------------ | :--------- | :----- |
@@ -372,7 +372,7 @@
 | Duplication Treemap         | `webui/src/components/DuplicationTreemap.test.tsx`                                    | 3 tests    | PASS   |
 | Export Report Modal         | `webui/src/components/ExportReportModal.test.tsx`                                     | 3 tests    | PASS   |
 | Health Audit Modal          | `webui/src/components/HealthAuditModal.test.tsx`                                      | 3 tests    | PASS   |
-| Hub Federation Modal        | `webui/src/components/HubFederationModal.test.tsx`                                    | 3 tests    | PASS   |
+| Hub Federation Modal        | `webui/src/components/HubFederationModal.test.tsx`                                    | 4 tests    | PASS   |
 | Language Analytics Modal    | `webui/src/components/LanguageAnalyticsModal.test.tsx`                                | 2 tests    | PASS   |
 | Overlap Detector Modal      | `webui/src/components/OverlapDetectorModal.test.tsx`                                  | 3 tests    | PASS   |
 | Policy Rules Modal          | `webui/src/components/PolicyRulesModal.test.tsx`                                      | 4 tests    | PASS   |
@@ -412,7 +412,7 @@
 | use Treemap Layout          | `webui/src/hooks/useTreemapLayout.test.ts`                                            | 3 tests    | PASS   |
 | use Virtualizer             | `webui/src/hooks/useVirtualizer.test.ts`                                              | 3 tests    | PASS   |
 | Global Store                | `webui/src/store/cddm-store.test.ts`                                                  | 11 tests   | PASS   |
-| hub-slice                   | `webui/src/store/hub-slice.test.ts`                                                   | 5 tests    | PASS   |
+| hub-slice                   | `webui/src/store/hub-slice.test.ts`                                                   | 6 tests    | PASS   |
 | Semantic Slice              | `webui/src/store/semantic-slice.test.ts`                                              | 7 tests    | PASS   |
 | coverage-slice              | `webui/src/store/slices/coverage-slice.test.ts`                                       | 3 tests    | PASS   |
 | Watch Slice                 | `webui/src/store/watch-slice.test.ts`                                                 | 6 tests    | PASS   |
@@ -428,7 +428,7 @@
 
 ---
 
-## 3. Repository Scripts & MCP Protocol — Bun Test Suites (193 tests across 57 suites)
+## 3. Repository Scripts & MCP Protocol — Bun Test Suites (195 tests across 58 suites)
 
 ### Repository Tooling & Automation Suites
 
@@ -494,6 +494,7 @@
 | Tool: cddm_semantic_neural_scan     | `tests/mcp/tools/semantic-neural-scan.test.ts`     | 4 tests    | PASS   |
 | Tool: cddm_suggest_cluster_refactor | `tests/mcp/tools/suggest-cluster-refactor.test.ts` | 2 tests    | PASS   |
 | Tool: cddm_suggest_refactor         | `tests/mcp/tools/suggest-refactor.test.ts`         | 2 tests    | PASS   |
+| Tool: cddm_sync_hub                 | `tests/mcp/tools/sync-hub.test.ts`                 | 2 tests    | PASS   |
 | Tool: cddm_trace_reachability       | `tests/mcp/tools/trace-reachability.test.ts`       | 2 tests    | PASS   |
 | Tool: cddm_verify_refactor          | `tests/mcp/tools/verify-refactor.test.ts`          | 1 tests    | PASS   |
 

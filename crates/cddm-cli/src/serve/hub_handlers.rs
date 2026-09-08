@@ -154,3 +154,15 @@ pub async fn hub_extract_handler(Json(req): Json<HubExtractRequest>) -> impl Int
             .into_response(),
     }
 }
+
+/// Handler for `POST /api/hub/sync`.
+pub async fn hub_sync_handler(Json(req): Json<cddm_core::HubSyncRequest>) -> impl IntoResponse {
+    match cddm_core::sync_hub_peering(&req).await {
+        Ok(res) => (StatusCode::OK, Json(res)).into_response(),
+        Err(err) => (
+            StatusCode::BAD_REQUEST,
+            Json(serde_json::json!({ "error": err })),
+        )
+            .into_response(),
+    }
+}
