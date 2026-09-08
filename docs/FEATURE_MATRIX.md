@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-27 | Rust: 357 #[test] units | WebUI: 229 tests across 63 suites | Scripts & MCP: 195 tests across 58 suites | CI Workflows: PASS
+> Last verified: 2026-08-27 | Rust: 357 #[test] units | WebUI: 229 tests across 63 suites | Scripts & MCP: 204 tests across 60 suites | CI Workflows: PASS
 
 ---
 
@@ -428,7 +428,7 @@
 
 ---
 
-## 3. Repository Scripts & MCP Protocol — Bun Test Suites (195 tests across 58 suites)
+## 3. Repository Scripts & MCP Protocol — Bun Test Suites (204 tests across 60 suites)
 
 ### Repository Tooling & Automation Suites
 
@@ -438,11 +438,13 @@
 | interface-docs-generator      | `scripts/lib/interface-docs-generator.test.ts` | 6 tests    | PASS   |
 | milestone-release-engine      | `scripts/lib/milestone-release-engine.test.ts` | 2 tests    | PASS   |
 | milestone-sync-engine         | `scripts/lib/milestone-sync-engine.test.ts`    | 5 tests    | PASS   |
+| release-notes-engine          | `scripts/lib/release-notes-engine.test.ts`     | 7 tests    | PASS   |
 | step-runner                   | `scripts/lib/step-runner.test.ts`              | 4 tests    | PASS   |
 | test-matrix-generator         | `scripts/lib/test-matrix-generator.test.ts`    | 3 tests    | PASS   |
 | version-updater               | `scripts/lib/version-updater.test.ts`          | 2 tests    | PASS   |
 | bun-only                      | `scripts/tests/bun-only.test.ts`               | 2 tests    | PASS   |
 | check-milestones              | `scripts/tests/check-milestones.test.ts`       | 1 tests    | PASS   |
+| check-release-notes           | `scripts/tests/check-release-notes.test.ts`    | 2 tests    | PASS   |
 | Workspace Engine & Reset      | `scripts/tests/clean-reset.test.ts`            | 10 tests   | PASS   |
 | Documentation Integrity       | `scripts/tests/docs.test.ts`                   | 4 tests    | PASS   |
 | Feature Matrix Synchronizer   | `scripts/tests/feature-matrix.test.ts`         | 4 tests    | PASS   |

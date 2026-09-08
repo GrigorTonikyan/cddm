@@ -4,6 +4,7 @@
 
 import { giteaFetch } from "./gitea-client";
 import { extractVersionFromMilestoneTitle, type MilestoneMeta } from "./milestone-sync-engine";
+import { generateReleaseNotes } from "./release-notes-engine";
 
 export interface MilestoneReleaseResult {
   triggered: boolean;
@@ -162,13 +163,16 @@ export async function checkAndTriggerMilestoneRelease(
 
   // 8. Create official Gitea release
   console.log(`--> Publishing Gitea release ${tag}...`);
+  const richReleaseNotes = generateReleaseNotes(version, {
+    milestoneTitle: candidate.title,
+  });
   const releaseRes = await giteaFetch("/repos/gt-dev/cddm/releases", {
     method: "POST",
     body: JSON.stringify({
       tag_name: tag,
       target_commitish: "main",
       name: `CDDM ${tag} - ${candidate.title}`,
-      body: `Automated semantic milestone release for ${candidate.title}.\n\nSee CHANGELOG.md for detailed component changes.`,
+      body: richReleaseNotes,
       draft: false,
       prerelease: false,
     }),

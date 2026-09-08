@@ -28,7 +28,8 @@
     "url": "https://git.gt-web-dev.com/gt-dev/cddm.git"
   },
   "bin": {
-    "cddm": "./bin/cddm.js"
+    "cddm": "./bin/cddm.js",
+    "cddm-mcp": "./bin/cddm-mcp.js"
   },
   "main": "./bin/cddm.js",
   "optionalDependencies": {

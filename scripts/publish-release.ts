@@ -7,6 +7,7 @@
 
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
+import { generateReleaseNotes } from "./lib/release-notes-engine";
 import { getCurrentVersion } from "./version";
 
 export interface ReleaseOptions {
@@ -57,7 +58,9 @@ export function parseArgs(args: string[]): ReleaseOptions {
     else if (arg === "--title" && args[i + 1]) title = args[++i]!;
   }
 
-  const changelogBody = getChangelogForVersion(tag.replace(/^v/, ""));
+  const releaseBody = generateReleaseNotes(tag.replace(/^v/, ""), {
+    milestoneTitle: title,
+  });
 
   return {
     host,
@@ -65,7 +68,7 @@ export function parseArgs(args: string[]): ReleaseOptions {
     token,
     tag,
     title,
-    body: changelogBody,
+    body: releaseBody,
     draft,
     prerelease,
     distDir,
@@ -132,6 +135,32 @@ export async function createOrGetGiteaRelease(
   if (checkRes.ok) {
     const existing = (await checkRes.json()) as GiteaReleaseResponse;
     console.log(`\x1b[36mFound existing release ID ${existing.id} for tag ${options.tag}\x1b[0m`);
+
+    // Ensure release body meets the rich release notes standard and is updated
+    if (
+      !existing.body ||
+      existing.body.includes("See CHANGELOG.md") ||
+      !existing.body.includes("Model Context Protocol")
+    ) {
+      console.log(
+        `--> Updating release #${existing.id} notes on Gitea with rich release notes and MCP highlights...`,
+      );
+      const updateRes = await fetch(`${apiUrl}/${existing.id}`, {
+        method: "PATCH",
+        headers: {
+          Authorization: getAuthHeader(options.token),
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          name: existing.name || options.title,
+          body: options.body,
+        }),
+      });
+      if (updateRes.ok) {
+        existing.body = options.body;
+      }
+    }
     return existing;
   }
 
