@@ -4,8 +4,7 @@ version.workspace = true
 edition.workspace = true
 description = "Core Polyglot Code De-Duplication & Architectural Modularity Engine"
 documentation.workspace = true
-readme = "../../README.md"
-homepage.workspace = true
+readme.workspace = true
 repository.workspace = true
 license.workspace = true
 keywords.workspace = true
@@ -15,7 +14,6 @@ categories.workspace = true
 workspace = true
 
 [dependencies]
-anyhow.workspace = true
 async-trait.workspace = true
 blake3.workspace = true
 chrono.workspace = true

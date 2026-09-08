@@ -1,5 +1,7 @@
 import { describe, expect, it } from "bun:test";
+import { giteaFetch } from "./gitea-client";
 import { checkAndTriggerMilestoneRelease } from "./milestone-release-engine";
+import type { MilestoneMeta } from "./milestone-sync-engine";
 
 describe("milestone-release-engine", () => {
   it("should report when no milestones are ready for release", async () => {
@@ -10,10 +12,13 @@ describe("milestone-release-engine", () => {
   });
 
   it("should reject release when open issues remain without force flag", async () => {
-    // Dynamic query of current open milestone with open issues (e.g. Milestone 35)
+    const openRes = await giteaFetch<MilestoneMeta[]>("/repos/gt-dev/cddm/milestones?state=open");
+    const openMilestoneWithIssues = openRes.data?.find((m) => m.open_issues > 0);
+    const targetId = openMilestoneWithIssues?.id ?? 37;
+
     const res = await checkAndTriggerMilestoneRelease({
       dryRun: true,
-      specificMilestoneId: 35,
+      specificMilestoneId: targetId,
       force: false,
     });
     expect(res.triggered).toBe(false);
