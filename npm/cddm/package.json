@@ -1,6 +1,6 @@
 {
   "name": "cddm",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "CDDM — Code De-Duplication Meister: High-Performance Polyglot Code Clone & Modularity Analyzer",
   "keywords": [
     "ast",
