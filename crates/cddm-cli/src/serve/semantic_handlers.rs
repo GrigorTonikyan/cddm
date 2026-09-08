@@ -224,7 +224,10 @@ pub async fn semantic_neural_handler(
         max_subwords: req.max_subwords.unwrap_or(512),
     };
 
-    cddm_core::scan_neural_clones(path, &config)
+    let use_hnsw = req.use_hnsw.unwrap_or(false) || req.use_sq8.unwrap_or(false);
+    let use_sq8 = req.use_sq8.unwrap_or(false);
+
+    cddm_core::scan_neural_clones_with_options(path, &config, use_hnsw, use_sq8)
         .map(Json)
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))
 }

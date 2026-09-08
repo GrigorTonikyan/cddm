@@ -329,6 +329,8 @@ pub struct SemanticNeuralRequest {
     pub threshold: Option<f32>,
     pub dimension: Option<usize>,
     pub max_subwords: Option<usize>,
+    pub use_hnsw: Option<bool>,
+    pub use_sq8: Option<bool>,
 }
 
 /// Request payload for running dead code analysis.

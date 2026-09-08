@@ -3,86 +3,18 @@
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashSet};
 
-use super::embedder::NeuralCodeEmbedder;
-use super::types::{CodeEmbeddingVector, EquivalenceConfidence, NeuralClonePair};
+use super::types::{DistItem, HnswConfig, HnswNode, MaxDistItem, generate_random_level};
+use crate::neural::embedder::NeuralCodeEmbedder;
+use crate::neural::types::{CodeEmbeddingVector, EquivalenceConfidence, NeuralClonePair};
 
-/// Configuration parameters for the Hierarchical Navigable Small World (HNSW) vector index.
-#[derive(Debug, Clone)]
-pub struct HnswConfig {
-    pub m: usize,
-    pub m0: usize,
-    pub ef_construction: usize,
-    pub ef_search: usize,
-    pub ml: f64,
-}
-
-impl Default for HnswConfig {
-    fn default() -> Self {
-        Self {
-            m: 16,
-            m0: 32,
-            ef_construction: 64,
-            ef_search: 32,
-            ml: 1.0 / (16.0f64.ln()),
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
-struct HnswNode {
-    level: usize,
-    neighbors: Vec<Vec<usize>>,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-struct DistItem {
-    dist: f32,
-    node_id: usize,
-}
-
-impl Eq for DistItem {}
-impl Ord for DistItem {
-    fn cmp(&self, other: &Self) -> Ordering {
-        other
-            .dist
-            .partial_cmp(&self.dist)
-            .unwrap_or(Ordering::Equal)
-    }
-}
-impl PartialOrd for DistItem {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-struct MaxDistItem {
-    dist: f32,
-    node_id: usize,
-}
-
-impl Eq for MaxDistItem {}
-impl Ord for MaxDistItem {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.dist
-            .partial_cmp(&other.dist)
-            .unwrap_or(Ordering::Equal)
-    }
-}
-impl PartialOrd for MaxDistItem {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-/// High-performance Pure-Rust HNSW multi-layer vector index for dense code embeddings.
+/// High-performance Pure-Rust HNSW multi-layer vector index for dense f32 code embeddings.
 #[derive(Debug, Clone)]
 pub struct HnswVectorIndex {
-    config: HnswConfig,
-    vectors: Vec<Vec<f32>>,
-    nodes: Vec<HnswNode>,
-    entry_point: Option<usize>,
-    max_level: usize,
+    pub(crate) config: HnswConfig,
+    pub(crate) vectors: Vec<Vec<f32>>,
+    pub(crate) nodes: Vec<HnswNode>,
+    pub(crate) entry_point: Option<usize>,
+    pub(crate) max_level: usize,
 }
 
 impl Default for HnswVectorIndex {
@@ -110,9 +42,33 @@ impl HnswVectorIndex {
         self.vectors.is_empty()
     }
 
+    /// Returns estimated memory footprint of the index in bytes.
+    pub fn memory_bytes(&self) -> usize {
+        let vectors_bytes: usize = self
+            .vectors
+            .iter()
+            .map(|v| std::mem::size_of::<Vec<f32>>() + v.capacity() * std::mem::size_of::<f32>())
+            .sum();
+        let nodes_bytes: usize = self
+            .nodes
+            .iter()
+            .map(|n| {
+                std::mem::size_of::<HnswNode>()
+                    + n.neighbors
+                        .iter()
+                        .map(|layer| {
+                            std::mem::size_of::<Vec<usize>>()
+                                + layer.capacity() * std::mem::size_of::<usize>()
+                        })
+                        .sum::<usize>()
+            })
+            .sum();
+        std::mem::size_of::<Self>() + vectors_bytes + nodes_bytes
+    }
+
     pub fn insert(&mut self, vector: Vec<f32>) -> usize {
         let node_id = self.vectors.len();
-        let level = self.generate_random_level(node_id);
+        let level = generate_random_level(node_id, self.config.ml);
         let mut node = HnswNode {
             level,
             neighbors: vec![Vec::new(); level + 1],
@@ -260,13 +216,14 @@ impl HnswVectorIndex {
                     continue;
                 }
 
-                let confidence = if similarity >= super::constants::HIGH_CONFIDENCE_THRESHOLD {
-                    EquivalenceConfidence::High
-                } else if similarity >= super::constants::MEDIUM_CONFIDENCE_THRESHOLD {
-                    EquivalenceConfidence::Medium
-                } else {
-                    EquivalenceConfidence::Low
-                };
+                let confidence =
+                    if similarity >= crate::neural::constants::HIGH_CONFIDENCE_THRESHOLD {
+                        EquivalenceConfidence::High
+                    } else if similarity >= crate::neural::constants::MEDIUM_CONFIDENCE_THRESHOLD {
+                        EquivalenceConfidence::Medium
+                    } else {
+                        EquivalenceConfidence::Low
+                    };
 
                 let rationale = format!(
                     "HNSW index cosine similarity {:.1}% across {} and {}",
@@ -399,82 +356,5 @@ impl HnswVectorIndex {
             .collect();
         items.sort_by(|a, b| a.dist.partial_cmp(&b.dist).unwrap_or(Ordering::Equal));
         items.into_iter().take(m_max).map(|i| i.node_id).collect()
-    }
-
-    fn generate_random_level(&self, seed: usize) -> usize {
-        let mut x = (seed as u64)
-            .wrapping_mul(0x517cc1b727220a95)
-            .wrapping_add(1);
-        x ^= x >> 12;
-        x ^= x << 25;
-        x ^= x >> 27;
-        let r = ((x.wrapping_mul(0x2545f4914f6cdd1d) >> 11) as f64) / (9007199254740992.0);
-        let unif = r.clamp(1e-7, 1.0 - 1e-7);
-        ((-unif.ln()) * self.config.ml).floor() as usize
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_hnsw_empty_and_single_insert() {
-        let mut index = HnswVectorIndex::default();
-        assert!(index.is_empty());
-        assert_eq!(index.len(), 0);
-
-        let vec1 = vec![1.0, 0.0, 0.0];
-        let id1 = index.insert(vec1.clone());
-        assert_eq!(id1, 0);
-        assert_eq!(index.len(), 1);
-
-        let results = index.search_top_k(&vec1, 1, 0.9);
-        assert_eq!(results.len(), 1);
-        assert_eq!(results[0].0, 0);
-        assert!(results[0].1 >= 0.99);
-    }
-
-    #[test]
-    fn test_hnsw_top_k_search() {
-        let mut index = HnswVectorIndex::default();
-        let v1 = vec![1.0, 0.0, 0.0];
-        let v2 = vec![0.9, 0.1, 0.0];
-        let v3 = vec![0.0, 1.0, 0.0];
-
-        index.insert(v1.clone());
-        index.insert(v2);
-        index.insert(v3);
-
-        let res = index.search_top_k(&v1, 2, 0.5);
-        assert!(res.len() >= 2);
-        assert_eq!(res[0].0, 0);
-        assert_eq!(res[1].0, 1);
-    }
-
-    #[test]
-    fn test_hnsw_find_all_pairs() {
-        let v1 = CodeEmbeddingVector {
-            file_path: "src/a.rs".to_string(),
-            start_line: 1,
-            end_line: 10,
-            language: "Rust".to_string(),
-            vector: vec![0.95, 0.05, 0.0],
-            norm: 1.0,
-        };
-        let v2 = CodeEmbeddingVector {
-            file_path: "src/b.rs".to_string(),
-            start_line: 20,
-            end_line: 30,
-            language: "Rust".to_string(),
-            vector: vec![0.93, 0.07, 0.0],
-            norm: 1.0,
-        };
-        let items = vec![v1, v2];
-        let pairs = HnswVectorIndex::find_all_pairs(&items, None, 0.85);
-
-        assert_eq!(pairs.len(), 1);
-        assert_eq!(pairs[0].file_a, "src/a.rs");
-        assert_eq!(pairs[0].file_b, "src/b.rs");
     }
 }
