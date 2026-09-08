@@ -81,6 +81,10 @@ const STEPS: ScriptStep[] = [
     command: ["bun", "scripts/check-milestones.ts"],
   },
   {
+    title: "Rich release notes & MCP standard enforcement (bun scripts/check-release-notes.ts)",
+    command: ["bun", "scripts/check-release-notes.ts"],
+  },
+  {
     title: "CDDM Dogfooding Self-Scan (cddm scan .)",
     command: [
       "cargo",
