@@ -164,9 +164,18 @@ impl CddmWatcher {
 
         while let Ok(res) = self.rx.try_recv() {
             if let Ok(event) = res {
-                for path in event.paths {
-                    if Self::is_relevant_path(&path, ignore_patterns) {
-                        changed.insert(path);
+                use notify::event::{EventKind, MetadataKind, ModifyKind};
+                let is_mutation = match event.kind {
+                    EventKind::Create(_) | EventKind::Remove(_) => true,
+                    EventKind::Modify(ModifyKind::Metadata(MetadataKind::AccessTime)) => false,
+                    EventKind::Modify(_) => true,
+                    _ => false,
+                };
+                if is_mutation {
+                    for path in event.paths {
+                        if Self::is_relevant_path(&path, ignore_patterns) {
+                            changed.insert(path);
+                        }
                     }
                 }
             }
