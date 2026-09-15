@@ -18,7 +18,7 @@ For every task, fix, refactor, or feature:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ 1. Discover / Create Primary Issue on Gitea (`git.gt-web-dev.com`)          │
+│ 1. Discover / Create Issue via Forge MCP (`gitea_list/create_issue`)        │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 2. Create Issue-Derived Branch: `git checkout -b <type>/issue-<id>-<desc>`   │
 ├─────────────────────────────────────────────────────────────────────────────┤
@@ -26,9 +26,11 @@ For every task, fix, refactor, or feature:
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 4. Push Issue Branch to Gitea `origin` (auto-mirrored to `github`)           │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 5. Open Pull Request on Gitea targeting `main` (with `Fixes #<id>`)          │
+│ 5. Open Pull Request via Forge MCP (`gitea_create_pull_request`)            │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 6. Merge via Gitea REST API (`POST /repos/gt-dev/cddm/pulls/{id}/merge`)    │
+│ 6. Verify CI Quality Gate via Forge MCP (`gitea_wait_for_ci_gate`)           │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ 7. Merge via Forge MCP (`gitea_merge_pull_request` with branch deletion)   │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -45,6 +47,6 @@ All working branches MUST strictly adhere to the canonical naming format derived
 ## 4. API-Driven PR Merge Protocol
 
 1. **Never Merge via Local Fast-Forward Push**: Agents must not merge locally and push `main` directly to remotes.
-2. **API Merge Endpoint**: All merges MUST be executed via the authoritative Gitea REST API endpoint:
-   `POST /repos/{owner}/{repo}/pulls/{index}/merge` with `{"Do": "merge", "delete_branch_after_merge": true}`.
-3. **Traceability**: This ensures Gitea automatically marks the PR as merged, attaches all CI workflow logs to the PR, and auto-closes the linked issue.
+2. **Never Bypass CI Gates**: All commits and PRs must satisfy CI quality gates verified through `gitea_wait_for_ci_gate` or `gitea_get_commit_statuses`.
+3. **API Merge Endpoint**: All merges MUST be executed via Forge MCP (`gitea_merge_pull_request`) or `forge pr merge <id> --delete-branch`.
+4. **Traceability**: This ensures Gitea automatically marks the PR as merged, attaches all CI workflow logs to the PR, and auto-closes the linked issue.

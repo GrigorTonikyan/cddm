@@ -2,6 +2,11 @@
 /**
  * CDDM Gitea Actions CI/CD Workflow Monitor
  * Queries, streams, and audits live CI/CD pipeline runs and build jobs.
+ *
+ * NOTE: For automated AI agent gating, prefer the native Forge MCP tools:
+ * - `gitea_wait_for_ci_gate(sha, gate_context)`
+ * - `gitea_get_commit_statuses(sha)`
+ * - `gitea_runner_status()`
  */
 
 import { GITEA_REPO, giteaFetch, sleep } from "./lib/gitea-client";

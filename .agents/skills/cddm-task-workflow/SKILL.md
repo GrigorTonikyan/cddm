@@ -49,6 +49,7 @@ Update docs in `docs/` and root as needed.
 1. Sync versions if needed: `vp run bump`
 2. Commit with Conventional Commits referencing the primary Gitea issue (`Fixes #<gitea-id>`)
 3. Push to `origin` (Gitea) (never use `--no-verify`), using strictly ONE canonical branch (`feat/issue-<num>-<desc>`). Do NOT push manually to `github`—Gitea automatically replicates all branches and commits to GitHub via server-side push mirror (`sync_on_commit: true`).
-4. Open the primary Pull Request on Gitea (`https://git.gt-web-dev.com/gt-dev/cddm/pulls`), include `Fixes #<id>`, and assign target milestone.
-5. Merge PR via Gitea REST API (`POST /repos/{owner}/{repo}/pulls/{id}/merge`) to ensure auto-closure of issues and clean UI state.
-6. For milestone releases: When all issues in a milestone are completed (100%), execute `bun scripts/milestone-release.ts` (or `vp run release:milestone`) to automagically synchronize all 10 manifests, tag `vX.Y.Z`, push to Gitea `origin` (push mirrored to GitHub), close the milestone, and publish the release.
+4. Open primary Pull Request via Forge MCP (`gitea_create_pull_request` or `forge pr create`), include `Fixes #<id>`, and assign target milestone.
+5. Verify CI quality gate via Forge MCP (`gitea_wait_for_ci_gate` or `gitea_get_commit_statuses`). Never bypass CI gates (`--no-verify` or manual fast-forwards are strictly prohibited).
+6. Merge PR via Forge MCP (`gitea_merge_pull_request` or `forge pr merge <id> --delete-branch`) to ensure auto-closure of issues, remote branch deletion, and clean UI state.
+7. For milestone releases: When all issues in a milestone are completed (100%), execute `bun scripts/milestone-release.ts` (or `vp run release:milestone`) to automagically synchronize all 10 manifests, tag `vX.Y.Z`, push to Gitea `origin` (push mirrored to GitHub), close the milestone, and publish the release.

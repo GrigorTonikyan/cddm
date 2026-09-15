@@ -33,6 +33,8 @@ The following rules dictate coding standards, architectural limits, and workflow
   - Details the strict ban on ad-hoc scratch scripts and mandates continuous enhancement and reuse of canonical tools under `scripts/`.
 - [Protected Branch & Mandatory Pull Request Governance](.agents/rules/protected-branch-pr-enforcement.md)
   - Details absolute ban on direct commits/pushes to `main` without explicit user approval and mandates Gitea branch/PR workflow.
+- [Forge MCP Infrastructure & VCS SSoT Standard](.agents/rules/forge_mcp.md)
+  - Details mandatory use of Forge MCP (`forge-mcp`) tools for all Gitea issue tracking, PR lifecycle, CI gate checks, and upstream defect reporting.
 
 ## 2. Workspace Skills (`.agents/skills/`)
 

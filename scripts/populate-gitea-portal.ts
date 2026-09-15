@@ -1,7 +1,12 @@
 #!/usr/bin/env bun
 /**
- * CDDM Gitea Portal Populator
- * Synchronizes Milestones, Labels, Issues, PRs, Releases, Packages, and Wiki documentation.
+ * CDDM Gitea Portal Populator (LEGACY / DEPRECATED)
+ *
+ * NOTE: As of the Forge MCP migration (Issue #238), this ad-hoc portal population
+ * script is deprecated in favor of standardized `forge-mcp` tools (`gitea_create_issue`,
+ * `gitea_create_pull_request`, `gitea_merge_pull_request`, etc.) and `forge` CLI commands.
+ * Upstream feature requests have been filed on Gitea SSoT (gt-dev/forge#42, #43, #44)
+ * to expand Forge MCP with native milestone, release, and label management tools.
  */
 
 import { createHash } from "node:crypto";
@@ -200,6 +205,39 @@ const MILESTONES = [
   {
     title: "v4.0.0 - Monorepo Clone Federation & AVX-512 Engine",
     description: "Milestone v4.0.0",
+    due_on: "2026-12-31T23:59:59Z",
+    state: "closed" as const,
+  },
+  {
+    title: "v4.0.1 - Rust Nightly Toolchain & Dependency Modernization",
+    description: "Milestone v4.0.1",
+    due_on: "2026-12-31T23:59:59Z",
+    state: "closed" as const,
+  },
+  {
+    title: "v4.1.0 - Rich Release Notes Enforcement & MCP Ecosystem Distribution",
+    description: "Milestone v4.1.0",
+    due_on: "2026-12-31T23:59:59Z",
+    state: "closed" as const,
+  },
+  {
+    title: "v4.2.0 - AI Harness Async Engine & Modern LLM Provider Streaming",
+    description:
+      "Milestone v4.2.0: Asynchronous HTTP transport via reqwest, SSE diff streaming, and modern AI model catalog",
+    due_on: "2026-12-31T23:59:59Z",
+    state: "open" as const,
+  },
+  {
+    title: "v4.3.0 - Model Context Protocol 2026-07-28 & Background Tasks",
+    description:
+      "Milestone v4.3.0: MCP 2026-07-28 specification upgrade, asynchronous task scheduler, and MCP Apps UI integration",
+    due_on: "2026-12-31T23:59:59Z",
+    state: "open" as const,
+  },
+  {
+    title: "v4.4.0 - Enterprise Observability & Developer Ergonomics",
+    description:
+      "Milestone v4.4.0: OpenTelemetry distributed tracing, Prometheus /metrics endpoint, and shell completions via clap_complete",
     due_on: "2026-12-31T23:59:59Z",
     state: "open" as const,
   },
