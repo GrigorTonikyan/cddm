@@ -5,6 +5,13 @@ All notable changes to **CDDM** (_Code De-Duplication Meister_) will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.1.0] - 2026-09-15
+
+### Features
+
+- **infra**: enforce vite-plus toolchain, modular docker registry, and quality gate (`7bdba3d`)
+- **release**: enforce rich release notes with changelog and MCP highlights (`17f66b4`)
+
 ## [4.0.1] - 2026-09-08
 
 ### Bug Fixes
