@@ -5,6 +5,7 @@
  * Ensures the backend is fully initialized and healthy before routing frontend requests.
  */
 
+import { existsSync } from "node:fs";
 import { join } from "node:path";
 import type { Subprocess } from "bun";
 
@@ -71,12 +72,26 @@ async function main() {
   console.log("      CDDM Studio — Full-Stack Development Mode      ");
   console.log("=======================================================\n");
 
-  console.log(
-    "[CDDM Dev] Launching Rust Axum backend (cargo run -p cddm-cli -- serve --port 3001)...",
-  );
+  const binName = process.platform === "win32" ? "cddm.exe" : "cddm";
+  const releaseBin = join(workspaceRoot, "target", "release", binName);
+  const debugBin = join(workspaceRoot, "target", "debug", binName);
+
+  let cmd: string[];
+  if (existsSync(releaseBin)) {
+    console.log(`[CDDM Dev] Using prebuilt release binary: ${releaseBin}`);
+    cmd = [releaseBin, "serve", "--port", String(BACKEND_PORT)];
+  } else if (existsSync(debugBin)) {
+    console.log(`[CDDM Dev] Using prebuilt debug binary: ${debugBin}`);
+    cmd = [debugBin, "serve", "--port", String(BACKEND_PORT)];
+  } else {
+    console.log(
+      "[CDDM Dev] Launching Rust Axum backend (cargo run -p cddm-cli -- serve --port 3001)...",
+    );
+    cmd = ["cargo", "run", "-p", "cddm-cli", "--", "serve", "--port", String(BACKEND_PORT)];
+  }
 
   backendProc = Bun.spawn({
-    cmd: ["cargo", "run", "-p", "cddm-cli", "--", "serve", "--port", String(BACKEND_PORT)],
+    cmd,
     cwd: workspaceRoot,
     stdout: "inherit",
     stderr: "inherit",
