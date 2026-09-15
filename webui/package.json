@@ -8,7 +8,7 @@
     "build": "tsc -b && vp build",
     "test": "vitest run --config vite.config.ts",
     "test:coverage": "vitest run --coverage --config vite.config.ts",
-    "test:e2e": "playwright test ../tests/e2e/scan-workflow.spec.ts --config=../tests/e2e/playwright.config.ts",
+    "test:e2e": "bun run --cwd .. test:e2e",
     "lint": "vp lint",
     "lint:fix": "vp lint --fix",
     "format": "vp fmt --write",
@@ -25,7 +25,6 @@
     "zustand": "^5.0.15"
   },
   "devDependencies": {
-    "@playwright/test": "^1.63.0",
     "@tailwindcss/vite": "^4.3.3",
     "@testing-library/react": "^16.3.3",
     "@types/node": "^26.5.0",

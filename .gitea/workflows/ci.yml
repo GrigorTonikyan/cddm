@@ -111,11 +111,9 @@ jobs:
         run: bun run test
 
       - name: Install Playwright Browsers
-        working-directory: ./webui
         run: bunx playwright install --with-deps chromium
 
       - name: Run Playwright E2E Browser Test Suite
-        working-directory: ./webui
         run: bun run test:e2e
 
       - name: Build WebUI Bundle (vp build)
