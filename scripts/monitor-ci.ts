@@ -59,7 +59,7 @@ export async function fetchJobLogs(jobId: number): Promise<string | null> {
   const path = `/repos/${GITEA_REPO}/actions/jobs/${jobId}/logs`;
   try {
     const res = await giteaFetch<string>(path);
-    return res.data;
+    return typeof res.data === "string" ? res.data : null;
   } catch {
     return null;
   }
@@ -115,7 +115,7 @@ export async function displayRunsSnapshot(limit = 10): Promise<boolean> {
       const jobs = await fetchRunJobs(run.id);
       for (const job of jobs) {
         const jobBadge = formatStatusBadge(job.status, job.conclusion);
-        console.log(`    - ${jobBadge} ${job.name}`);
+        console.log(`    - ${jobBadge} ${job.name} (job #${job.id})`);
       }
     } catch {
       // Ignore job fetch error

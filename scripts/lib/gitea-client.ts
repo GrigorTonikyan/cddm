@@ -8,17 +8,15 @@ export const GITEA_TOKEN =
   process.env.REGISTRY_TOKEN ||
   process.env.FORGE_GITEA_TOKEN ||
   process.env.GITHUB_TOKEN ||
-  "";
+  "token-placeholder";
 export const GITEA_REPO = process.env.GITEA_REPO || "gt-dev/cddm";
 export const GITEA_OWNER = process.env.GITEA_OWNER || "gt-dev";
 
 export function getApiHeaders(useJson = true): Record<string, string> {
   const headers: Record<string, string> = {
     Accept: "application/json",
+    Authorization: `token ${GITEA_TOKEN}`,
   };
-  if (GITEA_TOKEN) {
-    headers["Authorization"] = `token ${GITEA_TOKEN}`;
-  }
   if (useJson) {
     headers["Content-Type"] = "application/json";
   }
