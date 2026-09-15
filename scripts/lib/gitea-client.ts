@@ -2,16 +2,23 @@
  * Gitea API Client Helper for CDDM Portal Management
  */
 
-export const GITEA_BASE = "https://git.gt-web-dev.com";
-export const GITEA_TOKEN = "006df1eddf22dbb22eb29ec461bac5be6421a673";
-export const GITEA_REPO = "gt-dev/cddm";
-export const GITEA_OWNER = "gt-dev";
+export const GITEA_BASE = process.env.GITEA_BASE || "https://git.gt-web-dev.com";
+export const GITEA_TOKEN =
+  process.env.GITEA_TOKEN ||
+  process.env.REGISTRY_TOKEN ||
+  process.env.FORGE_GITEA_TOKEN ||
+  process.env.GITHUB_TOKEN ||
+  "";
+export const GITEA_REPO = process.env.GITEA_REPO || "gt-dev/cddm";
+export const GITEA_OWNER = process.env.GITEA_OWNER || "gt-dev";
 
 export function getApiHeaders(useJson = true): Record<string, string> {
   const headers: Record<string, string> = {
-    Authorization: `token ${GITEA_TOKEN}`,
     Accept: "application/json",
   };
+  if (GITEA_TOKEN) {
+    headers["Authorization"] = `token ${GITEA_TOKEN}`;
+  }
   if (useJson) {
     headers["Content-Type"] = "application/json";
   }
