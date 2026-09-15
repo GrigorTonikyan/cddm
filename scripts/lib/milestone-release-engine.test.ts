@@ -13,7 +13,8 @@ describe("milestone-release-engine", () => {
 
   it("should reject release when open issues remain without force flag", async () => {
     const openRes = await giteaFetch<MilestoneMeta[]>("/repos/gt-dev/cddm/milestones?state=open");
-    const openMilestoneWithIssues = openRes.data?.find((m) => m.open_issues > 0);
+    const milestones = Array.isArray(openRes.data) ? openRes.data : [];
+    const openMilestoneWithIssues = milestones.find((m) => m.open_issues > 0);
 
     if (openMilestoneWithIssues) {
       const res = await checkAndTriggerMilestoneRelease({
