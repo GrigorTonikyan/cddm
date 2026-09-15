@@ -27,8 +27,8 @@ This rule governs repository tracking, issue management, branching nomenclature,
 
 ## 2. Issue Tracking & Task Tracing Mandate
 
-1. **Gitea-First Issue Discovery**: When investigating changes or embarking on a task, always query and verify existing issues on Gitea first (`git.gt-web-dev.com/api/v1/repos/gt-dev/cddm/issues`).
-2. **Mandatory Issue Recording**: If no issue exists for a required bugfix, refactor, or feature, the agent **MUST** create the issue on Gitea as the primary authoritative record before writing code or creating a working branch.
+1. **Gitea-First Issue Discovery**: When investigating changes or embarking on a task, always query and verify existing issues on Gitea first via Forge MCP (`gitea_list_issues` or `forge issue list --state open`).
+2. **Mandatory Issue Recording**: If no issue exists for a required bugfix, refactor, or feature, the agent **MUST** create the issue on Gitea as the primary authoritative record via Forge MCP (`gitea_create_issue` or `forge issue create`) before writing code or creating a working branch.
 3. **Primary Issue Identification**: All task discussions, commit messages, and PR summaries MUST cite the primary Gitea issue (e.g. `Fixes #16` pointing to Gitea Issue #16).
 
 ## 3. Branching & Commit Nomenclature
@@ -46,13 +46,14 @@ This rule governs repository tracking, issue management, branching nomenclature,
 
 1. **Gitea Push (Sole Push Target)**: Always push working branches to `origin` (Gitea: `https://git.gt-web-dev.com/gt-dev/cddm.git`).
 2. **Automated Server-Side Mirroring (Zero Manual Push)**: Gitea is configured with automated server-side push mirroring (`sync_on_commit: true`) to GitHub (`https://github.com/GrigorTonikyan/cddm.git`). Never push manually to the `github` remote—doing so causes redundant network traffic, race conditions, and reference lock collisions (e.g. `cannot lock ref ... reference already exists`).
-3. **Primary PR Creation**: Open the primary Pull Request on Gitea (`https://git.gt-web-dev.com/gt-dev/cddm/pulls`) merging into `main`.
+3. **Primary PR Creation**: Open the primary Pull Request via Forge MCP (`gitea_create_pull_request` or `forge pr create`) targeting `main`.
 4. **Auto-Closing Issue Citations**: PR descriptions MUST include closing keywords (`Fixes #<id>`, `Closes #<id>`, `Resolves #<id>`) pointing to the primary Gitea issue.
-5. **API-Driven Merge Enforcement**:
-   - Merging PRs into `main` MUST be executed via the official Gitea REST API (`POST /repos/{owner}/{repo}/pulls/{index}/merge`).
-   - Merging via the API ensures Gitea automatically marks the PR as **`merged: true`** with state **`closed`**, auto-closes the linked issue, and prevents orphan PRs lingering in the UI.
+5. **CI Quality Gate Verification**: Verify all CI workflow checks pass before merging using Forge MCP (`gitea_wait_for_ci_gate` or `gitea_get_commit_statuses`). Never bypass CI gates (`--no-verify` and bypasses are strictly forbidden).
+6. **API-Driven Merge Enforcement**:
+   - Merging PRs into `main` MUST be executed via Forge MCP (`gitea_merge_pull_request` or `forge pr merge <id> --delete-branch`).
+   - Merging via Forge MCP ensures Gitea automatically marks the PR as **`merged: true`** with state **`closed`**, auto-closes the linked issue, and prevents orphan PRs lingering in the UI.
    - Never bypass the Gitea merge endpoint with silent local fast-forward pushes to `main`.
-6. **Automatic Branch Deletion**: Merged feature branches must be deleted immediately after merge (enforced by Gitea `default_delete_branch_after_merge: true`).
+7. **Automatic Branch Deletion**: Merged feature branches must be deleted immediately after merge (enforced by Gitea `default_delete_branch_after_merge: true`).
 
 ## 5. Milestone & Release Lifecycle
 

@@ -26,7 +26,7 @@ trigger: always_on
    - Every change must be preceded by an issue on Gitea.
    - Canonical branches MUST be derived strictly from the issue: `feat/issue-<id>-<slug>`, `fix/issue-<id>-<slug>`.
    - Commits must adhere to Conventional Commits referencing the issue (`Fixes #<id>`).
-   - Direct commits/pushes to `main` are strictly banned. All merges must proceed through Gitea PRs and be executed via the Gitea REST API (`POST /repos/{owner}/{repo}/pulls/{index}/merge` with `delete_branch_after_merge: true`).
+   - Direct commits/pushes to `main` are strictly banned. All merges must proceed through Gitea PRs and be executed via Forge MCP (`gitea_merge_pull_request` with `delete_branch_after_merge: true`) or `forge pr merge <id> --delete-branch`. CI gates must be strictly verified with zero bypasses (`gitea_wait_for_ci_gate`).
 9. **Strict Dogfooding Quality Gate**:
    - Every verification must run `cddm scan . --min-tokens 50 --fail-threshold 5.0` on release binaries. Loose thresholds (e.g. 15.0%) are strictly prohibited.
 10. **Zero Hardcoding Enforcement**:
@@ -57,3 +57,5 @@ trigger: always_on
     - Never write one-off scratch scripts in external or brain directories for workspace automation, CI polling, or API calls. All developer tooling and automation MUST reside permanently under `scripts/`, be continuously enhanced and extended with reusable CLI parameters, and maintain 100% test coverage in `scripts/tests/` (governed by `.agents/rules/workspace-tooling-reusability.md`).
 22. **Protected Branch & Mandatory Pull Request Governance**:
     - AI coding agents MUST NEVER commit or push directly to default/protected branches (`main`, `master`, `release/*`) unless explicitly and unambiguously commanded by the human user in their prompt. All work must proceed through canonical issue branches, primary Gitea PRs, and API merges (governed by `.agents/rules/protected-branch-pr-enforcement.md`).
+23. **Forge MCP Infrastructure & VCS SSoT Mandate**:
+    - All operations interacting with Gitea (issue discovery/creation, PR opening/merging, CI gate polling, runners) and infrastructure (TrueNAS, Coolify) MUST use native `forge-mcp` tools or `forge` CLI. When tooling defects or missing capabilities are discovered in Forge or external tools, report them upstream to Gitea SSoT (`gt-dev/forge`) using `forge_report_bug`, `forge_request_feature`, or `forge_suggest_enhancement`. Never monkey-patch tools locally.

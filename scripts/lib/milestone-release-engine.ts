@@ -33,7 +33,7 @@ export async function checkAndTriggerMilestoneRelease(
 
   // 1. Fetch all open milestones from Gitea
   const openRes = await giteaFetch<MilestoneMeta[]>("/repos/gt-dev/cddm/milestones?state=open");
-  if (!openRes.ok || !openRes.data) {
+  if (!openRes.ok || !openRes.data || !Array.isArray(openRes.data)) {
     return {
       triggered: false,
       reason: `Failed to query open milestones from Gitea (status: ${openRes.status})`,

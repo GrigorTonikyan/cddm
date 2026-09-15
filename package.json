@@ -28,6 +28,7 @@
     "test:webui": "vp -C webui run test",
     "test:scripts": "bun test scripts/tests",
     "test:mcp": "bun test tests/mcp",
+    "test:e2e": "playwright test tests/e2e/scan-workflow.spec.ts --config=tests/e2e/playwright.config.ts",
     "test": "cargo test --workspace && vp -C webui run test && bun test scripts/tests && bun test tests/mcp",
     "self-scan": "cargo run -p cddm-cli -- scan . --min-tokens 50 --fail-threshold 5.0",
     "commitlint": "commitlint --edit",

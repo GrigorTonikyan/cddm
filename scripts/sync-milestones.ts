@@ -35,27 +35,36 @@ async function main() {
 
     for (const issue of issuesRes.data) {
       totalAudited++;
-      if (!issue.milestone) {
-        const targetMilestoneId = resolveIssueMilestone(issue, milestones);
-        if (targetMilestoneId) {
-          const targetM = milestones.find((m) => m.id === targetMilestoneId);
-          console.log(
-            `  [ASSIGNING] Issue #${issue.number} ("${issue.title.slice(0, 45)}...") -> Milestone #${targetMilestoneId} ("${targetM?.title}")`,
-          );
-          const patchRes = await giteaFetch(`/repos/gt-dev/cddm/issues/${issue.number}`, {
-            method: "PATCH",
-            body: JSON.stringify({ milestone: targetMilestoneId }),
-          });
-          if (patchRes.ok) {
-            updatedCount++;
-          } else {
-            console.warn(
-              `    [WARN] Failed to patch issue #${issue.number}: status ${patchRes.status}`,
-            );
-          }
+      const targetMilestoneId = resolveIssueMilestone(issue, milestones);
+      const isWrongMilestone =
+        targetMilestoneId && issue.milestone && issue.milestone.id !== targetMilestoneId;
+      const isClosedMilestoneOnOpenIssue =
+        issue.state === "open" &&
+        issue.milestone &&
+        milestones.find((m) => m.id === issue.milestone?.id)?.state === "closed";
+      const shouldAssign =
+        !issue.milestone ||
+        isClosedMilestoneOnOpenIssue ||
+        (isWrongMilestone && (process.argv.includes("--force") || issue.state === "open"));
+
+      if (shouldAssign && targetMilestoneId) {
+        const targetM = milestones.find((m) => m.id === targetMilestoneId);
+        console.log(
+          `  [ASSIGNING] Issue #${issue.number} ("${issue.title.slice(0, 45)}...") -> Milestone #${targetMilestoneId} ("${targetM?.title}")`,
+        );
+        const patchRes = await giteaFetch(`/repos/gt-dev/cddm/issues/${issue.number}`, {
+          method: "PATCH",
+          body: JSON.stringify({ milestone: targetMilestoneId }),
+        });
+        if (patchRes.ok) {
+          updatedCount++;
         } else {
-          console.warn(`  [UNRESOLVED] Issue #${issue.number}: ${issue.title}`);
+          console.warn(
+            `    [WARN] Failed to patch issue #${issue.number}: status ${patchRes.status}`,
+          );
         }
+      } else if (!issue.milestone) {
+        console.warn(`  [UNRESOLVED] Issue #${issue.number}: ${issue.title}`);
       }
     }
 

@@ -21,9 +21,9 @@ This rule governs the exclusive use of Gitea as the Single Source of Truth (SSoT
 
 ## 3. Project Management Workflow
 
-1. **Discovery & Planning**: When planning new features or analyzing requirements, query Gitea (\git.gt-web-dev.com/api/v1/repos/gt-dev/cddm/issues\) to retrieve the canonical state.
+1. **Discovery & Planning**: When planning new features or analyzing requirements, query Gitea via Forge MCP (`gitea_list_issues` or `forge issue list --state open`) to retrieve the canonical state.
 2. **Documentation Pointers**: Files like `docs/ROADMAP.md` or `docs/TODO.md` MUST only contain high-level strategic summaries and absolute links pointing directly to the Gitea Milestone and Issue Tracker endpoints.
-3. **Continuous Sync**: If the roadmap changes, update the Gitea Milestone/Issue first. Do not update a local markdown file as a substitute.
+3. **Continuous Sync**: If the roadmap changes, update the Gitea Milestone/Issue first via Forge MCP (`gitea_update_issue` or `forge issue`). Do not update a local markdown file as a substitute.
 
 ## 4. Automagic Milestone Releases & Agent Enforcement
 

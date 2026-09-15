@@ -11,6 +11,8 @@ env:
   CARGO_BUILD_JOBS: 4
   CARGO_INCREMENTAL: 0
   RUSTFLAGS: "-C debuginfo=0"
+  NODE_TLS_REJECT_UNAUTHORIZED: "0"
+  NODE_EXTRA_CA_CERTS: /etc/ssl/certs/ca-certificates.crt
 
 jobs:
   build-binaries:

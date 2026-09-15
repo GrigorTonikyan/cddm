@@ -29,7 +29,7 @@ test.describe("CDDM WebUI Studio Comprehensive UI/UX Quality Verification", () =
 
     // 1. Initial Page Load & Header Controls
     await page.goto("http://localhost:3000");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
     await expect(page.locator("h1")).toContainText("CDDM Studio");
     await expect(page.getByText(/v1\.\d+\.\d+/)).toBeVisible();
     await expect(
