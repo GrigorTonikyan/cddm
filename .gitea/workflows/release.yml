@@ -71,7 +71,7 @@ jobs:
           cp target/${{ matrix.target }}/release/cddm${{ matrix.exe_ext }} dist-package/
           cp target/${{ matrix.target }}/release/cddm-mcp${{ matrix.exe_ext }} dist-package/
           cp target/${{ matrix.target }}/release/cddm-lsp${{ matrix.exe_ext }} dist-package/
-          TAG_NAME="${GITHUB_REF_NAME:-v1.9.0}"
+          TAG_NAME="${GITHUB_REF_NAME:-v4.1.0}"
           if [ "${{ matrix.archive_ext }}" = ".zip" ]; then
             cd dist-package && zip -r "../cddm-${TAG_NAME}-${{ matrix.target }}.zip" ./* && cd ..
           else
@@ -79,7 +79,7 @@ jobs:
           fi
 
       - name: Upload Target Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_prefix }}-archive
           path: cddm-*.*
@@ -106,14 +106,38 @@ jobs:
           bun scripts/package-vscode.ts
 
       - name: Upload VSIX Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: vscode-vsix
           path: packaging/vscode/*.vsix
 
+  publish-container:
+    name: Publish Container to Private VCS Registry
+    runs-on: highperf
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Private Gitea Container Registry
+        run: |
+          echo "${{ secrets.GITEA_TOKEN || secrets.GITHUB_TOKEN }}" | docker login git.gt-web-dev.com -u "${{ github.actor }}" --password-stdin
+
+      - name: Build and Push Release Container
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            git.gt-web-dev.com/gt-dev/cddm:latest
+            git.gt-web-dev.com/gt-dev/cddm:${{ github.ref_name }}
+
   gitea-publish:
     name: Publish Gitea Release & Ecosystem Packages
-    needs: [build-binaries, package-vscode]
+    needs: [build-binaries, package-vscode, publish-container]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Source Code
@@ -125,7 +149,7 @@ jobs:
           bun-version: latest
 
       - name: Download All Build Artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: ./downloaded-artifacts
 
@@ -143,5 +167,5 @@ jobs:
           GITEA_REPO: "gt-dev/cddm"
           GITEA_TOKEN: ${{ secrets.GITEA_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
-          TAG_NAME="${GITHUB_REF_NAME:-v1.9.0}"
+          TAG_NAME="${GITHUB_REF_NAME:-v4.1.0}"
           bun scripts/publish-release.ts --tag "${TAG_NAME}" --dist-dir "dist-release"

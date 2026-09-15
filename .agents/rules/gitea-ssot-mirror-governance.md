@@ -16,6 +16,7 @@ This rule governs repository tracking, issue management, branching nomenclature,
 │    - Primary Pull Requests, Code Reviews, and Merges                        │
 │    - Gitea Actions CI/CD matrix and cross-compilation                       │
 │    - Authoritative binary release publisher and packaging assets            │
+│    - Authoritative Private VCS Container Registry (git.gt-web-dev.com/...)  │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 2. SECONDARY DOWNSTREAM: GitHub Mirror (https://github.com/GrigorTonikyan/cddm)│
 │    - Read-only / secondary replica mirror                                   │
