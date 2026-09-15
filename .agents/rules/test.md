@@ -37,6 +37,7 @@ CDDM enforces an industry-standard, multi-tier testing model:
    - Utility: `src/utils/ide-links.ts` -> `src/utils/ide-links.test.ts`
 2. **Prohibition of Legacy `__tests__/` Directories**: Arbitrary nested `__tests__/` subdirectories are strictly forbidden in `webui/`.
 3. **Vitest + React Testing Library**: Test user-visible behavior and accessibility (`getByRole`, `findByText`), not internal state or implementation details.
+4. **Mandatory E2E Browser Testing**: End-to-end user journeys, modal interactions, and diff viewers MUST be verified using Playwright test suites in `tests/e2e/` (run via `vp -C webui run test:e2e`). Zero mock testing for full browser acceptance flows.
 
 ## 3. Workspace Scripts & Tooling Standards (`scripts/`)
 
@@ -80,13 +81,25 @@ CDDM enforces an industry-standard, multi-tier testing model:
 
 ## 8. Automated Pipeline Enforcement
 
-Every test suite defined by this standard is strictly executed in `vp run verify` (or `bun scripts/verify.ts`):
+Every quality check and test suite is strictly executed in `vp run verify` (or `bun scripts/verify.ts`):
 
-- `[1/18]` `cargo fmt --check`
-- `[2/18]` `cargo clippy`
-- `[3/18]` `cargo test --workspace`
-- `[4/18]` `tsc -p tsconfig.json`
-- `[5/18]` `bun test scripts/tests`
-- `[6/18]` `bun test tests/mcp`
-- `[7/18]` `vp check`
-- `[8/18]` `vp -C webui run test`
+1. `cargo fmt --check` (Rust formatting check)
+2. `cargo clippy --workspace --all-targets -- -D warnings` (Clippy zero-warning gate)
+3. `cargo test --workspace` (Rust unit & integration tests)
+4. `tsc -p tsconfig.json` (Scripts TypeScript type check)
+5. `bun test scripts/tests scripts/lib` (Repository scripts test suite)
+6. `bun test tests/mcp` (MCP Server 1:1 per-tool test suites)
+7. `vp check` (Workspace-wide Vite Plus type-aware verification)
+8. `vp -C webui run test` (WebUI Vitest test suite)
+9. `vp -C webui run build` (WebUI production bundle build)
+10. `bun scripts/check-no-emojis.ts` (Zero-Emoji codebase policy)
+11. `bun scripts/check-docs.ts` (Documentation integrity & cross-reference sync)
+12. `bun scripts/check-file-length.ts` (File length <= 500 lines modularity ceiling)
+13. `bun scripts/check-feature-parity.ts` (4-Pillar Cross-Interface parity check)
+14. `bun scripts/package-distribution.ts` (Ecosystem distribution packaging validation)
+15. `tsc -p editors/vscode/tsconfig.json` (VS Code extension TypeScript check)
+16. `bun test scripts/tests/vscode-extension.test.ts` (VS Code extension unit tests)
+17. `bun scripts/package-vscode.ts` (VS Code extension VSIX packaging)
+18. `bun scripts/check-milestones.ts` (Milestone governance & issue assignment gate)
+19. `bun scripts/check-release-notes.ts` (Rich release notes & MCP standard gate)
+20. `cargo run -p cddm-cli --release -- scan . --min-tokens 50 --fail-threshold 5.0` (Strict CDDM dogfooding self-scan)
