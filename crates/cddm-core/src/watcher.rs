@@ -17,6 +17,9 @@ pub const DEFAULT_WATCH_IGNORES: &[&str] = &[
     ".next",
     ".output",
     "build",
+    "test-results",
+    ".playwright",
+    ".vite",
 ];
 
 /// Detailed change event for an observed file.

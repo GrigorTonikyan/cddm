@@ -65,14 +65,22 @@ export async function fetchJobLogs(jobId: number): Promise<string | null> {
   }
 }
 
-export async function displayJobLogs(jobId: number, tailLines = 100): Promise<void> {
+export async function displayJobLogs(
+  jobId: number,
+  tailLines = 100,
+  filterPattern?: string,
+): Promise<void> {
   console.log(`\n=== Gitea Actions Job #${jobId} Logs ===`);
   const logs = await fetchJobLogs(jobId);
   if (!logs) {
     console.error(`Could not retrieve logs for job #${jobId}`);
     return;
   }
-  const lines = logs.split("\n");
+  let lines = logs.split("\n");
+  if (filterPattern) {
+    const re = new RegExp(filterPattern, "i");
+    lines = lines.filter((l) => re.test(l));
+  }
   const slice = tailLines > 0 ? lines.slice(-tailLines) : lines;
   console.log(slice.join("\n"));
 }
@@ -143,6 +151,7 @@ if (import.meta.main) {
       ["--interval <sec>, -i <sec>", "Polling interval in seconds for --watch (default: 10s)"],
       ["--logs <jobId>, -L <jobId>", "Fetch and print log output for a specific job ID"],
       ["--tail <n>, -t <n>", "Number of trailing log lines to show (default: 100, 0 for all)"],
+      ["--grep <pattern>, -g <pattern>", "Filter log output by regex pattern"],
       ["--help, -h", "Show this help message"],
     ]);
     process.exit(0);
@@ -156,7 +165,9 @@ if (import.meta.main) {
     const tailIdx = args.indexOf("--tail") !== -1 ? args.indexOf("--tail") : args.indexOf("-t");
     const tail =
       tailIdx !== -1 && args[tailIdx + 1] ? Number.parseInt(args[tailIdx + 1]!, 10) : 100;
-    await displayJobLogs(jobId, tail);
+    const grepIdx = args.indexOf("--grep") !== -1 ? args.indexOf("--grep") : args.indexOf("-g");
+    const grepPattern = grepIdx !== -1 && args[grepIdx + 1] ? args[grepIdx + 1] : undefined;
+    await displayJobLogs(jobId, tail, grepPattern);
     process.exit(0);
   }
 

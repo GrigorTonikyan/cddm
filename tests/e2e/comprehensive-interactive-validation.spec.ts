@@ -40,7 +40,7 @@ test.describe("CDDM WebUI Studio Complete Automated Chrome UI/UX Interactive Val
 
     // 1. Navigate to http://localhost:3000 & Verify Header
     await page.goto("http://localhost:3000");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     await expect(page.locator("h1")).toContainText("CDDM Studio");
     await expect(page.getByText(/v\d+\.\d+\.\d+/)).toBeVisible();
