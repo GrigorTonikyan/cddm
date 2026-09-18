@@ -1,2 +1,5 @@
 [test]
 timeout = 30000
+
+[install.scopes]
+"@gt-dev" = { url = "https://git.gt-web-dev.com/api/packages/gt-dev/npm/" }
