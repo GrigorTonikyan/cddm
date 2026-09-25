@@ -15,7 +15,6 @@ env:
   CARGO_BUILD_JOBS: 4
   CARGO_INCREMENTAL: 0
   RUSTFLAGS: "-C debuginfo=0"
-  NODE_TLS_REJECT_UNAUTHORIZED: "0"
   NODE_EXTRA_CA_CERTS: /etc/ssl/certs/ca-certificates.crt
 
 jobs:
@@ -24,7 +23,9 @@ jobs:
     runs-on: highperf
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: builtin:checkout
+        with:
+          fetch-depth: 0
 
       - name: Install Rust Toolchain
         uses: dtolnay/rust-toolchain@nightly
@@ -73,7 +74,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: builtin:checkout
+        with:
+          fetch-depth: 0
 
       - name: Download Prebuilt Binaries
         uses: actions/download-artifact@v4
@@ -126,7 +129,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: builtin:checkout
+        with:
+          fetch-depth: 0
 
       - name: Download Prebuilt Binaries
         uses: actions/download-artifact@v4
@@ -179,7 +184,9 @@ jobs:
     runs-on: highperf
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: builtin:checkout
+        with:
+          fetch-depth: 0
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
