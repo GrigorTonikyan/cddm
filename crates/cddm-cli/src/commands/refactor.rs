@@ -4,6 +4,7 @@ use crate::formatters::{
     print_ast_refactor_recommendation, print_cluster_refactor_recommendation,
     print_refactor_recommendation,
 };
+use crate::types::commands::RefactorArgs;
 use cddm_core::{
     AiRefactorPromptRequest, CloneLocation, CloneType, ScanConfig, analyze_clone_refactoring,
     analyze_cluster_refactoring, apply_cluster_refactor_branch, generate_ai_refactor_prompt,
@@ -26,31 +27,70 @@ fn write_output_file(
     Ok(())
 }
 
-#[allow(clippy::too_many_arguments)]
-pub async fn run_refactor_command(
-    pair: usize,
-    cluster: Option<usize>,
-    directory: PathBuf,
-    min_tokens: usize,
-    output: Option<PathBuf>,
-    prompt: bool,
-    ast: bool,
-    fn_name: Option<String>,
-    target_module: Option<String>,
-    apply_branch: Option<String>,
-    verify: bool,
-    test_cmd: Option<String>,
-    languages: Vec<String>,
-    ignore: Vec<String>,
+async fn stream_ai_refactor(
+    prompt_text: &str,
+    args: &RefactorArgs,
+    patch_to_apply: &mut String,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    use std::io::Write;
+    use tokio_stream::StreamExt;
+
+    println!("\n=== CDDM — Streaming AI Refactoring Surgeon ===");
+    println!("Connecting to AI provider stream...\n");
+
+    let provider_kind = match args.provider.as_deref().map(str::to_lowercase).as_deref() {
+        Some("gemini") => cddm_core::AiProviderKind::Gemini,
+        Some("claude") => cddm_core::AiProviderKind::Claude,
+        Some("openai") => cddm_core::AiProviderKind::OpenAi,
+        Some("ollama") => cddm_core::AiProviderKind::Ollama,
+        Some("custom") => cddm_core::AiProviderKind::Custom,
+        Some("mock") => cddm_core::AiProviderKind::Mock,
+        _ => cddm_core::AiProviderKind::Mock,
+    };
+
+    let p_cfg = cddm_core::AiProviderConfig {
+        provider: provider_kind,
+        model: args.model.clone(),
+        endpoint: None,
+        api_key: None,
+        temperature: None,
+        timeout_secs: Some(60),
+    };
+    let ai_provider = cddm_core::create_ai_provider(&p_cfg);
+    let mut stream = ai_provider
+        .stream_prompt(prompt_text)
+        .await
+        .map_err(|e| format!("AI stream error: {e}"))?;
+
+    let mut accumulated = String::new();
+    while let Some(chunk_res) = stream.next().await {
+        match chunk_res {
+            Ok(chunk) => {
+                print!("{chunk}");
+                let _ = std::io::stdout().flush();
+                accumulated.push_str(&chunk);
+            }
+            Err(e) => {
+                eprintln!("\n[ERROR] Stream error: {e}");
+                break;
+            }
+        }
+    }
+    println!();
+    *patch_to_apply = accumulated.clone();
+    write_output_file(args.output.as_ref(), &accumulated, "Streamed AI patch")?;
+    Ok(())
+}
+
+pub async fn run_refactor_command(args: RefactorArgs) -> Result<(), Box<dyn std::error::Error>> {
     let config = ScanConfig {
-        directory: directory.to_string_lossy().to_string(),
-        min_tokens,
-        languages,
-        ignore_patterns: if ignore.is_empty() {
+        directory: args.directory.to_string_lossy().to_string(),
+        min_tokens: args.min_tokens,
+        languages: args.languages.clone(),
+        ignore_patterns: if args.ignore.is_empty() {
             ScanConfig::default().ignore_patterns
         } else {
-            ignore
+            args.ignore.clone()
         },
         detect_type2: true,
         detect_type3: true,
@@ -75,10 +115,10 @@ pub async fn run_refactor_command(
     let cancel_flag = Arc::new(AtomicBool::new(false));
 
     let result = run_scan(config, tx, cancel_flag).await?;
-    let patch_to_apply: String;
+    let mut patch_to_apply: String;
 
-    if ast {
-        let occurrences = if let Some(c_idx) = cluster {
+    if args.ast {
+        let occurrences = if let Some(c_idx) = args.cluster {
             if result.clone_clusters.is_empty() {
                 println!("No duplicate code clone clusters found to refactor.");
                 return Ok(());
@@ -94,8 +134,8 @@ pub async fn run_refactor_command(
                 println!("No duplicate code clone pairs found to refactor.");
                 return Ok(());
             }
-            let target_idx = if pair > 0 && pair <= result.clone_pairs.len() {
-                pair - 1
+            let target_idx = if args.pair > 0 && args.pair <= result.clone_pairs.len() {
+                args.pair - 1
             } else {
                 0
             };
@@ -118,43 +158,46 @@ pub async fn run_refactor_command(
 
         let ast_res = generate_ast_cluster_refactor(
             &occurrences,
-            fn_name.as_deref(),
-            target_module.as_deref(),
+            args.fn_name.as_deref(),
+            args.target_module.as_deref(),
             None,
         )?;
 
         patch_to_apply = ast_res.unified_patch.clone();
 
-        if prompt {
-            let prompt_req = AiRefactorPromptRequest {
-                clone_type: CloneType::Exact,
-                similarity: 1.0,
-                token_count: 100,
-                lines_saved_est: ast_res.total_lines_saved,
-                function_name: ast_res.function_name.clone(),
-                target_module: ast_res.target_module_path.clone(),
-                occurrences: cddm_core::occurrences_to_ai_context(&occurrences),
-                invariant_body: ast_res.helper_function_code.clone(),
-                parameters: ast_res
-                    .inferred_parameters
-                    .iter()
-                    .map(|p| format!("{}: {}", p.name, p.inferred_type))
-                    .collect(),
-                context_slices: None,
-                custom_instructions: None,
-            };
-            let prompt_text = generate_ai_refactor_prompt(&prompt_req);
+        let prompt_req = AiRefactorPromptRequest {
+            clone_type: CloneType::Exact,
+            similarity: 1.0,
+            token_count: 100,
+            lines_saved_est: ast_res.total_lines_saved,
+            function_name: ast_res.function_name.clone(),
+            target_module: ast_res.target_module_path.clone(),
+            occurrences: cddm_core::occurrences_to_ai_context(&occurrences),
+            invariant_body: ast_res.helper_function_code.clone(),
+            parameters: ast_res
+                .inferred_parameters
+                .iter()
+                .map(|p| format!("{}: {}", p.name, p.inferred_type))
+                .collect(),
+            context_slices: None,
+            custom_instructions: None,
+        };
+        let prompt_text = generate_ai_refactor_prompt(&prompt_req);
+
+        if args.stream {
+            stream_ai_refactor(&prompt_text, &args, &mut patch_to_apply).await?;
+        } else if args.prompt {
             println!("{}", prompt_text);
-            write_output_file(output.as_ref(), &prompt_text, "AI refactoring prompt")?;
+            write_output_file(args.output.as_ref(), &prompt_text, "AI refactoring prompt")?;
         } else {
-            print_ast_refactor_recommendation(cluster, &ast_res);
+            print_ast_refactor_recommendation(args.cluster, &ast_res);
             write_output_file(
-                output.as_ref(),
+                args.output.as_ref(),
                 &ast_res.unified_patch,
                 "AST-native unified patch",
             )?;
         }
-    } else if let Some(c_idx) = cluster {
+    } else if let Some(c_idx) = args.cluster {
         if result.clone_clusters.is_empty() {
             println!("No duplicate code clone clusters found to refactor.");
             return Ok(());
@@ -178,35 +221,38 @@ pub async fn run_refactor_command(
         )?;
         patch_to_apply = suggestion.unified_patch.clone();
 
-        if prompt {
-            let prompt_req = AiRefactorPromptRequest {
-                clone_type: selected_cluster.clone_type.clone(),
-                similarity: selected_cluster.similarity,
-                token_count: selected_cluster.token_count,
-                lines_saved_est: suggestion.total_lines_saved,
-                function_name: suggestion.suggested_function_name.clone(),
-                target_module: suggestion.target_module_hint.clone(),
-                occurrences: cddm_core::occurrences_to_ai_context(&selected_cluster.occurrences),
-                invariant_body: suggestion.common_body_lines.join("\n"),
-                parameters: suggestion
-                    .sites
-                    .iter()
-                    .flat_map(|s| {
-                        s.parameter_differences
-                            .iter()
-                            .map(|p| p.fragment_a_code.clone())
-                    })
-                    .collect(),
-                context_slices: None,
-                custom_instructions: None,
-            };
-            let prompt_text = generate_ai_refactor_prompt(&prompt_req);
+        let prompt_req = AiRefactorPromptRequest {
+            clone_type: selected_cluster.clone_type.clone(),
+            similarity: selected_cluster.similarity,
+            token_count: selected_cluster.token_count,
+            lines_saved_est: suggestion.total_lines_saved,
+            function_name: suggestion.suggested_function_name.clone(),
+            target_module: suggestion.target_module_hint.clone(),
+            occurrences: cddm_core::occurrences_to_ai_context(&selected_cluster.occurrences),
+            invariant_body: suggestion.common_body_lines.join("\n"),
+            parameters: suggestion
+                .sites
+                .iter()
+                .flat_map(|s| {
+                    s.parameter_differences
+                        .iter()
+                        .map(|p| p.fragment_a_code.clone())
+                })
+                .collect(),
+            context_slices: None,
+            custom_instructions: None,
+        };
+        let prompt_text = generate_ai_refactor_prompt(&prompt_req);
+
+        if args.stream {
+            stream_ai_refactor(&prompt_text, &args, &mut patch_to_apply).await?;
+        } else if args.prompt {
             println!("{}", prompt_text);
-            write_output_file(output.as_ref(), &prompt_text, "AI refactoring prompt")?;
+            write_output_file(args.output.as_ref(), &prompt_text, "AI refactoring prompt")?;
         } else {
             print_cluster_refactor_recommendation(selected_cluster, &suggestion);
             write_output_file(
-                output.as_ref(),
+                args.output.as_ref(),
                 &suggestion.unified_patch,
                 "Multi-site unified patch",
             )?;
@@ -217,12 +263,12 @@ pub async fn run_refactor_command(
             return Ok(());
         }
 
-        let target_idx = if pair > 0 && pair <= result.clone_pairs.len() {
-            pair - 1
+        let target_idx = if args.pair > 0 && args.pair <= result.clone_pairs.len() {
+            args.pair - 1
         } else {
             eprintln!(
                 "Warning: Specified pair index {} out of range (total: {}); defaulting to 1.",
-                pair,
+                args.pair,
                 result.clone_pairs.len()
             );
             0
@@ -237,52 +283,64 @@ pub async fn run_refactor_command(
         )?;
         patch_to_apply = suggestion.unified_patch.clone();
 
-        if prompt {
-            let locs = vec![
-                CloneLocation {
-                    file: selected.file_a.clone(),
-                    start_line: selected.start_line_a,
-                    end_line: selected.end_line_a,
-                    author: selected.author_a.clone(),
-                },
-                CloneLocation {
-                    file: selected.file_b.clone(),
-                    start_line: selected.start_line_b,
-                    end_line: selected.end_line_b,
-                    author: selected.author_b.clone(),
-                },
-            ];
+        let locs = vec![
+            CloneLocation {
+                file: selected.file_a.clone(),
+                start_line: selected.start_line_a,
+                end_line: selected.end_line_a,
+                author: selected.author_a.clone(),
+            },
+            CloneLocation {
+                file: selected.file_b.clone(),
+                start_line: selected.start_line_b,
+                end_line: selected.end_line_b,
+                author: selected.author_b.clone(),
+            },
+        ];
 
-            let prompt_req = AiRefactorPromptRequest {
-                clone_type: selected.clone_type.clone(),
-                similarity: selected.similarity,
-                token_count: selected.token_count,
-                lines_saved_est: suggestion.lines_saved,
-                function_name: suggestion.suggested_function_name.clone(),
-                target_module: suggestion.target_module_hint.clone(),
-                occurrences: cddm_core::occurrences_to_ai_context(&locs),
-                invariant_body: suggestion.common_body_lines.join("\n"),
-                parameters: suggestion
-                    .parameter_differences
-                    .iter()
-                    .map(|p| p.fragment_a_code.clone())
-                    .collect(),
-                context_slices: None,
-                custom_instructions: None,
-            };
-            let prompt_text = generate_ai_refactor_prompt(&prompt_req);
+        let prompt_req = AiRefactorPromptRequest {
+            clone_type: selected.clone_type.clone(),
+            similarity: selected.similarity,
+            token_count: selected.token_count,
+            lines_saved_est: suggestion.lines_saved,
+            function_name: suggestion.suggested_function_name.clone(),
+            target_module: suggestion.target_module_hint.clone(),
+            occurrences: cddm_core::occurrences_to_ai_context(&locs),
+            invariant_body: suggestion.common_body_lines.join("\n"),
+            parameters: suggestion
+                .parameter_differences
+                .iter()
+                .map(|p| p.fragment_a_code.clone())
+                .collect(),
+            context_slices: None,
+            custom_instructions: None,
+        };
+        let prompt_text = generate_ai_refactor_prompt(&prompt_req);
+
+        if args.stream {
+            stream_ai_refactor(&prompt_text, &args, &mut patch_to_apply).await?;
+        } else if args.prompt {
             println!("{}", prompt_text);
-            write_output_file(output.as_ref(), &prompt_text, "AI refactoring prompt")?;
+            write_output_file(args.output.as_ref(), &prompt_text, "AI refactoring prompt")?;
         } else {
             print_refactor_recommendation(selected, &suggestion);
-            write_output_file(output.as_ref(), &suggestion.unified_patch, "Unified patch")?;
+            write_output_file(
+                args.output.as_ref(),
+                &suggestion.unified_patch,
+                "Unified patch",
+            )?;
         }
     }
 
-    if let Some(branch_name) = apply_branch
+    if let Some(branch_name) = &args.apply_branch
         && !patch_to_apply.is_empty()
     {
-        match apply_cluster_refactor_branch(&directory, &patch_to_apply, Some(&branch_name), true) {
+        match apply_cluster_refactor_branch(
+            &args.directory,
+            &patch_to_apply,
+            Some(branch_name),
+            true,
+        ) {
             Ok(res) => {
                 println!(
                     "\n[PASS] Refactoring patch applied to branch '{}':",
@@ -302,9 +360,9 @@ pub async fn run_refactor_command(
         }
     }
 
-    if verify {
+    if args.verify {
         println!("\n=== CDDM — Closed-Loop Test Suite Verification ===");
-        match verify_refactor_test_suite(&directory, test_cmd.as_deref(), None, None) {
+        match verify_refactor_test_suite(&args.directory, args.test_cmd.as_deref(), None, None) {
             Ok(v_res) => {
                 if v_res.success {
                     println!(

@@ -18,6 +18,7 @@ export const API_ROUTES = {
   SCAN: "/api/scan",
   SNIPPET: "/api/snippet",
   REFACTOR: "/api/refactor",
+  REFACTOR_STREAM: "/api/refactor/stream",
   REFACTOR_CLUSTER: "/api/refactor-cluster",
   APPLY_PATCH: "/api/apply-patch",
   EVENTS: "/api/events",

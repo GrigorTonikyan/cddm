@@ -1,7 +1,11 @@
 #![forbid(unsafe_code)]
 
 use super::types::*;
-use axum::{extract::Json, http::StatusCode};
+use axum::{
+    extract::Json,
+    http::StatusCode,
+    response::sse::{Event, KeepAlive, Sse},
+};
 use cddm_core::{
     ApplyRefactorBranchRequest, ApplyRefactorBranchResult, AstRewriteResult,
     ClusterRefactorSuggestion, RefactorSandboxRequest, RefactorSandboxResult, RefactorSuggestion,
@@ -9,6 +13,7 @@ use cddm_core::{
     analyze_cluster_refactoring, apply_cluster_refactor_branch, generate_ai_refactor_prompt,
     generate_ast_cluster_refactor, preview_cluster_refactor, verify_refactor_test_suite,
 };
+use std::convert::Infallible;
 use std::path::Path;
 
 pub async fn refactor_handler(
@@ -23,6 +28,121 @@ pub async fn refactor_handler(
         Ok(suggestion) => Ok(Json(suggestion)),
         Err(err) => Err((StatusCode::BAD_REQUEST, err)),
     }
+}
+
+pub async fn refactor_stream_handler(
+    Json(req): Json<RefactorStreamRequest>,
+) -> Sse<impl tokio_stream::Stream<Item = Result<Event, Infallible>>> {
+    let locs = vec![
+        cddm_core::CloneLocation {
+            file: req.file_a.clone(),
+            start_line: req.start_line_a,
+            end_line: req.end_line_a,
+            author: None,
+        },
+        cddm_core::CloneLocation {
+            file: req.file_b.clone(),
+            start_line: req.start_line_b,
+            end_line: req.end_line_b,
+            author: None,
+        },
+    ];
+
+    let suggestion = analyze_clone_refactoring(
+        &req.file_a,
+        (req.start_line_a, req.end_line_a),
+        &req.file_b,
+        (req.start_line_b, req.end_line_b),
+    );
+
+    let prompt_req = match &suggestion {
+        Ok(sug) => cddm_core::AiRefactorPromptRequest {
+            clone_type: cddm_core::CloneType::Exact,
+            similarity: 1.0,
+            token_count: 50,
+            lines_saved_est: sug.lines_saved,
+            function_name: sug.suggested_function_name.clone(),
+            target_module: sug.target_module_hint.clone(),
+            occurrences: cddm_core::occurrences_to_ai_context(&locs),
+            invariant_body: sug.common_body_lines.join("\n"),
+            parameters: sug
+                .parameter_differences
+                .iter()
+                .map(|p| p.fragment_a_code.clone())
+                .collect(),
+            context_slices: None,
+            custom_instructions: None,
+        },
+        Err(_) => cddm_core::AiRefactorPromptRequest {
+            clone_type: cddm_core::CloneType::Exact,
+            similarity: 1.0,
+            token_count: 50,
+            lines_saved_est: 10,
+            function_name: "deduplicated_function".to_string(),
+            target_module: "shared".to_string(),
+            occurrences: cddm_core::occurrences_to_ai_context(&locs),
+            invariant_body: String::new(),
+            parameters: vec![],
+            context_slices: None,
+            custom_instructions: None,
+        },
+    };
+
+    let prompt = generate_ai_refactor_prompt(&prompt_req);
+
+    let provider_kind = match req.provider.as_deref().map(str::to_lowercase).as_deref() {
+        Some("gemini") => cddm_core::AiProviderKind::Gemini,
+        Some("claude") => cddm_core::AiProviderKind::Claude,
+        Some("openai") => cddm_core::AiProviderKind::OpenAi,
+        Some("ollama") => cddm_core::AiProviderKind::Ollama,
+        Some("custom") => cddm_core::AiProviderKind::Custom,
+        Some("mock") => cddm_core::AiProviderKind::Mock,
+        _ => cddm_core::AiProviderKind::Mock,
+    };
+
+    let provider_config = cddm_core::AiProviderConfig {
+        provider: provider_kind,
+        model: req.model,
+        endpoint: req.endpoint,
+        api_key: req.api_key,
+        temperature: req.temperature,
+        timeout_secs: Some(60),
+    };
+
+    let ai_provider = cddm_core::create_ai_provider(&provider_config);
+
+    let (tx, rx) = tokio::sync::mpsc::channel(64);
+    tokio::spawn(async move {
+        match ai_provider.stream_prompt(&prompt).await {
+            Ok(mut stream) => {
+                use tokio_stream::StreamExt;
+                while let Some(chunk_res) = stream.next().await {
+                    match chunk_res {
+                        Ok(chunk) => {
+                            let data = serde_json::json!({ "chunk": chunk }).to_string();
+                            if tx.send(Ok(Event::default().data(data))).await.is_err() {
+                                return;
+                            }
+                        }
+                        Err(e) => {
+                            let data = serde_json::json!({ "error": e }).to_string();
+                            let _ = tx.send(Ok(Event::default().data(data))).await;
+                            return;
+                        }
+                    }
+                }
+                let data = serde_json::json!({ "done": true }).to_string();
+                let _ = tx.send(Ok(Event::default().data(data))).await;
+            }
+            Err(e) => {
+                let data = serde_json::json!({ "error": e }).to_string();
+                let _ = tx.send(Ok(Event::default().data(data))).await;
+            }
+        }
+    });
+
+    let sse_stream = tokio_stream::wrappers::ReceiverStream::new(rx);
+    Sse::new(sse_stream).keep_alive(KeepAlive::default())
 }
 
 pub async fn refactor_cluster_handler(

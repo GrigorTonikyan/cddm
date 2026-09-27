@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-27 | Rust: 366 #[test] units | WebUI: 229 tests across 63 suites | Scripts & MCP: 204 tests across 60 suites | CI Workflows: PASS
+> Last verified: 2026-08-27 | Rust: 374 #[test] units | WebUI: 233 tests across 64 suites | Scripts & MCP: 204 tests across 60 suites | CI Workflows: PASS
 
 ---
 
@@ -358,7 +358,7 @@
 
 ---
 
-## 2. WebUI Frontend — React 19 + TypeScript + Vitest (229 unit tests across 63 suites)
+## 2. WebUI Frontend — React 19 + TypeScript + Vitest (233 unit tests across 64 suites)
 
 | Module                      | Test Suite File                                                                       | Test Cases | Status |
 | :-------------------------- | :------------------------------------------------------------------------------------ | :--------- | :----- |
@@ -409,6 +409,7 @@
 | Win2x Resize Hook           | `webui/src/components/ui/win2x-manager/hooks/use-pointer-resize.test.ts`              | 2 tests    | PASS   |
 | Live Watch Studio           | `webui/src/components/watch/LiveWatch.test.tsx`                                       | 5 tests    | PASS   |
 | use-form-state              | `webui/src/hooks/use-form-state.test.ts`                                              | 3 tests    | PASS   |
+| use Refactor Stream         | `webui/src/hooks/useRefactorStream.test.ts`                                           | 4 tests    | PASS   |
 | use Treemap Layout          | `webui/src/hooks/useTreemapLayout.test.ts`                                            | 3 tests    | PASS   |
 | use Virtualizer             | `webui/src/hooks/useVirtualizer.test.ts`                                              | 3 tests    | PASS   |
 | Global Store                | `webui/src/store/cddm-store.test.ts`                                                  | 11 tests   | PASS   |
