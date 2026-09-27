@@ -1,20 +1,10 @@
 import { describe, it, expect } from "bun:test";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { completionFiles, requiredPackagingFiles } from "../package-distribution";
 
 describe("Ecosystem Distribution & Packaging Validator", () => {
   const rootDir = resolve(import.meta.dir, "../..");
-
-  const requiredPackagingFiles = [
-    "packaging/homebrew/cddm.rb",
-    "packaging/scoop/cddm.json",
-    "packaging/winget/GrigorTonikyan.cddm.yaml",
-    "packaging/install.sh",
-    "packaging/install.ps1",
-    "docs/JETBRAINS_SETUP.md",
-    "editors/vscode/package.json",
-    "editors/vscode/resources/cddm-icon.svg",
-  ];
 
   it("should have all required ecosystem distribution files present and non-empty", () => {
     for (const relPath of requiredPackagingFiles) {
@@ -25,11 +15,14 @@ describe("Ecosystem Distribution & Packaging Validator", () => {
     }
   });
 
-  it("should validate Homebrew formula syntax", () => {
+  it("should validate Homebrew formula syntax and completion directives", () => {
     const brewPath = resolve(rootDir, "packaging/homebrew/cddm.rb");
     const brewContent = readFileSync(brewPath, "utf-8");
     expect(brewContent).toContain("class Cddm < Formula");
     expect(brewContent).toContain('bin.install "cddm"');
+    expect(brewContent).toContain("bash_completion.install");
+    expect(brewContent).toContain("zsh_completion.install");
+    expect(brewContent).toContain("fish_completion.install");
   });
 
   it("should validate Scoop manifest JSON schema", () => {
@@ -57,5 +50,22 @@ describe("Ecosystem Distribution & Packaging Validator", () => {
     expect(shContent).toContain("curl");
     expect(ps1Content).toContain("cddm");
     expect(ps1Content).toContain("Invoke-WebRequest");
+  });
+
+  it("should validate generated shell completions signatures across all 5 shells", () => {
+    const bash = readFileSync(resolve(rootDir, completionFiles.bash), "utf-8");
+    expect(bash).toContain("_cddm");
+
+    const zsh = readFileSync(resolve(rootDir, completionFiles.zsh), "utf-8");
+    expect(zsh).toContain("#compdef cddm");
+
+    const fish = readFileSync(resolve(rootDir, completionFiles.fish), "utf-8");
+    expect(fish).toContain("complete -c cddm");
+
+    const ps1 = readFileSync(resolve(rootDir, completionFiles.powershell), "utf-8");
+    expect(ps1).toContain("Register-ArgumentCompleter");
+
+    const elv = readFileSync(resolve(rootDir, completionFiles.elvish), "utf-8");
+    expect(elv).toContain("edit:completion:arg-completer[cddm]");
   });
 });

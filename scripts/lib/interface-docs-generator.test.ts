@@ -16,10 +16,11 @@ import {
 } from "./interface-docs-mcp-webui";
 
 describe("Interface Documentation Generator", () => {
-  test("CLI commands catalog contains all 23 subcommands", () => {
-    expect(CLI_COMMANDS_CATALOG.length).toBe(23);
+  test("CLI commands catalog contains all 24 subcommands", () => {
+    expect(CLI_COMMANDS_CATALOG.length).toBe(24);
     const names = CLI_COMMANDS_CATALOG.map((c) => c.name);
     expect(names).toContain("scan");
+    expect(names).toContain("completions");
     expect(names).toContain("diff");
     expect(names).toContain("semantic");
     expect(names).toContain("refactor");

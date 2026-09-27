@@ -306,4 +306,11 @@ fn test_cli_subcommands_parsing() {
         Commands::DeadCode(args) => assert!(args.include_ignored),
         _ => panic!("expected DeadCode command"),
     }
+
+    let cli_completions =
+        Cli::try_parse_from(["cddm", "completions", "bash"]).expect("parse completions bash");
+    match cli_completions.command {
+        Commands::Completions(args) => assert_eq!(args.shell, clap_complete::Shell::Bash),
+        _ => panic!("expected Completions command"),
+    }
 }

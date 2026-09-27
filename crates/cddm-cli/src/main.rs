@@ -279,6 +279,10 @@ async fn run_app(cli: Cli) -> Result<(), Box<dyn std::error::Error>> {
         Commands::Coverage(args) => {
             handle_coverage_command(args).await?;
         }
+
+        Commands::Completions(args) => {
+            run_completions_command(args.shell)?;
+        }
     }
 
     Ok(())

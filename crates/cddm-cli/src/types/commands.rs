@@ -114,7 +114,7 @@ pub enum HubSubcommand {
     /// Extract a cross-repository duplicate cluster into a standalone shared package
     Extract {
         /// Configuration file path (default: .cddmhub.toml)
-        #[arg(short, long, default_value = cddm_core::DEFAULT_HUB_CONFIG_FILE)]
+        #[arg(short = 'C', long, default_value = cddm_core::DEFAULT_HUB_CONFIG_FILE)]
         config: PathBuf,
         /// Cluster index to extract
         #[arg(short = 'c', long, default_value_t = 1)]
@@ -268,4 +268,12 @@ pub struct PruneArgs {
     /// Custom file or path ignore patterns
     #[arg(short, long, value_delimiter = ',')]
     pub ignore: Option<Vec<String>>,
+}
+
+/// CLI Arguments for `cddm completions`
+#[derive(Args, Debug, Clone)]
+pub struct CompletionsArgs {
+    /// Target shell for completion script (bash, elvish, fish, powershell, zsh)
+    #[arg(value_enum)]
+    pub shell: clap_complete::Shell,
 }

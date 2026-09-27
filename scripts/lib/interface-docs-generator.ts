@@ -236,6 +236,12 @@ export const CLI_COMMANDS_CATALOG: CliCommandMetadata[] = [
     usage: "cddm coverage [OPTIONS]",
     keyFlags: ["--report", "--dead-code-only", "--min-hits", "--risk-threshold", "--format"],
   },
+  {
+    name: "completions",
+    summary: "Generate dynamic shell completion scripts for Bash, Zsh, Fish, PowerShell, or Elvish",
+    usage: "cddm completions <SHELL>",
+    keyFlags: ["bash", "elvish", "fish", "powershell", "zsh"],
+  },
 ];
 
 export const TUI_TABS_CATALOG: TuiTabMetadata[] = [
