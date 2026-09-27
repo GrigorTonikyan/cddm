@@ -79,3 +79,20 @@ cddm heal --cluster 1 --provider gemini --model gemini-3.8-pro --verify --test-c
 ```bash
 cddm init gitea --fail-threshold 5.0 --write
 ```
+
+---
+
+## 4. OpenTelemetry Distributed Tracing
+
+For enterprise CI/CD observability and bottleneck profiling on multi-gigabyte repositories, CDDM automatically exports distributed trace spans when standard OpenTelemetry environment variables are present:
+
+- `OTEL_EXPORTER_OTLP_ENDPOINT`: Standard OTLP collector HTTP endpoint (e.g. `http://otel-collector:4318` or `http://localhost:4318/v1/traces`).
+- `OTEL_SERVICE_NAME`: Service name identifier (defaults to `cddm`).
+
+Structured span telemetry covers all core detection phases:
+
+1. `cddm.discovery`: Candidate file discovery and suppression filtering.
+2. `cddm.tokenization`: Source tokenization and cache reconciliation.
+3. `cddm.ast_parsing`: Tree-sitter AST parsing and inline directive filtering.
+4. `cddm.winnowing`: Robust winnowing fingerprint generation.
+5. `cddm.clustering`: Clone pair aggregation, cluster grouping, and DRY scoring.
