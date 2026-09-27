@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-27 | Rust: 376 #[test] units | WebUI: 233 tests across 64 suites | Scripts & MCP: 207 tests across 60 suites | CI Workflows: PASS
+> Last verified: 2026-08-27 | Rust: 382 #[test] units | WebUI: 237 tests across 65 suites | Scripts & MCP: 207 tests across 60 suites | CI Workflows: PASS
 
 ---
 
@@ -358,7 +358,7 @@
 
 ---
 
-## 2. WebUI Frontend — React 19 + TypeScript + Vitest (233 unit tests across 64 suites)
+## 2. WebUI Frontend — React 19 + TypeScript + Vitest (237 unit tests across 65 suites)
 
 | Module                      | Test Suite File                                                                       | Test Cases | Status |
 | :-------------------------- | :------------------------------------------------------------------------------------ | :--------- | :----- |
@@ -374,6 +374,7 @@
 | Health Audit Modal          | `webui/src/components/HealthAuditModal.test.tsx`                                      | 3 tests    | PASS   |
 | Hub Federation Modal        | `webui/src/components/HubFederationModal.test.tsx`                                    | 4 tests    | PASS   |
 | Language Analytics Modal    | `webui/src/components/LanguageAnalyticsModal.test.tsx`                                | 2 tests    | PASS   |
+| Mcp Apps Preview Modal      | `webui/src/components/McpAppsPreviewModal.test.tsx`                                   | 4 tests    | PASS   |
 | Overlap Detector Modal      | `webui/src/components/OverlapDetectorModal.test.tsx`                                  | 3 tests    | PASS   |
 | Policy Rules Modal          | `webui/src/components/PolicyRulesModal.test.tsx`                                      | 4 tests    | PASS   |
 | Refactor Patch Modal        | `webui/src/components/RefactorPatchModal.test.tsx`                                    | 3 tests    | PASS   |

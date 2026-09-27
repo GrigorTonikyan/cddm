@@ -70,6 +70,7 @@ export interface CDDMStoreState {
   isSemanticGraphModalOpen: boolean;
   isOverlapDetectorOpen: boolean;
   isHubModalOpen: boolean;
+  isMcpAppsModalOpen: boolean;
 
   /** Organization Federation Hub state */
   hubConfig: import("../types/cddm-types").HubConfig | null;
@@ -194,6 +195,7 @@ export interface CDDMStoreState {
   setIsPolicyRulesModalOpen: (open: boolean) => void;
   setIsSemanticGraphModalOpen: (open: boolean) => void;
   setIsOverlapDetectorOpen: (open: boolean) => void;
+  setIsMcpAppsModalOpen: (open: boolean) => void;
   setIsLiveEventInspectorOpen: (open: boolean) => void;
 
   /** Live Watch Daemon state and actions */

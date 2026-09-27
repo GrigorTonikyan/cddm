@@ -11,6 +11,7 @@ use tokio::task::AbortHandle;
 static TASK_COUNTER: AtomicU64 = AtomicU64::new(1);
 
 /// Thread-safe manager for MCP 2026-07-28 background tasks.
+#[derive(Debug)]
 pub struct TaskManager {
     tasks: Arc<RwLock<HashMap<String, TaskRecord>>>,
     abort_handles: Arc<Mutex<HashMap<String, AbortHandle>>>,

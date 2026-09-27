@@ -54,6 +54,8 @@ export const API_ROUTES = {
   DEAD_CODE_SCAN: "/api/dead-code/scan",
   DEAD_CODE_PRUNE: "/api/dead-code/prune",
   DEAD_CODE: "/api/dead-code",
+  MCP_APPS_WIDGETS: "/api/mcp/apps/widgets",
+  MCP_APPS_RENDER: "/api/mcp/apps/render",
 } as const;
 
 /**

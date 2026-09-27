@@ -351,6 +351,7 @@ dependencies = [
  "axum",
  "cddm-core",
  "cddm-lsp",
+ "cddm-mcp",
  "chrono",
  "clap",
  "comfy-table",

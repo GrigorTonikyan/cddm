@@ -2,7 +2,8 @@
 
 use super::helpers::{get_bool_arg, get_str_arg, parse_clone_pair_args, run_scan_from_mcp_args};
 use crate::protocol::{
-    JsonRpcResponse, make_error_response, make_text_response, mcp_tools, rpc_errors,
+    JsonRpcResponse, make_app_widget_response, make_error_response, make_text_response, mcp_tools,
+    rpc_errors,
 };
 use cddm_core::{
     AiRefactorPromptRequest, CloneLocation, CloneType, DEFAULT_EXTRACTED_FUNCTION_NAME,
@@ -51,10 +52,35 @@ pub fn handle_suggest_refactor(
 ) -> JsonRpcResponse {
     if let Some((fa, sa, ea, fb, sb, eb)) = parse_clone_pair_args(args) {
         match analyze_clone_refactoring(fa, (sa, ea), fb, (sb, eb)) {
-            Ok(suggestion) => make_text_response(
-                id,
-                serde_json::to_string_pretty(&suggestion).unwrap_or_default(),
-            ),
+            Ok(suggestion) => {
+                let include_widget = args
+                    .and_then(|a| a.get(mcp_tools::PARAM_INCLUDE_WIDGET))
+                    .and_then(|v| v.as_bool())
+                    .unwrap_or(false);
+                if include_widget {
+                    let common_body = suggestion.common_body_lines.join("\n");
+                    let widget = crate::apps::generate_diff_split_view_widget(
+                        "Clone Pair Refactoring Diff",
+                        fa,
+                        (sa, ea),
+                        fb,
+                        (sb, eb),
+                        &common_body,
+                        &common_body,
+                        Some(&suggestion.unified_patch),
+                    );
+                    let widget_val = serde_json::to_value(&widget).unwrap_or_default();
+                    let mut val = serde_json::to_value(&suggestion).unwrap_or_default();
+                    if let Some(obj) = val.as_object_mut() {
+                        obj.insert("_widget".to_string(), widget_val.clone());
+                    }
+                    let json_text = serde_json::to_string_pretty(&val).unwrap_or_default();
+                    make_app_widget_response(id, json_text, &widget_val)
+                } else {
+                    let json_text = serde_json::to_string_pretty(&suggestion).unwrap_or_default();
+                    make_text_response(id, json_text)
+                }
+            }
             Err(e) => make_error_response(id, rpc_errors::INVALID_PARAMS, e),
         }
     } else {
@@ -87,10 +113,39 @@ pub async fn handle_suggest_cluster_refactor(
         }
 
         match analyze_cluster_refactoring("cluster-custom", &explicit_occs) {
-            Ok(suggestion) => make_text_response(
-                id,
-                serde_json::to_string_pretty(&suggestion).unwrap_or_default(),
-            ),
+            Ok(suggestion) => {
+                let include_widget = args
+                    .and_then(|a| a.get(mcp_tools::PARAM_INCLUDE_WIDGET))
+                    .and_then(|v| v.as_bool())
+                    .unwrap_or(false);
+                if include_widget {
+                    let first_file = explicit_occs
+                        .first()
+                        .map(|o| o.file.as_str())
+                        .unwrap_or("site_a.rs");
+                    let common_body = suggestion.common_body_lines.join("\n");
+                    let widget = crate::apps::generate_diff_split_view_widget(
+                        "Cluster Refactoring Diff",
+                        first_file,
+                        (1, 1),
+                        &suggestion.target_module_hint,
+                        (1, 1),
+                        &common_body,
+                        &common_body,
+                        Some(&suggestion.unified_patch),
+                    );
+                    let widget_val = serde_json::to_value(&widget).unwrap_or_default();
+                    let mut val = serde_json::to_value(&suggestion).unwrap_or_default();
+                    if let Some(obj) = val.as_object_mut() {
+                        obj.insert("_widget".to_string(), widget_val.clone());
+                    }
+                    let json_text = serde_json::to_string_pretty(&val).unwrap_or_default();
+                    make_app_widget_response(id, json_text, &widget_val)
+                } else {
+                    let json_text = serde_json::to_string_pretty(&suggestion).unwrap_or_default();
+                    make_text_response(id, json_text)
+                }
+            }
             Err(e) => make_error_response(id, rpc_errors::INVALID_PARAMS, e),
         }
     } else if let Some(target_id) = cluster_id_opt {
@@ -101,10 +156,42 @@ pub async fn handle_suggest_cluster_refactor(
                 if let Some(cluster) = found {
                     match analyze_cluster_refactoring(&cluster.id.to_string(), &cluster.occurrences)
                     {
-                        Ok(suggestion) => make_text_response(
-                            id,
-                            serde_json::to_string_pretty(&suggestion).unwrap_or_default(),
-                        ),
+                        Ok(suggestion) => {
+                            let include_widget = args
+                                .and_then(|a| a.get(mcp_tools::PARAM_INCLUDE_WIDGET))
+                                .and_then(|v| v.as_bool())
+                                .unwrap_or(false);
+                            if include_widget {
+                                let first_file = cluster
+                                    .occurrences
+                                    .first()
+                                    .map(|o| o.file.as_str())
+                                    .unwrap_or("cluster_site.rs");
+                                let common_body = suggestion.common_body_lines.join("\n");
+                                let widget = crate::apps::generate_diff_split_view_widget(
+                                    &format!("Cluster #{} Refactoring Diff", cluster.id),
+                                    first_file,
+                                    (1, 1),
+                                    &suggestion.target_module_hint,
+                                    (1, 1),
+                                    &common_body,
+                                    &common_body,
+                                    Some(&suggestion.unified_patch),
+                                );
+                                let widget_val = serde_json::to_value(&widget).unwrap_or_default();
+                                let mut val = serde_json::to_value(&suggestion).unwrap_or_default();
+                                if let Some(obj) = val.as_object_mut() {
+                                    obj.insert("_widget".to_string(), widget_val.clone());
+                                }
+                                let json_text =
+                                    serde_json::to_string_pretty(&val).unwrap_or_default();
+                                make_app_widget_response(id, json_text, &widget_val)
+                            } else {
+                                let json_text =
+                                    serde_json::to_string_pretty(&suggestion).unwrap_or_default();
+                                make_text_response(id, json_text)
+                            }
+                        }
                         Err(e) => make_error_response(id, rpc_errors::INVALID_PARAMS, e),
                     }
                 } else {
@@ -243,7 +330,31 @@ pub fn handle_ast_refactor(
         ) {
             Ok(ast_res) => {
                 let json_str = serde_json::to_string_pretty(&ast_res).unwrap_or_default();
-                make_text_response(id, json_str)
+                let include_widget = args_val
+                    .get(mcp_tools::PARAM_INCLUDE_WIDGET)
+                    .and_then(|v| v.as_bool())
+                    .unwrap_or(false);
+                if include_widget {
+                    let first_occ = occurrences.first();
+                    let file = first_occ.map(|o| o.file.as_str()).unwrap_or("site.rs");
+                    let lines = first_occ
+                        .map(|o| (o.start_line, o.end_line))
+                        .unwrap_or((1, 1));
+                    let widget = crate::apps::generate_diff_split_view_widget(
+                        "AST Cluster Refactoring Diff",
+                        file,
+                        lines,
+                        &ast_res.target_module_path,
+                        (1, ast_res.helper_function_code.lines().count()),
+                        &ast_res.helper_function_code,
+                        &ast_res.helper_function_code,
+                        Some(&ast_res.unified_patch),
+                    );
+                    let widget_val = serde_json::to_value(&widget).unwrap_or_default();
+                    make_app_widget_response(id, json_str, &widget_val)
+                } else {
+                    make_text_response(id, json_str)
+                }
             }
             Err(err) => make_error_response(id, rpc_errors::INTERNAL_ERROR, err),
         }

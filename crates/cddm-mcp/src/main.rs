@@ -1,17 +1,7 @@
 #![forbid(unsafe_code)]
 
-mod prompts;
-mod protocol;
-mod resources;
-mod server;
-mod tasks;
-mod tools;
-
-#[cfg(test)]
-mod tests;
-
-use protocol::{JsonRpcRequest, make_error_response, rpc_errors};
-use server::handle_mcp_request;
+use cddm_mcp::handle_mcp_request;
+use cddm_mcp::protocol::{JsonRpcRequest, make_error_response, rpc_errors};
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 
 #[tokio::main]

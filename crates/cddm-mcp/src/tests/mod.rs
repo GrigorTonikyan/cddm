@@ -40,6 +40,12 @@ async fn test_mcp_initialize() {
     assert_eq!(res["serverInfo"]["name"], SERVER_NAME);
     assert!(res["capabilities"]["tasks"].is_object());
     assert!(res["capabilities"]["tasks"]["cancel"].as_bool().unwrap());
+    assert!(res["capabilities"]["apps"].is_object());
+    assert!(
+        res["capabilities"]["apps"]["generativeUi"]
+            .as_bool()
+            .unwrap()
+    );
     assert!(res["capabilities"]["sampling"].is_null());
     assert!(res["capabilities"]["roots"].is_null());
 
@@ -285,4 +291,82 @@ async fn test_mcp_check_policies_tool_and_resource() {
     .expect("Expected response");
 
     assert!(resp_call.error.is_none());
+}
+
+#[tokio::test]
+async fn test_mcp_apps_widgets_list() {
+    let resp = handle_mcp_request(make_test_req(70, mcp_methods::APPS_WIDGETS_LIST, None))
+        .await
+        .expect("Expected response");
+    assert_eq!(resp.id, Some(json!(70)));
+    assert!(resp.error.is_none());
+
+    let res = resp.result.unwrap();
+    let widgets = res["widgets"].as_array().expect("widgets array");
+    assert_eq!(widgets.len(), 2);
+    assert!(widgets.iter().any(|w| w["id"] == "diff-split-view"));
+    assert!(widgets.iter().any(|w| w["id"] == "cluster-treemap"));
+}
+
+#[tokio::test]
+async fn test_mcp_apps_render_diff_split_view() {
+    let params = json!({
+        "widget_type": "diff-split-view",
+        "title": "Refactoring Review",
+        "file_a": "src/main.rs",
+        "file_b": "src/extracted.rs",
+        "original_code": "fn duplicate() { println!(\"old\"); }",
+        "refactored_code": "fn extracted() { println!(\"new\"); }",
+        "diff_patch": "--- a/src/main.rs\n+++ b/src/extracted.rs\n@@ -1 +1 @@\n-old\n+new"
+    });
+
+    let resp = handle_mcp_request(make_test_req(71, mcp_methods::APPS_RENDER, Some(params)))
+        .await
+        .expect("Expected response");
+    assert_eq!(resp.id, Some(json!(71)));
+    assert!(resp.error.is_none());
+
+    let res = resp.result.unwrap();
+    let widget = &res["widget"];
+    assert_eq!(widget["type"], "app_widget");
+    assert_eq!(widget["widgetType"], "diff-split-view");
+    assert!(
+        widget["html"]
+            .as_str()
+            .unwrap()
+            .contains("Refactoring Review")
+    );
+    assert!(widget["html"].as_str().unwrap().contains("diff-table"));
+}
+
+#[tokio::test]
+async fn test_mcp_apps_render_cluster_treemap() {
+    let params = json!({
+        "widget_type": "cluster-treemap",
+        "title": "Codebase Duplication Treemap",
+        "clusters": [
+            {
+                "id": 1,
+                "name": "Cluster 1",
+                "clone_type": "exact",
+                "occurrence_count": 3,
+                "token_count": 120,
+                "files": ["crates/a.rs", "crates/b.rs"]
+            }
+        ],
+        "dry_health_score": 92.5
+    });
+
+    let resp = handle_mcp_request(make_test_req(72, mcp_methods::APPS_RENDER, Some(params)))
+        .await
+        .expect("Expected response");
+    assert_eq!(resp.id, Some(json!(72)));
+    assert!(resp.error.is_none());
+
+    let res = resp.result.unwrap();
+    let widget = &res["widget"];
+    assert_eq!(widget["type"], "app_widget");
+    assert_eq!(widget["widgetType"], "cluster-treemap");
+    assert!(widget["html"].as_str().unwrap().contains("Cluster 1"));
+    assert!(widget["html"].as_str().unwrap().contains("treemap-grid"));
 }

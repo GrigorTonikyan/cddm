@@ -48,6 +48,7 @@ export const useCDDMStore = create<CDDMStoreState>((set, get) => ({
   isPolicyRulesModalOpen: false,
   isSemanticGraphModalOpen: false,
   isOverlapDetectorOpen: false,
+  isMcpAppsModalOpen: false,
   semanticGraphRequest: null,
   semanticGraphResponse: null,
   isSemanticGraphLoading: false,
@@ -97,6 +98,7 @@ export const useCDDMStore = create<CDDMStoreState>((set, get) => ({
   setIsLanguageModalOpen: (isLanguageModalOpen) => set({ isLanguageModalOpen }),
   setIsClusterRefactorModalOpen: (isClusterRefactorModalOpen) =>
     set({ isClusterRefactorModalOpen }),
+  setIsMcpAppsModalOpen: (isMcpAppsModalOpen) => set({ isMcpAppsModalOpen }),
   setIsTimelineModalOpen: (isOpen) => {
     set({ isTimelineModalOpen: isOpen });
     if (isOpen && !get().timelineData && !get().isTimelineLoading) {

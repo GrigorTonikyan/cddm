@@ -1,5 +1,6 @@
 import {
   Activity,
+  AppWindow,
   Award,
   Building2,
   CheckCheck,
@@ -69,6 +70,10 @@ const LiveEventInspectorModal = lazyModal(
   () => import("./components/watch/LiveEventInspectorModal"),
   "LiveEventInspectorModal",
 );
+const McpAppsPreviewModal = lazyModal(
+  () => import("./components/McpAppsPreviewModal"),
+  "McpAppsPreviewModal",
+);
 
 export const App: React.FC = () => {
   const {
@@ -99,6 +104,8 @@ export const App: React.FC = () => {
     setIsCoverageModalOpen,
     isDeadCodeModalOpen,
     setIsDeadCodeModalOpen,
+    isMcpAppsModalOpen,
+    setIsMcpAppsModalOpen,
     isLiveEventInspectorOpen,
     setIsLiveEventInspectorOpen,
   } = useCDDMStore();
@@ -217,6 +224,15 @@ export const App: React.FC = () => {
           >
             <Trash2 className="w-3.5 h-3.5 text-rose-400" />
             <span>Dead Code</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsMcpAppsModalOpen(true)}
+            className="px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 hover:bg-slate-800 text-slate-300 flex items-center gap-1.5 transition-colors shadow-sm"
+          >
+            <AppWindow className="w-3.5 h-3.5 text-cyan-400" />
+            <span>MCP Apps</span>
           </button>
 
           {results && (
@@ -341,6 +357,12 @@ export const App: React.FC = () => {
         <LiveEventInspectorModal
           isOpen={isLiveEventInspectorOpen}
           onClose={() => setIsLiveEventInspectorOpen(false)}
+        />
+
+        {/* MCP Apps Interactive Preview Modal */}
+        <McpAppsPreviewModal
+          isOpen={isMcpAppsModalOpen}
+          onClose={() => setIsMcpAppsModalOpen(false)}
         />
       </Suspense>
 
