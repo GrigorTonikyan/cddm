@@ -142,7 +142,7 @@ pub fn get_tool_definitions() -> Vec<serde_json::Value> {
                     mcp_tools::PARAM_OCCURRENCES: { "type": "array", "items": occurrences_item_schema() },
                     "custom_function_name": { "type": "string", "description": "Suggested function name (optional)" },
                     "target_module": { "type": "string", "description": "Suggested target module path (optional)" },
-                    "model_target": { "type": "string", "description": "Target AI model (default: gemini-2.5-pro, supports claude-3-7-sonnet, gpt-4.5-preview)" }
+                    "model_target": { "type": "string", "description": "Target AI model (default: gemini-3.8-pro, supports claude-3-7-sonnet, gpt-4o)" }
                 }),
                 &[],
             ),
@@ -199,7 +199,7 @@ pub fn get_tool_definitions() -> Vec<serde_json::Value> {
                     "max_iterations": { "type": "number", "description": "Maximum healing retry iterations (default: 3)" },
                     "provider": { "type": "string", "description": "AI provider backend (mock, openai, anthropic, gemini)" },
                     "api_key": { "type": "string", "description": "Optional API key for AI provider" },
-                    "model": { "type": "string", "description": "Model identifier (e.g. gemini-2.5-pro, claude-3-7-sonnet, gpt-4.5-preview)" },
+                    "model": { "type": "string", "description": "Model identifier (e.g. gemini-3.8-pro, claude-3-7-sonnet, gpt-4o)" },
                     "test_command": { "type": "string", "description": "Test command to verify refactoring (e.g. 'cargo test')" }
                 }),
                 &["cluster_id"],

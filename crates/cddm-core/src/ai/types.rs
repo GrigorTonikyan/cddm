@@ -21,7 +21,7 @@ pub enum AiProviderKind {
 pub struct AiProviderConfig {
     /// Target provider backend
     pub provider: AiProviderKind,
-    /// Model identifier (e.g. "gemini-2.5-pro", "claude-3-7-sonnet", "gpt-4.5-preview", "qwen2.5-coder")
+    /// Model identifier (e.g. "gemini-3.8-pro", "claude-3-7-sonnet", "gpt-4o", "qwen2.5-coder")
     pub model: Option<String>,
     /// Secret API key for authentication
     pub api_key: Option<String>,

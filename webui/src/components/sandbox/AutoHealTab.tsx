@@ -128,10 +128,11 @@ export const AutoHealTab: React.FC<AutoHealTabProps> = ({
               className="w-full bg-zinc-950 border border-zinc-800 rounded px-2 py-1 text-zinc-200"
             >
               <option value="Mock">Mock / Deterministic</option>
-              <option value="Gemini">Google Gemini (gemini-2.5-pro)</option>
-              <option value="Claude">Anthropic Claude (claude-3-7-sonnet)</option>
-              <option value="OpenAi">OpenAI (gpt-4.5-preview)</option>
+              <option value="Gemini">Google Gemini (gemini-3.8-pro)</option>
+              <option value="Claude">Anthropic Claude (claude-3-7-sonnet / claude-4)</option>
+              <option value="OpenAi">OpenAI (gpt-4o)</option>
               <option value="Ollama">Ollama Local (qwen2.5-coder)</option>
+              <option value="Custom">Custom OpenAI-Compatible (vLLM / LM Studio / LocalAI)</option>
             </select>
           </div>
 

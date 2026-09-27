@@ -7,11 +7,13 @@ macro_rules! define_ai_str_constants {
 }
 
 define_ai_str_constants! {
-    DEFAULT_GEMINI_MODEL => "gemini-2.5-pro",
+    DEFAULT_GEMINI_MODEL => "gemini-3.8-pro",
     DEFAULT_CLAUDE_MODEL => "claude-3-7-sonnet",
-    DEFAULT_OPENAI_MODEL => "gpt-4.5-preview",
+    DEFAULT_CLAUDE_4_MODEL => "claude-4-sonnet",
+    DEFAULT_OPENAI_MODEL => "gpt-4o",
     DEFAULT_OLLAMA_MODEL => "qwen2.5-coder",
     DEFAULT_OLLAMA_ENDPOINT => "http://localhost:11434",
+    DEFAULT_CUSTOM_ENDPOINT => "http://localhost:8000/v1/chat/completions",
     GEMINI_API_ENDPOINT_TEMPLATE => "https://generativelanguage.googleapis.com/v1beta/models/{}:generateContent?key={}",
     DEFAULT_CLAUDE_ENDPOINT => "https://api.anthropic.com/v1/messages",
     DEFAULT_OPENAI_ENDPOINT => "https://api.openai.com/v1/chat/completions",
@@ -19,6 +21,10 @@ define_ai_str_constants! {
     ENV_GEMINI_API_KEY => "GEMINI_API_KEY",
     ENV_ANTHROPIC_API_KEY => "ANTHROPIC_API_KEY",
     ENV_OPENAI_API_KEY => "OPENAI_API_KEY",
+    ENV_CDDM_AI_MODEL => "CDDM_AI_MODEL",
+    ENV_CDDM_AI_PROVIDER => "CDDM_AI_PROVIDER",
+    ENV_OPENAI_BASE_URL => "OPENAI_BASE_URL",
+    ENV_OPENAI_API_BASE => "OPENAI_API_BASE",
     HEADER_CONTENT_TYPE => "Content-Type",
     CONTENT_TYPE_JSON => "application/json",
     HEADER_ANTHROPIC_API_KEY => "x-api-key",

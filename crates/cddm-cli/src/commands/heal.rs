@@ -38,6 +38,7 @@ pub async fn run_heal_command(args: HealCliArgs) -> Result<(), Box<dyn std::erro
         "claude" => AiProviderKind::Claude,
         "openai" => AiProviderKind::OpenAi,
         "ollama" => AiProviderKind::Ollama,
+        "custom" => AiProviderKind::Custom,
         _ => AiProviderKind::Mock,
     };
 

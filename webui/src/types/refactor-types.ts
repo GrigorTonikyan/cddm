@@ -231,7 +231,7 @@ export interface VerifyRefactorResult {
 /**
  * Supported AI provider backend variants.
  */
-export type AiProviderKind = "Mock" | "Gemini" | "Claude" | "OpenAi" | "Ollama";
+export type AiProviderKind = "Mock" | "Gemini" | "Claude" | "OpenAi" | "Ollama" | "Custom";
 
 /**
  * Configuration options for AI Code Surgeon provider.
