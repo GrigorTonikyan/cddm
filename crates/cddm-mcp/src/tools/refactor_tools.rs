@@ -331,6 +331,7 @@ pub async fn handle_heal_refactor(
             "claude" => cddm_core::AiProviderKind::Claude,
             "openai" => cddm_core::AiProviderKind::OpenAi,
             "ollama" => cddm_core::AiProviderKind::Ollama,
+            "custom" => cddm_core::AiProviderKind::Custom,
             _ => cddm_core::AiProviderKind::Mock,
         };
 

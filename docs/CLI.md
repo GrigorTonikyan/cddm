@@ -71,7 +71,7 @@ cddm diff main --fail-threshold 3.0 --format sarif --output results.sarif
 ### AI Autonomous Refactoring Loop
 
 ```bash
-cddm heal --cluster 1 --provider gemini --model gemini-2.5-pro --verify --test-cmd "cargo test"
+cddm heal --cluster 1 --provider gemini --model gemini-3.8-pro --verify --test-cmd "cargo test"
 ```
 
 ### Turnkey Gitea Actions Workflow Generation

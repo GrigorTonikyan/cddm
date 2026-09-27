@@ -101,22 +101,73 @@ fn init_provider_config(
     env_var: &str,
     temperature: Option<f64>,
 ) -> (String, String, f64) {
-    (
-        model.unwrap_or_else(|| default_model.to_string()),
-        api_key
-            .or_else(|| std::env::var(env_var).ok())
-            .unwrap_or_default(),
-        temperature.unwrap_or(DEFAULT_TEMPERATURE),
-    )
+    let resolved_model = model
+        .or_else(|| std::env::var(ENV_CDDM_AI_MODEL).ok())
+        .unwrap_or_else(|| default_model.to_string());
+    let resolved_key = api_key
+        .or_else(|| std::env::var(env_var).ok())
+        .unwrap_or_default();
+    let resolved_temp = temperature.unwrap_or(DEFAULT_TEMPERATURE);
+    (resolved_model, resolved_key, resolved_temp)
 }
 
-/// Cloud AI provider supporting Gemini, Claude, and OpenAI backends.
+fn normalize_chat_endpoint(endpoint: &str) -> String {
+    let trimmed = endpoint.trim_end_matches('/');
+    if trimmed.ends_with("/chat/completions") {
+        trimmed.to_string()
+    } else {
+        format!("{trimmed}/chat/completions")
+    }
+}
+
+fn resolve_openai_endpoint(custom_endpoint: Option<&str>, default_endpoint: &str) -> String {
+    if let Some(ep) = custom_endpoint.filter(|s| !s.is_empty()) {
+        return normalize_chat_endpoint(ep);
+    }
+    if let Some(base) = std::env::var(ENV_OPENAI_BASE_URL)
+        .or_else(|_| std::env::var(ENV_OPENAI_API_BASE))
+        .ok()
+        .filter(|b| !b.is_empty())
+    {
+        return normalize_chat_endpoint(&base);
+    }
+    default_endpoint.to_string()
+}
+
+fn resolve_provider_kind(configured: AiProviderKind) -> AiProviderKind {
+    if let Ok(env_provider) = std::env::var(ENV_CDDM_AI_PROVIDER) {
+        match env_provider.to_lowercase().trim() {
+            "gemini" => return AiProviderKind::Gemini,
+            "claude" => return AiProviderKind::Claude,
+            "openai" => return AiProviderKind::OpenAi,
+            "ollama" => return AiProviderKind::Ollama,
+            "custom" => return AiProviderKind::Custom,
+            "mock" => return AiProviderKind::Mock,
+            _ => {}
+        }
+    }
+    configured
+}
+
+struct CloudInitArgs<'a> {
+    model: Option<String>,
+    default_model: &'a str,
+    api_key: Option<String>,
+    env_key: &'a str,
+    temperature: Option<f64>,
+    kind: AiProviderKind,
+    endpoint: Option<String>,
+    client: Option<reqwest::Client>,
+}
+
+/// Cloud AI provider supporting Gemini, Claude, OpenAI, and Custom backends.
 #[derive(Debug, Clone)]
 pub struct CloudAiProvider {
     pub model: String,
     pub api_key: String,
     pub temperature: f64,
     pub kind: AiProviderKind,
+    pub endpoint: Option<String>,
     pub client: reqwest::Client,
 }
 
@@ -125,23 +176,21 @@ pub type ClaudeProvider = CloudAiProvider;
 pub type OpenAiProvider = CloudAiProvider;
 
 impl CloudAiProvider {
-    fn create_cloud(
-        model: Option<String>,
-        default_model: &str,
-        api_key: Option<String>,
-        env_key: &str,
-        temperature: Option<f64>,
-        kind: AiProviderKind,
-        client: Option<reqwest::Client>,
-    ) -> Self {
-        let (model, api_key, temperature) =
-            init_provider_config(model, default_model, api_key, env_key, temperature);
+    fn create_cloud(args: CloudInitArgs<'_>) -> Self {
+        let (model, api_key, temperature) = init_provider_config(
+            args.model,
+            args.default_model,
+            args.api_key,
+            args.env_key,
+            args.temperature,
+        );
         Self {
             model,
             api_key,
             temperature,
-            kind,
-            client: client.unwrap_or_else(|| create_http_client(None)),
+            kind: args.kind,
+            endpoint: args.endpoint,
+            client: args.client.unwrap_or_else(|| create_http_client(None)),
         }
     }
 
@@ -159,15 +208,16 @@ impl CloudAiProvider {
         temperature: Option<f64>,
         client: Option<reqwest::Client>,
     ) -> Self {
-        Self::create_cloud(
+        Self::create_cloud(CloudInitArgs {
             model,
-            DEFAULT_GEMINI_MODEL,
+            default_model: DEFAULT_GEMINI_MODEL,
             api_key,
-            ENV_GEMINI_API_KEY,
+            env_key: ENV_GEMINI_API_KEY,
             temperature,
-            AiProviderKind::Gemini,
+            kind: AiProviderKind::Gemini,
+            endpoint: None,
             client,
-        )
+        })
     }
 
     pub fn new_claude(
@@ -184,15 +234,16 @@ impl CloudAiProvider {
         temperature: Option<f64>,
         client: Option<reqwest::Client>,
     ) -> Self {
-        Self::create_cloud(
+        Self::create_cloud(CloudInitArgs {
             model,
-            DEFAULT_CLAUDE_MODEL,
+            default_model: DEFAULT_CLAUDE_MODEL,
             api_key,
-            ENV_ANTHROPIC_API_KEY,
+            env_key: ENV_ANTHROPIC_API_KEY,
             temperature,
-            AiProviderKind::Claude,
+            kind: AiProviderKind::Claude,
+            endpoint: None,
             client,
-        )
+        })
     }
 
     pub fn new_openai(
@@ -209,15 +260,45 @@ impl CloudAiProvider {
         temperature: Option<f64>,
         client: Option<reqwest::Client>,
     ) -> Self {
-        Self::create_cloud(
+        Self::new_openai_with_endpoint_and_client(model, api_key, None, temperature, client)
+    }
+
+    pub fn new_openai_with_endpoint_and_client(
+        model: Option<String>,
+        api_key: Option<String>,
+        endpoint: Option<String>,
+        temperature: Option<f64>,
+        client: Option<reqwest::Client>,
+    ) -> Self {
+        Self::create_cloud(CloudInitArgs {
             model,
-            DEFAULT_OPENAI_MODEL,
+            default_model: DEFAULT_OPENAI_MODEL,
             api_key,
-            ENV_OPENAI_API_KEY,
+            env_key: ENV_OPENAI_API_KEY,
             temperature,
-            AiProviderKind::OpenAi,
+            kind: AiProviderKind::OpenAi,
+            endpoint,
             client,
-        )
+        })
+    }
+
+    pub fn new_custom_with_client(
+        model: Option<String>,
+        api_key: Option<String>,
+        endpoint: Option<String>,
+        temperature: Option<f64>,
+        client: Option<reqwest::Client>,
+    ) -> Self {
+        Self::create_cloud(CloudInitArgs {
+            model,
+            default_model: DEFAULT_OPENAI_MODEL,
+            api_key,
+            env_key: ENV_OPENAI_API_KEY,
+            temperature,
+            kind: AiProviderKind::Custom,
+            endpoint,
+            client,
+        })
     }
 }
 
@@ -283,19 +364,33 @@ impl AiProvider for CloudAiProvider {
                 let payload = chat_message_payload(&self.model, self.temperature, prompt, None);
                 let auth_hdr = format!("{BEARER_PREFIX}{}", self.api_key);
                 let headers = [(HEADER_AUTHORIZATION, auth_hdr.as_str())];
-                execute_http_chat(
-                    &self.client,
-                    DEFAULT_OPENAI_ENDPOINT,
-                    &headers,
-                    &payload,
-                    |val| {
-                        val.get("choices")?
-                            .get(0)?
-                            .get("message")?
-                            .get("content")?
-                            .as_str()
-                    },
-                )
+                let url =
+                    resolve_openai_endpoint(self.endpoint.as_deref(), DEFAULT_OPENAI_ENDPOINT);
+                execute_http_chat(&self.client, &url, &headers, &payload, |val| {
+                    val.get("choices")?
+                        .get(0)?
+                        .get("message")?
+                        .get("content")?
+                        .as_str()
+                })
+                .await
+            }
+            AiProviderKind::Custom => {
+                let payload = chat_message_payload(&self.model, self.temperature, prompt, None);
+                let url =
+                    resolve_openai_endpoint(self.endpoint.as_deref(), DEFAULT_CUSTOM_ENDPOINT);
+                let auth_hdr = format!("{BEARER_PREFIX}{}", self.api_key);
+                let mut headers = Vec::new();
+                if !self.api_key.is_empty() {
+                    headers.push((HEADER_AUTHORIZATION, auth_hdr.as_str()));
+                }
+                execute_http_chat(&self.client, &url, &headers, &payload, |val| {
+                    val.get("choices")?
+                        .get(0)?
+                        .get("message")?
+                        .get("content")?
+                        .as_str()
+                })
                 .await
             }
             _ => Err("Unsupported cloud provider backend".to_string()),
@@ -327,100 +422,48 @@ fn chat_message_payload(
 /// Constructs an AI provider instance from a configuration object.
 pub fn create_ai_provider(config: &AiProviderConfig) -> Box<dyn AiProvider> {
     let client = create_http_client(config.timeout_secs);
-    match config.provider {
-        AiProviderKind::Mock => Box::new(MockAiProvider::new(config.model.clone())),
+    let provider = resolve_provider_kind(config.provider);
+    let model = config
+        .model
+        .clone()
+        .or_else(|| std::env::var(ENV_CDDM_AI_MODEL).ok());
+
+    match provider {
+        AiProviderKind::Mock => Box::new(MockAiProvider::new(model)),
         AiProviderKind::Ollama => Box::new(OllamaProvider::with_client(
-            config.model.clone(),
+            model,
             config.endpoint.clone(),
             config.temperature,
             Some(client),
         )),
         AiProviderKind::Gemini => Box::new(CloudAiProvider::new_gemini_with_client(
-            config.model.clone(),
+            model,
             config.api_key.clone(),
             config.temperature,
             Some(client),
         )),
         AiProviderKind::Claude => Box::new(CloudAiProvider::new_claude_with_client(
-            config.model.clone(),
+            model,
             config.api_key.clone(),
             config.temperature,
             Some(client),
         )),
-        AiProviderKind::OpenAi => Box::new(CloudAiProvider::new_openai_with_client(
-            config.model.clone(),
+        AiProviderKind::OpenAi => Box::new(CloudAiProvider::new_openai_with_endpoint_and_client(
+            model,
             config.api_key.clone(),
+            config.endpoint.clone(),
             config.temperature,
             Some(client),
         )),
-        AiProviderKind::Custom => Box::new(MockAiProvider::new(None)),
+        AiProviderKind::Custom => Box::new(CloudAiProvider::new_custom_with_client(
+            model,
+            config.api_key.clone(),
+            config.endpoint.clone(),
+            config.temperature,
+            Some(client),
+        )),
     }
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[tokio::test]
-    async fn test_mock_provider_hermetic() {
-        let provider = MockAiProvider::new(None);
-        let resp = provider.complete_prompt("test").await.unwrap();
-        assert_eq!(resp, DEFAULT_MOCK_DIFF_RESPONSE);
-
-        let custom = MockAiProvider::new(Some("custom patch".to_string()));
-        let resp2 = custom.complete_prompt("test").await.unwrap();
-        assert_eq!(resp2, "custom patch");
-    }
-
-    #[tokio::test]
-    async fn test_provider_constructors_with_client() {
-        let client = create_http_client(Some(10));
-        let ollama = OllamaProvider::with_client(None, None, None, Some(client.clone()));
-        assert_eq!(ollama.model, DEFAULT_OLLAMA_MODEL);
-        assert_eq!(ollama.endpoint, DEFAULT_OLLAMA_ENDPOINT);
-
-        let gemini = CloudAiProvider::new_gemini_with_client(
-            Some("gemini-test".into()),
-            Some("key".into()),
-            Some(0.5),
-            Some(client.clone()),
-        );
-        assert_eq!(gemini.model, "gemini-test");
-        assert_eq!(gemini.kind, AiProviderKind::Gemini);
-
-        let claude =
-            CloudAiProvider::new_claude_with_client(None, None, None, Some(client.clone()));
-        assert_eq!(claude.model, DEFAULT_CLAUDE_MODEL);
-        assert_eq!(claude.kind, AiProviderKind::Claude);
-
-        let openai = CloudAiProvider::new_openai_with_client(None, None, None, Some(client));
-        assert_eq!(openai.model, DEFAULT_OPENAI_MODEL);
-        assert_eq!(openai.kind, AiProviderKind::OpenAi);
-    }
-
-    #[tokio::test]
-    async fn test_cloud_provider_missing_key_errors() {
-        let gemini = CloudAiProvider::new_gemini(None, Some("".into()), None);
-        let err = gemini.complete_prompt("hello").await.unwrap_err();
-        assert!(err.contains("Gemini API key not provided"));
-
-        let claude = CloudAiProvider::new_claude(None, Some("".into()), None);
-        let err = claude.complete_prompt("hello").await.unwrap_err();
-        assert!(err.contains("Anthropic API key not provided"));
-
-        let openai = CloudAiProvider::new_openai(None, Some("".into()), None);
-        let err = openai.complete_prompt("hello").await.unwrap_err();
-        assert!(err.contains("OpenAI API key not provided"));
-    }
-
-    #[tokio::test]
-    async fn test_ollama_unreachable_endpoint_graceful_error() {
-        let ollama = OllamaProvider::new(
-            Some("test-model".into()),
-            Some("http://127.0.0.1:59999".into()),
-            None,
-        );
-        let err = ollama.complete_prompt("hello").await.unwrap_err();
-        assert!(err.contains("HTTP request error") || err.contains("connection"));
-    }
-}
+mod tests;

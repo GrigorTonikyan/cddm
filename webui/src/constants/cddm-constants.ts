@@ -62,11 +62,13 @@ export const DEFAULT_HEAL_CONFIG = {
   max_iterations: 3,
   verify: true,
   default_provider: "Mock" as const,
-  default_gemini_model: "gemini-2.5-pro",
+  default_gemini_model: "gemini-3.8-pro",
   default_claude_model: "claude-3-7-sonnet",
-  default_openai_model: "gpt-4.5-preview",
+  default_claude_4_model: "claude-4-sonnet",
+  default_openai_model: "gpt-4o",
   default_ollama_model: "qwen2.5-coder",
   default_ollama_endpoint: "http://localhost:11434",
+  default_custom_endpoint: "http://localhost:8000/v1/chat/completions",
 } as const;
 
 /**

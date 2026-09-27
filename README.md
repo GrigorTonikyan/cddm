@@ -152,7 +152,7 @@ cddm tui
 cddm serve --port 3000 --open
 
 # 5. Autonomous AI Code Surgeon refactoring with test loop
-cddm heal --cluster 1 --provider gemini --model gemini-2.5-pro --verify --test-cmd "cargo test"
+cddm heal --cluster 1 --provider gemini --model gemini-3.8-pro --verify --test-cmd "cargo test"
 
 # 6. Generate turnkey Gitea Actions CI/CD workflow
 cddm init gitea --write

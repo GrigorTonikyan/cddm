@@ -26,7 +26,7 @@ pub struct HealArgs {
     #[arg(long, default_value = "mock")]
     pub provider: String,
 
-    /// Model identifier name (e.g. gemini-2.5-pro, claude-3-7-sonnet, gpt-4.5-preview, qwen2.5-coder)
+    /// Model identifier name (e.g. gemini-3.8-pro, claude-3-7-sonnet, gpt-4o, qwen2.5-coder)
     #[arg(long)]
     pub model: Option<String>,
 
