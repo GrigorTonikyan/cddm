@@ -49,6 +49,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .join()
         .unwrap_or_else(|e| std::panic::resume_unwind(e));
 
+    cddm_core::telemetry::shutdown_telemetry();
+
     match res {
         Ok(()) => Ok(()),
         Err(e) => Err(e.into()),

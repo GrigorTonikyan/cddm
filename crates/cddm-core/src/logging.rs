@@ -59,6 +59,7 @@ pub struct LogConfig {
     pub quiet: bool,
     pub log_file: Option<PathBuf>,
     pub json_format: bool,
+    pub telemetry: Option<crate::telemetry::TelemetryConfig>,
 }
 
 impl LogConfig {
@@ -85,6 +86,11 @@ impl LogConfig {
         self.log_file = Some(path.into());
         self
     }
+
+    pub fn with_telemetry(mut self, telemetry: crate::telemetry::TelemetryConfig) -> Self {
+        self.telemetry = Some(telemetry);
+        self
+    }
 }
 
 /// Initialize the global tracing subscriber with environment variables and configuration.
@@ -108,27 +114,42 @@ pub fn init_logging(config: &LogConfig) -> Result<(), String> {
             .with_ansi(true)
             .with_target(false);
 
-        if let Some(ref file_path) = config.log_file
+        let file_layer = if let Some(ref file_path) = config.log_file
             && let Ok(file) = open_log_file(file_path)
         {
-            let file_layer = fmt::layer()
-                .with_writer(file)
-                .with_ansi(false)
-                .with_target(true);
+            Some(
+                fmt::layer()
+                    .with_writer(file)
+                    .with_ansi(false)
+                    .with_target(true),
+            )
+        } else {
+            None
+        };
 
-            let subscriber = tracing_subscriber::registry()
-                .with(env_filter)
-                .with(stderr_layer)
-                .with(file_layer);
+        let telemetry_config = config
+            .telemetry
+            .clone()
+            .unwrap_or_else(crate::telemetry::TelemetryConfig::from_env);
 
-            let _ = subscriber.try_init();
-            initialized = true;
-            return;
-        }
+        let otel_layer = if telemetry_config.enabled {
+            match crate::telemetry::init_telemetry(&telemetry_config) {
+                Ok(Some(provider)) => Some(crate::telemetry::create_telemetry_layer(&provider)),
+                Ok(None) => None,
+                Err(err) => {
+                    eprintln!("Warning: failed to initialize OpenTelemetry: {err}");
+                    None
+                }
+            }
+        } else {
+            None
+        };
 
         let subscriber = tracing_subscriber::registry()
             .with(env_filter)
-            .with(stderr_layer);
+            .with(stderr_layer)
+            .with(file_layer)
+            .with(otel_layer);
 
         let _ = subscriber.try_init();
         initialized = true;

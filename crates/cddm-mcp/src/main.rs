@@ -46,5 +46,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
+    cddm_core::telemetry::shutdown_telemetry();
+
     Ok(())
 }

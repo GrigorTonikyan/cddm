@@ -28,6 +28,13 @@ memmap2 = "^0.9"
 mime_guess = "^2"
 notify = "^8"
 opener = "^0.8"
+opentelemetry = { version = "^0.33", features = ["trace"] }
+opentelemetry-otlp = { version = "^0.33", default-features = false, features = [
+  "trace",
+  "http-proto",
+  "reqwest-client",
+] }
+opentelemetry_sdk = { version = "^0.33", features = ["trace", "rt-tokio"] }
 ratatui = "^0.30"
 rayon = "^1"
 redb = "^4"
@@ -47,6 +54,7 @@ toml = "^1.1.4"
 tower-http = { version = "^0.7", features = ["cors", "fs"] }
 tower-lsp = "^0.20"
 tracing = "^0.1"
+tracing-opentelemetry = "^0.34"
 tracing-subscriber = { version = "^0.3", features = ["env-filter"] }
 tree-sitter = "^0.26"
 tree-sitter-bash = "^0.25"

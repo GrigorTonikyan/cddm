@@ -2,6 +2,7 @@
 
 use super::discovery::{discover_candidate_files, init_policy_engine, init_suppression_engine};
 use super::indexer::index_and_match_clone_pairs;
+use super::progress::{ProgressTracker, execute_in_thread_pool};
 use super::types::ParsedFile;
 use crate::cache::{
     CACHE_SCHEMA_VERSION, CachedFileEntry, DiskFingerprintCache, resolve_cache_path,
@@ -12,35 +13,10 @@ use crate::tokenizer::tokenize;
 use crate::types::{ScanConfig, ScanPhase, ScanProgress, ScanResult};
 use rayon::prelude::*;
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Instant;
 use tokio::sync::mpsc::Sender;
-
-struct ProgressTracker {
-    scan_id: String,
-    phase: RwLock<ScanPhase>,
-    files_processed: AtomicUsize,
-    total_files: AtomicUsize,
-    progress_scaled: AtomicU64,
-    message: RwLock<String>,
-    done: AtomicBool,
-}
-
-fn execute_in_thread_pool<F, R>(threads: Option<usize>, f: F) -> R
-where
-    F: FnOnce() -> R + Send,
-    R: Send,
-{
-    if let Some(num_threads) = threads.filter(|&n| n > 0)
-        && let Ok(pool) = rayon::ThreadPoolBuilder::new()
-            .num_threads(num_threads)
-            .build()
-    {
-        return pool.install(f);
-    }
-    f()
-}
 
 /// Runs the complete code clone detection process with real-time granular progress updates.
 pub async fn run_scan(
@@ -51,15 +27,7 @@ pub async fn run_scan(
     let start_time = Instant::now();
     let scan_id = uuid::Uuid::new_v4().to_string();
 
-    let tracker = Arc::new(ProgressTracker {
-        scan_id: scan_id.clone(),
-        phase: RwLock::new(ScanPhase::Discovery),
-        files_processed: AtomicUsize::new(0),
-        total_files: AtomicUsize::new(0),
-        progress_scaled: AtomicU64::new(0),
-        message: RwLock::new("Discovering files...".to_string()),
-        done: AtomicBool::new(false),
-    });
+    let tracker = Arc::new(ProgressTracker::new(scan_id.clone()));
 
     tracing::info!(
         scan_id = %scan_id,
@@ -71,7 +39,14 @@ pub async fn run_scan(
     let suppression_engine = init_suppression_engine(&config);
     let policy_engine = init_policy_engine(&config);
 
-    let files_to_process = discover_candidate_files(&config, &suppression_engine, &cancel_flag)?;
+    let discovery_span = crate::telemetry::discovery_span(&config.directory, config.min_tokens);
+    let files_to_process = {
+        let _discovery_guard = discovery_span.enter();
+        let files = discover_candidate_files(&config, &suppression_engine, &cancel_flag)?;
+        discovery_span.record("total_files", files.len());
+        files
+    };
+
     let total_files = files_to_process.len();
     tracker.total_files.store(total_files, Ordering::Relaxed);
     tracing::debug!(
@@ -148,6 +123,8 @@ pub async fn run_scan(
     });
 
     // Start Tokenization phase
+    let tokenization_span = crate::telemetry::tokenization_span(total_files);
+    let _tokenization_guard = tokenization_span.enter();
     {
         *tracker.phase.write().unwrap() = ScanPhase::Tokenization;
         *tracker.message.write().unwrap() = format!("Tokenizing {} files...", total_files);
@@ -242,24 +219,39 @@ pub async fn run_scan(
                                 blake3::hash(content.as_bytes()).to_hex().to_string();
 
                             let path_str = path.to_string_lossy().to_string();
-                            let mut tokens = tokenize(&content, grammar, config_clone.detect_type2);
-                            let directives =
-                                crate::suppression::parse_inline_directives(&path_str, &content);
-                            if !directives.is_empty() {
-                                tokens.retain(|(_, span)| {
-                                    !directives.iter().any(|d| {
-                                        span.line_start <= d.end_line
-                                            && span.line_end >= d.start_line
-                                    })
-                                });
-                            }
-                            let token_count = tokens.len();
-                            let token_spans: Vec<_> =
-                                tokens.iter().map(|(_, span)| span.clone()).collect();
+                            let ast_span =
+                                crate::telemetry::ast_parsing_span(&path_str, grammar.name);
+                            let (tokens, token_spans, token_count) = {
+                                let _ast_guard = ast_span.enter();
+                                let mut toks =
+                                    tokenize(&content, grammar, config_clone.detect_type2);
+                                let directives = crate::suppression::parse_inline_directives(
+                                    &path_str, &content,
+                                );
+                                if !directives.is_empty() {
+                                    toks.retain(|(_, span)| {
+                                        !directives.iter().any(|d| {
+                                            span.line_start <= d.end_line
+                                                && span.line_end >= d.start_line
+                                        })
+                                    });
+                                }
+                                let count = toks.len();
+                                ast_span.record("token_count", count);
+                                let spans: Vec<_> =
+                                    toks.iter().map(|(_, span)| span.clone()).collect();
+                                (toks, spans, count)
+                            };
 
                             let k = std::cmp::max(MIN_K_GRAM, config_clone.min_tokens / 2);
                             let w = k + WINDOW_OFFSET;
-                            let fingerprints = winnow(&tokens, k, w);
+                            let winnow_span = crate::telemetry::winnowing_span(k, w);
+                            let fingerprints = {
+                                let _winnow_guard = winnow_span.enter();
+                                let fps = winnow(&tokens, k, w);
+                                winnow_span.record("fingerprints_count", fps.len());
+                                fps
+                            };
 
                             let parsed = ParsedFile {
                                 path: path_str.clone(),
@@ -396,8 +388,14 @@ pub async fn run_scan(
         tracker.progress_scaled.store(9500, Ordering::Relaxed);
     }
 
-    let metrics = super::scoring::compute_scan_scoring(&parsed_files, &merged_pairs, total_tokens);
-    let total_clusters = metrics.clone_clusters.len();
+    let clustering_span = crate::telemetry::clustering_span(merged_pairs.len());
+    let (metrics, total_clusters) = {
+        let _clustering_guard = clustering_span.enter();
+        let m = super::scoring::compute_scan_scoring(&parsed_files, &merged_pairs, total_tokens);
+        let count = m.clone_clusters.len();
+        clustering_span.record("total_clusters", count);
+        (m, count)
+    };
 
     let mut scan_result = ScanResult {
         scan_id: scan_id.clone(),

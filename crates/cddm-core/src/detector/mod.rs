@@ -2,6 +2,7 @@
 
 pub mod discovery;
 pub mod indexer;
+pub(crate) mod progress;
 pub mod runner;
 pub mod scoring;
 pub mod semantic;
