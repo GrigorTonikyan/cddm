@@ -85,6 +85,11 @@ pub async fn watch_rescan_handler(
     match run_scan(config, tx, cancel_flag).await {
         Ok(result) => {
             *state.latest_result.write().await = Some(result.clone());
+            crate::serve::metrics_handlers::record_scan_metrics(
+                result.total_clones,
+                result.dry_health_score,
+                result.duration_ms,
+            );
             let _ = state
                 .broadcast_tx
                 .send(ServerEvent::ScanComplete(result.clone()));
@@ -144,6 +149,11 @@ pub async fn execute_watch_incremental_scan(state: &AppState, changed_paths: &[P
         );
 
         *state.latest_result.write().await = Some(new_result.clone());
+        crate::serve::metrics_handlers::record_scan_metrics(
+            new_result.total_clones,
+            new_result.dry_health_score,
+            new_result.duration_ms,
+        );
         {
             let mut log = state.watch_events_log.write().await;
             log.push(delta.clone());

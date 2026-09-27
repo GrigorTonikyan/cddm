@@ -3,6 +3,7 @@
 mod coverage_tests;
 mod dead_code_tests;
 mod mcp_apps_tests;
+mod metrics_tests;
 mod refactor_stream_tests;
 mod semantic_tests;
 mod watch_tests;

@@ -61,6 +61,11 @@ pub async fn scan_handler(
     match run_scan(config, tx, cancel_flag).await {
         Ok(result) => {
             *state.latest_result.write().await = Some(result.clone());
+            crate::serve::metrics_handlers::record_scan_metrics(
+                result.total_clones,
+                result.dry_health_score,
+                result.duration_ms,
+            );
             let _ = state
                 .broadcast_tx
                 .send(ServerEvent::ScanComplete(result.clone()));
@@ -140,6 +145,11 @@ pub async fn execute_background_refresh(state: &AppState) {
 
     if let Ok(scan_res) = run_scan(config, tx, cancel_flag).await {
         *state.latest_result.write().await = Some(scan_res.clone());
+        crate::serve::metrics_handlers::record_scan_metrics(
+            scan_res.total_clones,
+            scan_res.dry_health_score,
+            scan_res.duration_ms,
+        );
         let _ = state.broadcast_tx.send(ServerEvent::ScanComplete(scan_res));
     }
 }
