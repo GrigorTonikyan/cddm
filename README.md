@@ -48,7 +48,7 @@ CDDM strictly enforces **100% Cross-Interface Feature Parity** across all four p
 |                                    CDDM Unified Core Engine                                        |
 +----------------------------------------------------------------------------------------------------+
 |  1. CLI Engine        |  2. WebUI Studio       |  3. MCP Server         |  4. TUI Studio           |
-|  - 23 Subcommands     |  - React 19 Studio     |  - 33 Agent Tools      |  - 12 Ratatui Tabs       |
+|  - 24 Subcommands     |  - React 19 Studio     |  - 33 Agent Tools      |  - 12 Ratatui Tabs       |
 |  - Scriptable stdout  |  - Monaco Split Diffs  |  - 17 MCP Resources    |  - Split Diff Viewer     |
 |  - Turnkey CI/CD      |  - SSE Live Stream     |  - 3 Agent Prompts     |  - Keyboard-Driven       |
 |  [docs/CLI.md]        |  [docs/WEBUI.md]       |  [docs/MCP.md]         |  [docs/TUI.md]           |
@@ -164,8 +164,8 @@ cddm init gitea --write
 
 For comprehensive technical manuals on each interaction surface, explore our dedicated guides:
 
-- **[CLI Command Reference](docs/CLI.md)** — Exhaustive manual for all 22 CLI subcommands, flags, and recipes.
-- **[MCP Server Specification](docs/MCP.md)** — Stdio JSON-RPC 2.0 reference for all 30 AI agent tools, 17 resources, and prompts.
+- **[CLI Command Reference](docs/CLI.md)** — Exhaustive manual for all 24 CLI subcommands, flags, and recipes.
+- **[MCP Server Specification](docs/MCP.md)** — Stdio JSON-RPC 2.0 reference for all 33 AI agent tools, 17 resources, and prompts.
 - **[Embedded Studio WebUI](docs/WEBUI.md)** — React 19 Studio guide, 19 interactive modals, REST & SSE API catalog.
 - **[Terminal UI (TUI) Studio](docs/TUI.md)** — Keyboard shortcuts and 12-tab navigation guide.
 - **[Language Server & IDE Setup](docs/LSP_SETUP.md)** — Real-time in-editor setup for VS Code, Cursor, Neovim, Zed, Helix, Sublime.
