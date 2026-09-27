@@ -23,7 +23,7 @@ describe("MCP Server Live Multi-Tool Fidelity & Response Audit", () => {
     expect(result.serverInfo.name).toContain("CDDM");
   });
 
-  it("should list all 30 tools with semantic category metadata", async () => {
+  it("should list all 33 tools with semantic category metadata", async () => {
     const toolsListRes = await callMcpStdio({
       jsonrpc: "2.0",
       id: 2,
@@ -34,7 +34,7 @@ describe("MCP Server Live Multi-Tool Fidelity & Response Audit", () => {
     const tools = (
       toolsListRes.result as { tools: Array<{ name: string; "x-cddm-category"?: string }> }
     ).tools;
-    expect(tools.length).toBeGreaterThanOrEqual(22);
+    expect(tools.length).toBeGreaterThanOrEqual(33);
     for (const t of tools) {
       expect(t["x-cddm-category"]).toBeDefined();
     }

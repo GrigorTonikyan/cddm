@@ -51,9 +51,9 @@ CDDM enforces strict **100% Feature Parity** across all four primary interaction
 ## Wiki Table of Contents
 
 - [[Getting-Started|Getting Started]]: Installation, package managers, and quick start.
-- [[CLI-Reference|CLI Command Reference]]: Complete manual for all 22 CLI subcommands.
+- [[CLI-Reference|CLI Command Reference]]: Complete manual for all 24 CLI subcommands.
 - [[WebUI-Studio|WebUI Studio]]: Feature-Sliced React 19 Studio, Monaco diffs, and 19 modals.
-- [[MCP-Server-Protocol|MCP Server Protocol]]: 30 Model Context Protocol tools & resources for AI agents.
+- [[MCP-Server-Protocol|MCP Server Protocol]]: 33 Model Context Protocol tools & resources for AI agents.
 - [[TUI-Studio|TUI Terminal Studio]]: 12-tab Ratatui terminal dashboard.
 - [[AST-Engine-and-Deduplication|System Architecture & AST]]: System pipeline phases, hashing, and crate breakdown.
 - [[4-Pillar-Feature-Parity|Feature Parity Matrix]]: 21 core capabilities across all 4 interaction pillars.
