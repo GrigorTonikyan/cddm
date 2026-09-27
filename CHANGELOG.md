@@ -5,6 +5,14 @@ All notable changes to **CDDM** (_Code De-Duplication Meister_) will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.4.0] - 2026-09-27
+
+### Features
+
+- **cli**: add shell completion generator for bash, zsh, fish, and powershell via clap_complete (`330d539`)
+- **telemetry**: expose Prometheus /metrics endpoint on Axum WebUI server (`43b50a6`)
+- **telemetry**: add tracing-opentelemetry distributed tracing exporter (`a76eb76`)
+
 ## [4.3.0] - 2026-09-27
 
 ### Features
