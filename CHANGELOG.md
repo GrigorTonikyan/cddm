@@ -5,6 +5,36 @@ All notable changes to **CDDM** (_Code De-Duplication Meister_) will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.2.0] - 2026-09-27
+
+### Features
+
+- **ai**: support streaming SSE token diff generation for AI refactor surgeon (#229) (`510995a`)
+- **ai**: update AI model catalog to Gemini 3.8 and Claude 3.7 / 4.0 (#230) (`80fcd61`)
+- **ai**: replace blocking curl subprocess with async reqwest client (#228) (`05c49a6`)
+- **ci**: standardize on Gitea CI/CD SSoT and runner 4.0.0 (`9696f83`)
+
+### Bug Fixes
+
+- **test**: guard against non-array giteaFetch response in milestone release test (`23a6564`)
+- **test**: configure default token placeholder in gitea-client for offline tests (`c3dd0cc`)
+- **ci**: scope container publishing to main branch and configure registry token authentication (`ea895cd`)
+- **watcher**: filter inotify events to ignore file reads and access time metadata (`f5deab8`)
+- **e2e**: replace networkidle with domcontentloaded and ignore test artifacts in watcher (`e9ae2fc`)
+- **ci**: resolve playwright module resolution and delegate webui e2e runner to root (`696d3a4`)
+- **ci**: configure node tls rejection and system ca for artifact upload (`ecce4e9`)
+- **ci**: provide prebuilt cddm binary to webui e2e test runner (`3c6c8e3`)
+
+### Refactoring
+
+- **vcs**: migrate workspace VCS operations and governance rules to Forge MCP (`d2ce3c8`)
+
+### Tooling & Maintenance
+
+- **docs**: synchronize workspace documentation, rules, skills, and references (`619918a`)
+- **ci**: migrate to global gitea-ci-cd SSoT skill (`7691be0`)
+- **infra**: configure private package registry and boundary rules (`52dbc6b`)
+
 ## [4.1.0] - 2026-09-15
 
 ### Features
