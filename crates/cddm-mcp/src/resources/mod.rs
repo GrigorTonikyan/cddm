@@ -133,6 +133,7 @@ pub fn resources_list_response(id: Option<serde_json::Value>) -> JsonRpcResponse
             ]
         })),
         error: None,
+        headers: None,
     }
 }
 
@@ -169,6 +170,7 @@ pub fn resources_templates_list_response(id: Option<serde_json::Value>) -> JsonR
             ]
         })),
         error: None,
+        headers: None,
     }
 }
 
@@ -190,6 +192,7 @@ fn make_resource_json_response<T: serde::Serialize>(
             ]
         })),
         error: None,
+        headers: None,
     }
 }
 

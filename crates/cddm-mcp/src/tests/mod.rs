@@ -15,6 +15,7 @@ pub fn make_test_req(id: u64, method: &str, params: Option<serde_json::Value>) -
         id: Some(json!(id)),
         method: method.to_string(),
         params,
+        headers: None,
     }
 }
 
@@ -37,29 +38,103 @@ async fn test_mcp_initialize() {
     let res = resp.result.unwrap();
     assert_eq!(res["protocolVersion"], MCP_PROTOCOL_VERSION);
     assert_eq!(res["serverInfo"]["name"], SERVER_NAME);
-    assert!(res["capabilities"]["sampling"].is_object());
+    assert!(res["capabilities"]["tasks"].is_object());
+    assert!(res["capabilities"]["tasks"]["cancel"].as_bool().unwrap());
+    assert!(res["capabilities"]["sampling"].is_null());
+    assert!(res["capabilities"]["roots"].is_null());
+
+    let headers = resp.headers.unwrap();
+    assert_eq!(headers.get("Mcp-Protocol-Version").unwrap(), "2026-07-28");
 }
 
 #[tokio::test]
-async fn test_mcp_sampling_create_message() {
-    let resp = handle_mcp_request(make_test_req(
-        15,
-        mcp_methods::SAMPLING_CREATE_MESSAGE,
+async fn test_mcp_deprecated_roots_and_sampling_return_method_not_found() {
+    for deprecated in ["sampling/createMessage", "roots/list"] {
+        let resp = handle_mcp_request(make_test_req(15, deprecated, None))
+            .await
+            .expect("Expected response");
+        assert_eq!(resp.id, Some(json!(15)));
+        assert!(resp.error.is_some());
+        let err = resp.error.unwrap();
+        assert_eq!(err["code"], rpc_errors::METHOD_NOT_FOUND);
+    }
+}
+
+#[tokio::test]
+async fn test_mcp_tasks_framework() {
+    // 1. Call task
+    let call_resp = handle_mcp_request(make_test_req(
+        20,
+        mcp_methods::TASKS_CALL,
         Some(json!({
-            "messages": [{"role": "user", "content": {"type": "text", "text": "test"}}]
+            "name": mcp_tools::SCAN_CODEBASE,
+            "arguments": { "directory": "." }
         })),
     ))
     .await
     .expect("Expected response");
-    assert_eq!(resp.id, Some(json!(15)));
-    let res = resp.result.unwrap();
-    assert_eq!(res["role"], "assistant");
-    assert!(
-        res["content"]["text"]
-            .as_str()
-            .unwrap()
-            .contains("sampling")
+    assert!(call_resp.error.is_none());
+    let call_res = call_resp.result.unwrap();
+    let task_id = call_res["taskId"].as_str().unwrap();
+    assert!(task_id.starts_with("task-"));
+    assert_eq!(call_res["status"], "running");
+
+    // 2. List tasks
+    let list_resp = handle_mcp_request(make_test_req(21, mcp_methods::TASKS_LIST, None))
+        .await
+        .expect("Expected response");
+    assert!(list_resp.error.is_none());
+    let tasks = list_resp.result.unwrap()["tasks"]
+        .as_array()
+        .unwrap()
+        .clone();
+    assert!(tasks.iter().any(|t| t["taskId"] == task_id));
+
+    // 3. Status check
+    let status_resp = handle_mcp_request(make_test_req(
+        22,
+        mcp_methods::TASKS_STATUS,
+        Some(json!({ "taskId": task_id })),
+    ))
+    .await
+    .expect("Expected response");
+    assert!(status_resp.error.is_none());
+    let status_res = status_resp.result.unwrap();
+    assert_eq!(status_res["taskId"], task_id);
+
+    // 4. Cancel task
+    let cancel_resp = handle_mcp_request(make_test_req(
+        23,
+        mcp_methods::TASKS_CANCEL,
+        Some(json!({ "taskId": task_id })),
+    ))
+    .await
+    .expect("Expected response");
+    assert!(cancel_resp.error.is_none());
+    let cancel_res = cancel_resp.result.unwrap();
+    assert_eq!(cancel_res["taskId"], task_id);
+    assert!(cancel_res["cancelled"].as_bool().unwrap());
+}
+
+#[tokio::test]
+async fn test_mcp_header_based_routing() {
+    let mut req = make_test_req(
+        30,
+        "mcp/dispatch",
+        Some(json!({ "arguments": { "directory": "." } })),
     );
+    let mut headers = std::collections::HashMap::new();
+    headers.insert("Mcp-Method".to_string(), "tools/call".to_string());
+    headers.insert("Mcp-Name".to_string(), mcp_tools::SCAN_CODEBASE.to_string());
+    req.headers = Some(headers);
+
+    let resp = handle_mcp_request(req).await.expect("Expected response");
+    assert!(resp.error.is_none());
+    let res = resp.result.unwrap();
+    assert!(res["content"].is_array());
+
+    let resp_headers = resp.headers.unwrap();
+    assert_eq!(resp_headers.get("Mcp-Method").unwrap(), "tools/call");
 }
 
 #[tokio::test]
@@ -175,6 +250,7 @@ async fn test_mcp_notification_returns_none() {
         id: None,
         method: mcp_methods::INITIALIZED.to_string(),
         params: None,
+        headers: None,
     };
     let resp = handle_mcp_request(req).await;
     assert!(resp.is_none());

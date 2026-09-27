@@ -78,6 +78,7 @@ pub fn prompts_list_response(id: Option<serde_json::Value>) -> JsonRpcResponse {
             ]
         })),
         error: None,
+        headers: None,
     }
 }
 

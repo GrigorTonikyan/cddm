@@ -71,6 +71,66 @@ export async function callMcpStdio<T = unknown>(
   return JSON.parse(line) as JsonRpcResponse<T>;
 }
 
+export interface McpSession {
+  call<T = unknown>(request: Record<string, unknown>): Promise<JsonRpcResponse<T>>;
+  close(): Promise<void>;
+}
+
+export function startMcpSession(): McpSession {
+  const binaryPath = getMcpBinaryPath();
+  const proc = Bun.spawn([binaryPath], {
+    stdin: "pipe",
+    stdout: "pipe",
+    stderr: "pipe",
+  });
+
+  const reader = proc.stdout.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  async function readLine(): Promise<string> {
+    while (true) {
+      const newlineIndex = buffer.indexOf("\n");
+      if (newlineIndex !== -1) {
+        const line = buffer.slice(0, newlineIndex).trim();
+        buffer = buffer.slice(newlineIndex + 1);
+        if (line.startsWith("{") && line.endsWith("}")) {
+          return line;
+        }
+      }
+      const { value, done } = await reader.read();
+      if (done) {
+        if (buffer.trim().startsWith("{") && buffer.trim().endsWith("}")) {
+          const l = buffer.trim();
+          buffer = "";
+          return l;
+        }
+        throw new Error("cddm-mcp stdout closed unexpectedly");
+      }
+      buffer += decoder.decode(value, { stream: true });
+    }
+  }
+
+  return {
+    async call<T = unknown>(request: Record<string, unknown>): Promise<JsonRpcResponse<T>> {
+      const payload = JSON.stringify(request) + "\n";
+      void proc.stdin.write(payload);
+      void proc.stdin.flush();
+      const line = await readLine();
+      return JSON.parse(line) as JsonRpcResponse<T>;
+    },
+    async close(): Promise<void> {
+      try {
+        void proc.stdin.end();
+      } catch {}
+      try {
+        proc.kill();
+      } catch {}
+      await proc.exited;
+    },
+  };
+}
+
 export async function executeTool<T = any>(
   name: string,
   args: Record<string, unknown> = {},

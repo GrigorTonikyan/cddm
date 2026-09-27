@@ -273,8 +273,8 @@ To ensure high-throughput execution, real-time live watch subscriptions, and cle
 4. **LSP 3.18 CodeLens & Inlay Hints (`cddm-lsp`)**:
    - Interactive code lenses for clone counterpart navigation and non-intrusive inline clone percentage badges.
 
-5. **MCP 2026 Agentic Sampling Protocol (`cddm-mcp`)**:
-   - Sampling elicitation (`sampling/createMessage`) enabling AI coding assistants to leverage server-side reasoning loops.
+5. **MCP 2026-07-28 Asynchronous Tasks & Header Routing Engine (`cddm-mcp`)**:
+   - Upgraded to MCP 2026-07-28 standard with asynchronous background Tasks framework (`tasks/call`, `tasks/list`, `tasks/status`, `tasks/cancel`) for long monorepo scans, header-based routing (`Mcp-Method`, `Mcp-Name`), and deterministic caching annotations (`ttlMs`, `cacheScope`). Deprecated roots and sampling protocols retired.
 
 ---
 

@@ -7,7 +7,7 @@ use serde_json::json;
 pub const JSONRPC_VERSION: &str = "2.0";
 
 /// MCP protocol specification version supported by this server.
-pub const MCP_PROTOCOL_VERSION: &str = "2024-11-05";
+pub const MCP_PROTOCOL_VERSION: &str = "2026-07-28";
 
 /// MCP Server human-readable display name.
 pub const SERVER_NAME: &str = "CDDM Code De-Duplication Meister MCP Server";
@@ -40,10 +40,11 @@ pub mod mcp_methods {
     pub const RESOURCES_UPDATED: &str = "notifications/resources/updated";
     pub const PROMPTS_LIST: &str = "prompts/list";
     pub const PROMPTS_GET: &str = "prompts/get";
-    pub const ROOTS_LIST: &str = "roots/list";
-    pub const ROOTS_LIST_CHANGED: &str = "notifications/roots/list_changed";
     pub const PROGRESS: &str = "notifications/progress";
-    pub const SAMPLING_CREATE_MESSAGE: &str = "sampling/createMessage";
+    pub const TASKS_LIST: &str = "tasks/list";
+    pub const TASKS_CALL: &str = "tasks/call";
+    pub const TASKS_STATUS: &str = "tasks/status";
+    pub const TASKS_CANCEL: &str = "tasks/cancel";
 }
 
 /// Exposed tool identifiers and parameters.
@@ -144,15 +145,18 @@ pub mod mcp_prompts {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct JsonRpcRequest {
     pub jsonrpc: String,
     pub id: Option<serde_json::Value>,
     pub method: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub params: Option<serde_json::Value>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub headers: Option<std::collections::HashMap<String, String>>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct JsonRpcResponse {
     pub jsonrpc: String,
     pub id: Option<serde_json::Value>,
@@ -160,6 +164,8 @@ pub struct JsonRpcResponse {
     pub result: Option<serde_json::Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub error: Option<serde_json::Value>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub headers: Option<std::collections::HashMap<String, String>>,
 }
 
 pub fn make_error_response(
@@ -175,6 +181,7 @@ pub fn make_error_response(
             "code": code,
             "message": message.into(),
         })),
+        headers: None,
     }
 }
 
@@ -194,6 +201,7 @@ pub fn make_text_response(
             ]
         })),
         error: None,
+        headers: None,
     }
 }
 
@@ -218,5 +226,6 @@ pub fn make_prompt_response(
             ]
         })),
         error: None,
+        headers: None,
     }
 }

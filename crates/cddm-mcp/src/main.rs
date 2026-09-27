@@ -4,6 +4,7 @@ mod prompts;
 mod protocol;
 mod resources;
 mod server;
+mod tasks;
 mod tools;
 
 #[cfg(test)]
