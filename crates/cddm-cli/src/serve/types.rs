@@ -18,6 +18,7 @@ define_api_routes! {
     ROUTE_API_DIFF_MATRIX => "/api/diff/matrix",
     ROUTE_API_SNIPPET => "/api/snippet",
     ROUTE_API_REFACTOR => "/api/refactor",
+    ROUTE_API_REFACTOR_STREAM => "/api/refactor/stream",
     ROUTE_API_REFACTOR_CLUSTER => "/api/refactor-cluster",
     ROUTE_API_APPLY_PATCH => "/api/apply-patch",
     ROUTE_API_EVENTS => "/api/events",
@@ -184,6 +185,22 @@ pub struct RefactorRequest {
     pub file_b: String,
     pub start_line_b: usize,
     pub end_line_b: usize,
+}
+
+/// Request payload for streaming refactoring patch generation.
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Default)]
+pub struct RefactorStreamRequest {
+    pub file_a: String,
+    pub start_line_a: usize,
+    pub end_line_a: usize,
+    pub file_b: String,
+    pub start_line_b: usize,
+    pub end_line_b: usize,
+    pub provider: Option<String>,
+    pub model: Option<String>,
+    pub endpoint: Option<String>,
+    pub api_key: Option<String>,
+    pub temperature: Option<f64>,
 }
 
 /// Request payload for synthesizing multi-site cluster refactoring suggestions.

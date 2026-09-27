@@ -65,6 +65,7 @@ pub fn build_app_with_state(state: AppState) -> Router {
         .route(ROUTE_API_DIFF_MATRIX, post(diff_matrix_handler))
         .route(ROUTE_API_SNIPPET, get(snippet_handler))
         .route(ROUTE_API_REFACTOR, post(refactor_handler))
+        .route(ROUTE_API_REFACTOR_STREAM, post(refactor_stream_handler))
         .route(ROUTE_API_REFACTOR_CLUSTER, post(refactor_cluster_handler))
         .route(ROUTE_API_APPLY_PATCH, post(apply_patch_handler))
         .route(ROUTE_API_EVENTS, get(events_handler))

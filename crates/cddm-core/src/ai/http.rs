@@ -103,6 +103,71 @@ pub async fn execute_http_chat(
     post_and_extract(client, url, headers, payload, extract_fn).await
 }
 
+/// Helper to execute an HTTP streaming chat request with Server-Sent Events or chunked transfer.
+pub async fn execute_http_chat_stream<F>(
+    client: &reqwest::Client,
+    url: &str,
+    headers: &[(&str, &str)],
+    payload: &serde_json::Value,
+    extract_delta_fn: F,
+) -> Result<super::provider::stream::BoxAiStream, String>
+where
+    F: Fn(&str) -> Option<String> + Send + Sync + 'static,
+{
+    let mut req = client
+        .post(url)
+        .header(HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON)
+        .json(payload);
+    for (k, v) in headers {
+        req = req.header(*k, *v);
+    }
+
+    let resp = req
+        .send()
+        .await
+        .map_err(|e| format!("HTTP request error: {e}"))?;
+    let status = resp.status();
+    if !status.is_success() {
+        let err_text = resp.text().await.unwrap_or_default();
+        return Err(format!("HTTP {}: {}", status.as_u16(), err_text));
+    }
+
+    let (tx, rx) = tokio::sync::mpsc::channel(64);
+    tokio::spawn(async move {
+        use tokio_stream::StreamExt;
+        let mut stream = resp.bytes_stream();
+        let mut buffer = String::new();
+        while let Some(chunk_res) = stream.next().await {
+            match chunk_res {
+                Ok(bytes) => {
+                    let chunk_str = String::from_utf8_lossy(&bytes);
+                    buffer.push_str(&chunk_str);
+                    while let Some(pos) = buffer.find('\n') {
+                        let line = buffer[..pos].trim_end_matches('\r').to_string();
+                        buffer = buffer[pos + 1..].to_string();
+                        if let Some(token) = extract_delta_fn(&line)
+                            && tx.send(Ok(token)).await.is_err()
+                        {
+                            return;
+                        }
+                    }
+                }
+                Err(e) => {
+                    let _ = tx.send(Err(format!("Stream read error: {e}"))).await;
+                    return;
+                }
+            }
+        }
+        if !buffer.trim().is_empty()
+            && let Some(token) = extract_delta_fn(buffer.trim())
+        {
+            let _ = tx.send(Ok(token)).await;
+        }
+    });
+
+    Ok(Box::pin(tokio_stream::wrappers::ReceiverStream::new(rx)))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

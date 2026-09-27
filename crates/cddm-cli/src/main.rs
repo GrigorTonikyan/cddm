@@ -141,23 +141,7 @@ async fn run_app(cli: Cli) -> Result<(), Box<dyn std::error::Error>> {
         }
 
         Commands::Refactor(args) => {
-            run_refactor_command(
-                args.pair,
-                args.cluster,
-                args.directory,
-                args.min_tokens,
-                args.output,
-                args.prompt,
-                args.ast,
-                args.fn_name,
-                args.target_module,
-                args.apply_branch,
-                args.verify,
-                args.test_cmd,
-                args.languages,
-                args.ignore,
-            )
-            .await?;
+            run_refactor_command(args).await?;
         }
 
         Commands::Extract(args) => {

@@ -304,6 +304,18 @@ pub struct RefactorArgs {
     /// Glob patterns to ignore
     #[arg(short, long)]
     pub ignore: Vec<String>,
+
+    /// Stream AI token diff generation directly to terminal
+    #[arg(long, default_value_t = false)]
+    pub stream: bool,
+
+    /// AI provider to use for streaming refactoring (gemini, claude, openai, ollama, custom, mock)
+    #[arg(long)]
+    pub provider: Option<String>,
+
+    /// AI model identifier to use
+    #[arg(long)]
+    pub model: Option<String>,
 }
 
 /// CLI Arguments for `cddm extract`

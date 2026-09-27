@@ -117,3 +117,53 @@ fn test_resolve_provider_kind_default_and_env() {
         AiProviderKind::Custom
     );
 }
+
+#[tokio::test]
+async fn test_mock_provider_stream() {
+    use tokio_stream::StreamExt;
+    let provider = MockAiProvider::new(Some("line 1\nline 2\n".to_string()));
+    let mut stream = provider.stream_prompt("test").await.unwrap();
+    let mut collected = String::new();
+    while let Some(chunk) = stream.next().await {
+        collected.push_str(&chunk.unwrap());
+    }
+    assert_eq!(collected, "line 1\nline 2\n");
+}
+
+#[tokio::test]
+async fn test_cloud_provider_missing_key_stream_errors() {
+    let gemini = CloudAiProvider::new_gemini(None, Some("".into()), None);
+    let err = match gemini.stream_prompt("hello").await {
+        Ok(_) => panic!("expected error"),
+        Err(e) => e,
+    };
+    assert!(err.contains("Gemini API key not provided"));
+
+    let claude = CloudAiProvider::new_claude(None, Some("".into()), None);
+    let err = match claude.stream_prompt("hello").await {
+        Ok(_) => panic!("expected error"),
+        Err(e) => e,
+    };
+    assert!(err.contains("Anthropic API key not provided"));
+
+    let openai = CloudAiProvider::new_openai(None, Some("".into()), None);
+    let err = match openai.stream_prompt("hello").await {
+        Ok(_) => panic!("expected error"),
+        Err(e) => e,
+    };
+    assert!(err.contains("OpenAI API key not provided"));
+}
+
+#[tokio::test]
+async fn test_ollama_unreachable_endpoint_stream_error() {
+    let ollama = OllamaProvider::new(
+        Some("test-model".into()),
+        Some("http://127.0.0.1:59999".into()),
+        None,
+    );
+    let err = match ollama.stream_prompt("hello").await {
+        Ok(_) => panic!("expected error"),
+        Err(e) => e,
+    };
+    assert!(err.contains("HTTP request error") || err.contains("connection"));
+}
