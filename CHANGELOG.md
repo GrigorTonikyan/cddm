@@ -5,6 +5,13 @@ All notable changes to **CDDM** (_Code De-Duplication Meister_) will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.3.0] - 2026-09-27
+
+### Features
+
+- **mcp**: implement MCP Apps capability for interactive UI refactoring widgets (`1126663`)
+- **mcp**: upgrade protocol to 2026-07-28 and implement Tasks framework (#231) (`3345248`)
+
 ## [4.2.0] - 2026-09-27
 
 ### Features

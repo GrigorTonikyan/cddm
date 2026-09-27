@@ -345,7 +345,7 @@ dependencies = [
 
 [[package]]
 name = "cddm-cli"
-version = "4.2.0"
+version = "4.3.0"
 dependencies = [
  "async-trait",
  "axum",
@@ -374,7 +374,7 @@ dependencies = [
 
 [[package]]
 name = "cddm-core"
-version = "4.2.0"
+version = "4.3.0"
 dependencies = [
  "async-trait",
  "blake3",
@@ -425,7 +425,7 @@ dependencies = [
 
 [[package]]
 name = "cddm-lsp"
-version = "4.2.0"
+version = "4.3.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -441,7 +441,7 @@ dependencies = [
 
 [[package]]
 name = "cddm-mcp"
-version = "4.2.0"
+version = "4.3.0"
 dependencies = [
  "async-trait",
  "cddm-core",
