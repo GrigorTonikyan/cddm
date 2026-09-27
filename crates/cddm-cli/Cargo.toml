@@ -26,6 +26,7 @@ cddm-lsp = { path = "../cddm-lsp" }
 cddm-mcp = { path = "../cddm-mcp" }
 chrono.workspace = true
 clap.workspace = true
+clap_complete.workspace = true
 comfy-table.workspace = true
 crossterm.workspace = true
 metrics.workspace = true

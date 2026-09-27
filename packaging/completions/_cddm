@@ -1,0 +1,1855 @@
+#compdef cddm
+
+autoload -U is-at-least
+
+_cddm() {
+    typeset -A opt_args
+    typeset -a _arguments_options
+    local ret=1
+
+    if is-at-least 5.2; then
+        _arguments_options=(-s -S -C)
+    else
+        _arguments_options=(-s -C)
+    fi
+
+    local context curcontext="$curcontext" state line
+    _arguments "${_arguments_options[@]}" : \
+'--log-level=[Explicitly set the logging verbosity level (trace, debug, info, warn, error, off)]:LOG_LEVEL:_default' \
+'--log-file=[Write structured logs to a dedicated log file]:LOG_FILE:_files' \
+'*-v[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'*--verbose[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'-q[Suppress all non-error output and diagnostics]' \
+'--quiet[Suppress all non-error output and diagnostics]' \
+'-h[Print help (see more with '\''--help'\'')]' \
+'--help[Print help (see more with '\''--help'\'')]' \
+'-V[Print version]' \
+'--version[Print version]' \
+":: :_cddm_commands" \
+"*::: :->cddm" \
+&& ret=0
+    case $state in
+    (cddm)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:cddm-command-$line[1]:"
+        case $line[1] in
+            (scan)
+_arguments "${_arguments_options[@]}" : \
+'-m+[Minimum token count to consider as duplicate clone]:MIN_TOKENS:_default' \
+'--min-tokens=[Minimum token count to consider as duplicate clone]:MIN_TOKENS:_default' \
+'-f+[Output report format (console, json, markdown, sarif)]:FORMAT:(console json markdown sarif ndjson)' \
+'--format=[Output report format (console, json, markdown, sarif)]:FORMAT:(console json markdown sarif ndjson)' \
+'--fail-threshold=[Exit with non-zero status code if duplication percentage exceeds threshold (0-100)]:FAIL_THRESHOLD:_default' \
+'*-l+[Specific language(s) to scan (e.g. Rust, TypeScript, Python)]:LANGUAGES:_default' \
+'*--languages=[Specific language(s) to scan (e.g. Rust, TypeScript, Python)]:LANGUAGES:_default' \
+'*-i+[Glob patterns to ignore (e.g. node_modules, target)]:IGNORE:_default' \
+'*--ignore=[Glob patterns to ignore (e.g. node_modules, target)]:IGNORE:_default' \
+'--cache-dir=[Custom path for persistent redb cache database (default\: OS user cache)]:CACHE_DIR:_files' \
+'--cddmignore=[Custom path to .cddmignore configuration file]:CDDMIGNORE:_files' \
+'--ignore-tests=[Automatically filter test files and test directories (default\: true)]:IGNORE_TESTS:(true false)' \
+'--ignore-mocks=[Automatically filter mock and fixture files (default\: true)]:IGNORE_MOCKS:(true false)' \
+'--rules=[Path to custom architectural policy rules (.cddmrules.toml)]:RULES:_files' \
+'--cross-language=[Detect cross-language semantic clones across different programming languages]:CROSS_LANGUAGE:(true false)' \
+'--detect-type4=[Detect Type-4 semantic clones using AST/CFG Weisfeiler-Lehman graph analysis]:DETECT_TYPE4:(true false)' \
+'-j+[Maximum number of parallel worker threads to utilize (default\: all logical cores)]:THREADS:_default' \
+'--threads=[Maximum number of parallel worker threads to utilize (default\: all logical cores)]:THREADS:_default' \
+'--log-level=[Explicitly set the logging verbosity level (trace, debug, info, warn, error, off)]:LOG_LEVEL:_default' \
+'--log-file=[Write structured logs to a dedicated log file]:LOG_FILE:_files' \
+'--summary[Output compact summary report to conserve terminal/token output]' \
+'--include-ignored[Include files and directories ignored by .gitignore]' \
+'--git-blame[Enable in-process git blame author & line age annotation]' \
+'--in-tree-cache[Store persistent redb cache database in workspace (.cddm/cache.db) instead of OS user cache]' \
+'--no-cache[Bypass persistent disk cache and force full re-scan]' \
+'--clear-cache[Clear existing persistent cache database before scanning]' \
+'--no-ignore-tests[Include test files and test directories in scan]' \
+'--no-ignore-mocks[Include mock and fixture files in scan]' \
+'--ignore-generated[Automatically filter auto-generated files with generator headers]' \
+'--enforce-policies[Enforce architectural policy rules (exit code 1 on error-level violations)]' \
+'--no-cross-language[Disable cross-language semantic clone detection]' \
+'--no-type3[Disable Type-3 near-miss modified statement clone detection]' \
+'--no-type4[Disable Type-4 semantic AST/CFG clone detection]' \
+'*-v[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'*--verbose[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'-q[Suppress all non-error output and diagnostics]' \
+'--quiet[Suppress all non-error output and diagnostics]' \
+'-h[Print help]' \
+'--help[Print help]' \
+'::directory -- Directory path to scan (default\: current directory):_files' \
+&& ret=0
+;;
+(dead-code)
+_arguments "${_arguments_options[@]}" : \
+'-m+[Minimum token count threshold for dead code items]:MIN_TOKENS:_default' \
+'--min-tokens=[Minimum token count threshold for dead code items]:MIN_TOKENS:_default' \
+'-f+[Output report format (console, json, markdown, sarif)]:FORMAT:_default' \
+'--format=[Output report format (console, json, markdown, sarif)]:FORMAT:_default' \
+'-c+[Path to optional coverage report file (e.g. lcov.info, coverage.xml)]:COVERAGE:_files' \
+'--coverage=[Path to optional coverage report file (e.g. lcov.info, coverage.xml)]:COVERAGE:_files' \
+'*-l+[Filter by target programming languages]:LANGUAGES:_default' \
+'*--languages=[Filter by target programming languages]:LANGUAGES:_default' \
+'*-i+[Custom file or path ignore patterns]:IGNORE:_default' \
+'*--ignore=[Custom file or path ignore patterns]:IGNORE:_default' \
+'--log-level=[Explicitly set the logging verbosity level (trace, debug, info, warn, error, off)]:LOG_LEVEL:_default' \
+'--log-file=[Write structured logs to a dedicated log file]:LOG_FILE:_files' \
+'--summary[Output compact summary report to conserve terminal/token output]' \
+'--static-only[Restrict analysis to static AST & symbol analysis only]' \
+'--include-ignored[Include files and directories ignored by .gitignore]' \
+'*-v[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'*--verbose[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'-q[Suppress all non-error output and diagnostics]' \
+'--quiet[Suppress all non-error output and diagnostics]' \
+'-h[Print help]' \
+'--help[Print help]' \
+'::directory -- Directory path to scan (default\: current directory):_files' \
+&& ret=0
+;;
+(prune)
+_arguments "${_arguments_options[@]}" : \
+'-t+[Confidence threshold for safe removal (0.0 to 1.0)]:THRESHOLD:_default' \
+'--threshold=[Confidence threshold for safe removal (0.0 to 1.0)]:THRESHOLD:_default' \
+'-m+[Minimum token count threshold for dead clone items]:MIN_TOKENS:_default' \
+'--min-tokens=[Minimum token count threshold for dead clone items]:MIN_TOKENS:_default' \
+'-f+[Output report format (console, json, markdown, sarif)]:FORMAT:_default' \
+'--format=[Output report format (console, json, markdown, sarif)]:FORMAT:_default' \
+'*-l+[Filter by target programming languages]:LANGUAGES:_default' \
+'*--languages=[Filter by target programming languages]:LANGUAGES:_default' \
+'*-i+[Custom file or path ignore patterns]:IGNORE:_default' \
+'*--ignore=[Custom file or path ignore patterns]:IGNORE:_default' \
+'--log-level=[Explicitly set the logging verbosity level (trace, debug, info, warn, error, off)]:LOG_LEVEL:_default' \
+'--log-file=[Write structured logs to a dedicated log file]:LOG_FILE:_files' \
+'--dry-run[Dry run preview without modifying files on disk]' \
+'--safe-only[Only prune dead clones meeting strict closed-loop safety verification (default\: true)]' \
+'*-v[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'*--verbose[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'-q[Suppress all non-error output and diagnostics]' \
+'--quiet[Suppress all non-error output and diagnostics]' \
+'-h[Print help]' \
+'--help[Print help]' \
+'::directory -- Directory path to scan (default\: current directory):_files' \
+&& ret=0
+;;
+(diff)
+_arguments "${_arguments_options[@]}" : \
+'-d+[Directory path of the Git repository to scan (default\: current directory)]:DIRECTORY:_files' \
+'--directory=[Directory path of the Git repository to scan (default\: current directory)]:DIRECTORY:_files' \
+'-m+[Minimum token count to consider as duplicate clone]:MIN_TOKENS:_default' \
+'--min-tokens=[Minimum token count to consider as duplicate clone]:MIN_TOKENS:_default' \
+'-f+[Output report format (console, json, markdown, sarif)]:FORMAT:(console json markdown sarif ndjson)' \
+'--format=[Output report format (console, json, markdown, sarif)]:FORMAT:(console json markdown sarif ndjson)' \
+'--fail-threshold=[Exit with non-zero status code if duplication percentage exceeds threshold (0-100)]:FAIL_THRESHOLD:_default' \
+'*-l+[Specific language(s) to scan]:LANGUAGES:_default' \
+'*--languages=[Specific language(s) to scan]:LANGUAGES:_default' \
+'*-i+[Glob patterns to ignore]:IGNORE:_default' \
+'*--ignore=[Glob patterns to ignore]:IGNORE:_default' \
+'--cache-dir=[Custom path for persistent redb cache database (default\: .cddm/cache.db)]:CACHE_DIR:_files' \
+'--cddmignore=[Custom path to .cddmignore configuration file]:CDDMIGNORE:_files' \
+'--rules=[Path to custom architectural policy rules (.cddmrules.toml)]:RULES:_files' \
+'*--matrix=[Multi-branch clone drift matrix comparison across multiple revisions (comma-separated list)]:MATRIX:_default' \
+'--log-level=[Explicitly set the logging verbosity level (trace, debug, info, warn, error, off)]:LOG_LEVEL:_default' \
+'--log-file=[Write structured logs to a dedicated log file]:LOG_FILE:_files' \
+'--git-blame[Enable in-process git blame author & line age annotation]' \
+'--no-cache[Bypass persistent disk cache and force full re-scan]' \
+'--include-ignored[Include files and directories ignored by .gitignore]' \
+'--ignore-tests[Automatically filter test files and test directories]' \
+'--ignore-mocks[Automatically filter mock and fixture files]' \
+'--ignore-generated[Automatically filter auto-generated files with generator headers]' \
+'--enforce-policies[Enforce architectural policy rules (exit code 1 on error-level violations)]' \
+'--cross-language[Detect cross-language semantic clones across different programming languages]' \
+'*-v[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'*--verbose[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'-q[Suppress all non-error output and diagnostics]' \
+'--quiet[Suppress all non-error output and diagnostics]' \
+'-h[Print help]' \
+'--help[Print help]' \
+':base_ref -- Base Git revision to compare against (e.g. main, origin/main, HEAD~1):_default' \
+'::target_ref -- Target Git revision (default\: working directory / HEAD):_default' \
+&& ret=0
+;;
+(semantic)
+_arguments "${_arguments_options[@]}" : \
+'-t+[Minimum hybrid similarity threshold (0.0 to 1.0, default\: 0.70)]:THRESHOLD:_default' \
+'--threshold=[Minimum hybrid similarity threshold (0.0 to 1.0, default\: 0.70)]:THRESHOLD:_default' \
+'-m+[Minimum token count to consider as duplicate clone]:MIN_TOKENS:_default' \
+'--min-tokens=[Minimum token count to consider as duplicate clone]:MIN_TOKENS:_default' \
+'-f+[Output report format (console, json, markdown)]:FORMAT:(console json markdown sarif ndjson)' \
+'--format=[Output report format (console, json, markdown)]:FORMAT:(console json markdown sarif ndjson)' \
+'*-l+[Specific language(s) to scan]:LANGUAGES:_default' \
+'*--languages=[Specific language(s) to scan]:LANGUAGES:_default' \
+'*-i+[Glob patterns to ignore]:IGNORE:_default' \
+'*--ignore=[Glob patterns to ignore]:IGNORE:_default' \
+'--neural-threshold=[Minimum cosine similarity threshold for neural matching (default\: 0.85)]:NEURAL_THRESHOLD:_default' \
+'-j+[Maximum number of parallel worker threads to utilize (default\: all logical cores)]:THREADS:_default' \
+'--threads=[Maximum number of parallel worker threads to utilize (default\: all logical cores)]:THREADS:_default' \
+'--log-level=[Explicitly set the logging verbosity level (trace, debug, info, warn, error, off)]:LOG_LEVEL:_default' \
+'--log-file=[Write structured logs to a dedicated log file]:LOG_FILE:_files' \
+'--neural[Enable in-process dense neural code embedding equivalence scan]' \
+'--hnsw[Use Hierarchical Navigable Small World (HNSW) index for sub-linear logarithmic search]' \
+'--sq8[Use 8-bit scalar quantization (SQ8) for 4x vector memory reduction during search]' \
+'*-v[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'*--verbose[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'-q[Suppress all non-error output and diagnostics]' \
+'--quiet[Suppress all non-error output and diagnostics]' \
+'-h[Print help]' \
+'--help[Print help]' \
+'::directory -- Directory path to scan (default\: current directory):_files' \
+&& ret=0
+;;
+(refactor)
+_arguments "${_arguments_options[@]}" : \
+'-p+[1-based index of clone pair to refactor]:PAIR:_default' \
+'--pair=[1-based index of clone pair to refactor]:PAIR:_default' \
+'-c+[1-based index of clone cluster to refactor]:CLUSTER:_default' \
+'--cluster=[1-based index of clone cluster to refactor]:CLUSTER:_default' \
+'-m+[Minimum token count to consider as duplicate clone]:MIN_TOKENS:_default' \
+'--min-tokens=[Minimum token count to consider as duplicate clone]:MIN_TOKENS:_default' \
+'-o+[Output file path to write patch to (default\: stdout)]:OUTPUT:_files' \
+'--output=[Output file path to write patch to (default\: stdout)]:OUTPUT:_files' \
+'--fn-name=[Custom name for extracted function]:FN_NAME:_default' \
+'--target-module=[Target module path for extracted helper]:TARGET_MODULE:_default' \
+'--apply-branch=[Apply refactoring to dedicated Git branch]:APPLY_BRANCH:_default' \
+'--test-cmd=[Custom test command for verification]:TEST_CMD:_default' \
+'*-l+[Specific language(s) to scan]:LANGUAGES:_default' \
+'*--languages=[Specific language(s) to scan]:LANGUAGES:_default' \
+'*-i+[Glob patterns to ignore]:IGNORE:_default' \
+'*--ignore=[Glob patterns to ignore]:IGNORE:_default' \
+'--provider=[AI provider to use for streaming refactoring (gemini, claude, openai, ollama, custom, mock)]:PROVIDER:_default' \
+'--model=[AI model identifier to use]:MODEL:_default' \
+'--log-level=[Explicitly set the logging verbosity level (trace, debug, info, warn, error, off)]:LOG_LEVEL:_default' \
+'--log-file=[Write structured logs to a dedicated log file]:LOG_FILE:_files' \
+'--prompt[Generate formatted markdown prompt for AI refactoring agents]' \
+'--ast[Generate Tree-sitter AST-native code transformations]' \
+'--verify[Verify refactoring against test suite]' \
+'--stream[Stream AI token diff generation directly to terminal]' \
+'*-v[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'*--verbose[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'-q[Suppress all non-error output and diagnostics]' \
+'--quiet[Suppress all non-error output and diagnostics]' \
+'-h[Print help]' \
+'--help[Print help]' \
+'::directory -- Directory path to scan (default\: current directory):_files' \
+&& ret=0
+;;
+(extract)
+_arguments "${_arguments_options[@]}" : \
+'-p+[1-based index of clone pair to extract]:PAIR:_default' \
+'--pair=[1-based index of clone pair to extract]:PAIR:_default' \
+'-c+[1-based index of clone cluster to extract]:CLUSTER:_default' \
+'--cluster=[1-based index of clone cluster to extract]:CLUSTER:_default' \
+'-t+[Target destination path (e.g. \`crates/shared_utils\` or \`src/common/utils.rs\`)]:TARGET:_default' \
+'--target=[Target destination path (e.g. \`crates/shared_utils\` or \`src/common/utils.rs\`)]:TARGET:_default' \
+'--fn-name=[Custom extracted helper function name]:FN_NAME:_default' \
+'--crate-type=[Packaging strategy\: auto, crate, module, existing]:CRATE_TYPE:_default' \
+'-m+[Minimum token count for clone detection]:MIN_TOKENS:_default' \
+'--min-tokens=[Minimum token count for clone detection]:MIN_TOKENS:_default' \
+'--log-level=[Explicitly set the logging verbosity level (trace, debug, info, warn, error, off)]:LOG_LEVEL:_default' \
+'--log-file=[Write structured logs to a dedicated log file]:LOG_FILE:_files' \
+'--dry-run[Perform a dry-run preview without modifying files]' \
+'--apply[Commit and apply generated files, manifest updates, and caller rewrites]' \
+'--generate-tests[Automatically synthesize unit tests for the extracted helper]' \
+'--generate-benchmarks[Automatically synthesize performance micro-benchmarks for the extracted helper]' \
+'--bench[Automatically synthesize performance micro-benchmarks for the extracted helper]' \
+'*-v[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'*--verbose[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'-q[Suppress all non-error output and diagnostics]' \
+'--quiet[Suppress all non-error output and diagnostics]' \
+'-h[Print help]' \
+'--help[Print help]' \
+'::directory -- Directory path to scan (default\: current directory):_files' \
+&& ret=0
+;;
+(serve)
+_arguments "${_arguments_options[@]}" : \
+'-p+[Port to bind the WebUI HTTP and WebSocket server to]:PORT:_default' \
+'--port=[Port to bind the WebUI HTTP and WebSocket server to]:PORT:_default' \
+'--log-level=[Explicitly set the logging verbosity level (trace, debug, info, warn, error, off)]:LOG_LEVEL:_default' \
+'--log-file=[Write structured logs to a dedicated log file]:LOG_FILE:_files' \
+'-o[Automatically open WebUI in default web browser]' \
+'--open[Automatically open WebUI in default web browser]' \
+'*-v[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'*--verbose[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'-q[Suppress all non-error output and diagnostics]' \
+'--quiet[Suppress all non-error output and diagnostics]' \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
+(watch)
+_arguments "${_arguments_options[@]}" : \
+'-m+[Minimum token count to consider as duplicate clone]:MIN_TOKENS:_default' \
+'--min-tokens=[Minimum token count to consider as duplicate clone]:MIN_TOKENS:_default' \
+'*-l+[Specific language(s) to scan]:LANGUAGES:_default' \
+'*--languages=[Specific language(s) to scan]:LANGUAGES:_default' \
+'*-i+[Glob patterns to ignore]:IGNORE:_default' \
+'*--ignore=[Glob patterns to ignore]:IGNORE:_default' \
+'--cache-dir=[Custom path for persistent redb cache database (default\: .cddm/cache.db)]:CACHE_DIR:_files' \
+'-d+[Debounce delay in milliseconds before scanning on file changes]:DEBOUNCE_MS:_default' \
+'--debounce-ms=[Debounce delay in milliseconds before scanning on file changes]:DEBOUNCE_MS:_default' \
+'--fail-threshold=[Exit with non-zero status code if duplication percentage exceeds threshold (0-100)]:FAIL_THRESHOLD:_default' \
+'-s+[Optionally start embedded WebUI Studio server on specified port (default\: 3000)]::SERVE:_default' \
+'--serve=[Optionally start embedded WebUI Studio server on specified port (default\: 3000)]::SERVE:_default' \
+'-f+[Output report format (console, json, markdown, ndjson)]:FORMAT:(console json markdown sarif ndjson)' \
+'--format=[Output report format (console, json, markdown, ndjson)]:FORMAT:(console json markdown sarif ndjson)' \
+'--log-level=[Explicitly set the logging verbosity level (trace, debug, info, warn, error, off)]:LOG_LEVEL:_default' \
+'--log-file=[Write structured logs to a dedicated log file]:LOG_FILE:_files' \
+'--git-blame[Enable in-process git blame author & line age annotation]' \
+'--no-cache[Bypass persistent disk cache and force full re-scan]' \
+'-o[Automatically open WebUI in browser when --serve is enabled]' \
+'--open[Automatically open WebUI in browser when --serve is enabled]' \
+'--cross-language[Detect cross-language semantic clones across different programming languages]' \
+'*-v[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'*--verbose[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'-q[Suppress all non-error output and diagnostics]' \
+'--quiet[Suppress all non-error output and diagnostics]' \
+'-h[Print help]' \
+'--help[Print help]' \
+'::directory -- Directory path to watch (default\: current directory):_files' \
+&& ret=0
+;;
+(lsp)
+_arguments "${_arguments_options[@]}" : \
+'-m+[Minimum token count for clone detection]:MIN_TOKENS:_default' \
+'--min-tokens=[Minimum token count for clone detection]:MIN_TOKENS:_default' \
+'--log-level=[Explicitly set the logging verbosity level (trace, debug, info, warn, error, off)]:LOG_LEVEL:_default' \
+'--log-file=[Write structured logs to a dedicated log file]:LOG_FILE:_files' \
+'*-v[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'*--verbose[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'-q[Suppress all non-error output and diagnostics]' \
+'--quiet[Suppress all non-error output and diagnostics]' \
+'-h[Print help]' \
+'--help[Print help]' \
+'::directory -- Directory path to serve LSP for (default\: current directory):_files' \
+&& ret=0
+;;
+(trend)
+_arguments "${_arguments_options[@]}" : \
+'-s+[Maximum number of historical commit snapshots to sample (default\: 10)]:MAX_SAMPLES:_default' \
+'--max-samples=[Maximum number of historical commit snapshots to sample (default\: 10)]:MAX_SAMPLES:_default' \
+'-m+[Minimum token count to consider as duplicate clone]:MIN_TOKENS:_default' \
+'--min-tokens=[Minimum token count to consider as duplicate clone]:MIN_TOKENS:_default' \
+'-f+[Output report format (console, json, markdown)]:FORMAT:(console json markdown sarif ndjson)' \
+'--format=[Output report format (console, json, markdown)]:FORMAT:(console json markdown sarif ndjson)' \
+'--log-level=[Explicitly set the logging verbosity level (trace, debug, info, warn, error, off)]:LOG_LEVEL:_default' \
+'--log-file=[Write structured logs to a dedicated log file]:LOG_FILE:_files' \
+'*-v[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'*--verbose[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'-q[Suppress all non-error output and diagnostics]' \
+'--quiet[Suppress all non-error output and diagnostics]' \
+'-h[Print help]' \
+'--help[Print help]' \
+'::directory -- Directory path of Git repository (default\: current directory):_files' \
+&& ret=0
+;;
+(hook)
+_arguments "${_arguments_options[@]}" : \
+'--log-level=[Explicitly set the logging verbosity level (trace, debug, info, warn, error, off)]:LOG_LEVEL:_default' \
+'--log-file=[Write structured logs to a dedicated log file]:LOG_FILE:_files' \
+'*-v[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'*--verbose[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'-q[Suppress all non-error output and diagnostics]' \
+'--quiet[Suppress all non-error output and diagnostics]' \
+'-h[Print help]' \
+'--help[Print help]' \
+":: :_cddm__subcmd__hook_commands" \
+"*::: :->hook" \
+&& ret=0
+
+    case $state in
+    (hook)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:cddm-hook-command-$line[1]:"
+        case $line[1] in
+            (install)
+_arguments "${_arguments_options[@]}" : \
+'-t+[Hook type to install (pre-commit or pre-push)]:HOOK_TYPE:_default' \
+'--hook-type=[Hook type to install (pre-commit or pre-push)]:HOOK_TYPE:_default' \
+'--fail-threshold=[Duplication percentage threshold to fail on (default\: 15.0)]:FAIL_THRESHOLD:_default' \
+'-m+[Minimum token count for clone detection (default\: 50)]:MIN_TOKENS:_default' \
+'--min-tokens=[Minimum token count for clone detection (default\: 50)]:MIN_TOKENS:_default' \
+'--log-level=[Explicitly set the logging verbosity level (trace, debug, info, warn, error, off)]:LOG_LEVEL:_default' \
+'--log-file=[Write structured logs to a dedicated log file]:LOG_FILE:_files' \
+'*-v[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'*--verbose[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'-q[Suppress all non-error output and diagnostics]' \
+'--quiet[Suppress all non-error output and diagnostics]' \
+'-h[Print help]' \
+'--help[Print help]' \
+'::directory -- Repository root directory path (default\: current directory):_files' \
+&& ret=0
+;;
+(uninstall)
+_arguments "${_arguments_options[@]}" : \
+'-t+[Hook type to remove (pre-commit or pre-push)]:HOOK_TYPE:_default' \
+'--hook-type=[Hook type to remove (pre-commit or pre-push)]:HOOK_TYPE:_default' \
+'--log-level=[Explicitly set the logging verbosity level (trace, debug, info, warn, error, off)]:LOG_LEVEL:_default' \
+'--log-file=[Write structured logs to a dedicated log file]:LOG_FILE:_files' \
+'*-v[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'*--verbose[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'-q[Suppress all non-error output and diagnostics]' \
+'--quiet[Suppress all non-error output and diagnostics]' \
+'-h[Print help]' \
+'--help[Print help]' \
+'::directory -- Repository root directory path (default\: current directory):_files' \
+&& ret=0
+;;
+(status)
+_arguments "${_arguments_options[@]}" : \
+'--log-level=[Explicitly set the logging verbosity level (trace, debug, info, warn, error, off)]:LOG_LEVEL:_default' \
+'--log-file=[Write structured logs to a dedicated log file]:LOG_FILE:_files' \
+'*-v[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'*--verbose[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'-q[Suppress all non-error output and diagnostics]' \
+'--quiet[Suppress all non-error output and diagnostics]' \
+'-h[Print help]' \
+'--help[Print help]' \
+'::directory -- Repository root directory path (default\: current directory):_files' \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" : \
+":: :_cddm__subcmd__hook__subcmd__help_commands" \
+"*::: :->help" \
+&& ret=0
+
+    case $state in
+    (help)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:cddm-hook-help-command-$line[1]:"
+        case $line[1] in
+            (install)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(uninstall)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(status)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+        esac
+    ;;
+esac
+;;
+(ignore)
+_arguments "${_arguments_options[@]}" : \
+'--log-level=[Explicitly set the logging verbosity level (trace, debug, info, warn, error, off)]:LOG_LEVEL:_default' \
+'--log-file=[Write structured logs to a dedicated log file]:LOG_FILE:_files' \
+'*-v[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'*--verbose[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'-q[Suppress all non-error output and diagnostics]' \
+'--quiet[Suppress all non-error output and diagnostics]' \
+'-h[Print help]' \
+'--help[Print help]' \
+":: :_cddm__subcmd__ignore_commands" \
+"*::: :->ignore" \
+&& ret=0
+
+    case $state in
+    (ignore)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:cddm-ignore-command-$line[1]:"
+        case $line[1] in
+            (init)
+_arguments "${_arguments_options[@]}" : \
+'--log-level=[Explicitly set the logging verbosity level (trace, debug, info, warn, error, off)]:LOG_LEVEL:_default' \
+'--log-file=[Write structured logs to a dedicated log file]:LOG_FILE:_files' \
+'-f[Overwrite existing .cddmignore file if present]' \
+'--force[Overwrite existing .cddmignore file if present]' \
+'*-v[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'*--verbose[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'-q[Suppress all non-error output and diagnostics]' \
+'--quiet[Suppress all non-error output and diagnostics]' \
+'-h[Print help]' \
+'--help[Print help]' \
+'::directory -- Target directory path to create .cddmignore in (default\: current directory):_files' \
+&& ret=0
+;;
+(check)
+_arguments "${_arguments_options[@]}" : \
+'-l+[Optional 1-based line number to check for inline suppression directives]:LINE:_default' \
+'--line=[Optional 1-based line number to check for inline suppression directives]:LINE:_default' \
+'--cddmignore=[Path to custom .cddmignore file]:CDDMIGNORE:_files' \
+'--log-level=[Explicitly set the logging verbosity level (trace, debug, info, warn, error, off)]:LOG_LEVEL:_default' \
+'--log-file=[Write structured logs to a dedicated log file]:LOG_FILE:_files' \
+'--ignore-tests[Check with test file suppression enabled]' \
+'--ignore-mocks[Check with mock file suppression enabled]' \
+'--ignore-generated[Check with generated file suppression enabled]' \
+'*-v[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'*--verbose[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'-q[Suppress all non-error output and diagnostics]' \
+'--quiet[Suppress all non-error output and diagnostics]' \
+'-h[Print help]' \
+'--help[Print help]' \
+':path -- Target file path to check:_files' \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" : \
+":: :_cddm__subcmd__ignore__subcmd__help_commands" \
+"*::: :->help" \
+&& ret=0
+
+    case $state in
+    (help)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:cddm-ignore-help-command-$line[1]:"
+        case $line[1] in
+            (init)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(check)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+        esac
+    ;;
+esac
+;;
+(rules)
+_arguments "${_arguments_options[@]}" : \
+'--log-level=[Explicitly set the logging verbosity level (trace, debug, info, warn, error, off)]:LOG_LEVEL:_default' \
+'--log-file=[Write structured logs to a dedicated log file]:LOG_FILE:_files' \
+'*-v[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'*--verbose[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'-q[Suppress all non-error output and diagnostics]' \
+'--quiet[Suppress all non-error output and diagnostics]' \
+'-h[Print help]' \
+'--help[Print help]' \
+":: :_cddm__subcmd__rules_commands" \
+"*::: :->rules" \
+&& ret=0
+
+    case $state in
+    (rules)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:cddm-rules-command-$line[1]:"
+        case $line[1] in
+            (init)
+_arguments "${_arguments_options[@]}" : \
+'-o+[Target output file path (default\: .cddmrules.toml)]:OUTPUT:_files' \
+'--output=[Target output file path (default\: .cddmrules.toml)]:OUTPUT:_files' \
+'--log-level=[Explicitly set the logging verbosity level (trace, debug, info, warn, error, off)]:LOG_LEVEL:_default' \
+'--log-file=[Write structured logs to a dedicated log file]:LOG_FILE:_files' \
+'-f[Overwrite existing file if present]' \
+'--force[Overwrite existing file if present]' \
+'--write[Write directly to disk (default\: true)]' \
+'*-v[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'*--verbose[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'-q[Suppress all non-error output and diagnostics]' \
+'--quiet[Suppress all non-error output and diagnostics]' \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
+(check)
+_arguments "${_arguments_options[@]}" : \
+'-r+[Custom path to .cddmrules.toml file]:RULES:_files' \
+'--rules=[Custom path to .cddmrules.toml file]:RULES:_files' \
+'-m+[Minimum token count for clone detection]:MIN_TOKENS:_default' \
+'--min-tokens=[Minimum token count for clone detection]:MIN_TOKENS:_default' \
+'-f+[Output report format (console, json, markdown)]:FORMAT:(console json markdown sarif ndjson)' \
+'--format=[Output report format (console, json, markdown)]:FORMAT:(console json markdown sarif ndjson)' \
+'--log-level=[Explicitly set the logging verbosity level (trace, debug, info, warn, error, off)]:LOG_LEVEL:_default' \
+'--log-file=[Write structured logs to a dedicated log file]:LOG_FILE:_files' \
+'--enforce-policies[Exit with non-zero code if any policy violations exist]' \
+'--summary[Output compact summary report to conserve terminal/token output]' \
+'*-v[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'*--verbose[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'-q[Suppress all non-error output and diagnostics]' \
+'--quiet[Suppress all non-error output and diagnostics]' \
+'-h[Print help]' \
+'--help[Print help]' \
+'::directory -- Target directory to scan (default\: current directory):_files' \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" : \
+":: :_cddm__subcmd__rules__subcmd__help_commands" \
+"*::: :->help" \
+&& ret=0
+
+    case $state in
+    (help)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:cddm-rules-help-command-$line[1]:"
+        case $line[1] in
+            (init)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(check)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+        esac
+    ;;
+esac
+;;
+(init)
+_arguments "${_arguments_options[@]}" : \
+'--fail-threshold=[Duplication percentage threshold to fail on (default\: 15.0)]:FAIL_THRESHOLD:_default' \
+'-m+[Minimum token count for clone detection (default\: 50)]:MIN_TOKENS:_default' \
+'--min-tokens=[Minimum token count for clone detection (default\: 50)]:MIN_TOKENS:_default' \
+'-o+[Output file path (defaults to standard platform config file)]:OUTPUT:_files' \
+'--output=[Output file path (defaults to standard platform config file)]:OUTPUT:_files' \
+'--log-level=[Explicitly set the logging verbosity level (trace, debug, info, warn, error, off)]:LOG_LEVEL:_default' \
+'--log-file=[Write structured logs to a dedicated log file]:LOG_FILE:_files' \
+'-w[Write directly to disk (default\: print to stdout unless --write or output specified)]' \
+'--write[Write directly to disk (default\: print to stdout unless --write or output specified)]' \
+'*-v[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'*--verbose[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'-q[Suppress all non-error output and diagnostics]' \
+'--quiet[Suppress all non-error output and diagnostics]' \
+'-h[Print help]' \
+'--help[Print help]' \
+'::platform -- Target CI/CD platform\: github, gitlab, or azure:(gitea github gitlab azure)' \
+&& ret=0
+;;
+(comment)
+_arguments "${_arguments_options[@]}" : \
+'-m+[Minimum token count to consider as duplicate clone]:MIN_TOKENS:_default' \
+'--min-tokens=[Minimum token count to consider as duplicate clone]:MIN_TOKENS:_default' \
+'--fail-threshold=[Duplication percentage threshold to fail on (default\: 15.0)]:FAIL_THRESHOLD:_default' \
+'-p+[Target CI/CD platform format\: github, gitlab, or azure]:PLATFORM:(gitea github gitlab azure)' \
+'--platform=[Target CI/CD platform format\: github, gitlab, or azure]:PLATFORM:(gitea github gitlab azure)' \
+'-o+[Output file path to write Markdown comment to (default\: stdout)]:OUTPUT:_files' \
+'--output=[Output file path to write Markdown comment to (default\: stdout)]:OUTPUT:_files' \
+'--log-level=[Explicitly set the logging verbosity level (trace, debug, info, warn, error, off)]:LOG_LEVEL:_default' \
+'--log-file=[Write structured logs to a dedicated log file]:LOG_FILE:_files' \
+'*-v[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'*--verbose[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'-q[Suppress all non-error output and diagnostics]' \
+'--quiet[Suppress all non-error output and diagnostics]' \
+'-h[Print help]' \
+'--help[Print help]' \
+'::directory -- Directory path to scan (default\: current directory):_files' \
+&& ret=0
+;;
+(heal)
+_arguments "${_arguments_options[@]}" : \
+'-c+[Target clone cluster index to heal]:CLUSTER:_default' \
+'--cluster=[Target clone cluster index to heal]:CLUSTER:_default' \
+'-p+[Target clone pair index to heal]:PAIR:_default' \
+'--pair=[Target clone pair index to heal]:PAIR:_default' \
+'--provider=[AI Provider backend (gemini, claude, openai, ollama, mock)]:PROVIDER:_default' \
+'--model=[Model identifier name (e.g. gemini-3.8-pro, claude-3-7-sonnet, gpt-4o, qwen2.5-coder)]:MODEL:_default' \
+'--api-key=[Secret API key for authentication]:API_KEY:_default' \
+'--endpoint=[Custom endpoint URL (e.g. http\://localhost\:11434 for Ollama)]:ENDPOINT:_default' \
+'-i+[Maximum healing repair iterations]:MAX_ITERATIONS:_default' \
+'--max-iterations=[Maximum healing repair iterations]:MAX_ITERATIONS:_default' \
+'--test-cmd=[Custom test command (e.g. "cargo test", "bun test")]:TEST_CMD:_default' \
+'--branch=[Apply passing refactoring to dedicated Git branch]:BRANCH:_default' \
+'--fn-name=[Custom extracted function name]:FN_NAME:_default' \
+'--target-module=[Target module path for helper function]:TARGET_MODULE:_default' \
+'--custom-instructions=[Custom instructions or architectural constraints for the AI]:CUSTOM_INSTRUCTIONS:_default' \
+'-m+[Minimum token count for clone detection]:MIN_TOKENS:_default' \
+'--min-tokens=[Minimum token count for clone detection]:MIN_TOKENS:_default' \
+'--log-level=[Explicitly set the logging verbosity level (trace, debug, info, warn, error, off)]:LOG_LEVEL:_default' \
+'--log-file=[Write structured logs to a dedicated log file]:LOG_FILE:_files' \
+'--verify[Verify refactoring against test suite]' \
+'*-v[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'*--verbose[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'-q[Suppress all non-error output and diagnostics]' \
+'--quiet[Suppress all non-error output and diagnostics]' \
+'-h[Print help]' \
+'--help[Print help]' \
+'::directory -- Directory path to scan (default\: current directory):_files' \
+&& ret=0
+;;
+(cache)
+_arguments "${_arguments_options[@]}" : \
+'--log-level=[Explicitly set the logging verbosity level (trace, debug, info, warn, error, off)]:LOG_LEVEL:_default' \
+'--log-file=[Write structured logs to a dedicated log file]:LOG_FILE:_files' \
+'*-v[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'*--verbose[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'-q[Suppress all non-error output and diagnostics]' \
+'--quiet[Suppress all non-error output and diagnostics]' \
+'-h[Print help]' \
+'--help[Print help]' \
+":: :_cddm__subcmd__cache_commands" \
+"*::: :->cache" \
+&& ret=0
+
+    case $state in
+    (cache)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:cddm-cache-command-$line[1]:"
+        case $line[1] in
+            (export)
+_arguments "${_arguments_options[@]}" : \
+'--cache-dir=[Custom path to cache database (default\: .cddm/cache.db)]:CACHE_DIR:_files' \
+'-o+[Output pack archive file path (default\: cddm-cache.cddmpack)]:OUTPUT:_files' \
+'--output=[Output pack archive file path (default\: cddm-cache.cddmpack)]:OUTPUT:_files' \
+'--log-level=[Explicitly set the logging verbosity level (trace, debug, info, warn, error, off)]:LOG_LEVEL:_default' \
+'--log-file=[Write structured logs to a dedicated log file]:LOG_FILE:_files' \
+'*-v[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'*--verbose[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'-q[Suppress all non-error output and diagnostics]' \
+'--quiet[Suppress all non-error output and diagnostics]' \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
+(import)
+_arguments "${_arguments_options[@]}" : \
+'--target-dir=[Target cache directory to populate (default\: .cddm)]:TARGET_DIR:_files' \
+'--log-level=[Explicitly set the logging verbosity level (trace, debug, info, warn, error, off)]:LOG_LEVEL:_default' \
+'--log-file=[Write structured logs to a dedicated log file]:LOG_FILE:_files' \
+'*-v[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'*--verbose[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'-q[Suppress all non-error output and diagnostics]' \
+'--quiet[Suppress all non-error output and diagnostics]' \
+'-h[Print help]' \
+'--help[Print help]' \
+':pack_file -- Path to .cddmpack archive file to import:_files' \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" : \
+":: :_cddm__subcmd__cache__subcmd__help_commands" \
+"*::: :->help" \
+&& ret=0
+
+    case $state in
+    (help)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:cddm-cache-help-command-$line[1]:"
+        case $line[1] in
+            (export)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(import)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+        esac
+    ;;
+esac
+;;
+(monorepo)
+_arguments "${_arguments_options[@]}" : \
+'-m+[Minimum token count to consider as duplicate clone]:MIN_TOKENS:_default' \
+'--min-tokens=[Minimum token count to consider as duplicate clone]:MIN_TOKENS:_default' \
+'--log-level=[Explicitly set the logging verbosity level (trace, debug, info, warn, error, off)]:LOG_LEVEL:_default' \
+'--log-file=[Write structured logs to a dedicated log file]:LOG_FILE:_files' \
+'*-v[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'*--verbose[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'-q[Suppress all non-error output and diagnostics]' \
+'--quiet[Suppress all non-error output and diagnostics]' \
+'-h[Print help]' \
+'--help[Print help]' \
+'::directory -- Root directory of monorepo (default\: current directory):_files' \
+&& ret=0
+;;
+(tui)
+_arguments "${_arguments_options[@]}" : \
+'-m+[Minimum token count to consider as duplicate clone]:MIN_TOKENS:_default' \
+'--min-tokens=[Minimum token count to consider as duplicate clone]:MIN_TOKENS:_default' \
+'--fail-threshold=[Exit with non-zero status code if duplication percentage exceeds threshold (0-100)]:FAIL_THRESHOLD:_default' \
+'*-l+[Specific language(s) to scan]:LANGUAGES:_default' \
+'*--languages=[Specific language(s) to scan]:LANGUAGES:_default' \
+'*-i+[Glob patterns to ignore]:IGNORE:_default' \
+'*--ignore=[Glob patterns to ignore]:IGNORE:_default' \
+'--log-level=[Explicitly set the logging verbosity level (trace, debug, info, warn, error, off)]:LOG_LEVEL:_default' \
+'--log-file=[Write structured logs to a dedicated log file]:LOG_FILE:_files' \
+'-w[Enable live watch mode for real-time rescanning on file changes]' \
+'--watch[Enable live watch mode for real-time rescanning on file changes]' \
+'*-v[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'*--verbose[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'-q[Suppress all non-error output and diagnostics]' \
+'--quiet[Suppress all non-error output and diagnostics]' \
+'-h[Print help]' \
+'--help[Print help]' \
+'::directory -- Directory path to scan (default\: current directory):_files' \
+&& ret=0
+;;
+(overlap)
+_arguments "${_arguments_options[@]}" : \
+'-t+[Confidence threshold for library overlap detection (0.0 to 1.0)]:THRESHOLD:_default' \
+'--threshold=[Confidence threshold for library overlap detection (0.0 to 1.0)]:THRESHOLD:_default' \
+'-f+[Output format (console, json, markdown)]:FORMAT:_default' \
+'--format=[Output format (console, json, markdown)]:FORMAT:_default' \
+'--log-level=[Explicitly set the logging verbosity level (trace, debug, info, warn, error, off)]:LOG_LEVEL:_default' \
+'--log-file=[Write structured logs to a dedicated log file]:LOG_FILE:_files' \
+'*-v[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'*--verbose[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'-q[Suppress all non-error output and diagnostics]' \
+'--quiet[Suppress all non-error output and diagnostics]' \
+'-h[Print help]' \
+'--help[Print help]' \
+'::directory -- Directory path to scan (default\: current directory):_files' \
+&& ret=0
+;;
+(hub)
+_arguments "${_arguments_options[@]}" : \
+'--log-level=[Explicitly set the logging verbosity level (trace, debug, info, warn, error, off)]:LOG_LEVEL:_default' \
+'--log-file=[Write structured logs to a dedicated log file]:LOG_FILE:_files' \
+'*-v[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'*--verbose[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'-q[Suppress all non-error output and diagnostics]' \
+'--quiet[Suppress all non-error output and diagnostics]' \
+'-h[Print help]' \
+'--help[Print help]' \
+":: :_cddm__subcmd__hub_commands" \
+"*::: :->hub" \
+&& ret=0
+
+    case $state in
+    (hub)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:cddm-hub-command-$line[1]:"
+        case $line[1] in
+            (init)
+_arguments "${_arguments_options[@]}" : \
+'-c+[Custom configuration file path (default\: .cddmhub.toml)]:CONFIG:_files' \
+'--config=[Custom configuration file path (default\: .cddmhub.toml)]:CONFIG:_files' \
+'-n+[Organization or hub name]:NAME:_default' \
+'--name=[Organization or hub name]:NAME:_default' \
+'--log-level=[Explicitly set the logging verbosity level (trace, debug, info, warn, error, off)]:LOG_LEVEL:_default' \
+'--log-file=[Write structured logs to a dedicated log file]:LOG_FILE:_files' \
+'*-v[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'*--verbose[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'-q[Suppress all non-error output and diagnostics]' \
+'--quiet[Suppress all non-error output and diagnostics]' \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
+(scan)
+_arguments "${_arguments_options[@]}" : \
+'-f+[Output format (console, json, markdown)]:FORMAT:_default' \
+'--format=[Output format (console, json, markdown)]:FORMAT:_default' \
+'-m+[Minimum token count]:MIN_TOKENS:_default' \
+'--min-tokens=[Minimum token count]:MIN_TOKENS:_default' \
+'--log-level=[Explicitly set the logging verbosity level (trace, debug, info, warn, error, off)]:LOG_LEVEL:_default' \
+'--log-file=[Write structured logs to a dedicated log file]:LOG_FILE:_files' \
+'*-v[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'*--verbose[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'-q[Suppress all non-error output and diagnostics]' \
+'--quiet[Suppress all non-error output and diagnostics]' \
+'-h[Print help]' \
+'--help[Print help]' \
+'*::targets -- Configuration file path or repository directories to scan:_default' \
+&& ret=0
+;;
+(extract)
+_arguments "${_arguments_options[@]}" : \
+'-C+[Configuration file path (default\: .cddmhub.toml)]:CONFIG:_files' \
+'--config=[Configuration file path (default\: .cddmhub.toml)]:CONFIG:_files' \
+'-c+[Cluster index to extract]:CLUSTER:_default' \
+'--cluster=[Cluster index to extract]:CLUSTER:_default' \
+'-n+[Target package name (e.g. @org/shared-utils or cddm-shared-common)]:PKG_NAME:_default' \
+'--pkg-name=[Target package name (e.g. @org/shared-utils or cddm-shared-common)]:PKG_NAME:_default' \
+'-t+[Target package ecosystem (npm, cargo, pypi, go)]:PKG_TYPE:_default' \
+'--pkg-type=[Target package ecosystem (npm, cargo, pypi, go)]:PKG_TYPE:_default' \
+'-d+[Destination directory path for the new standalone package]:TARGET_DIR:_default' \
+'--target-dir=[Destination directory path for the new standalone package]:TARGET_DIR:_default' \
+'--log-level=[Explicitly set the logging verbosity level (trace, debug, info, warn, error, off)]:LOG_LEVEL:_default' \
+'--log-file=[Write structured logs to a dedicated log file]:LOG_FILE:_files' \
+'--dry-run[Dry run preview without writing changes to disk]' \
+'*-v[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'*--verbose[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'-q[Suppress all non-error output and diagnostics]' \
+'--quiet[Suppress all non-error output and diagnostics]' \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
+(sync)
+_arguments "${_arguments_options[@]}" : \
+'-c+[Custom configuration file path (default\: .cddmhub.toml)]:CONFIG:_files' \
+'--config=[Custom configuration file path (default\: .cddmhub.toml)]:CONFIG:_files' \
+'-e+[Remote peering endpoint URL (HTTPS/gRPC)]:ENDPOINT:_default' \
+'--endpoint=[Remote peering endpoint URL (HTTPS/gRPC)]:ENDPOINT:_default' \
+'-r+[Local repository name (defaults to directory name)]:REPO:_default' \
+'--repo=[Local repository name (defaults to directory name)]:REPO:_default' \
+'-s+[Cryptographic privacy salt (shared secret for organization hashing)]:SALT:_default' \
+'--salt=[Cryptographic privacy salt (shared secret for organization hashing)]:SALT:_default' \
+'-f+[Output format (console, json)]:FORMAT:_default' \
+'--format=[Output format (console, json)]:FORMAT:_default' \
+'--log-level=[Explicitly set the logging verbosity level (trace, debug, info, warn, error, off)]:LOG_LEVEL:_default' \
+'--log-file=[Write structured logs to a dedicated log file]:LOG_FILE:_files' \
+'--dry-run[Dry run preview without transmitting or saving cache packs]' \
+'*-v[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'*--verbose[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'-q[Suppress all non-error output and diagnostics]' \
+'--quiet[Suppress all non-error output and diagnostics]' \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" : \
+":: :_cddm__subcmd__hub__subcmd__help_commands" \
+"*::: :->help" \
+&& ret=0
+
+    case $state in
+    (help)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:cddm-hub-help-command-$line[1]:"
+        case $line[1] in
+            (init)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(scan)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(extract)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(sync)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+        esac
+    ;;
+esac
+;;
+(coverage)
+_arguments "${_arguments_options[@]}" : \
+'-r+[Path to coverage tracefile (e.g. lcov.info, coverage.xml, coverage-final.json)]:REPORT:_files' \
+'--report=[Path to coverage tracefile (e.g. lcov.info, coverage.xml, coverage-final.json)]:REPORT:_files' \
+'-m+[Minimum token count to consider as duplicate clone]:MIN_TOKENS:_default' \
+'--min-tokens=[Minimum token count to consider as duplicate clone]:MIN_TOKENS:_default' \
+'-f+[Output report format (console, json, markdown)]:FORMAT:_default' \
+'--format=[Output report format (console, json, markdown)]:FORMAT:_default' \
+'--min-hits=[Filter clones by minimum combined runtime execution hits]:MIN_HITS:_default' \
+'--risk-threshold=[Filter clones exceeding this risk score threshold (0-100)]:RISK_THRESHOLD:_default' \
+'--log-level=[Explicitly set the logging verbosity level (trace, debug, info, warn, error, off)]:LOG_LEVEL:_default' \
+'--log-file=[Write structured logs to a dedicated log file]:LOG_FILE:_files' \
+'--dead-code-only[Show only dead code duplicates (0 runtime executions across all sites)]' \
+'*-v[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'*--verbose[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'-q[Suppress all non-error output and diagnostics]' \
+'--quiet[Suppress all non-error output and diagnostics]' \
+'-h[Print help]' \
+'--help[Print help]' \
+'::directory -- Directory path to scan (default\: current directory):_files' \
+&& ret=0
+;;
+(completions)
+_arguments "${_arguments_options[@]}" : \
+'--log-level=[Explicitly set the logging verbosity level (trace, debug, info, warn, error, off)]:LOG_LEVEL:_default' \
+'--log-file=[Write structured logs to a dedicated log file]:LOG_FILE:_files' \
+'*-v[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'*--verbose[Enable verbose debug logging output (-v for debug, -vv for trace)]' \
+'-q[Suppress all non-error output and diagnostics]' \
+'--quiet[Suppress all non-error output and diagnostics]' \
+'-h[Print help]' \
+'--help[Print help]' \
+':shell -- Target shell for completion script (bash, elvish, fish, powershell, zsh):(bash elvish fish powershell zsh)' \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" : \
+":: :_cddm__subcmd__help_commands" \
+"*::: :->help" \
+&& ret=0
+
+    case $state in
+    (help)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:cddm-help-command-$line[1]:"
+        case $line[1] in
+            (scan)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(dead-code)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(prune)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(diff)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(semantic)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(refactor)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(extract)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(serve)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(watch)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(lsp)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(trend)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(hook)
+_arguments "${_arguments_options[@]}" : \
+":: :_cddm__subcmd__help__subcmd__hook_commands" \
+"*::: :->hook" \
+&& ret=0
+
+    case $state in
+    (hook)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:cddm-help-hook-command-$line[1]:"
+        case $line[1] in
+            (install)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(uninstall)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(status)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+(ignore)
+_arguments "${_arguments_options[@]}" : \
+":: :_cddm__subcmd__help__subcmd__ignore_commands" \
+"*::: :->ignore" \
+&& ret=0
+
+    case $state in
+    (ignore)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:cddm-help-ignore-command-$line[1]:"
+        case $line[1] in
+            (init)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(check)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+(rules)
+_arguments "${_arguments_options[@]}" : \
+":: :_cddm__subcmd__help__subcmd__rules_commands" \
+"*::: :->rules" \
+&& ret=0
+
+    case $state in
+    (rules)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:cddm-help-rules-command-$line[1]:"
+        case $line[1] in
+            (init)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(check)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+(init)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(comment)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(heal)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(cache)
+_arguments "${_arguments_options[@]}" : \
+":: :_cddm__subcmd__help__subcmd__cache_commands" \
+"*::: :->cache" \
+&& ret=0
+
+    case $state in
+    (cache)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:cddm-help-cache-command-$line[1]:"
+        case $line[1] in
+            (export)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(import)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+(monorepo)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(tui)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(overlap)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(hub)
+_arguments "${_arguments_options[@]}" : \
+":: :_cddm__subcmd__help__subcmd__hub_commands" \
+"*::: :->hub" \
+&& ret=0
+
+    case $state in
+    (hub)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:cddm-help-hub-command-$line[1]:"
+        case $line[1] in
+            (init)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(scan)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(extract)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(sync)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+(coverage)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(completions)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+        esac
+    ;;
+esac
+}
+
+(( $+functions[_cddm_commands] )) ||
+_cddm_commands() {
+    local commands; commands=(
+'scan:Scan target directory for code duplication & DRY health score' \
+'dead-code:Detect unreferenced functions, unreachable blocks, and dead code duplicates' \
+'prune:Automatically prune unreachable dead clone clusters and unreferenced code' \
+'diff:Differential duplication scan comparing current changes against a Git base revision' \
+'semantic:Analyze cross-language semantic clones & Weisfeiler-Lehman graph isomorphisms' \
+'refactor:Synthesize automated refactoring suggestions for duplicate clone pairs' \
+'extract:Extract duplicate code into a standalone shared crate or module' \
+'serve:Launch interactive WebUI dashboard in browser' \
+'watch:Watch directory and trigger continuous real-time clone analysis on file save' \
+'lsp:Run Language Server Protocol (LSP) server for live IDE diagnostic squiggles' \
+'trend:Analyze historical duplication trends across Git commit history' \
+'hook:Manage local Git hooks (pre-commit / pre-push) for automated duplication gate enforcement' \
+'ignore:Manage .cddmignore rules and test path suppression matching' \
+'rules:Manage architectural policy rules (.cddmrules.toml)' \
+'init:Generate turnkey CI/CD workflow configurations (GitHub Actions, GitLab CI, Azure Pipelines)' \
+'comment:Generate formatted Markdown summary comment for Pull Requests / Merge Requests' \
+'heal:Autonomous AI Code Surgeon refactoring with closed-loop test healing' \
+'cache:Manage persistent fingerprint cache and export/import .cddmpack archives' \
+'monorepo:Discover and scan monorepos with multi-workspace packages' \
+'tui:Launch interactive Terminal UI (TUI) Studio dashboard' \
+'overlap:Detect reimplemented ecosystem library algorithms and suggest standard packages' \
+'hub:Manage and scan multi-repository Organization Federation Hub (.cddmhub.toml)' \
+'coverage:Dynamic runtime execution & coverage-aware de-duplication analysis' \
+'completions:Generate shell completion scripts for Bash, Zsh, Fish, PowerShell, or Elvish' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'cddm commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__cache_commands] )) ||
+_cddm__subcmd__cache_commands() {
+    local commands; commands=(
+'export:Export persistent cache database to a portable .cddmpack archive' \
+'import:Import a portable .cddmpack archive into persistent cache database' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'cddm cache commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__cache__subcmd__export_commands] )) ||
+_cddm__subcmd__cache__subcmd__export_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm cache export commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__cache__subcmd__help_commands] )) ||
+_cddm__subcmd__cache__subcmd__help_commands() {
+    local commands; commands=(
+'export:Export persistent cache database to a portable .cddmpack archive' \
+'import:Import a portable .cddmpack archive into persistent cache database' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'cddm cache help commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__cache__subcmd__help__subcmd__export_commands] )) ||
+_cddm__subcmd__cache__subcmd__help__subcmd__export_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm cache help export commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__cache__subcmd__help__subcmd__help_commands] )) ||
+_cddm__subcmd__cache__subcmd__help__subcmd__help_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm cache help help commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__cache__subcmd__help__subcmd__import_commands] )) ||
+_cddm__subcmd__cache__subcmd__help__subcmd__import_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm cache help import commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__cache__subcmd__import_commands] )) ||
+_cddm__subcmd__cache__subcmd__import_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm cache import commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__comment_commands] )) ||
+_cddm__subcmd__comment_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm comment commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__completions_commands] )) ||
+_cddm__subcmd__completions_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm completions commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__coverage_commands] )) ||
+_cddm__subcmd__coverage_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm coverage commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__dead-code_commands] )) ||
+_cddm__subcmd__dead-code_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm dead-code commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__diff_commands] )) ||
+_cddm__subcmd__diff_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm diff commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__extract_commands] )) ||
+_cddm__subcmd__extract_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm extract commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__heal_commands] )) ||
+_cddm__subcmd__heal_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm heal commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__help_commands] )) ||
+_cddm__subcmd__help_commands() {
+    local commands; commands=(
+'scan:Scan target directory for code duplication & DRY health score' \
+'dead-code:Detect unreferenced functions, unreachable blocks, and dead code duplicates' \
+'prune:Automatically prune unreachable dead clone clusters and unreferenced code' \
+'diff:Differential duplication scan comparing current changes against a Git base revision' \
+'semantic:Analyze cross-language semantic clones & Weisfeiler-Lehman graph isomorphisms' \
+'refactor:Synthesize automated refactoring suggestions for duplicate clone pairs' \
+'extract:Extract duplicate code into a standalone shared crate or module' \
+'serve:Launch interactive WebUI dashboard in browser' \
+'watch:Watch directory and trigger continuous real-time clone analysis on file save' \
+'lsp:Run Language Server Protocol (LSP) server for live IDE diagnostic squiggles' \
+'trend:Analyze historical duplication trends across Git commit history' \
+'hook:Manage local Git hooks (pre-commit / pre-push) for automated duplication gate enforcement' \
+'ignore:Manage .cddmignore rules and test path suppression matching' \
+'rules:Manage architectural policy rules (.cddmrules.toml)' \
+'init:Generate turnkey CI/CD workflow configurations (GitHub Actions, GitLab CI, Azure Pipelines)' \
+'comment:Generate formatted Markdown summary comment for Pull Requests / Merge Requests' \
+'heal:Autonomous AI Code Surgeon refactoring with closed-loop test healing' \
+'cache:Manage persistent fingerprint cache and export/import .cddmpack archives' \
+'monorepo:Discover and scan monorepos with multi-workspace packages' \
+'tui:Launch interactive Terminal UI (TUI) Studio dashboard' \
+'overlap:Detect reimplemented ecosystem library algorithms and suggest standard packages' \
+'hub:Manage and scan multi-repository Organization Federation Hub (.cddmhub.toml)' \
+'coverage:Dynamic runtime execution & coverage-aware de-duplication analysis' \
+'completions:Generate shell completion scripts for Bash, Zsh, Fish, PowerShell, or Elvish' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'cddm help commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__help__subcmd__cache_commands] )) ||
+_cddm__subcmd__help__subcmd__cache_commands() {
+    local commands; commands=(
+'export:Export persistent cache database to a portable .cddmpack archive' \
+'import:Import a portable .cddmpack archive into persistent cache database' \
+    )
+    _describe -t commands 'cddm help cache commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__help__subcmd__cache__subcmd__export_commands] )) ||
+_cddm__subcmd__help__subcmd__cache__subcmd__export_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm help cache export commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__help__subcmd__cache__subcmd__import_commands] )) ||
+_cddm__subcmd__help__subcmd__cache__subcmd__import_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm help cache import commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__help__subcmd__comment_commands] )) ||
+_cddm__subcmd__help__subcmd__comment_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm help comment commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__help__subcmd__completions_commands] )) ||
+_cddm__subcmd__help__subcmd__completions_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm help completions commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__help__subcmd__coverage_commands] )) ||
+_cddm__subcmd__help__subcmd__coverage_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm help coverage commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__help__subcmd__dead-code_commands] )) ||
+_cddm__subcmd__help__subcmd__dead-code_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm help dead-code commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__help__subcmd__diff_commands] )) ||
+_cddm__subcmd__help__subcmd__diff_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm help diff commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__help__subcmd__extract_commands] )) ||
+_cddm__subcmd__help__subcmd__extract_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm help extract commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__help__subcmd__heal_commands] )) ||
+_cddm__subcmd__help__subcmd__heal_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm help heal commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__help__subcmd__help_commands] )) ||
+_cddm__subcmd__help__subcmd__help_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm help help commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__help__subcmd__hook_commands] )) ||
+_cddm__subcmd__help__subcmd__hook_commands() {
+    local commands; commands=(
+'install:Install a Git hook enforcing code duplication thresholds' \
+'uninstall:Uninstall an existing CDDM Git hook' \
+'status:Check current installation status of Git hooks' \
+    )
+    _describe -t commands 'cddm help hook commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__help__subcmd__hook__subcmd__install_commands] )) ||
+_cddm__subcmd__help__subcmd__hook__subcmd__install_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm help hook install commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__help__subcmd__hook__subcmd__status_commands] )) ||
+_cddm__subcmd__help__subcmd__hook__subcmd__status_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm help hook status commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__help__subcmd__hook__subcmd__uninstall_commands] )) ||
+_cddm__subcmd__help__subcmd__hook__subcmd__uninstall_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm help hook uninstall commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__help__subcmd__hub_commands] )) ||
+_cddm__subcmd__help__subcmd__hub_commands() {
+    local commands; commands=(
+'init:Initialize a new .cddmhub.toml configuration template' \
+'scan:Scan organization federation repositories for cross-repository duplication' \
+'extract:Extract a cross-repository duplicate cluster into a standalone shared package' \
+'sync:Synchronize privacy-preserving fingerprint caches with remote Federation Hub peers' \
+    )
+    _describe -t commands 'cddm help hub commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__help__subcmd__hub__subcmd__extract_commands] )) ||
+_cddm__subcmd__help__subcmd__hub__subcmd__extract_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm help hub extract commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__help__subcmd__hub__subcmd__init_commands] )) ||
+_cddm__subcmd__help__subcmd__hub__subcmd__init_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm help hub init commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__help__subcmd__hub__subcmd__scan_commands] )) ||
+_cddm__subcmd__help__subcmd__hub__subcmd__scan_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm help hub scan commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__help__subcmd__hub__subcmd__sync_commands] )) ||
+_cddm__subcmd__help__subcmd__hub__subcmd__sync_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm help hub sync commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__help__subcmd__ignore_commands] )) ||
+_cddm__subcmd__help__subcmd__ignore_commands() {
+    local commands; commands=(
+'init:Initialize a standard, well-documented .cddmignore configuration template' \
+'check:Test whether a specific file path or line number is ignored by suppression rules' \
+    )
+    _describe -t commands 'cddm help ignore commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__help__subcmd__ignore__subcmd__check_commands] )) ||
+_cddm__subcmd__help__subcmd__ignore__subcmd__check_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm help ignore check commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__help__subcmd__ignore__subcmd__init_commands] )) ||
+_cddm__subcmd__help__subcmd__ignore__subcmd__init_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm help ignore init commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__help__subcmd__init_commands] )) ||
+_cddm__subcmd__help__subcmd__init_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm help init commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__help__subcmd__lsp_commands] )) ||
+_cddm__subcmd__help__subcmd__lsp_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm help lsp commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__help__subcmd__monorepo_commands] )) ||
+_cddm__subcmd__help__subcmd__monorepo_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm help monorepo commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__help__subcmd__overlap_commands] )) ||
+_cddm__subcmd__help__subcmd__overlap_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm help overlap commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__help__subcmd__prune_commands] )) ||
+_cddm__subcmd__help__subcmd__prune_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm help prune commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__help__subcmd__refactor_commands] )) ||
+_cddm__subcmd__help__subcmd__refactor_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm help refactor commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__help__subcmd__rules_commands] )) ||
+_cddm__subcmd__help__subcmd__rules_commands() {
+    local commands; commands=(
+'init:Initialize a starter .cddmrules.toml configuration template' \
+'check:Evaluate architectural policy rules against codebase' \
+    )
+    _describe -t commands 'cddm help rules commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__help__subcmd__rules__subcmd__check_commands] )) ||
+_cddm__subcmd__help__subcmd__rules__subcmd__check_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm help rules check commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__help__subcmd__rules__subcmd__init_commands] )) ||
+_cddm__subcmd__help__subcmd__rules__subcmd__init_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm help rules init commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__help__subcmd__scan_commands] )) ||
+_cddm__subcmd__help__subcmd__scan_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm help scan commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__help__subcmd__semantic_commands] )) ||
+_cddm__subcmd__help__subcmd__semantic_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm help semantic commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__help__subcmd__serve_commands] )) ||
+_cddm__subcmd__help__subcmd__serve_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm help serve commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__help__subcmd__trend_commands] )) ||
+_cddm__subcmd__help__subcmd__trend_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm help trend commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__help__subcmd__tui_commands] )) ||
+_cddm__subcmd__help__subcmd__tui_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm help tui commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__help__subcmd__watch_commands] )) ||
+_cddm__subcmd__help__subcmd__watch_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm help watch commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__hook_commands] )) ||
+_cddm__subcmd__hook_commands() {
+    local commands; commands=(
+'install:Install a Git hook enforcing code duplication thresholds' \
+'uninstall:Uninstall an existing CDDM Git hook' \
+'status:Check current installation status of Git hooks' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'cddm hook commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__hook__subcmd__help_commands] )) ||
+_cddm__subcmd__hook__subcmd__help_commands() {
+    local commands; commands=(
+'install:Install a Git hook enforcing code duplication thresholds' \
+'uninstall:Uninstall an existing CDDM Git hook' \
+'status:Check current installation status of Git hooks' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'cddm hook help commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__hook__subcmd__help__subcmd__help_commands] )) ||
+_cddm__subcmd__hook__subcmd__help__subcmd__help_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm hook help help commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__hook__subcmd__help__subcmd__install_commands] )) ||
+_cddm__subcmd__hook__subcmd__help__subcmd__install_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm hook help install commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__hook__subcmd__help__subcmd__status_commands] )) ||
+_cddm__subcmd__hook__subcmd__help__subcmd__status_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm hook help status commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__hook__subcmd__help__subcmd__uninstall_commands] )) ||
+_cddm__subcmd__hook__subcmd__help__subcmd__uninstall_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm hook help uninstall commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__hook__subcmd__install_commands] )) ||
+_cddm__subcmd__hook__subcmd__install_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm hook install commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__hook__subcmd__status_commands] )) ||
+_cddm__subcmd__hook__subcmd__status_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm hook status commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__hook__subcmd__uninstall_commands] )) ||
+_cddm__subcmd__hook__subcmd__uninstall_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm hook uninstall commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__hub_commands] )) ||
+_cddm__subcmd__hub_commands() {
+    local commands; commands=(
+'init:Initialize a new .cddmhub.toml configuration template' \
+'scan:Scan organization federation repositories for cross-repository duplication' \
+'extract:Extract a cross-repository duplicate cluster into a standalone shared package' \
+'sync:Synchronize privacy-preserving fingerprint caches with remote Federation Hub peers' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'cddm hub commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__hub__subcmd__extract_commands] )) ||
+_cddm__subcmd__hub__subcmd__extract_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm hub extract commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__hub__subcmd__help_commands] )) ||
+_cddm__subcmd__hub__subcmd__help_commands() {
+    local commands; commands=(
+'init:Initialize a new .cddmhub.toml configuration template' \
+'scan:Scan organization federation repositories for cross-repository duplication' \
+'extract:Extract a cross-repository duplicate cluster into a standalone shared package' \
+'sync:Synchronize privacy-preserving fingerprint caches with remote Federation Hub peers' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'cddm hub help commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__hub__subcmd__help__subcmd__extract_commands] )) ||
+_cddm__subcmd__hub__subcmd__help__subcmd__extract_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm hub help extract commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__hub__subcmd__help__subcmd__help_commands] )) ||
+_cddm__subcmd__hub__subcmd__help__subcmd__help_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm hub help help commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__hub__subcmd__help__subcmd__init_commands] )) ||
+_cddm__subcmd__hub__subcmd__help__subcmd__init_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm hub help init commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__hub__subcmd__help__subcmd__scan_commands] )) ||
+_cddm__subcmd__hub__subcmd__help__subcmd__scan_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm hub help scan commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__hub__subcmd__help__subcmd__sync_commands] )) ||
+_cddm__subcmd__hub__subcmd__help__subcmd__sync_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm hub help sync commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__hub__subcmd__init_commands] )) ||
+_cddm__subcmd__hub__subcmd__init_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm hub init commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__hub__subcmd__scan_commands] )) ||
+_cddm__subcmd__hub__subcmd__scan_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm hub scan commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__hub__subcmd__sync_commands] )) ||
+_cddm__subcmd__hub__subcmd__sync_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm hub sync commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__ignore_commands] )) ||
+_cddm__subcmd__ignore_commands() {
+    local commands; commands=(
+'init:Initialize a standard, well-documented .cddmignore configuration template' \
+'check:Test whether a specific file path or line number is ignored by suppression rules' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'cddm ignore commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__ignore__subcmd__check_commands] )) ||
+_cddm__subcmd__ignore__subcmd__check_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm ignore check commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__ignore__subcmd__help_commands] )) ||
+_cddm__subcmd__ignore__subcmd__help_commands() {
+    local commands; commands=(
+'init:Initialize a standard, well-documented .cddmignore configuration template' \
+'check:Test whether a specific file path or line number is ignored by suppression rules' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'cddm ignore help commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__ignore__subcmd__help__subcmd__check_commands] )) ||
+_cddm__subcmd__ignore__subcmd__help__subcmd__check_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm ignore help check commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__ignore__subcmd__help__subcmd__help_commands] )) ||
+_cddm__subcmd__ignore__subcmd__help__subcmd__help_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm ignore help help commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__ignore__subcmd__help__subcmd__init_commands] )) ||
+_cddm__subcmd__ignore__subcmd__help__subcmd__init_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm ignore help init commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__ignore__subcmd__init_commands] )) ||
+_cddm__subcmd__ignore__subcmd__init_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm ignore init commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__init_commands] )) ||
+_cddm__subcmd__init_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm init commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__lsp_commands] )) ||
+_cddm__subcmd__lsp_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm lsp commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__monorepo_commands] )) ||
+_cddm__subcmd__monorepo_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm monorepo commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__overlap_commands] )) ||
+_cddm__subcmd__overlap_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm overlap commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__prune_commands] )) ||
+_cddm__subcmd__prune_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm prune commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__refactor_commands] )) ||
+_cddm__subcmd__refactor_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm refactor commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__rules_commands] )) ||
+_cddm__subcmd__rules_commands() {
+    local commands; commands=(
+'init:Initialize a starter .cddmrules.toml configuration template' \
+'check:Evaluate architectural policy rules against codebase' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'cddm rules commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__rules__subcmd__check_commands] )) ||
+_cddm__subcmd__rules__subcmd__check_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm rules check commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__rules__subcmd__help_commands] )) ||
+_cddm__subcmd__rules__subcmd__help_commands() {
+    local commands; commands=(
+'init:Initialize a starter .cddmrules.toml configuration template' \
+'check:Evaluate architectural policy rules against codebase' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'cddm rules help commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__rules__subcmd__help__subcmd__check_commands] )) ||
+_cddm__subcmd__rules__subcmd__help__subcmd__check_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm rules help check commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__rules__subcmd__help__subcmd__help_commands] )) ||
+_cddm__subcmd__rules__subcmd__help__subcmd__help_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm rules help help commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__rules__subcmd__help__subcmd__init_commands] )) ||
+_cddm__subcmd__rules__subcmd__help__subcmd__init_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm rules help init commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__rules__subcmd__init_commands] )) ||
+_cddm__subcmd__rules__subcmd__init_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm rules init commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__scan_commands] )) ||
+_cddm__subcmd__scan_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm scan commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__semantic_commands] )) ||
+_cddm__subcmd__semantic_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm semantic commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__serve_commands] )) ||
+_cddm__subcmd__serve_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm serve commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__trend_commands] )) ||
+_cddm__subcmd__trend_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm trend commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__tui_commands] )) ||
+_cddm__subcmd__tui_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm tui commands' commands "$@"
+}
+(( $+functions[_cddm__subcmd__watch_commands] )) ||
+_cddm__subcmd__watch_commands() {
+    local commands; commands=()
+    _describe -t commands 'cddm watch commands' commands "$@"
+}
+
+if [ "$funcstack[1]" = "_cddm" ]; then
+    _cddm "$@"
+else
+    compdef _cddm cddm
+fi

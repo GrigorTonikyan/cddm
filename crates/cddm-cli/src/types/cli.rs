@@ -2,9 +2,9 @@
 
 use super::actions::{CacheAction, HookAction, IgnoreAction, RulesAction};
 use super::commands::{
-    CommentArgs, CoverageArgs, DeadCodeArgs, DiffArgs, ExtractArgs, HealArgs, HubArgs, InitArgs,
-    LspArgs, MonorepoArgs, OverlapArgs, PruneArgs, RefactorArgs, ScanArgs, SemanticArgs, ServeArgs,
-    TrendArgs, TuiArgs, WatchArgs,
+    CommentArgs, CompletionsArgs, CoverageArgs, DeadCodeArgs, DiffArgs, ExtractArgs, HealArgs,
+    HubArgs, InitArgs, LspArgs, MonorepoArgs, OverlapArgs, PruneArgs, RefactorArgs, ScanArgs,
+    SemanticArgs, ServeArgs, TrendArgs, TuiArgs, WatchArgs,
 };
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
@@ -127,4 +127,7 @@ pub enum Commands {
 
     /// Dynamic runtime execution & coverage-aware de-duplication analysis
     Coverage(CoverageArgs),
+
+    /// Generate shell completion scripts for Bash, Zsh, Fish, PowerShell, or Elvish
+    Completions(CompletionsArgs),
 }

@@ -27,6 +27,12 @@ class Cddm < Formula
   def install
     bin.install "cddm"
     bin.install "cddm-mcp" if File.exist?("cddm-mcp")
+
+    if File.exist?("packaging/completions/cddm.bash")
+      bash_completion.install "packaging/completions/cddm.bash" => "cddm"
+      zsh_completion.install "packaging/completions/_cddm" => "_cddm"
+      fish_completion.install "packaging/completions/cddm.fish"
+    end
   end
 
   test do
