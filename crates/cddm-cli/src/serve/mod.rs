@@ -5,6 +5,7 @@ pub mod coverage_handlers;
 pub mod dead_code_handlers;
 pub mod extract_handlers;
 pub mod hub_handlers;
+pub mod mcp_apps_handlers;
 pub mod overlap_handlers;
 pub mod policy_handlers;
 pub mod refactor_handlers;
@@ -14,6 +15,7 @@ pub mod timeline_handlers;
 pub mod types;
 pub mod watch_handlers;
 
+use mcp_apps_handlers::*;
 pub use types::*;
 
 use assets::static_asset_handler;
@@ -125,6 +127,8 @@ pub fn build_app_with_state(state: AppState) -> Router {
             get(dead_code_reachability_handler),
         )
         .route(ROUTE_API_DEAD_CODE, get(dead_code_get_handler))
+        .route(ROUTE_API_MCP_APPS_WIDGETS, get(mcp_apps_widgets_handler))
+        .route(ROUTE_API_MCP_APPS_RENDER, post(mcp_apps_render_handler))
         .fallback(static_asset_handler)
         .layer(CorsLayer::permissive())
         .with_state(state)

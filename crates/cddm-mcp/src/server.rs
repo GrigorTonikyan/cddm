@@ -2,6 +2,7 @@
 
 use std::collections::HashMap;
 
+use crate::apps::{handle_apps_render, handle_apps_widgets_list};
 use crate::prompts::{handle_prompt_get, prompts_list_response};
 use crate::protocol::{
     JSONRPC_VERSION, JsonRpcRequest, JsonRpcResponse, MCP_PROTOCOL_VERSION, SERVER_NAME,
@@ -70,6 +71,12 @@ pub async fn handle_mcp_request(req: JsonRpcRequest) -> Option<JsonRpcResponse> 
                     "resources": { "subscribe": true, "listChanged": false },
                     "prompts": { "listChanged": false },
                     "tasks": { "listChanged": false, "cancel": true },
+                    "apps": {
+                        "widgets": true,
+                        "render": true,
+                        "generativeUi": true,
+                        "widgetTypes": ["diff-split-view", "cluster-treemap"]
+                    },
                     "logging": {}
                 },
                 "serverInfo": {
@@ -102,6 +109,10 @@ pub async fn handle_mcp_request(req: JsonRpcRequest) -> Option<JsonRpcResponse> 
         mcp_methods::TASKS_STATUS => Some(handle_tasks_status(req_id, params.as_ref()).await),
 
         mcp_methods::TASKS_CANCEL => Some(handle_tasks_cancel(req_id, params.as_ref()).await),
+
+        mcp_methods::APPS_WIDGETS_LIST => Some(handle_apps_widgets_list(req_id)),
+
+        mcp_methods::APPS_RENDER => Some(handle_apps_render(req_id, params.as_ref()).await),
 
         mcp_methods::RESOURCES_LIST => Some(resources_list_response(req_id)),
 

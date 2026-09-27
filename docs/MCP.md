@@ -135,3 +135,43 @@ Every tool definition registers deterministic caching metadata:
 - **`ttlMs`**: Cache time-to-live in milliseconds (e.g., `30000` for read-only scans, `0` for destructive actions).
 - **`cacheScope`**: Cache boundary scope (`"workspace"` or `"none"`).
 - Returned on tool call responses in `_meta` and response headers (`Mcp-Cache-Ttl`, `Mcp-Cache-Scope`).
+
+---
+
+## 6. MCP Apps & Generative UI Refactoring Widgets
+
+CDDM implements the **MCP Apps** capability for interactive generative UI refactoring widgets, enabling chat client hosts (Antigravity, Cursor, Claude Desktop) and web surfaces to render rich UI components directly from MCP responses.
+
+### Advertised Capabilities
+
+In the `initialize` handshake, CDDM advertises apps support:
+
+```json
+{
+  "capabilities": {
+    "apps": {
+      "widgets": true,
+      "render": true,
+      "generativeUi": true,
+      "widgetTypes": ["diff-split-view", "cluster-treemap"]
+    }
+  }
+}
+```
+
+### Supported Widget Types
+
+1. **`diff-split-view`**: Side-by-side or unified interactive diff comparison widget featuring syntax-colored deletions and additions, one-click "Copy Refactored", "Copy Patch", and "Accept Changes" event postMessage action hooks (`cddm:mcp-app-action`).
+2. **`cluster-treemap`**: Dynamic visual duplication treemap with color-coded severity tiles (exact, renamed, gapped, semantic), instant fuzzy filter search, and interactive tile inspection.
+
+### Discovery & On-Demand Rendering Endpoints
+
+- **`apps/widgets/list`**: Returns the list of registered widget descriptors, titles, descriptions, and parameter schemas.
+- **`apps/render`**: Renders an interactive HTML/CSS/JS widget on demand given `widgetType` and input properties.
+
+### Tool Integration (`include_widget: true`)
+
+Refactoring tools support the optional `include_widget: true` boolean parameter:
+
+- **`cddm_suggest_refactor`**: Generates and attaches an interactive `diff-split-view` widget.
+- **`cddm_suggest_cluster_refactor`**: Generates and attaches an interactive `diff-split-view` widget for multi-site consensus refactoring.

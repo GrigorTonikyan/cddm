@@ -2,7 +2,8 @@
 
 use super::helpers::{parse_clone_pair_args, run_scan_from_mcp_args};
 use crate::protocol::{
-    JsonRpcResponse, make_error_response, make_text_response, mcp_tools, rpc_errors,
+    JsonRpcResponse, make_app_widget_response, make_error_response, make_text_response, mcp_tools,
+    rpc_errors,
 };
 use cddm_core::refactor::read_file_lines_range;
 use serde_json::json;
@@ -92,10 +93,30 @@ pub async fn handle_get_clone_cluster(
                         "occurrences": occurrences_with_code
                     });
 
-                    make_text_response(
-                        id,
-                        serde_json::to_string_pretty(&payload).unwrap_or_default(),
-                    )
+                    let json_text = serde_json::to_string_pretty(&payload).unwrap_or_default();
+                    let include_widget = args
+                        .and_then(|a| a.get(mcp_tools::PARAM_INCLUDE_WIDGET))
+                        .and_then(|v| v.as_bool())
+                        .unwrap_or(false);
+                    if include_widget {
+                        let item = crate::apps::TreemapClusterItem {
+                            id: cluster.id,
+                            name: format!("Cluster #{}", cluster.id),
+                            clone_type: format!("{:?}", cluster.clone_type),
+                            occurrence_count: cluster.occurrences.len(),
+                            token_count: cluster.token_count,
+                            files: cluster.occurrences.iter().map(|o| o.file.clone()).collect(),
+                        };
+                        let widget = crate::apps::generate_cluster_treemap_widget(
+                            &format!("Cluster #{} Treemap", cluster.id),
+                            &[item],
+                            scan_res.dry_health_score,
+                        );
+                        let widget_val = serde_json::to_value(&widget).unwrap_or_default();
+                        make_app_widget_response(id, json_text, &widget_val)
+                    } else {
+                        make_text_response(id, json_text)
+                    }
                 } else {
                     make_error_response(
                         id,

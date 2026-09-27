@@ -45,6 +45,16 @@ pub mod mcp_methods {
     pub const TASKS_CALL: &str = "tasks/call";
     pub const TASKS_STATUS: &str = "tasks/status";
     pub const TASKS_CANCEL: &str = "tasks/cancel";
+    pub const APPS_WIDGETS_LIST: &str = "apps/widgets/list";
+    pub const APPS_RENDER: &str = "apps/render";
+}
+
+/// Supported MCP Apps capabilities and widget identifiers.
+#[allow(dead_code)]
+pub mod mcp_capabilities {
+    pub const APPS: &str = "apps";
+    pub const WIDGET_DIFF_SPLIT_VIEW: &str = "diff-split-view";
+    pub const WIDGET_CLUSTER_TREEMAP: &str = "cluster-treemap";
 }
 
 /// Exposed tool identifiers and parameters.
@@ -107,6 +117,7 @@ pub mod mcp_tools {
     pub const PARAM_PATCH: &str = "patch";
     pub const PARAM_BRANCH_NAME: &str = "branch_name";
     pub const PARAM_CREATE_BRANCH: &str = "create_branch";
+    pub const PARAM_INCLUDE_WIDGET: &str = "include_widget";
 }
 
 macro_rules! define_mcp_constants {
@@ -223,6 +234,28 @@ pub fn make_prompt_response(
                         "text": user_prompt.into(),
                     }
                 }
+            ]
+        })),
+        error: None,
+        headers: None,
+    }
+}
+
+pub fn make_app_widget_response(
+    id: Option<serde_json::Value>,
+    text: impl Into<String>,
+    widget: &serde_json::Value,
+) -> JsonRpcResponse {
+    JsonRpcResponse {
+        jsonrpc: JSONRPC_VERSION.to_string(),
+        id,
+        result: Some(json!({
+            "content": [
+                {
+                    "type": "text",
+                    "text": text.into(),
+                },
+                widget
             ]
         })),
         error: None,

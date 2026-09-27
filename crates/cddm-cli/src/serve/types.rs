@@ -57,6 +57,8 @@ define_api_routes! {
     ROUTE_API_DEAD_CODE_PRUNE => "/api/dead-code/prune",
     ROUTE_API_DEAD_CODE_REACHABILITY => "/api/dead-code/reachability",
     ROUTE_API_DEAD_CODE => "/api/dead-code",
+    ROUTE_API_MCP_APPS_WIDGETS => "/api/mcp/apps/widgets",
+    ROUTE_API_MCP_APPS_RENDER => "/api/mcp/apps/render",
 }
 
 /// Default localhost IPv4 binding.

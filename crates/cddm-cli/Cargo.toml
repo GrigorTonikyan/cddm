@@ -23,6 +23,7 @@ async-trait.workspace = true
 axum.workspace = true
 cddm-core = { path = "../cddm-core" }
 cddm-lsp = { path = "../cddm-lsp" }
+cddm-mcp = { path = "../cddm-mcp" }
 chrono.workspace = true
 clap.workspace = true
 comfy-table.workspace = true
