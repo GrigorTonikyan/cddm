@@ -28,6 +28,7 @@ pub fn tools_list_response(id: Option<serde_json::Value>) -> JsonRpcResponse {
             "tools": schemas::get_tool_definitions()
         })),
         error: None,
+        headers: None,
     }
 }
 

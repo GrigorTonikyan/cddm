@@ -48,6 +48,14 @@ pub fn tool_def(
 
     let is_open_world = name.contains("heal") || name.contains("prompt");
 
+    let (ttl_ms, cache_scope) = if is_destructive {
+        (0, "none")
+    } else if is_read_only {
+        (30000, "workspace")
+    } else {
+        (10000, "workspace")
+    };
+
     let annotations = json!({
         "readOnly": is_read_only,
         "consequential": is_destructive,
@@ -55,7 +63,9 @@ pub fn tool_def(
         "readOnlyHint": is_read_only,
         "destructiveHint": is_destructive,
         "idempotentHint": is_idempotent,
-        "openWorldHint": is_open_world
+        "openWorldHint": is_open_world,
+        "ttlMs": ttl_ms,
+        "cacheScope": cache_scope
     });
 
     json!({

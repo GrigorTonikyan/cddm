@@ -104,3 +104,34 @@ The CDDM MCP Server (`cddm-mcp`) exposes the entire clone analysis, AST refactor
 1. `audit_dry_health`: Audits codebase DRY health and prioritizes duplication hotspots.
 2. `refactor_clone_pair`: Formulates extract-method prompts for duplicate code fragments.
 3. `audit_cross_language`: Detects isomorphic logic across different programming languages.
+
+---
+
+## 5. MCP 2026-07-28 Tasks Framework & Stateless Routing
+
+CDDM implements the **MCP Specification 2026-07-28** standard, replacing deprecated roots and sampling protocols with asynchronous task orchestration, stateless header routing, and deterministic caching annotations.
+
+### Asynchronous Tasks Framework
+
+For long-running operations (such as large monorepo duplicate scans and federation queries), CDDM exposes background task primitives:
+
+- **`tasks/call`**: Spawns an asynchronous background task. Returns immediately with `{ taskId, name, status: "running", createdAt }`.
+- **`tasks/list`**: Enumerates active and historical tasks.
+- **`tasks/status`**: Queries the real-time progress, status (`queued`, `running`, `completed`, `failed`, `cancelled`), and final result or error payload for a given `taskId`.
+- **`tasks/cancel`**: Aborts and cancels an active task by `taskId`.
+
+### Stateless Header-Based Routing
+
+In addition to standard JSON-RPC `method` dispatching, the MCP server supports HTTP/stateless header routing via top-level `headers` or `params._meta.headers`:
+
+- **`Mcp-Method`**: Dispatches the request to the target MCP method (e.g., `tools/call`, `tasks/call`).
+- **`Mcp-Name`**: Specifies the target tool or task name (e.g., `scan_codebase`, `scan_monorepo`).
+- **`Mcp-Protocol-Version`**: Automatically attached to every server response indicating `"2026-07-28"`.
+
+### Caching Annotations
+
+Every tool definition registers deterministic caching metadata:
+
+- **`ttlMs`**: Cache time-to-live in milliseconds (e.g., `30000` for read-only scans, `0` for destructive actions).
+- **`cacheScope`**: Cache boundary scope (`"workspace"` or `"none"`).
+- Returned on tool call responses in `_meta` and response headers (`Mcp-Cache-Ttl`, `Mcp-Cache-Scope`).

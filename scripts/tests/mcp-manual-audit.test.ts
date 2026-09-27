@@ -8,14 +8,18 @@ describe("MCP Server Live Multi-Tool Fidelity & Response Audit", () => {
       id: 1,
       method: "initialize",
       params: {
-        protocolVersion: "2024-11-05",
+        protocolVersion: "2026-07-28",
         capabilities: {},
         clientInfo: { name: "ManualAuditClient", version: "1.0.0" },
       },
     });
     expect(initRes.error).toBeUndefined();
     expect(initRes.result).toBeDefined();
-    const result = initRes.result as { serverInfo: { name: string; version: string } };
+    const result = initRes.result as {
+      protocolVersion: string;
+      serverInfo: { name: string; version: string };
+    };
+    expect(result.protocolVersion).toBe("2026-07-28");
     expect(result.serverInfo.name).toContain("CDDM");
   });
 

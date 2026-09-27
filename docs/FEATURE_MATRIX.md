@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-27 | Rust: 374 #[test] units | WebUI: 233 tests across 64 suites | Scripts & MCP: 204 tests across 60 suites | CI Workflows: PASS
+> Last verified: 2026-08-27 | Rust: 376 #[test] units | WebUI: 233 tests across 64 suites | Scripts & MCP: 207 tests across 60 suites | CI Workflows: PASS
 
 ---
 
@@ -429,7 +429,7 @@
 
 ---
 
-## 3. Repository Scripts & MCP Protocol — Bun Test Suites (204 tests across 60 suites)
+## 3. Repository Scripts & MCP Protocol — Bun Test Suites (207 tests across 60 suites)
 
 ### Repository Tooling & Automation Suites
 
@@ -466,7 +466,7 @@
 
 | Tool / Protocol Feature             | Test Suite File                                    | Test Cases | Status |
 | :---------------------------------- | :------------------------------------------------- | :--------- | :----- |
-| MCP Dynamic Discovery               | `tests/mcp/discovery.test.ts`                      | 3 tests    | PASS   |
+| MCP Dynamic Discovery               | `tests/mcp/discovery.test.ts`                      | 6 tests    | PASS   |
 | Tool: cddm_apply_cluster_refactor   | `tests/mcp/tools/apply-cluster-refactor.test.ts`   | 2 tests    | PASS   |
 | Tool: cddm_ast_refactor             | `tests/mcp/tools/ast-refactor.test.ts`             | 2 tests    | PASS   |
 | Tool: cddm_check_policies           | `tests/mcp/tools/check-policies.test.ts`           | 2 tests    | PASS   |
