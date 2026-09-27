@@ -25,6 +25,8 @@ crossterm = "^0.29"
 gix = "^0.87"
 ignore = "^0.4"
 memmap2 = "^0.9"
+metrics = "^0.24"
+metrics-exporter-prometheus = { version = "^0.18", default-features = false }
 mime_guess = "^2"
 notify = "^8"
 opener = "^0.8"

@@ -67,3 +67,19 @@ cddm watch ./src --serve 3000 --open
 - `POST /api/coverage/correlate`: Correlate runtime LCOV/Cobertura traces.
 - `POST /api/dead-code/scan`: Unreferenced function and dead clone detector.
 - `GET/POST /api/hub/config` & `POST /api/hub/scan`: Organization Federation Hub.
+- `GET /metrics` & `GET /api/metrics`: Prometheus / OpenMetrics scrape endpoint.
+
+---
+
+## 4. Prometheus Telemetry & Metrics (`/metrics`)
+
+CDDM Studio exposes Prometheus-compatible metrics at `/metrics` (and `/api/metrics`) for continuous scraping by Prometheus, Grafana Agent, or Netdata.
+
+| Metric Name                   | Type        | Description                                                         |
+| :---------------------------- | :---------- | :------------------------------------------------------------------ |
+| `cddm_clones_active`          | `gauge`     | Total number of duplicate clone instances detected in the workspace |
+| `cddm_dry_health_score`       | `gauge`     | Current DRY (Don't Repeat Yourself) health score percentage (0-100) |
+| `cddm_duplication_percentage` | `gauge`     | Percentage of analyzed source tokens that are duplicated (0-100)    |
+| `cddm_scan_duration_seconds`  | `histogram` | Duration of CDDM workspace deduplication scans in seconds           |
+| `cddm_sse_clients_active`     | `gauge`     | Number of currently connected Server-Sent Events client connections |
+| `cddm_scans_total`            | `counter`   | Cumulative count of completed workspace deduplication scans         |
