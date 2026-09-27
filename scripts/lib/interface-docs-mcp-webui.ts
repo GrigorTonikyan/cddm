@@ -203,6 +203,12 @@ export const MCP_TOOLS_CATALOG: McpToolDef[] = [
     keyParams: "directory, min_tokens, dry_run, safe_only, threshold, item_ids",
   },
   {
+    name: "cddm_trace_reachability",
+    category: "Dead Code",
+    summary: "Computes cross-package call-graph reachability for polyglot monorepos",
+    keyParams: "directory, min_tokens",
+  },
+  {
     name: "cddm_semantic_neural_scan",
 
     category: "Neural",

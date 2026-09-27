@@ -24,7 +24,7 @@ The CDDM MCP Server (`cddm-mcp`) exposes the entire clone analysis, AST refactor
 
 ---
 
-## 2. Exposed MCP Tools Directory (30 Tools)
+## 2. Exposed MCP Tools Directory (33 Tools)
 
 <!-- AUTOGEN:MCP_TOOLS:START -->
 
@@ -60,6 +60,7 @@ The CDDM MCP Server (`cddm-mcp`) exposes the entire clone analysis, AST refactor
 | **`cddm_detect_dead_clones`**       | Coverage     | Filters duplicate clones with 0 runtime hits across all sites             | `coverage_report, directory`                                     |
 | **`cddm_detect_dead_code`**         | Dead Code    | Detects unreferenced functions, dead blocks, and orphan clones            | `directory, min_tokens, static_only`                             |
 | **`cddm_prune_dead_clones`**        | Dead Code    | Safely prunes unreachable dead clone clusters and unreferenced code       | `directory, min_tokens, dry_run, safe_only, threshold, item_ids` |
+| **`cddm_trace_reachability`**       | Dead Code    | Computes cross-package call-graph reachability for polyglot monorepos     | `directory, min_tokens`                                          |
 | **`cddm_semantic_neural_scan`**     | Neural       | Dense subword embedding scan for algorithmic equivalence clones           | `directory, neural_threshold`                                    |
 | **`cddm_diff_matrix`**              | Differential | Evaluates multi-branch and worktree clone drift matrix                    | `base_ref, branches, directory`                                  |
 

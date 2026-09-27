@@ -23,27 +23,38 @@ This rule governs Model Context Protocol (MCP) server testing in the CDDM reposi
 tests/mcp/
 ├── helpers.ts                        # Standard JSON-RPC stdio runner & assertion helpers
 ├── discovery.test.ts                 # Dynamic discovery & 1:1 test presence verification
-└── tools/                            # 1:1 dedicated test suites
-    ├── scan-codebase.test.ts
-    ├── get-clone-pair.test.ts
-    ├── suggest-refactor.test.ts
-    ├── get-clone-cluster.test.ts
-    ├── suggest-cluster-refactor.test.ts
-    ├── export-sarif.test.ts
-    ├── diff-scan.test.ts
-    ├── get-timeline.test.ts
-    ├── check-suppression.test.ts
+└── tools/                            # 1:1 dedicated test suites (33 tools)
     ├── apply-cluster-refactor.test.ts
-    ├── generate-ai-prompt.test.ts
     ├── ast-refactor.test.ts
-    ├── verify-refactor.test.ts
     ├── check-policies.test.ts
-    ├── heal-refactor.test.ts
-    ├── export-cache-pack.test.ts
-    ├── import-cache-pack.test.ts
-    ├── scan-monorepo.test.ts
-    ├── get-semantic-graph.test.ts
+    ├── check-suppression.test.ts
     ├── compare-semantic-graphs.test.ts
+    ├── correlate-coverage.test.ts
+    ├── detect-dead-clones.test.ts
+    ├── detect-dead-code.test.ts
+    ├── detect-overlap.test.ts
+    ├── diff-matrix.test.ts
+    ├── diff-scan.test.ts
+    ├── export-cache-pack.test.ts
+    ├── export-sarif.test.ts
+    ├── extract-hub-package.test.ts
+    ├── extract-shared-module.test.ts
+    ├── generate-ai-prompt.test.ts
+    ├── get-clone-cluster.test.ts
+    ├── get-clone-pair.test.ts
+    ├── get-semantic-graph.test.ts
+    ├── get-timeline.test.ts
+    ├── heal-refactor.test.ts
+    ├── import-cache-pack.test.ts
+    ├── prune-dead-clones.test.ts
+    ├── scan-codebase.test.ts
     ├── scan-cross-language.test.ts
-    └── extract-shared-module.test.ts
+    ├── scan-hub.test.ts
+    ├── scan-monorepo.test.ts
+    ├── semantic-neural-scan.test.ts
+    ├── suggest-cluster-refactor.test.ts
+    ├── suggest-refactor.test.ts
+    ├── sync-hub.test.ts
+    ├── trace-reachability.test.ts
+    └── verify-refactor.test.ts
 ```

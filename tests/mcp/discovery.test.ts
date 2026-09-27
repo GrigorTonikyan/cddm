@@ -18,7 +18,7 @@ describe("MCP Dynamic Discovery & 1:1 Test Suite Mapping", () => {
       params: {
         protocolVersion: "2024-11-05",
         capabilities: {},
-        clientInfo: { name: "cddm-discovery-test", version: "1.7.0" },
+        clientInfo: { name: "cddm-discovery-test", version: "4.1.0" },
       },
     });
 
@@ -29,7 +29,7 @@ describe("MCP Dynamic Discovery & 1:1 Test Suite Mapping", () => {
     expect(result?.serverInfo?.name).toContain("CDDM");
   });
 
-  it("should dynamically discover all 22 MCP tools and verify 1:1 test suite presence", async () => {
+  it("should dynamically discover all 33 MCP tools and verify 1:1 test suite presence", async () => {
     const res = await callMcpStdio({
       jsonrpc: "2.0",
       id: 2,
@@ -40,7 +40,7 @@ describe("MCP Dynamic Discovery & 1:1 Test Suite Mapping", () => {
     expect(res.jsonrpc).toBe("2.0");
     expect(res.error).toBeUndefined();
     const tools = (res.result as any)?.tools || [];
-    expect(tools.length).toBeGreaterThanOrEqual(22);
+    expect(tools.length).toBeGreaterThanOrEqual(33);
 
     const toolsDir = join(import.meta.dir, "tools");
     const existingTestFiles = new Set(readdirSync(toolsDir));

@@ -22,7 +22,7 @@ CDDM ensures that every engineering capability is first-class and accessible in 
 
 ---
 
-## 2. Exhaustive Feature Parity Matrix (20 Core Capabilities)
+## 2. Exhaustive Feature Parity Matrix (21 Core Capabilities)
 
 | Capability Area                                | 1. CLI Command                 | 2. WebUI Studio (REST/SSE + UI)                                                    | 3. MCP Tool & Resource                                                   | 4. TUI Studio (`cddm tui`)                                      |
 | :--------------------------------------------- | :----------------------------- | :--------------------------------------------------------------------------------- | :----------------------------------------------------------------------- | :-------------------------------------------------------------- |

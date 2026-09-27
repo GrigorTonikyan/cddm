@@ -2,7 +2,7 @@
 
 ## 1. High-Level Architecture
 
-CDDM (_Code De-Duplication Meister_) is a multi-threaded Rust workspace consisting of three primary crates, an embedded React 19 WebUI, and cross-platform npm/Cargo package wrappers:
+CDDM (_Code De-Duplication Meister_) is a multi-threaded Rust workspace consisting of four primary crates (`cddm-cli`, `cddm-core`, `cddm-lsp`, and `cddm-mcp`), an embedded React 19 WebUI, and cross-platform npm/Cargo package wrappers:
 
 ```mermaid
 graph TD
@@ -127,7 +127,7 @@ cddm-core (library crate)
   ├── gix                  (in-process git blame)
   ├── ignore               (directory traversal & .gitignore parsing)
   ├── memmap2              (zero-copy memory-mapped file I/O)
-  ├── tree-sitter-*        (AST CST parsing: 16 supported languages)
+  ├── tree-sitter-*        (AST CST parsing: 23 supported languages)
   ├── notify               (filesystem event watcher)
   ├── serde, serde_json    (serialization)
   └── tokio                (async runtime)
@@ -189,9 +189,11 @@ CDDM supports dual distribution channels:
    - `cddm`: Universal npm wrapper package with platform binary shims (`bin/cddm.js`).
    - `@cddm/win32-x64`, `@cddm/linux-x64`, `@cddm/darwin-x64`, `@cddm/darwin-arm64`: Native pre-built release binaries.
 
-3. **GitHub Actions CI/CD Workflows**:
-   - `.github/workflows/ci.yml`: Matrix build testing (Ubuntu, Windows, macOS), `clippy`, `rustfmt`, and WebUI tests.
-   - `.github/workflows/release.yml`: Cross-compiling standalone release binaries on GitHub tag pushes (`v*`).
+3. **Gitea Actions CI/CD Workflows (Authoritative SSoT)**:
+   - `.gitea/workflows/ci.yaml`: Authoritative matrix build testing (Ubuntu, Windows, macOS), `clippy`, `rustfmt`, and WebUI tests.
+   - `.gitea/workflows/release.yaml`: Cross-compiling standalone release binaries and publishing packages on Gitea tag pushes (`v*`).
+   - `.github/workflows/ci.yml`: Read-only downstream replica CI mirror.
+   - `.github/workflows/release.yml`: Read-only downstream replica release mirror.
 
 ---
 

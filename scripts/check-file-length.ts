@@ -30,7 +30,7 @@ export interface FileLengthSummary {
  * (Currently 100% of codebase files are strictly <= 500 LOC).
  */
 export const GRANDFATHERED_LINE_CAPS: Record<string, number> = {
-  "scripts/lib/gitea-issue-pr-data.ts": 650,
+  "scripts/lib/gitea-issue-pr-data.ts": 520,
   "scripts/populate-gitea-portal.ts": 600,
 };
 

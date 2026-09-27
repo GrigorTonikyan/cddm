@@ -42,8 +42,8 @@ describe("Interface Documentation Generator", () => {
     expect(TUI_TABS_CATALOG[11]?.title).toBe("Dead Code");
   });
 
-  test("MCP catalog contains 32 tools and 14 resources", () => {
-    expect(MCP_TOOLS_CATALOG.length).toBe(32);
+  test("MCP catalog contains 33 tools and 14 resources", () => {
+    expect(MCP_TOOLS_CATALOG.length).toBe(33);
     expect(MCP_RESOURCES_CATALOG.length).toBe(14);
   });
 
