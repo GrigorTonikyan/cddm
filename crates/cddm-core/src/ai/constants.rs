@@ -26,8 +26,17 @@ define_ai_str_constants! {
     ANTHROPIC_API_VERSION => "2023-06-01",
     HEADER_AUTHORIZATION => "Authorization",
     BEARER_PREFIX => "Bearer ",
-    CURL_COMMAND => "curl",
+    DEFAULT_USER_AGENT => "cddm-ai-surgeon/4.1.0",
 }
+
+/// Maximum retry attempts for transient HTTP failures.
+pub const DEFAULT_MAX_RETRIES: usize = 3;
+
+/// Initial backoff delay in milliseconds for HTTP retries.
+pub const DEFAULT_INITIAL_BACKOFF_MS: u64 = 500;
+
+/// Maximum backoff delay in milliseconds for HTTP retries.
+pub const DEFAULT_MAX_BACKOFF_MS: u64 = 4000;
 
 /// Default generation temperature for deterministic refactoring.
 pub const DEFAULT_TEMPERATURE: f64 = 0.2;

@@ -2,11 +2,13 @@
 
 pub mod constants;
 pub mod heal;
+pub mod http;
 pub mod provider;
 pub mod types;
 
 pub use constants::*;
 pub use heal::{extract_patch_from_response, heal_cluster_refactor};
+pub use http::{create_http_client, execute_http_chat, execute_http_post, post_and_extract};
 pub use provider::{
     AiProvider, ClaudeProvider, GeminiProvider, MockAiProvider, OllamaProvider, OpenAiProvider,
     create_ai_provider,

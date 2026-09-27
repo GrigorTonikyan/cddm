@@ -43,7 +43,8 @@ pub use ai::{
     DEFAULT_OPENAI_MODEL, DEFAULT_PROVIDER_TIMEOUT_SECS, DEFAULT_TARGET_MODULE,
     DEFAULT_TEMPERATURE, DEFAULT_VERIFY_TIMEOUT_SECS, ENV_ANTHROPIC_API_KEY, ENV_GEMINI_API_KEY,
     ENV_OPENAI_API_KEY, HealIterationLog, HealRefactorRequest, HealRefactorResult,
-    MAX_HEAL_ITERATIONS, MIN_HEAL_ITERATIONS, create_ai_provider, heal_cluster_refactor,
+    MAX_HEAL_ITERATIONS, MIN_HEAL_ITERATIONS, create_ai_provider, create_http_client,
+    heal_cluster_refactor,
 };
 pub use ai_prompt::*;
 pub use cache::pack::*;
