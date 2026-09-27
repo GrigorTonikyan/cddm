@@ -48,7 +48,7 @@ CDDM strictly enforces **100% Cross-Interface Feature Parity** across all four p
 |                                    CDDM Unified Core Engine                                        |
 +----------------------------------------------------------------------------------------------------+
 |  1. CLI Engine        |  2. WebUI Studio       |  3. MCP Server         |  4. TUI Studio           |
-|  - 22 Subcommands     |  - React 19 Studio     |  - 30 Agent Tools      |  - 12 Ratatui Tabs       |
+|  - 23 Subcommands     |  - React 19 Studio     |  - 33 Agent Tools      |  - 12 Ratatui Tabs       |
 |  - Scriptable stdout  |  - Monaco Split Diffs  |  - 17 MCP Resources    |  - Split Diff Viewer     |
 |  - Turnkey CI/CD      |  - SSE Live Stream     |  - 3 Agent Prompts     |  - Keyboard-Driven       |
 |  [docs/CLI.md]        |  [docs/WEBUI.md]       |  [docs/MCP.md]         |  [docs/TUI.md]           |

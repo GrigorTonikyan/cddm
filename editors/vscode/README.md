@@ -14,7 +14,7 @@ Provides real-time duplicate code diagnostics, inline DRY health analytics, embe
 - **One-Click Quick Fixes (`textDocument/codeAction`)**: Deduplicate repeated snippets into shared helper functions directly from the editor lightbulb menu.
 - **Rich Hover Tooltips**: Hover over duplicate blocks to inspect match percentage, token volume, line span, and counterpart file links.
 - **Jump to Counterpart**: Navigate directly from clone site A to clone site B with a single click.
-- **Polyglot AST Support**: Works across 24 languages: Rust, TypeScript, JavaScript, Python, Go, C, C++, Java, C#, Ruby, PHP, Swift, Shell/Bash, Lua, JSON, HTML, Kotlin, Zig, Scala, Elixir, SQL, and Dockerfile.
+- **Polyglot AST Support**: Works across 23 languages: Rust, TypeScript, JavaScript, Python, Go, C, C++, C#, Java, Ruby, PHP, Swift, Shell/Bash, Lua, CSS/SCSS/LESS, HTML, JSON, Kotlin, Zig, Scala, Elixir, SQL, and Dockerfile.
 
 ---
 
@@ -66,12 +66,12 @@ bun run package:vscode
 bun scripts/package-vscode.ts
 ```
 
-The output package will be generated at `packaging/vscode/cddm-1.7.0.vsix`.
+The output package will be generated at `packaging/vscode/cddm-4.1.0.vsix`.
 
 To install into VS Code or Cursor:
 
 ```bash
-code --install-extension packaging/vscode/cddm-1.7.0.vsix
+code --install-extension packaging/vscode/cddm-4.1.0.vsix
 ```
 
 ---

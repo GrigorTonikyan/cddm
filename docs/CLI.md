@@ -7,7 +7,7 @@
 
 ## 1. Executive Summary
 
-The CDDM CLI provides 22 subcommands for high-speed terminal-based duplication analysis, differential CI/CD verification, automated AST refactorings, and multi-repository federation.
+The CDDM CLI provides 23 subcommands for high-speed terminal-based duplication analysis, differential CI/CD verification, automated AST refactorings, and multi-repository federation.
 
 ### Global Options
 
