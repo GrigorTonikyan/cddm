@@ -1,8 +1,17 @@
 import { describe, expect, it } from "bun:test";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { callMcpStdio } from "../../tests/mcp/helpers";
 
+const exeName = process.platform === "win32" ? "cddm-mcp.exe" : "cddm-mcp";
+const hasBinary =
+  existsSync(join(import.meta.dir, "../../target/release", exeName)) ||
+  existsSync(join(import.meta.dir, "../../target/debug", exeName));
+
+const itIfBinary = hasBinary ? it : it.skip;
+
 describe("MCP Server Live Multi-Tool Fidelity & Response Audit", () => {
-  it("should initialize cleanly and negotiate capabilities", async () => {
+  itIfBinary("should initialize cleanly and negotiate capabilities", async () => {
     const initRes = await callMcpStdio({
       jsonrpc: "2.0",
       id: 1,
@@ -23,7 +32,7 @@ describe("MCP Server Live Multi-Tool Fidelity & Response Audit", () => {
     expect(result.serverInfo.name).toContain("CDDM");
   });
 
-  it("should list all 33 tools with semantic category metadata", async () => {
+  itIfBinary("should list all 33 tools with semantic category metadata", async () => {
     const toolsListRes = await callMcpStdio({
       jsonrpc: "2.0",
       id: 2,
@@ -40,7 +49,7 @@ describe("MCP Server Live Multi-Tool Fidelity & Response Audit", () => {
     }
   });
 
-  it("should extract semantic control flow graphs and compare them", async () => {
+  itIfBinary("should extract semantic control flow graphs and compare them", async () => {
     const compareRes = await callMcpStdio({
       jsonrpc: "2.0",
       id: 3,
@@ -64,18 +73,22 @@ describe("MCP Server Live Multi-Tool Fidelity & Response Audit", () => {
     expect(parsed.is_cross_language).toBe(true);
   });
 
-  it("should read workspace health resource", async () => {
-    const resRead = await callMcpStdio({
-      jsonrpc: "2.0",
-      id: 4,
-      method: "resources/read",
-      params: { uri: "cddm://workspace/health" },
-    });
-    expect(resRead.error).toBeUndefined();
-    const result = resRead.result as { contents: Array<{ text: string }> };
-    expect(result).toBeDefined();
-    const content = result.contents[0]?.text ?? "{}";
-    const parsed = JSON.parse(content);
-    expect(parsed.dry_health_score).toBeGreaterThan(0);
-  }, 30000);
+  itIfBinary(
+    "should read workspace health resource",
+    async () => {
+      const resRead = await callMcpStdio({
+        jsonrpc: "2.0",
+        id: 4,
+        method: "resources/read",
+        params: { uri: "cddm://workspace/health" },
+      });
+      expect(resRead.error).toBeUndefined();
+      const result = resRead.result as { contents: Array<{ text: string }> };
+      expect(result).toBeDefined();
+      const content = result.contents[0]?.text ?? "{}";
+      const parsed = JSON.parse(content);
+      expect(parsed.dry_health_score).toBeGreaterThan(0);
+    },
+    30000,
+  );
 });

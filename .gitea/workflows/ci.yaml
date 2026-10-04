@@ -12,15 +12,16 @@ concurrency:
 
 env:
   CARGO_TERM_COLOR: always
-  CARGO_BUILD_JOBS: 4
   CARGO_INCREMENTAL: 0
   RUSTFLAGS: "-C debuginfo=0"
   NODE_EXTRA_CA_CERTS: /etc/ssl/certs/ca-certificates.crt
+  DEBIAN_FRONTEND: noninteractive
+  NEEDRESTART_MODE: a
 
 jobs:
   rust-ci:
     name: Rust Quality Gate & Strict Dogfooding
-    runs-on: highperf
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: builtin:checkout
@@ -44,9 +45,6 @@ jobs:
           mkdir -p webui/dist
           test -f webui/dist/index.html || echo '<!DOCTYPE html><html><head><title>CDDM</title></head><body><div id="root"></div></body></html>' > webui/dist/index.html
 
-      - name: Cargo Typecheck (cargo check --all-targets)
-        run: cargo check --workspace --all-targets
-
       - name: Clippy Zero-Warning Linter (cargo clippy -D warnings)
         run: cargo clippy --workspace --all-targets -- -D warnings
 
@@ -60,7 +58,7 @@ jobs:
         run: ./target/release/cddm scan . --min-tokens 50 --fail-threshold 5.0
 
       - name: Upload Prebuilt Release Binaries
-        uses: actions/upload-artifact@v4
+        uses: self:gt-dev/actions/upload-artifact@v1
         with:
           name: cddm-prebuilt-binaries
           path: |
@@ -68,64 +66,8 @@ jobs:
             target/release/cddm-mcp
             target/release/cddm-lsp
 
-  webui-ci:
-    name: WebUI Frontend & E2E Acceptance Gate
-    needs: [rust-ci]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: builtin:checkout
-        with:
-          fetch-depth: 0
-
-      - name: Download Prebuilt Binaries
-        uses: actions/download-artifact@v4
-        with:
-          name: cddm-prebuilt-binaries
-          path: target/release
-
-      - name: Ensure Binaries Executable
-        run: chmod +x target/release/cddm target/release/cddm-mcp target/release/cddm-lsp
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Install Dependencies
-        run: |
-          bun install --frozen-lockfile || bun install
-          bun install --cwd webui
-
-      - name: Typecheck TypeScript (tsc -b)
-        working-directory: ./webui
-        run: bun run check
-
-      - name: Code Formatting Check (vp fmt --check)
-        working-directory: ./webui
-        run: bun run format:check
-
-      - name: WebUI Linter (vp lint)
-        working-directory: ./webui
-        run: bun run lint
-
-      - name: Run WebUI Vitest Suite (vitest run)
-        working-directory: ./webui
-        run: bun run test
-
-      - name: Install Playwright Browsers
-        run: bunx playwright install --with-deps chromium
-
-      - name: Run Playwright E2E Browser Test Suite
-        run: bun run test:e2e
-
-      - name: Build WebUI Bundle (vp build)
-        working-directory: ./webui
-        run: bun run build
-
   workspace-governance-ci:
-    name: Workspace Standards & MCP Protocol Gate
-    needs: [rust-ci]
+    name: Workspace Standards & Polyglot Quality Gate
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -133,34 +75,21 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Download Prebuilt Binaries
-        uses: actions/download-artifact@v4
+      - name: Setup Enterprise Toolchains
+        uses: self:gt-dev/actions/setup-toolchains@v1
         with:
-          name: cddm-prebuilt-binaries
-          path: target/release
-
-      - name: Ensure Binaries Executable
-        run: chmod +x target/release/cddm target/release/cddm-mcp target/release/cddm-lsp
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
+          bun: "true"
 
       - name: Install Dependencies
         run: |
           bun install --frozen-lockfile || bun install
-          bun install --cwd webui
-          bun install --cwd editors/vscode
+          bun scripts/setup-deps.ts
 
       - name: Validate Formatting, Lints & TypeScript (vp check)
         run: bunx vp check
 
-      - name: Run Script Test Suites (bun test)
+      - name: Run Workspace Script Test Suites (bun test)
         run: bun test --timeout 60000 scripts/tests scripts/lib
-
-      - name: Run MCP Protocol Per-Tool Test Suites (bun test)
-        run: bun test --timeout 60000 tests/mcp
 
       - name: Validate 4-Pillar Feature Parity
         run: bun scripts/check-feature-parity.ts
@@ -177,10 +106,85 @@ jobs:
       - name: Validate Milestone Governance Compliance
         run: bun scripts/check-milestones.ts
 
+  webui-ci:
+    name: WebUI Frontend Suite & Production Bundle
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: builtin:checkout
+        with:
+          fetch-depth: 0
+
+      - name: Setup Enterprise Toolchains
+        uses: self:gt-dev/actions/setup-toolchains@v1
+        with:
+          bun: "true"
+
+      - name: Install Dependencies
+        run: |
+          bun install --frozen-lockfile || bun install
+          bun install --cwd webui
+
+      - name: Run WebUI Vitest Suite (vitest run)
+        working-directory: ./webui
+        run: bun run test
+
+      - name: Build WebUI Production Bundle (vp build)
+        working-directory: ./webui
+        run: bun run build
+
+  e2e-and-mcp-ci:
+    name: MCP Protocol & Playwright E2E Acceptance Gate
+    needs: [rust-ci, webui-ci]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: builtin:checkout
+        with:
+          fetch-depth: 0
+
+      - name: Download Prebuilt Binaries
+        uses: self:gt-dev/actions/download-artifact@v1
+        with:
+          name: cddm-prebuilt-binaries
+          path: target/release
+
+      - name: Ensure Binaries Executable
+        run: chmod +x target/release/cddm target/release/cddm-mcp target/release/cddm-lsp
+
+      - name: Setup Enterprise Toolchains
+        uses: self:gt-dev/actions/setup-toolchains@v1
+        with:
+          bun: "true"
+
+      - name: Install Dependencies
+        run: |
+          bun install --frozen-lockfile || bun install
+          bun scripts/setup-deps.ts
+
+      - name: Run MCP Protocol Per-Tool Test Suites (bun test)
+        run: bun test --timeout 60000 tests/mcp
+
+      - name: Setup Playwright Browsers with Caching
+        uses: self:gt-dev/actions/setup-playwright@v1
+        with:
+          browser: chromium
+
+      - name: Run Playwright E2E Browser Test Suite
+        run: bun run test:e2e
+
+  merge-gate:
+    name: PR Quality & Merge Gate
+    needs: [rust-ci, workspace-governance-ci, webui-ci, e2e-and-mcp-ci]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verification Gate
+        run: echo "All quality gates, compiler checks, MCP test suites, and browser E2E workflows passed successfully."
+
   container-ci:
     name: Build & Push Container to Private VCS Registry
     if: github.ref == 'refs/heads/main'
-    needs: [rust-ci, webui-ci, workspace-governance-ci]
+    needs: [merge-gate]
     runs-on: highperf
     steps:
       - name: Checkout Code

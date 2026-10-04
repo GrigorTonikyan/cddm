@@ -17,6 +17,7 @@ export interface CleanOptions {
   reportsOnly?: boolean;
   buildOnly?: boolean;
   lockfilesOnly?: boolean;
+  calculateSizes?: boolean;
   cwd?: string;
 }
 

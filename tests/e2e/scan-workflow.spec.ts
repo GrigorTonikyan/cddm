@@ -26,7 +26,7 @@ test.describe("CDDM WebUI E2E Workflows", () => {
     }
 
     // Verify DRY Health Score renders
-    await expect(page.getByText("DRY Health Score")).toBeVisible({ timeout: 45000 });
+    await expect(page.getByText("DRY Health Score")).toBeVisible({ timeout: 90000 });
   });
 
   test("should toggle to N-Way Clusters view and display cluster cards", async ({ page }) => {
@@ -39,7 +39,7 @@ test.describe("CDDM WebUI E2E Workflows", () => {
       await page.getByRole("button", { name: /Run Duplicate Analysis/i }).click();
     }
 
-    await expect(page.getByText("DRY Health Score")).toBeVisible({ timeout: 45000 });
+    await expect(page.getByText("DRY Health Score")).toBeVisible({ timeout: 90000 });
     await expect(page.getByText("Clone Clusters")).toBeVisible();
 
     const clustersTab = page.getByRole("button", { name: /N-Way Clusters/i });

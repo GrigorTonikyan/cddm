@@ -9,7 +9,7 @@
  * - `gitea_runner_status()`
  */
 
-import { GITEA_REPO, giteaFetch, sleep } from "./lib/gitea-client";
+import { GITEA_OWNER, GITEA_REPO, giteaFetch, sleep } from "./lib/gitea-client";
 import { printScriptBanner, printScriptHelp } from "./lib/step-runner";
 
 export interface WorkflowJob {
@@ -63,6 +63,29 @@ export async function fetchJobLogs(jobId: number): Promise<string | null> {
   } catch {
     return null;
   }
+}
+
+export interface RunnerDetail {
+  id: number;
+  name: string;
+  status?: string;
+  labels?: string[];
+  busy?: boolean;
+}
+
+export async function fetchRunners(): Promise<RunnerDetail[]> {
+  for (const endpoint of [
+    `/admin/actions/runners`,
+    `/orgs/${GITEA_OWNER}/actions/runners`,
+    `/repos/${GITEA_REPO}/actions/runners`,
+  ]) {
+    const res = await giteaFetch<{ runners?: RunnerDetail[] } | RunnerDetail[]>(endpoint);
+    if (res.ok && res.data) {
+      if (Array.isArray(res.data)) return res.data;
+      if ("runners" in res.data && Array.isArray(res.data.runners)) return res.data.runners;
+    }
+  }
+  return [];
 }
 
 export async function displayJobLogs(
@@ -152,12 +175,26 @@ if (import.meta.main) {
       ["--logs <jobId>, -L <jobId>", "Fetch and print log output for a specific job ID"],
       ["--tail <n>, -t <n>", "Number of trailing log lines to show (default: 100, 0 for all)"],
       ["--grep <pattern>, -g <pattern>", "Filter log output by regex pattern"],
+      ["--runners, -r", "Inspect and display registered Gitea Actions CI/CD runners"],
       ["--help, -h", "Show this help message"],
     ]);
     process.exit(0);
   }
 
   printScriptBanner("CDDM Gitea Actions CI/CD Monitor");
+
+  if (args.includes("--runners") || args.includes("-r")) {
+    const runners = await fetchRunners();
+    console.log(`\n=== Gitea Actions Runners (${runners.length}) ===`);
+    for (const r of runners) {
+      const labelStr =
+        (r.labels as any[])?.map((l) => (typeof l === "object" ? l.name : l)).join(", ") || "none";
+      console.log(
+        `* Runner #${r.id}: ${r.name} [${r.status || "active"}] (busy: ${r.busy}) (labels: ${labelStr})`,
+      );
+    }
+    process.exit(0);
+  }
 
   const logsIdx = args.indexOf("--logs") !== -1 ? args.indexOf("--logs") : args.indexOf("-L");
   if (logsIdx !== -1 && args[logsIdx + 1]) {

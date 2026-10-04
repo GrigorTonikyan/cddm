@@ -7,7 +7,7 @@
 async function setupGitHooks() {
   console.log("\x1b[36mConfiguring Vite+ git hooks (.vite-hooks)...\x1b[0m");
 
-  const proc = Bun.spawn(["vp", "config"], {
+  const proc = Bun.spawn(["vp", "hooks", "enable"], {
     stdout: "inherit",
     stderr: "inherit",
   });

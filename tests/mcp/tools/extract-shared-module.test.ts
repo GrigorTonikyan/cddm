@@ -67,7 +67,7 @@ describe("MCP Tool: cddm_extract_shared_module", () => {
   it("should reject invocation when cluster_id does not exist", async () => {
     await assertToolError(
       "cddm_extract_shared_module",
-      { cluster_id: 999999 },
+      { cluster_id: 999999, directory: "crates/cddm-lsp" },
       RPC_ERRORS.INVALID_PARAMS,
     );
   }, 30000);
