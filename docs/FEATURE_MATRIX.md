@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-27 | Rust: 395 #[test] units | WebUI: 237 tests across 65 suites | Scripts & MCP: 207 tests across 60 suites | CI Workflows: PASS
+> Last verified: 2026-08-27 | Rust: 395 #[test] units | WebUI: 237 tests across 65 suites | Scripts & MCP: 212 tests across 61 suites | CI Workflows: PASS
 
 ---
 
@@ -430,7 +430,7 @@
 
 ---
 
-## 3. Repository Scripts & MCP Protocol — Bun Test Suites (207 tests across 60 suites)
+## 3. Repository Scripts & MCP Protocol — Bun Test Suites (212 tests across 61 suites)
 
 ### Repository Tooling & Automation Suites
 
@@ -459,6 +459,7 @@
 | VSIX Packaging Pipeline       | `scripts/tests/package-vscode.test.ts`         | 5 tests    | PASS   |
 | populate-gitea-portal         | `scripts/tests/populate-gitea-portal.test.ts`  | 5 tests    | PASS   |
 | publish-release               | `scripts/tests/publish-release.test.ts`        | 4 tests    | PASS   |
+| setup-deps                    | `scripts/tests/setup-deps.test.ts`             | 5 tests    | PASS   |
 | ui-ux-qa-verification         | `scripts/tests/ui-ux-qa-verification.test.ts`  | 4 tests    | PASS   |
 | Semantic Versioning & Commits | `scripts/tests/version.test.ts`                | 9 tests    | PASS   |
 | Polyglot Language Matrix      | `scripts/tests/vscode-extension.test.ts`       | 2 tests    | PASS   |
