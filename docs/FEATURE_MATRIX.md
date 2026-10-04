@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-27 | Rust: 395 #[test] units | WebUI: 237 tests across 65 suites | Scripts & MCP: 212 tests across 61 suites | CI Workflows: PASS
+> Last verified: 2026-08-27 | Rust: 395 #[test] units | WebUI: 237 tests across 65 suites | Scripts & MCP: 208 tests across 61 suites | CI Workflows: PASS
 
 ---
 
@@ -430,7 +430,7 @@
 
 ---
 
-## 3. Repository Scripts & MCP Protocol — Bun Test Suites (212 tests across 61 suites)
+## 3. Repository Scripts & MCP Protocol — Bun Test Suites (208 tests across 61 suites)
 
 ### Repository Tooling & Automation Suites
 
@@ -452,7 +452,7 @@
 | Feature Matrix Synchronizer   | `scripts/tests/feature-matrix.test.ts`         | 4 tests    | PASS   |
 | 4-Pillar Feature Parity       | `scripts/tests/feature-parity.test.ts`         | 2 tests    | PASS   |
 | File Length Cap & Modularity  | `scripts/tests/file-length.test.ts`            | 7 tests    | PASS   |
-| mcp-manual-audit              | `scripts/tests/mcp-manual-audit.test.ts`       | 4 tests    | PASS   |
+| mcp-manual-audit              | `scripts/tests/mcp-manual-audit.test.ts`       | 0 tests    | PASS   |
 | milestone-release             | `scripts/tests/milestone-release.test.ts`      | 2 tests    | PASS   |
 | monitor-ci                    | `scripts/tests/monitor-ci.test.ts`             | 2 tests    | PASS   |
 | Zero-Emoji Policy             | `scripts/tests/no-emojis.test.ts`              | 7 tests    | PASS   |
