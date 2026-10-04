@@ -1,14 +1,14 @@
 #!/usr/bin/env bun
 /**
  * Cross-platform workspace dependency installer for CDDM.
- * Ensures all nested package workspaces (webui, editors/vscode, tests/e2e)
+ * Ensures all nested package workspaces (webui, editors/vscode)
  * have their dependencies installed following root package installation.
  */
 
 import { existsSync } from "node:fs";
 import { join, resolve } from "node:path";
 
-export const DEPENDENCY_TARGET_DIRS = ["webui", "editors/vscode", "tests/e2e"] as const;
+export const DEPENDENCY_TARGET_DIRS = ["webui", "editors/vscode"] as const;
 
 export interface SetupDepsOptions {
   workspaceRoot?: string;

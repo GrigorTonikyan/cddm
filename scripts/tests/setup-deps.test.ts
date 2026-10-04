@@ -6,7 +6,8 @@ describe("scripts/setup-deps.ts", () => {
   it("defines expected target directories", () => {
     expect(DEPENDENCY_TARGET_DIRS).toContain("webui");
     expect(DEPENDENCY_TARGET_DIRS).toContain("editors/vscode");
-    expect(DEPENDENCY_TARGET_DIRS).toContain("tests/e2e");
+    expect(DEPENDENCY_TARGET_DIRS).not.toContain("tests/e2e");
+    expect(DEPENDENCY_TARGET_DIRS.length).toBe(2);
   });
 
   it("parses CLI flags correctly", () => {
