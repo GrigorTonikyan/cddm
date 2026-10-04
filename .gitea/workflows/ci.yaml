@@ -21,7 +21,7 @@ env:
 jobs:
   rust-ci:
     name: Rust Quality Gate & Strict Dogfooding
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest-12-cores
     steps:
       - name: Checkout Code
         uses: builtin:checkout
@@ -196,8 +196,11 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Log in to Private Gitea Container Registry
-        run: |
-          echo "${{ secrets.REGISTRY_TOKEN }}" | docker login git.gt-web-dev.com -u "${{ github.repository_owner }}" --password-stdin
+        uses: self:gt-dev/actions/docker-login@v1
+        with:
+          registry: git.gt-web-dev.com
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.REGISTRY_TOKEN }}
 
       - name: Build and Push CDDM Production Image
         uses: docker/build-push-action@v5
