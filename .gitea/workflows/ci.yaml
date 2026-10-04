@@ -60,7 +60,7 @@ jobs:
         run: ./target/release/cddm scan . --min-tokens 50 --fail-threshold 5.0
 
       - name: Upload Prebuilt Release Binaries
-        uses: actions/upload-artifact@v4
+        uses: self:gt-dev/actions/upload-artifact@v1
         with:
           name: cddm-prebuilt-binaries
           path: |
@@ -79,7 +79,7 @@ jobs:
           fetch-depth: 0
 
       - name: Download Prebuilt Binaries
-        uses: actions/download-artifact@v4
+        uses: self:gt-dev/actions/download-artifact@v1
         with:
           name: cddm-prebuilt-binaries
           path: target/release
@@ -134,7 +134,7 @@ jobs:
           fetch-depth: 0
 
       - name: Download Prebuilt Binaries
-        uses: actions/download-artifact@v4
+        uses: self:gt-dev/actions/download-artifact@v1
         with:
           name: cddm-prebuilt-binaries
           path: target/release
