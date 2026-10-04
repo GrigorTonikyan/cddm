@@ -73,6 +73,55 @@ export interface RunnerDetail {
   busy?: boolean;
 }
 
+export interface BranchProtection {
+  branch_name: string;
+  enable_status_check: boolean;
+  status_check_contexts: string[];
+  block_on_outdated_branch: boolean;
+  enable_approvals_whitelist: boolean;
+  required_approvals: number;
+}
+
+export async function fetchBranchProtections(): Promise<BranchProtection[]> {
+  const path = `/repos/${GITEA_REPO}/branch_protections`;
+  const res = await giteaFetch<BranchProtection[]>(path);
+  return res.data || [];
+}
+
+export async function updateBranchProtectionContexts(): Promise<void> {
+  const contexts = [
+    "Gitea Continuous Integration / Rust Quality Gate & Strict Dogfooding (pull_request)",
+    "Gitea Continuous Integration / Workspace Standards & Polyglot Quality Gate (pull_request)",
+    "Gitea Continuous Integration / WebUI Frontend Suite & Production Bundle (pull_request)",
+    "Gitea Continuous Integration / MCP Protocol & Playwright E2E Acceptance Gate (pull_request)",
+    "Gitea Continuous Integration / PR Quality & Merge Gate (pull_request)",
+  ];
+
+  try {
+    await giteaFetch(`/repos/${GITEA_REPO}/branch_protections/main`, { method: "DELETE" });
+    console.log("Cleaned up redundant branch protection rule: main");
+  } catch {
+    // Ignore
+  }
+
+  const patchRes = await giteaFetch(
+    `/repos/${GITEA_REPO}/branch_protections/${encodeURIComponent("main, default")}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({
+        enable_status_check: true,
+        status_check_contexts: contexts,
+      }),
+    },
+  );
+
+  if (patchRes.ok) {
+    console.log("Updated branch protection 'main, default' status check contexts successfully.");
+  } else {
+    console.warn("Patching 'main, default' returned status:", patchRes.status);
+  }
+}
+
 export async function fetchRunners(): Promise<RunnerDetail[]> {
   for (const endpoint of [
     `/admin/actions/runners`,
@@ -176,12 +225,41 @@ if (import.meta.main) {
       ["--tail <n>, -t <n>", "Number of trailing log lines to show (default: 100, 0 for all)"],
       ["--grep <pattern>, -g <pattern>", "Filter log output by regex pattern"],
       ["--runners, -r", "Inspect and display registered Gitea Actions CI/CD runners"],
+      ["--protection, -p", "Inspect branch protection rules and required status check contexts"],
+      [
+        "--update-protection",
+        "Synchronize branch protection required status checks with CI workflow",
+      ],
       ["--help, -h", "Show this help message"],
     ]);
     process.exit(0);
   }
 
   printScriptBanner("CDDM Gitea Actions CI/CD Monitor");
+
+  if (args.includes("--update-protection")) {
+    await updateBranchProtectionContexts();
+    process.exit(0);
+  }
+
+  if (args.includes("--protection") || args.includes("-p")) {
+    const path = `/repos/${GITEA_REPO}/branch_protections`;
+    const res = await giteaFetch<any[]>(path);
+    console.log(JSON.stringify(res.data, null, 2));
+    process.exit(0);
+  }
+
+  const shaIdx = args.indexOf("--statuses");
+  if (shaIdx !== -1 && args[shaIdx + 1]) {
+    const sha = args[shaIdx + 1]!;
+    const path = `/repos/${GITEA_REPO}/commits/${sha}/statuses`;
+    const res = await giteaFetch<any[]>(path);
+    console.log(`\n=== Commit Statuses for ${sha} (${res.data?.length || 0}) ===`);
+    for (const s of res.data || []) {
+      console.log(`* [${s.status}] ${s.context} - ${s.description}`);
+    }
+    process.exit(0);
+  }
 
   if (args.includes("--runners") || args.includes("-r")) {
     const runners = await fetchRunners();

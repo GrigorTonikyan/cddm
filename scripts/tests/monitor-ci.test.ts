@@ -23,5 +23,7 @@ describe("Gitea Actions CI/CD Monitor Script", () => {
     expect(stdout).toContain("--limit");
     expect(stdout).toContain("--logs");
     expect(stdout).toContain("--runners");
+    expect(stdout).toContain("--protection");
+    expect(stdout).toContain("--update-protection");
   });
 });
