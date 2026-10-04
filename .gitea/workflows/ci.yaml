@@ -19,7 +19,7 @@ env:
 jobs:
   rust-ci:
     name: Rust Quality Gate & Strict Dogfooding
-    runs-on: highperf
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: builtin:checkout
