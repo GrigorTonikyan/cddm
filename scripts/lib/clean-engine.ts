@@ -25,7 +25,10 @@ export * from "./clean-types";
 /**
  * Recursively calculate total size in bytes of a file or directory.
  */
-export function calculatePathSize(fullPath: string): number {
+export function calculatePathSize(fullPath: string, maxDepth = 3, currentDepth = 0): number {
+  if (currentDepth > maxDepth) {
+    return 0;
+  }
   try {
     const stat = lstatSync(fullPath);
     if (stat.isSymbolicLink()) {
@@ -37,7 +40,7 @@ export function calculatePathSize(fullPath: string): number {
     let total = 0;
     const entries = readdirSync(fullPath);
     for (const entry of entries) {
-      total += calculatePathSize(join(fullPath, entry));
+      total += calculatePathSize(join(fullPath, entry), maxDepth, currentDepth + 1);
     }
     return total;
   } catch {
@@ -178,7 +181,7 @@ export function findCleanableItems(
       try {
         const isDir = statSync(fullPath).isDirectory();
         if (isDir) {
-          const size = calculatePathSize(fullPath);
+          const size = options.calculateSizes ? calculatePathSize(fullPath) : undefined;
           addItem(dirDef.path, true, dirDef.category, size);
         }
       } catch {}
@@ -226,12 +229,12 @@ export function findCleanableItems(
 
       if (isDirectory) {
         if (entry === "node_modules") {
-          const size = calculatePathSize(fullEntry);
+          const size = options.calculateSizes ? calculatePathSize(fullEntry) : undefined;
           addItem(relEntry, true, "cache", size);
           continue;
         }
         if (entry === ".cddm" || entry === ".turbo" || entry === ".cache" || entry === ".vite") {
-          const size = calculatePathSize(fullEntry);
+          const size = options.calculateSizes ? calculatePathSize(fullEntry) : undefined;
           addItem(relEntry, true, "cache", size);
           continue;
         }
@@ -242,12 +245,12 @@ export function findCleanableItems(
           entry === "coverage" ||
           entry === ".nyc_output"
         ) {
-          const size = calculatePathSize(fullEntry);
+          const size = options.calculateSizes ? calculatePathSize(fullEntry) : undefined;
           addItem(relEntry, true, "test-report", size);
           continue;
         }
         if (entry === "target" || entry === "dist" || entry === "out") {
-          const size = calculatePathSize(fullEntry);
+          const size = options.calculateSizes ? calculatePathSize(fullEntry) : undefined;
           addItem(relEntry, true, "build", size);
           continue;
         }
