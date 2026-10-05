@@ -5,6 +5,37 @@ All notable changes to **CDDM** (_Code De-Duplication Meister_) will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.5.0] - 2026-10-05
+
+### Features
+
+- **ci**: separate mcp and e2e jobs, configure playwright, and ban suppression (`9da94af`)
+- **tooling**: add branch protection inspection and status context sync to CI monitor (`eae50c0`)
+
+### Bug Fixes
+
+- **tests**: gracefully skip mcp live audit when cddm-mcp binary is absent (`d5b6dae`)
+- **ci**: use modern internal artifact actions and increase e2e timeout (`4b97b48`)
+- **workspace**: exclude tests/e2e from setup-deps to avoid duplicate playwright module (`24fdf2e`)
+- **workspace**: full prod build on vp run build and turnkey vp install (`9d11943`)
+
+### Performance Improvements
+
+- **ci**: optimize playwright e2e gate, modernize container auth, and tune runner placement (`88688f7`)
+- **scripts**: optimize clean engine path size calculation and prevent test timeout (`843e5d5`)
+- **ci**: modernize pipeline with parallel stages and optimize vite hooks (`a9be349`)
+
+### Documentation
+
+- **matrix**: synchronize feature matrix dynamic test suite counts (`e2cc037`)
+
+### Tooling & Maintenance
+
+- **env**: configure DEBIAN_FRONTEND=noninteractive across all CI workflow steps (`0411d04`)
+- **rust**: route rust-ci to ubuntu-latest runner and enhance ci monitor with runner observability (`50a9b8d`)
+- **mcp**: scope extract-shared-module cluster_id test to avoid timeout (`75f79d0`)
+- **docs**: synchronize README, wiki data, and test assertions (`65a5a27`)
+
 ## [4.4.0] - 2026-09-27
 
 ### Features
