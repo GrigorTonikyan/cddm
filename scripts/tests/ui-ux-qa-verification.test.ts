@@ -22,13 +22,18 @@ describe("WebUI Studio UI/UX Verification Configuration & Suite Registry", () =>
     }
   });
 
-  it("should have valid Playwright configuration for Desktop Chrome", () => {
+  it("should have valid Playwright configuration for Desktop Chrome and CI adherence", () => {
     const configPath = join(process.cwd(), "tests", "e2e", "playwright.config.ts");
     expect(existsSync(configPath)).toBe(true);
     const content = readFileSync(configPath, "utf-8");
     expect(content).toContain("defineConfig");
     expect(content).toContain("baseURL");
     expect(content).toContain("chromium");
+    expect(content).toContain("PLAYWRIGHT_SCREENSHOT");
+    expect(content).toContain("PLAYWRIGHT_HTML_REPORT");
+    expect(content).toContain("PLAYWRIGHT_FAIL_FAST");
+    expect(content).toContain("PLAYWRIGHT_HEADED");
+    expect(content).toContain("maxFailures");
   });
 
   it("should enforce zero console error assertions in comprehensive browser spec", () => {
