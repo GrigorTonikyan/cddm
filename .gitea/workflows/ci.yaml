@@ -133,9 +133,9 @@ jobs:
         working-directory: ./webui
         run: bun run build
 
-  e2e-and-mcp-ci:
-    name: MCP Protocol & Playwright E2E Acceptance Gate
-    needs: [rust-ci, webui-ci]
+  mcp-ci:
+    name: MCP Protocol Per-Tool Quality Gate
+    needs: [rust-ci]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -165,6 +165,35 @@ jobs:
       - name: Run MCP Protocol Per-Tool Test Suites (bun test)
         run: bun test --timeout 60000 tests/mcp
 
+  e2e-ci:
+    name: Playwright E2E Browser Acceptance Gate
+    needs: [rust-ci, webui-ci]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: builtin:checkout
+        with:
+          fetch-depth: 0
+
+      - name: Download Prebuilt Binaries
+        uses: self:gt-dev/actions/download-artifact@v1
+        with:
+          name: cddm-prebuilt-binaries
+          path: target/release
+
+      - name: Ensure Binaries Executable
+        run: chmod +x target/release/cddm target/release/cddm-mcp target/release/cddm-lsp
+
+      - name: Setup Enterprise Toolchains
+        uses: self:gt-dev/actions/setup-toolchains@v1
+        with:
+          bun: "true"
+
+      - name: Install Dependencies
+        run: |
+          bun install --frozen-lockfile || bun install
+          bun scripts/setup-deps.ts
+
       - name: Setup Playwright Browsers with Caching
         uses: self:gt-dev/actions/setup-playwright@v1
         with:
@@ -173,9 +202,18 @@ jobs:
       - name: Run Playwright E2E Browser Test Suite
         run: bun run test:e2e
 
+      - name: Upload Playwright Test Artifacts on Failure
+        if: failure()
+        uses: self:gt-dev/actions/upload-artifact@v1
+        with:
+          name: playwright-test-artifacts
+          path: |
+            test-results/
+            playwright-report/
+
   merge-gate:
     name: PR Quality & Merge Gate
-    needs: [rust-ci, workspace-governance-ci, webui-ci, e2e-and-mcp-ci]
+    needs: [rust-ci, workspace-governance-ci, webui-ci, mcp-ci, e2e-ci]
     runs-on: ubuntu-latest
     steps:
       - name: Verification Gate

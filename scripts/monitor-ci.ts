@@ -93,7 +93,8 @@ export async function updateBranchProtectionContexts(): Promise<void> {
     "Gitea Continuous Integration / Rust Quality Gate & Strict Dogfooding (pull_request)",
     "Gitea Continuous Integration / Workspace Standards & Polyglot Quality Gate (pull_request)",
     "Gitea Continuous Integration / WebUI Frontend Suite & Production Bundle (pull_request)",
-    "Gitea Continuous Integration / MCP Protocol & Playwright E2E Acceptance Gate (pull_request)",
+    "Gitea Continuous Integration / MCP Protocol Per-Tool Quality Gate (pull_request)",
+    "Gitea Continuous Integration / Playwright E2E Browser Acceptance Gate (pull_request)",
     "Gitea Continuous Integration / PR Quality & Merge Gate (pull_request)",
   ];
 
