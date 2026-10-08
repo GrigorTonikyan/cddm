@@ -2,6 +2,9 @@
  * MCP and WebUI Metadata Catalogs for CDDM Interface Documentation.
  */
 
+import { existsSync, readdirSync, statSync } from "node:fs";
+import { basename, join, resolve } from "node:path";
+
 export interface McpToolDef {
   name: string;
   category: string;
@@ -296,133 +299,188 @@ export const MCP_RESOURCES_CATALOG: McpResourceDef[] = [
   },
 ];
 
-export const WEBUI_MODALS_CATALOG: WebUiModalDef[] = [
-  {
-    modal: "DiffScanResultsModal",
-    trigger: "Header 'Diff Scan'",
-    description: "Side-by-side branch comparison, new clone alerts, and drift metrics",
-  },
-  {
-    modal: "CoverageCorrelationModal",
-    trigger: "Header 'Coverage' / Key C",
-    description: "Runtime execution trace correlation, heatmaps, and hot-path risk score",
-  },
-  {
-    modal: "DeadCodeExplorerModal",
-    trigger: "Header 'Dead Code' / Key D",
-    description: "Interactive unreferenced function and dead clone block viewer",
-  },
-  {
-    modal: "HubFederationModal",
-    trigger: "Header 'Hub' / Key 0",
-    description: "Multi-repository organization federation overview and cross-repo clusters",
-  },
-  {
-    modal: "OverlapDetectorModal",
-    trigger: "Header 'Overlap' / Key 9",
-    description: "Reimplemented ecosystem library algorithm catalog and replacement suggestions",
-  },
-  {
-    modal: "PolicyRulesModal",
-    trigger: "Header 'Policies' / Key 6",
-    description: "Architectural boundary rules, zero-duplication zones, and policy violations",
-  },
-  {
-    modal: "SuppressionRulesModal",
-    trigger: "Header 'Suppression'",
-    description: ".cddmignore rule editor, regex patterns, and live suppression testing",
-  },
-  {
-    modal: "RefactorSandboxModal",
-    trigger: "Cluster Card 'Refactor'",
-    description: "Interactive AST refactoring sandbox, AI Prompt generator, and AI Surgeon",
-  },
-  {
-    modal: "RefactorPatchModal",
-    trigger: "Clone Card 'View Patch'",
-    description: "Unified .patch diff synthesizer and multi-file consensus viewer",
-  },
-  {
-    modal: "TimelineExplorerModal",
-    trigger: "Header 'Timeline' / Key 7",
-    description: "Historical Git trajectory charts, commit churn, and branch drift matrix",
-  },
-  {
-    modal: "TreemapExplorerModal",
-    trigger: "Header 'Treemap'",
-    description: "Hierarchical D3 file-tree duplication area visualization",
-  },
-  {
-    modal: "SemanticGraphModal",
-    trigger: "Header 'Semantic' / Key 3",
-    description: "Interactive CFG/PDG graph visualizer and WL kernel isomorphism viewer",
-  },
-  {
-    modal: "MonorepoWorkspaceModal",
-    trigger: "Header 'Monorepo'",
-    description: "Multi-package workspace package dependency graph and cross-package clones",
-  },
-  {
-    modal: "HookManagerModal",
-    trigger: "Header 'Hooks' / Key 8",
-    description: "Git pre-commit/pre-push hooks and turnkey CI/CD workflow generator",
-  },
-  {
-    modal: "ScanConfigModal",
-    trigger: "Header 'Configure Scan'",
-    description: "Real-time token thresholds, language filters, and worker thread ceilings",
-  },
-  {
-    modal: "ExportReportModal",
-    trigger: "Header 'Export'",
-    description: "One-click export to JSON, Markdown, SARIF 2.1.0, and HTML",
-  },
-  {
-    modal: "HealthAuditModal",
-    trigger: "DRY Health Gauge Click",
-    description: "Mathematical score breakdown, penalty factors, and modularity ratings",
-  },
-  {
-    modal: "LanguageAnalyticsModal",
-    trigger: "Language Bar Click",
-    description: "Polyglot volume breakdown, token percentages, and duplicate lines by language",
-  },
-  {
-    modal: "ClonePairDiffModal",
+export interface WebUiModalMeta {
+  trigger: string;
+  description: string;
+  relPath?: string;
+}
+
+export const WEBUI_MODAL_METADATA_REGISTRY: Record<string, WebUiModalMeta> = {
+  ClonePairDiffModal: {
     trigger: "Clone Pair Card Click",
     description: "Split Monaco diff viewer with syntax highlighting and git blame annotations",
   },
-  {
-    modal: "CodeEditorModal",
+  CodeEditorModal: {
     trigger: "Header 'Code Editor' / Clone Card 'Studio Editor'",
     description:
       "Integrated Monaco code editor and side-by-side split diff viewer with workspace file editing",
   },
-];
+  CoverageCorrelationModal: {
+    trigger: "Header 'Coverage' / Key C",
+    description: "Runtime execution trace correlation, heatmaps, and hot-path risk score",
+  },
+  DeadCodeExplorerModal: {
+    trigger: "Header 'Dead Code' / Key D",
+    description: "Interactive unreferenced function and dead clone block viewer",
+  },
+  DiffScanResultsModal: {
+    trigger: "Header 'Diff Scan'",
+    description: "Side-by-side branch comparison, new clone alerts, and drift metrics",
+  },
+  ExportReportModal: {
+    trigger: "Header 'Export'",
+    description: "One-click export to JSON, Markdown, SARIF 2.1.0, and HTML",
+  },
+  HealthAuditModal: {
+    trigger: "DRY Health Gauge Click",
+    description: "Mathematical score breakdown, penalty factors, and modularity ratings",
+  },
+  HookManagerModal: {
+    trigger: "Header 'Hooks' / Key 8",
+    description: "Git pre-commit/pre-push hooks and turnkey CI/CD workflow generator",
+  },
+  HubFederationModal: {
+    trigger: "Header 'Hub' / Key 0",
+    description: "Multi-repository organization federation overview and cross-repo clusters",
+  },
+  LanguageAnalyticsModal: {
+    trigger: "Language Bar Click",
+    description: "Polyglot volume breakdown, token percentages, and duplicate lines by language",
+  },
+  LiveEventInspectorModal: {
+    trigger: "Live Watch HUD Click",
+    description: "Real-time daemon status, file change events, and incremental rescan logs",
+    relPath: "watch/LiveEventInspectorModal.tsx",
+  },
+  McpAppsPreviewModal: {
+    trigger: "Header 'MCP Apps'",
+    description: "Interactive HTML preview widgets, diff split-views, and cluster treemaps",
+  },
+  MonorepoWorkspaceModal: {
+    trigger: "Header 'Monorepo'",
+    description: "Multi-package workspace package dependency graph and cross-package clones",
+  },
+  OverlapDetectorModal: {
+    trigger: "Header 'Overlap' / Key 9",
+    description: "Reimplemented ecosystem library algorithm catalog and replacement suggestions",
+  },
+  PolicyRulesModal: {
+    trigger: "Header 'Policies' / Key 6",
+    description: "Architectural boundary rules, zero-duplication zones, and policy violations",
+  },
+  RefactorPatchModal: {
+    trigger: "Clone Card 'View Patch'",
+    description: "Unified .patch diff synthesizer and multi-file consensus viewer",
+  },
+  RefactorSandboxModal: {
+    trigger: "Cluster Card 'Refactor'",
+    description: "Interactive AST refactoring sandbox, AI Prompt generator, and AI Surgeon",
+  },
+  ScanConfigModal: {
+    trigger: "Header 'Configure Scan'",
+    description: "Real-time token thresholds, language filters, and worker thread ceilings",
+  },
+  SemanticGraphModal: {
+    trigger: "Header 'Semantic' / Key 3",
+    description: "Interactive CFG/PDG graph visualizer and WL kernel isomorphism viewer",
+  },
+  SuppressionRulesModal: {
+    trigger: "Header 'Suppression'",
+    description: ".cddmignore rule editor, regex patterns, and live suppression testing",
+  },
+  TimelineExplorerModal: {
+    trigger: "Header 'Timeline' / Key 7",
+    description: "Historical Git trajectory charts, commit churn, and branch drift matrix",
+  },
+  TreemapExplorerModal: {
+    trigger: "Header 'Treemap'",
+    description: "Hierarchical D3 file-tree duplication area visualization",
+  },
+};
+
+function getWorkspaceRoot(explicitRoot?: string): string {
+  if (explicitRoot && existsSync(join(explicitRoot, "webui/src/components"))) {
+    return explicitRoot;
+  }
+  if (existsSync(join(process.cwd(), "webui/src/components"))) {
+    return process.cwd();
+  }
+  return resolve(import.meta.dir, "../..");
+}
+
+export function discoverWebUiModals(workspaceRoot?: string): WebUiModalDef[] {
+  const root = getWorkspaceRoot(workspaceRoot);
+  const componentsDir = join(root, "webui/src/components");
+  if (!existsSync(componentsDir)) {
+    throw new Error(`WebUI components directory not found: ${componentsDir}`);
+  }
+
+  const discoveredFiles: string[] = [];
+  const scan = (dir: string) => {
+    for (const e of readdirSync(dir)) {
+      const full = join(dir, e);
+      if (statSync(full).isDirectory()) {
+        if (e !== "ui") scan(full);
+      } else if (
+        e.endsWith("Modal.tsx") &&
+        !e.endsWith(".test.tsx") &&
+        e !== "ModalFooter.tsx" &&
+        e !== "ModalTabs.tsx"
+      ) {
+        discoveredFiles.push(full);
+      }
+    }
+  };
+  scan(componentsDir);
+
+  const modals: WebUiModalDef[] = discoveredFiles.map((file) => {
+    const modalName = basename(file).replace(/\.tsx$/, "");
+    const meta = WEBUI_MODAL_METADATA_REGISTRY[modalName];
+    if (!meta) {
+      throw new Error(
+        `Discovered modal '${modalName}' at '${file}' lacks metadata in WEBUI_MODAL_METADATA_REGISTRY.`,
+      );
+    }
+    return { modal: modalName, trigger: meta.trigger, description: meta.description };
+  });
+
+  for (const [name, meta] of Object.entries(WEBUI_MODAL_METADATA_REGISTRY)) {
+    const expected = meta.relPath
+      ? join(componentsDir, meta.relPath)
+      : join(componentsDir, `${name}.tsx`);
+    if (!existsSync(expected)) {
+      throw new Error(
+        `Phantom modal in registry: '${name}' does not exist on disk at '${expected}'.`,
+      );
+    }
+  }
+
+  return modals.sort((a, b) => a.modal.localeCompare(b.modal));
+}
+
+export const WEBUI_MODALS_CATALOG: WebUiModalDef[] = discoverWebUiModals();
 
 export function generateMcpToolsMarkdownTable(): string {
-  let table = "| Tool Name | Category | Description | Key Parameters |\n";
-  table += "| :--- | :--- | :--- | :--- |\n";
-  for (const tool of MCP_TOOLS_CATALOG) {
-    table += `| **\`${tool.name}\`** | ${tool.category} | ${tool.summary} | \`${tool.keyParams}\` |\n`;
-  }
-  return table;
+  const header =
+    "| Tool Name | Category | Description | Key Parameters |\n| :--- | :--- | :--- | :--- |\n";
+  const rows = MCP_TOOLS_CATALOG.map(
+    (t) => `| **\`${t.name}\`** | ${t.category} | ${t.summary} | \`${t.keyParams}\` |`,
+  ).join("\n");
+  return `${header}${rows}\n`;
 }
 
 export function generateMcpResourcesMarkdownTable(): string {
-  let table = "| Resource URI | Name | Description |\n";
-  table += "| :--- | :--- | :--- |\n";
-  for (const res of MCP_RESOURCES_CATALOG) {
-    table += `| \`${res.uri}\` | **${res.name}** | ${res.summary} |\n`;
-  }
-  return table;
+  const header = "| Resource URI | Name | Description |\n| :--- | :--- | :--- |\n";
+  const rows = MCP_RESOURCES_CATALOG.map(
+    (r) => `| \`${r.uri}\` | **${r.name}** | ${r.summary} |`,
+  ).join("\n");
+  return `${header}${rows}\n`;
 }
 
-export function generateWebUiModalsMarkdownTable(): string {
-  let table = "| Modal / View | Trigger / Shortcut | Description |\n";
-  table += "| :--- | :--- | :--- |\n";
-  for (const item of WEBUI_MODALS_CATALOG) {
-    table += `| **\`${item.modal}\`** | \`${item.trigger}\` | ${item.description} |\n`;
-  }
-  return table;
+export function generateWebUiModalsMarkdownTable(workspaceRoot?: string): string {
+  const header = "| Modal / View | Trigger / Shortcut | Description |\n| :--- | :--- | :--- |\n";
+  const rows = discoverWebUiModals(workspaceRoot)
+    .map((m) => `| **\`${m.modal}\`** | \`${m.trigger}\` | ${m.description} |`)
+    .join("\n");
+  return `${header}${rows}\n`;
 }

@@ -4,6 +4,7 @@ import {
   checkMarkdownLinks,
   checkMarkdownTables,
   checkRequiredDocFiles,
+  checkWebUiModalsIntegrity,
   validateDocumentation,
 } from "../check-docs";
 
@@ -12,6 +13,11 @@ describe("Documentation Integrity Validator", () => {
     const errors = checkRequiredDocFiles();
     expect(errors).toHaveLength(0);
     expect(REQUIRED_DOC_FILES.length).toBeGreaterThanOrEqual(12);
+  });
+
+  it("should validate all WebUI modals on disk are documented and integrated without errors", () => {
+    const errors = checkWebUiModalsIntegrity();
+    expect(errors).toHaveLength(0);
   });
 
   it("should detect broken markdown links in sample text", () => {
