@@ -5,6 +5,26 @@ All notable changes to **CDDM** (_Code De-Duplication Meister_) will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.6.0] - 2026-10-08
+
+### Features
+
+- **e2e**: implement exhaustive top-level navigation and discoverability matrix (`4292cef`)
+
+### Bug Fixes
+
+- **e2e**: specify exact button matching to resolve Playwright strict mode violation (#269) (`0df426c`)
+- **e2e**: align modal window titles and eliminate dismissal race conditions (#269) (`835a776`)
+- **e2e**: robust live watch accessibility label and timeout for E2E acceptance (`02d20b2`)
+- **tests**: mandate uninitialized default-state tests for all WebUI modals (Fixes #268) (`1be8142`)
+- **tooling**: replace hardcoded WEBUI_MODALS_CATALOG with dynamic discovery (`8508df1`)
+- **tooling**: enforce real React component and navigation verification (`094164a`)
+- **webui**: elevate dead code detection into first-class studio mode (`61791d5`)
+- **engine**: deduplicate AST symbol extraction and file metadata handlers (Fixes #264) (`5b83307`)
+- **webui**: unify scan parameters, engine tuning, and hooks into centralized configurations studio (`030c6ec`)
+- **webui**: elevate refactor sandbox to studio mode (`3cce082`)
+- **webui**: implement integrated code editor mode with split diff viewer and workspace file editing (`bf42534`)
+
 ## [4.5.0] - 2026-10-05
 
 ### Features
