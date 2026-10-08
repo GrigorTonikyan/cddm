@@ -17,6 +17,7 @@ import {
   Terminal,
   Trash2,
   X,
+  Code2,
 } from "lucide-react";
 import React, { Suspense } from "react";
 import { ScanConfigPanel } from "./components/ScanConfigPanel";
@@ -74,6 +75,7 @@ const McpAppsPreviewModal = lazyModal(
   () => import("./components/McpAppsPreviewModal"),
   "McpAppsPreviewModal",
 );
+const CodeEditorModal = lazyModal(() => import("./components/CodeEditorModal"), "CodeEditorModal");
 
 export const App: React.FC = () => {
   const {
@@ -108,6 +110,8 @@ export const App: React.FC = () => {
     setIsMcpAppsModalOpen,
     isLiveEventInspectorOpen,
     setIsLiveEventInspectorOpen,
+    isCodeEditorOpen,
+    setIsCodeEditorOpen,
   } = useCDDMStore();
 
   React.useEffect(() => {
@@ -233,6 +237,15 @@ export const App: React.FC = () => {
           >
             <AppWindow className="w-3.5 h-3.5 text-cyan-400" />
             <span>MCP Apps</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsCodeEditorOpen(true)}
+            className="px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 hover:bg-slate-800 text-slate-300 flex items-center gap-1.5 transition-colors shadow-sm"
+          >
+            <Code2 className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Code Editor</span>
           </button>
 
           {results && (
@@ -364,6 +377,9 @@ export const App: React.FC = () => {
           isOpen={isMcpAppsModalOpen}
           onClose={() => setIsMcpAppsModalOpen(false)}
         />
+
+        {/* Integrated Code Editor & Split Diff Studio Modal */}
+        <CodeEditorModal isOpen={isCodeEditorOpen} onClose={() => setIsCodeEditorOpen(false)} />
       </Suspense>
 
       {/* Footer */}

@@ -4,7 +4,8 @@ import { parsePath } from "../utils/path-utils";
 import { DiffViewer } from "./DiffViewer";
 import { RefactorPatchModal } from "./RefactorPatchModal";
 import { Win2xWindow } from "./ui/win2x-manager";
-import { Columns2, Sparkles, Wand2, Tag, Hash, User, Copy, Check } from "lucide-react";
+import { Columns2, Sparkles, Wand2, Tag, Hash, User, Copy, Check, Code2 } from "lucide-react";
+import { useCDDMStore } from "../store/cddm-store";
 
 export interface ClonePairDiffModalProps {
   isOpen: boolean;
@@ -67,6 +68,23 @@ export const ClonePairDiffModal: React.FC<ClonePairDiffModalProps> = ({
       </div>
 
       <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => {
+            void useCDDMStore
+              .getState()
+              .openDiffInEditor(
+                pair.file_a,
+                pair.file_b,
+                [pair.start_line_a, pair.end_line_a],
+                [pair.start_line_b, pair.end_line_b],
+              );
+          }}
+          className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs flex items-center gap-1.5 transition-colors shadow-sm"
+        >
+          <Code2 className="w-3.5 h-3.5" />
+          <span>Open in Studio Editor</span>
+        </button>
         <button
           type="button"
           onClick={() => setIsRefactorOpen(true)}

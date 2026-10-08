@@ -311,6 +311,16 @@ test.describe("CDDM WebUI Studio Comprehensive UI/UX Quality Verification", () =
       await minWin(page);
     }
 
+    // 17.5. Integrated Code Editor & Split Diff Studio Modal
+    const codeEditorBtn = page.getByRole("button", { name: /Code Editor/i }).first();
+    if (await codeEditorBtn.isVisible()) {
+      await codeEditorBtn.click();
+      await page.waitForTimeout(600);
+      await expect(page.getByText("Integrated Code Editor & Split Diff Studio")).toBeVisible();
+      await snap(page, "24b_code_editor_modal.png");
+      await minWin(page);
+    }
+
     // 18. Win2x Window Manager (Restore, Tile, Cascade, Minimize All)
     await page.evaluate(() => {
       const pills = document.querySelectorAll<HTMLElement>("[data-win2x-minimized-pill]");

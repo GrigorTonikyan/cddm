@@ -59,6 +59,8 @@ define_api_routes! {
     ROUTE_API_DEAD_CODE => "/api/dead-code",
     ROUTE_API_MCP_APPS_WIDGETS => "/api/mcp/apps/widgets",
     ROUTE_API_MCP_APPS_RENDER => "/api/mcp/apps/render",
+    ROUTE_API_FILE => "/api/file",
+    ROUTE_API_FILE_TREE => "/api/file/tree",
     ROUTE_METRICS => "/metrics",
     ROUTE_API_METRICS => "/api/metrics",
 }
@@ -112,6 +114,8 @@ pub enum ServerEvent {
     WatchScanDelta(cddm_core::WatchDeltaReport),
     #[serde(rename = "watch_status_changed")]
     WatchStatusChanged { is_active: bool },
+    #[serde(rename = "file_saved")]
+    FileSaved { path: String, timestamp: u64 },
 }
 
 /// Shared application state for Axum router.
@@ -379,4 +383,54 @@ pub struct DeadCodePruneRequest {
     pub item_ids: Option<Vec<usize>>,
     pub languages: Option<Vec<String>>,
     pub ignore: Option<Vec<String>>,
+}
+
+/// Query parameters for reading a workspace file.
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct FileReadQuery {
+    pub path: String,
+}
+
+/// Response payload containing file content and metadata for code editor.
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+pub struct FileReadResponse {
+    pub path: String,
+    pub content: String,
+    pub language: String,
+    pub size_bytes: usize,
+    pub total_lines: usize,
+    pub modified_timestamp_ms: u64,
+}
+
+/// Request payload for writing/saving a workspace file.
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq)]
+pub struct FileWriteRequest {
+    pub path: String,
+    pub content: String,
+}
+
+/// Response payload after writing a workspace file.
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+pub struct FileWriteResponse {
+    pub path: String,
+    pub bytes_written: usize,
+    pub success: bool,
+    pub modified_timestamp_ms: u64,
+}
+
+/// Single file entry for the workspace file explorer.
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+pub struct WorkspaceFileEntry {
+    pub path: String,
+    pub name: String,
+    pub is_dir: bool,
+    pub size_bytes: u64,
+    pub language: Option<String>,
+}
+
+/// Response payload containing list of workspace files.
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+pub struct FileTreeResponse {
+    pub root: String,
+    pub files: Vec<WorkspaceFileEntry>,
 }

@@ -188,7 +188,8 @@ export type ServerEvent =
   | { type: "patch_applied"; payload: ApplyPatchResult }
   | { type: "watch_file_changed"; payload: { files: string[]; timestamp: number } }
   | { type: "watch_scan_delta"; payload: WatchDeltaReport }
-  | { type: "watch_status_changed"; payload: { is_active: boolean } };
+  | { type: "watch_status_changed"; payload: { is_active: boolean } }
+  | { type: "file_saved"; payload: { path: string; timestamp: number } };
 
 /**
  * A point-in-time duplication metrics snapshot for a Git commit.

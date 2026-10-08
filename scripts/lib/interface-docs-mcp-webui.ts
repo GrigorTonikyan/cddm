@@ -392,6 +392,12 @@ export const WEBUI_MODALS_CATALOG: WebUiModalDef[] = [
     trigger: "Clone Pair Card Click",
     description: "Split Monaco diff viewer with syntax highlighting and git blame annotations",
   },
+  {
+    modal: "CodeEditorModal",
+    trigger: "Header 'Code Editor' / Clone Card 'Studio Editor'",
+    description:
+      "Integrated Monaco code editor and side-by-side split diff viewer with workspace file editing",
+  },
 ];
 
 export function generateMcpToolsMarkdownTable(): string {

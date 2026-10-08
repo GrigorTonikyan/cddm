@@ -2,6 +2,7 @@
 
 mod coverage_tests;
 mod dead_code_tests;
+mod file_tests;
 mod mcp_apps_tests;
 mod metrics_tests;
 mod refactor_stream_tests;
@@ -17,10 +18,18 @@ use tempfile::NamedTempFile;
 
 #[test]
 fn test_resolve_safe_path_valid() {
-    let file = NamedTempFile::new().unwrap();
+    let file = NamedTempFile::new_in(".").unwrap();
     let path_str = file.path().to_str().unwrap();
     let res = resolve_safe_path(path_str);
     assert!(res.is_ok());
+}
+
+#[test]
+fn test_resolve_safe_path_traversal_forbidden() {
+    let res = resolve_safe_path("../../Cargo.lock");
+    assert!(res.is_err());
+    let (status, _) = res.unwrap_err();
+    assert_eq!(status, StatusCode::FORBIDDEN);
 }
 
 #[test]
@@ -33,7 +42,7 @@ fn test_resolve_safe_path_nonexistent() {
 
 #[tokio::test]
 async fn test_snippet_handler_success() {
-    let mut file = NamedTempFile::new().unwrap();
+    let mut file = NamedTempFile::new_in(".").unwrap();
     writeln!(
         file,
         "line1\nline2\nline3\nline4\nline5\nline6\nline7\nline8\nline9\nline10"

@@ -6,3 +6,4 @@ export * from "./policy-types";
 export * from "./refactor-types";
 export * from "./scan-types";
 export * from "./semantic-types";
+export * from "./editor-types";

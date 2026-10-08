@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-27 | Rust: 395 #[test] units | WebUI: 237 tests across 65 suites | Scripts & MCP: 208 tests across 61 suites | CI Workflows: PASS
+> Last verified: 2026-08-27 | Rust: 402 #[test] units | WebUI: 255 tests across 69 suites | Scripts & MCP: 208 tests across 61 suites | CI Workflows: PASS
 
 ---
 
@@ -358,7 +358,7 @@
 
 ---
 
-## 2. WebUI Frontend — React 19 + TypeScript + Vitest (237 unit tests across 65 suites)
+## 2. WebUI Frontend — React 19 + TypeScript + Vitest (255 unit tests across 69 suites)
 
 | Module                      | Test Suite File                                                                       | Test Cases | Status |
 | :-------------------------- | :------------------------------------------------------------------------------------ | :--------- | :----- |
@@ -366,6 +366,7 @@
 | Clone Cluster Card          | `webui/src/components/CloneClusterCard.test.tsx`                                      | 2 tests    | PASS   |
 | Clone Pair Card             | `webui/src/components/ClonePairCard.test.tsx`                                         | 2 tests    | PASS   |
 | Clone Pair Diff Modal       | `webui/src/components/ClonePairDiffModal.test.tsx`                                    | 3 tests    | PASS   |
+| Code Editor Modal           | `webui/src/components/CodeEditorModal.test.tsx`                                       | 4 tests    | PASS   |
 | Coverage Correlation Modal  | `webui/src/components/CoverageCorrelationModal.test.tsx`                              | 3 tests    | PASS   |
 | Dead Code Explorer Modal    | `webui/src/components/DeadCodeExplorerModal.test.tsx`                                 | 6 tests    | PASS   |
 | Diff Viewer                 | `webui/src/components/DiffViewer.test.tsx`                                            | 3 tests    | PASS   |
@@ -387,6 +388,8 @@
 | Suppression Rules Modal     | `webui/src/components/SuppressionRulesModal.test.tsx`                                 | 3 tests    | PASS   |
 | Timeline Explorer Modal     | `webui/src/components/TimelineExplorerModal.test.tsx`                                 | 3 tests    | PASS   |
 | Treemap Explorer Modal      | `webui/src/components/TreemapExplorerModal.test.tsx`                                  | 3 tests    | PASS   |
+| Editor Surface              | `webui/src/components/editor/EditorSurface.test.tsx`                                  | 3 tests    | PASS   |
+| Editor Toolbar              | `webui/src/components/editor/EditorToolbar.test.tsx`                                  | 4 tests    | PASS   |
 | Extract Module Tab          | `webui/src/components/sandbox/ExtractModuleTab.test.tsx`                              | 3 tests    | PASS   |
 | Cross Language Explorer Tab | `webui/src/components/semantic/CrossLanguageExplorerTab.test.tsx`                     | 3 tests    | PASS   |
 | Semantic Pairs Table        | `webui/src/components/semantic/SemanticPairsTable.test.tsx`                           | 2 tests    | PASS   |
@@ -417,6 +420,7 @@
 | hub-slice                   | `webui/src/store/hub-slice.test.ts`                                                   | 6 tests    | PASS   |
 | Semantic Slice              | `webui/src/store/semantic-slice.test.ts`                                              | 7 tests    | PASS   |
 | coverage-slice              | `webui/src/store/slices/coverage-slice.test.ts`                                       | 3 tests    | PASS   |
+| editor-slice                | `webui/src/store/slices/editor-slice.test.ts`                                         | 7 tests    | PASS   |
 | Watch Slice                 | `webui/src/store/watch-slice.test.ts`                                                 | 6 tests    | PASS   |
 | Type System                 | `webui/src/types/cddm-types.test.ts`                                                  | 2 tests    | PASS   |
 | api-client                  | `webui/src/utils/api-client.test.ts`                                                  | 4 tests    | PASS   |

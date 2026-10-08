@@ -11,6 +11,7 @@ import { createWatchSlice } from "./slices/watch-slice";
 import { createHubSlice } from "./slices/hub-slice";
 import { createCoverageSlice } from "./slices/coverage-slice";
 import { createDeadCodeSlice } from "./slices/dead-code-slice";
+import { createEditorSlice } from "./slices/editor-slice";
 import type { CDDMStoreState } from "./types";
 
 export type { CDDMStoreState } from "./types";
@@ -131,6 +132,7 @@ export const useCDDMStore = create<CDDMStoreState>((set, get) => ({
   ...createHubSlice(set, get),
   ...createCoverageSlice(set, get),
   ...createDeadCodeSlice(set, get),
+  ...createEditorSlice(set, get),
 }));
 
 let eventSourceInstance: EventSource | null = null;
@@ -190,6 +192,16 @@ export function connectLiveWatchSSE(): void {
         } else if (event.type === "patch_applied") {
           useCDDMStore.setState({
             patchStatusMessage: event.payload.message,
+          });
+        } else if (event.type === "file_saved") {
+          const prevFiles = useCDDMStore.getState().recentModifiedFiles;
+          const updated = [
+            event.payload.path,
+            ...prevFiles.filter((f) => f !== event.payload.path),
+          ].slice(0, 20);
+          useCDDMStore.setState({
+            recentModifiedFiles: updated,
+            patchStatusMessage: `Saved ${event.payload.path}`,
           });
         }
       } catch {

@@ -18,6 +18,7 @@ import {
   Columns2,
   ExternalLink,
   Network,
+  Code2,
 } from "lucide-react";
 
 export interface ClonePairCardProps {
@@ -250,6 +251,26 @@ export const ClonePairCard: React.FC<ClonePairCardProps> = ({ pair, index }) => 
               >
                 <Network className="w-3.5 h-3.5 text-cyan-400" />
                 Semantic Graph
+              </button>
+
+              {/* Studio Editor Button */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  void useCDDMStore
+                    .getState()
+                    .openDiffInEditor(
+                      pair.file_a,
+                      pair.file_b,
+                      [pair.start_line_a, pair.end_line_a],
+                      [pair.start_line_b, pair.end_line_b],
+                    );
+                }}
+                className="px-3 py-1 rounded-lg bg-emerald-950/80 hover:bg-emerald-900/60 text-emerald-300 border border-emerald-800/60 font-semibold text-xs flex items-center gap-1.5 transition-colors shadow-sm"
+              >
+                <Code2 className="w-3.5 h-3.5 text-emerald-400" />
+                Studio Editor
               </button>
             </div>
           </div>
