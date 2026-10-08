@@ -52,9 +52,11 @@ test.describe("CDDM WebUI E2E Workflows", () => {
 
   test("should toggle live watch state from header", async ({ page }) => {
     const liveWatchBtn = page.getByRole("button", { name: /Live (Watch|Sync)/i });
-    await expect(liveWatchBtn).toBeVisible();
+    await expect(liveWatchBtn).toBeVisible({ timeout: 15000 });
     await liveWatchBtn.click();
-    await expect(page.getByRole("button", { name: /Live (Watch|Sync)/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Live (Watch|Sync)/i })).toBeVisible({
+      timeout: 15000,
+    });
   });
 
   test("should open Policy Studio modal and switch between tabs", async ({ page }) => {

@@ -60,6 +60,15 @@ export const LiveWatchBar: React.FC = () => {
       <button
         type="button"
         onClick={() => void toggleWatch()}
+        aria-label={
+          isScanning
+            ? "Live Watch & Sync (Syncing)"
+            : isLiveWatchActive
+              ? liveSyncCount > 0
+                ? `Live Sync (${liveSyncCount})`
+                : "Live Watch: ON"
+              : "Live Watch: OFF"
+        }
         title={
           isLiveWatchActive
             ? "Live Watch Active: Click to pause daemon"
