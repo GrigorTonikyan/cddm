@@ -62,4 +62,22 @@ describe("No-Emoji Policy Scanner", () => {
     expect(violations).toEqual([]);
     expect(violations.length).toBe(0);
   });
+
+  it("should correctly identify binary buffers containing null bytes", () => {
+    const { isBinaryBuffer } = require("../check-no-emojis");
+    const textBuffer = Buffer.from("Hello world, clean UTF-8 text without null bytes.");
+    expect(isBinaryBuffer(textBuffer)).toBe(false);
+
+    const binaryBuffer = Buffer.from([0x50, 0x4b, 0x03, 0x04, 0x00, 0x00, 0x00, 0x00]);
+    expect(isBinaryBuffer(binaryBuffer)).toBe(true);
+  });
+
+  it("should ignore binary package archives and packaging directories", () => {
+    const { DEFAULT_IGNORED_DIRS, DEFAULT_IGNORED_EXTENSIONS } = require("../check-no-emojis");
+    expect(DEFAULT_IGNORED_DIRS.has("packaging")).toBe(true);
+    expect(DEFAULT_IGNORED_DIRS.has("out")).toBe(true);
+    expect(DEFAULT_IGNORED_EXTENSIONS.has(".vsix")).toBe(true);
+    expect(DEFAULT_IGNORED_EXTENSIONS.has(".zip")).toBe(true);
+    expect(DEFAULT_IGNORED_EXTENSIONS.has(".tar")).toBe(true);
+  });
 });

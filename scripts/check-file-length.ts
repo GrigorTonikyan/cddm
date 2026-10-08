@@ -45,6 +45,12 @@ export const DEFAULT_IGNORED_DIRS = new Set([
   ".vite-hooks",
   ".cddm",
   ".vscode",
+  "packaging",
+  ".cache",
+  ".vite",
+  "test-results",
+  "playwright-report",
+  "blob-report",
 ]);
 
 export const DEFAULT_CODE_EXTENSIONS = new Set([".rs", ".ts", ".tsx", ".js", ".jsx", ".css"]);

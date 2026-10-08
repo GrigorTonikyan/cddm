@@ -31,13 +31,22 @@ export const DEFAULT_IGNORED_DIRS = new Set([
   "node_modules",
   "target",
   "dist",
+  "out",
   "coverage",
   ".vscode",
   ".cddm",
+  "packaging",
+  ".cache",
+  ".vite",
+  ".vite-hooks",
+  "test-results",
+  "playwright-report",
+  "blob-report",
 ]);
 
 export const DEFAULT_IGNORED_EXTENSIONS = new Set([
   ".lock",
+  // Image & vector formats
   ".png",
   ".jpg",
   ".jpeg",
@@ -45,6 +54,9 @@ export const DEFAULT_IGNORED_EXTENSIONS = new Set([
   ".webp",
   ".ico",
   ".svg",
+  ".bmp",
+  ".tiff",
+  // Executables & binary libraries
   ".wasm",
   ".exe",
   ".dll",
@@ -53,20 +65,76 @@ export const DEFAULT_IGNORED_EXTENSIONS = new Set([
   ".bin",
   ".db",
   ".pdf",
+  // Archives & packages
+  ".vsix",
+  ".zip",
+  ".tar",
+  ".gz",
+  ".tgz",
+  ".7z",
+  ".bz2",
+  ".xz",
+  ".zst",
+  ".rar",
+  ".deb",
+  ".rpm",
+  ".apk",
+  ".msi",
+  ".dmg",
+  ".pkg",
+  ".iso",
+  // Fonts
+  ".woff",
+  ".woff2",
+  ".ttf",
+  ".eot",
+  ".otf",
+  // Bytecode & Java archives
+  ".pyc",
+  ".pyo",
+  ".class",
+  ".jar",
+  ".war",
+  ".ear",
+  // Audio & video
+  ".mp3",
+  ".mp4",
+  ".wav",
+  ".ogg",
+  ".avi",
+  ".mov",
 ]);
+
+/**
+ * Detect if a buffer contains binary data (e.g. null bytes in the first 8KB).
+ */
+export function isBinaryBuffer(buffer: Uint8Array): boolean {
+  const checkLen = Math.min(buffer.length, 8192);
+  for (let i = 0; i < checkLen; i++) {
+    if (buffer[i] === 0) {
+      return true;
+    }
+  }
+  return false;
+}
 
 export function scanFileForEmojis(
   filePath: string,
   workspaceRoot: string = process.cwd(),
 ): EmojiMatch[] {
   const fullPath = join(workspaceRoot, filePath);
-  let content: string;
+  let buffer: Buffer;
   try {
-    content = readFileSync(fullPath, "utf-8");
+    buffer = readFileSync(fullPath);
   } catch {
     return [];
   }
 
+  if (isBinaryBuffer(buffer)) {
+    return [];
+  }
+
+  const content = buffer.toString("utf-8");
   const matches: EmojiMatch[] = [];
   const lines = content.split("\n");
 
