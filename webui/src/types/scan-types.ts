@@ -74,6 +74,12 @@ export interface ScanConfig {
   enforce_policies?: boolean;
   cross_language?: boolean;
   threads?: number;
+  fail_threshold?: number;
+  cache_dir?: string;
+  enable_cache?: boolean;
+  in_tree_cache?: boolean;
+  include_ignored?: boolean;
+  baseline?: string;
 }
 
 /**
@@ -264,4 +270,55 @@ export interface BranchMatrixReport {
   cleanest_branch?: string;
   highest_drift_branch?: string;
   summary: string;
+}
+
+/**
+ * A detected submodule, package, or workspace crate within a monorepo.
+ */
+export interface MonorepoWorkspace {
+  name: string;
+  path: string;
+  manifest_file: string;
+  package_type: string;
+}
+
+/**
+ * Comprehensive aggregated summary across multiple monorepo workspaces.
+ */
+export interface MonorepoScanSummary {
+  workspaces: MonorepoWorkspace[];
+  total_workspaces: number;
+  total_files: number;
+  total_tokens: number;
+  total_clones: number;
+  cross_workspace_clones: number;
+  average_dry_score: number;
+  scan_result: ScanResult;
+}
+
+/**
+ * Detailed summary of a persistent cache pack export or import operation.
+ */
+export interface CachePackSummary {
+  success: boolean;
+  pack_file: string;
+  entry_count: number;
+  checksum: string;
+  message: string;
+}
+
+/**
+ * Request payload for exporting persistent cache pack.
+ */
+export interface CacheExportRequest {
+  cache_dir?: string;
+  output_pack_path?: string;
+}
+
+/**
+ * Request payload for importing persistent cache pack.
+ */
+export interface CacheImportRequest {
+  pack_file: string;
+  target_cache_dir?: string;
 }

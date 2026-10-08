@@ -10,6 +10,10 @@ import {
   Shield,
   SlidersHorizontal,
   Sparkles,
+  ChevronDown,
+  ChevronUp,
+  Cpu,
+  AlertOctagon,
 } from "lucide-react";
 import React from "react";
 import { useCDDMStore } from "../store/cddm-store";
@@ -28,7 +32,60 @@ export const ScanConfigPanel: React.FC<ScanConfigPanelProps> = ({ className = ""
     startScan,
     isScanning,
     resetScan,
+    isScanConfigCollapsed,
+    setIsScanConfigCollapsed,
   } = useCDDMStore();
+
+  if (isScanConfigCollapsed) {
+    return (
+      <div
+        className={`bg-slate-900/80 border border-slate-800/80 rounded-xl px-6 py-4 shadow-xl backdrop-blur-md flex flex-wrap items-center justify-between gap-4 ${className}`}
+      >
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 text-indigo-400 font-bold text-sm">
+            <SlidersHorizontal className="w-4 h-4" />
+            <span>Scan Configuration</span>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-400">
+              Collapsed
+            </span>
+          </div>
+
+          <div className="hidden sm:flex items-center gap-3 text-xs font-mono text-slate-300">
+            <span className="text-slate-400">Target:</span>
+            <span className="text-slate-100 font-semibold">{config.directory || "."}</span>
+            <span className="text-slate-600">|</span>
+            <span className="text-slate-400">Tokens:</span>
+            <span className="text-slate-100 font-semibold">{config.min_tokens}</span>
+            <span className="text-slate-600">|</span>
+            <span className="text-slate-400">Fail:</span>
+            <span className="text-amber-300 font-semibold">{config.fail_threshold ?? 5.0}%</span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => void startScan()}
+            disabled={isScanning}
+            className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-1.5 px-4 rounded-lg text-xs transition-colors flex items-center gap-1.5 disabled:opacity-50"
+          >
+            <Play className="w-3.5 h-3.5 fill-current" />
+            <span>{isScanning ? "Scanning..." : "Quick Scan"}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsScanConfigCollapsed(false)}
+            aria-label="Expand Scan Configuration"
+            className="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-200 bg-slate-800/80 hover:bg-slate-800 px-3 py-1.5 rounded-lg transition-colors"
+          >
+            <span>Expand</span>
+            <ChevronDown className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -39,7 +96,18 @@ export const ScanConfigPanel: React.FC<ScanConfigPanelProps> = ({ className = ""
           <SlidersHorizontal className="w-5 h-5" />
           <span>Scan Configuration</span>
         </div>
-        <span className="text-xs font-mono text-slate-400">CDDM Polyglot Engine</span>
+        <div className="flex items-center gap-3">
+          <span className="text-xs font-mono text-slate-400">CDDM Polyglot Engine</span>
+          <button
+            type="button"
+            onClick={() => setIsScanConfigCollapsed(true)}
+            aria-label="Collapse Scan Configuration"
+            className="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-200 bg-slate-800/60 hover:bg-slate-800 px-2.5 py-1 rounded-md transition-colors"
+          >
+            <span>Collapse</span>
+            <ChevronUp className="w-3.5 h-3.5" />
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -95,6 +163,67 @@ export const ScanConfigPanel: React.FC<ScanConfigPanelProps> = ({ className = ""
             <span>50 (Recommended)</span>
             <span>200 (Strict)</span>
           </div>
+        </div>
+
+        {/* Fail Threshold Slider */}
+        <div>
+          <label
+            htmlFor="scan-fail-threshold"
+            className="text-xs font-bold uppercase tracking-wider text-slate-300 mb-2 flex items-center justify-between"
+          >
+            <span className="flex items-center gap-2">
+              <AlertOctagon className="w-4 h-4 text-amber-400" />
+              Fail Threshold (% Duplication)
+            </span>
+            <span className="text-xs bg-amber-950 text-amber-300 border border-amber-800/50 px-2.5 py-0.5 rounded font-mono font-bold">
+              {config.fail_threshold ?? 5.0}%
+            </span>
+          </label>
+          <input
+            id="scan-fail-threshold"
+            name="fail_threshold"
+            aria-label="Fail Threshold (% Duplication)"
+            type="range"
+            min="0.5"
+            max="30"
+            step="0.5"
+            value={config.fail_threshold ?? 5.0}
+            onChange={(e) => setConfig({ fail_threshold: Number(e.target.value) })}
+            className="w-full h-2 bg-slate-950 rounded-lg appearance-none cursor-pointer accent-amber-500 border border-slate-800"
+          />
+          <div className="flex justify-between text-[11px] font-mono text-slate-400 mt-1">
+            <span>0.5% (Strict CI)</span>
+            <span>5.0% (Standard)</span>
+            <span>30.0% (Permissive)</span>
+          </div>
+        </div>
+
+        {/* Worker Threads */}
+        <div>
+          <label
+            htmlFor="scan-threads"
+            className="text-xs font-bold uppercase tracking-wider text-slate-300 mb-2 flex items-center justify-between"
+          >
+            <span className="flex items-center gap-2">
+              <Cpu className="w-4 h-4 text-indigo-400" />
+              Worker Parallelism Threads
+            </span>
+            <span className="text-xs bg-indigo-950 text-indigo-300 border border-indigo-800/50 px-2.5 py-0.5 rounded font-mono font-bold">
+              {config.threads ?? 0} {config.threads ? "threads" : "(Auto: all cores)"}
+            </span>
+          </label>
+          <input
+            id="scan-threads"
+            name="threads"
+            aria-label="Worker Parallelism Threads"
+            type="number"
+            min="0"
+            max="64"
+            value={config.threads ?? 0}
+            onChange={(e) => setConfig({ threads: Number(e.target.value) })}
+            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm font-mono text-slate-100 focus:outline-none focus:border-indigo-500 transition-colors shadow-inner"
+            placeholder="0 for all CPU cores"
+          />
         </div>
 
         {/* Ignore Patterns */}

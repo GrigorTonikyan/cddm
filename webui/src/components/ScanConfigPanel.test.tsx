@@ -69,4 +69,34 @@ describe("ScanConfigPanel Component", () => {
       expect(useCDDMStore.getState().config.detect_type4).toBe(true);
     }
   });
+
+  it("should update fail threshold and threads", () => {
+    render(<ScanConfigPanel />);
+    const failSlider = screen.getByLabelText("Fail Threshold (% Duplication)") as HTMLInputElement;
+    fireEvent.change(failSlider, { target: { value: "3.5" } });
+    expect(useCDDMStore.getState().config.fail_threshold).toBe(3.5);
+
+    const threadsInput = screen.getByLabelText("Worker Parallelism Threads") as HTMLInputElement;
+    fireEvent.change(threadsInput, { target: { value: "8" } });
+    expect(useCDDMStore.getState().config.threads).toBe(8);
+  });
+
+  it("should collapse and expand the configuration panel", () => {
+    render(<ScanConfigPanel />);
+
+    // Initially expanded
+    expect(screen.getByText("CDDM Polyglot Engine")).toBeDefined();
+    const collapseBtn = screen.getByLabelText("Collapse Scan Configuration");
+    fireEvent.click(collapseBtn);
+
+    expect(useCDDMStore.getState().isScanConfigCollapsed).toBe(true);
+
+    // Collapsed state renders compact bar
+    expect(screen.getByText("Collapsed")).toBeDefined();
+    expect(screen.getByText("Quick Scan")).toBeDefined();
+
+    const expandBtn = screen.getByLabelText("Expand Scan Configuration");
+    fireEvent.click(expandBtn);
+    expect(useCDDMStore.getState().isScanConfigCollapsed).toBe(false);
+  });
 });

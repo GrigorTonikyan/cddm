@@ -58,12 +58,15 @@ export interface CDDMStoreState {
 
   /** Global window modal visibility states */
   isScanConfigOpen: boolean;
+  isScanConfigCollapsed: boolean;
   isHealthAuditOpen: boolean;
   isExportReportOpen: boolean;
   isTreemapModalOpen: boolean;
   isLanguageModalOpen: boolean;
   isClusterRefactorModalOpen: boolean;
   isTimelineModalOpen: boolean;
+  isHookManagerModalOpen: boolean;
+  isMonorepoModalOpen: boolean;
   isSuppressionModalOpen: boolean;
   isRefactorSandboxOpen: boolean;
   isPolicyRulesModalOpen: boolean;
@@ -203,12 +206,15 @@ export interface CDDMStoreState {
 
   /** Modal visibility setters */
   setIsScanConfigOpen: (open: boolean) => void;
+  setIsScanConfigCollapsed: (collapsed: boolean) => void;
   setIsHealthAuditOpen: (open: boolean) => void;
   setIsExportReportOpen: (open: boolean) => void;
   setIsTreemapModalOpen: (open: boolean) => void;
   setIsLanguageModalOpen: (open: boolean) => void;
   setIsClusterRefactorModalOpen: (open: boolean) => void;
   setIsTimelineModalOpen: (open: boolean) => void;
+  setIsHookManagerModalOpen: (open: boolean) => void;
+  setIsMonorepoModalOpen: (open: boolean) => void;
   setIsSuppressionModalOpen: (open: boolean) => void;
   setIsRefactorSandboxOpen: (open: boolean) => void;
   setIsPolicyRulesModalOpen: (open: boolean) => void;
@@ -294,4 +300,23 @@ export interface CDDMStoreState {
   setEditorSplitDiffMode: (diffMode: boolean) => void;
   fetchEditorFiles: () => Promise<void>;
   closeCodeEditor: () => void;
+
+  /** Monorepo multi-package workspace state & actions */
+  monorepoData: import("../types/cddm-types").MonorepoScanSummary | null;
+  isMonorepoLoading: boolean;
+  monorepoError: string | null;
+  runMonorepoScan: (
+    directory?: string,
+    minTokens?: number,
+  ) => Promise<import("../types/cddm-types").MonorepoScanSummary>;
+
+  /** Persistent cache pack export & import actions */
+  exportCachePack: (
+    cacheDir?: string,
+    outputPackPath?: string,
+  ) => Promise<import("../types/cddm-types").CachePackSummary>;
+  importCachePack: (
+    packFile: string,
+    targetCacheDir?: string,
+  ) => Promise<import("../types/cddm-types").CachePackSummary>;
 }
