@@ -23,6 +23,7 @@ export interface RefactorSandboxModalProps {
 
 export const RefactorSandboxModal: React.FC<RefactorSandboxModalProps> = ({ isOpen, onClose }) => {
   const {
+    results,
     sandboxRequest,
     sandboxResult,
     isSandboxLoading,
@@ -43,6 +44,7 @@ export const RefactorSandboxModal: React.FC<RefactorSandboxModalProps> = ({ isOp
     generateAiPrompt,
     previewExtractModule,
     applyExtractModule,
+    selectRefactorCluster,
   } = useCDDMStore();
 
   const [activeTab, setActiveTab] = useState<"patch" | "ast" | "heal" | "extract">("patch");
@@ -58,6 +60,14 @@ export const RefactorSandboxModal: React.FC<RefactorSandboxModalProps> = ({ isOp
   const [isApplyingBranch, setIsApplyingBranch] = useState<boolean>(false);
   const [branchAppliedSuccess, setBranchAppliedSuccess] = useState<string | null>(null);
   const [applyError, setApplyError] = useState<string | null>(null);
+
+  const availableClusters = React.useMemo(() => {
+    return (results?.clone_clusters || []).map((c) => ({
+      id: c.id,
+      occurrencesCount: c.occurrences?.length || 0,
+      similarity: c.similarity,
+    }));
+  }, [results?.clone_clusters]);
 
   useEffect(() => {
     if (sandboxRequest) {
@@ -137,7 +147,7 @@ export const RefactorSandboxModal: React.FC<RefactorSandboxModalProps> = ({ isOp
     }
   };
 
-  if (!isOpen || !sandboxRequest) return null;
+  if (!isOpen) return null;
 
   const currentPatch = sandboxResult?.unified_patch || "";
 
@@ -238,7 +248,7 @@ export const RefactorSandboxModal: React.FC<RefactorSandboxModalProps> = ({ isOp
     />
   );
 
-  const occCount = sandboxRequest.occurrences?.length || 0;
+  const occCount = sandboxRequest?.occurrences?.length || 0;
   const affectedFilesCount =
     sandboxResult?.affected_files?.length ?? sandboxResult?.sites_count ?? occCount;
 
@@ -259,6 +269,9 @@ export const RefactorSandboxModal: React.FC<RefactorSandboxModalProps> = ({ isOp
       <div className="space-y-4 font-mono text-xs text-slate-300">
         {/* Sandbox Configuration Controls */}
         <SandboxHeaderControls
+          selectedClusterId={sandboxRequest?.cluster_id}
+          availableClusters={availableClusters}
+          onSelectCluster={(clusterId) => void selectRefactorCluster(clusterId)}
           customFunctionName={customFunctionName}
           onFunctionNameChange={setCustomFunctionName}
           targetModulePath={targetModulePath}
@@ -268,6 +281,16 @@ export const RefactorSandboxModal: React.FC<RefactorSandboxModalProps> = ({ isOp
           isSandboxLoading={isSandboxLoading}
           onSimulate={handleSimulate}
         />
+
+        {!sandboxRequest && (
+          <div className="p-4 bg-slate-900/60 border border-slate-800 rounded-xl text-center space-y-1">
+            <p className="text-slate-300 font-semibold text-xs">
+              {availableClusters.length > 0
+                ? "Select a clone cluster from the dropdown above to simulate AST refactoring, extract shared crates, or run AI auto-heal."
+                : "No clone clusters detected yet. Run a codebase scan to discover duplicate clusters and simulate refactoring."}
+            </p>
+          </div>
+        )}
 
         {/* Metrics Summary Strip */}
         {sandboxResult && (
@@ -386,8 +409,8 @@ export const RefactorSandboxModal: React.FC<RefactorSandboxModalProps> = ({ isOp
         {/* Tab 3: AI Code Surgeon Auto-Heal */}
         {activeTab === "heal" && (
           <AutoHealTab
-            occurrences={sandboxRequest.occurrences}
-            clusterId={sandboxRequest.cluster_id}
+            occurrences={sandboxRequest?.occurrences || []}
+            clusterId={sandboxRequest?.cluster_id}
             customFunctionName={customFunctionName}
             targetModulePath={targetModulePath}
           />

@@ -123,4 +123,23 @@ test.describe("CDDM WebUI E2E Workflows", () => {
       page.getByRole("button", { name: /Discover Polyglot Clones|Analyze Clones/i }),
     ).toBeVisible();
   });
+
+  test("should open Refactor Studio from header and toggle all studio tabs", async ({ page }) => {
+    const refactorBtn = page.getByRole("button", { name: /Refactor Studio/i });
+    await expect(refactorBtn).toBeVisible();
+    await refactorBtn.click();
+
+    // Verify studio modal title
+    await expect(page.getByText("Interactive Auto-Refactor Sandbox & Visual Studio")).toBeVisible();
+
+    // Check tabs
+    await expect(page.getByRole("button", { name: /Unified Patch Diff/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /AST-Native Rewrite/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Auto-Heal/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Extract Shared Crate/i })).toBeVisible();
+
+    // Switch to Extract Shared Crate tab
+    await page.getByRole("button", { name: /Extract Shared Crate/i }).click();
+    await expect(page.getByText(/Automated Shared Crate & Module Extraction/i)).toBeVisible();
+  });
 });

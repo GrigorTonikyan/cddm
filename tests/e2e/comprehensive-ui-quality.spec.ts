@@ -10,7 +10,12 @@ async function snap(page: Page, filename: string, fullPage = false) {
 }
 
 async function minWin(page: Page) {
-  await page.locator('[title="Minimize"]').first().click();
+  const minBtn = page.locator('[title="Minimize"], [aria-label*="Minimize"]').first();
+  if (await minBtn.isVisible()) {
+    await minBtn.click();
+  } else {
+    await page.keyboard.press("Escape");
+  }
   await page.waitForTimeout(300);
 }
 
@@ -31,7 +36,7 @@ test.describe("CDDM WebUI Studio Comprehensive UI/UX Quality Verification", () =
     await page.goto("http://localhost:3000");
     await page.waitForLoadState("domcontentloaded");
     await expect(page.locator("h1")).toContainText("CDDM Studio");
-    await expect(page.getByText(/v1\.\d+\.\d+/)).toBeVisible();
+    await expect(page.getByText(/v\d+\.\d+\.\d+/)).toBeVisible();
     await expect(
       page.getByText("Code De-Duplication Meister & Architectural Health"),
     ).toBeVisible();
@@ -43,6 +48,7 @@ test.describe("CDDM WebUI Studio Comprehensive UI/UX Quality Verification", () =
     await expect(page.getByRole("button", { name: /Overlap Detector/i })).toBeVisible();
     await expect(page.getByRole("button", { name: /Org Hub/i })).toBeVisible();
     await expect(page.getByRole("button", { name: /Coverage/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Refactor Studio/i })).toBeVisible();
     await expect(
       page.getByRole("button", { name: /Live (Watch|Sync)|Syncing/i }).first(),
     ).toBeVisible();
@@ -318,6 +324,18 @@ test.describe("CDDM WebUI Studio Comprehensive UI/UX Quality Verification", () =
       await page.waitForTimeout(600);
       await expect(page.getByText("Integrated Code Editor & Split Diff Studio")).toBeVisible();
       await snap(page, "24b_code_editor_modal.png");
+      await minWin(page);
+    }
+
+    // 17.6. First-Class Refactor Sandbox & Visual Studio Modal
+    const refactorStudioBtn = page.getByRole("button", { name: /Refactor Studio/i }).first();
+    if (await refactorStudioBtn.isVisible()) {
+      await refactorStudioBtn.click();
+      await page.waitForTimeout(600);
+      await expect(
+        page.getByText("Interactive Auto-Refactor Sandbox & Visual Studio"),
+      ).toBeVisible();
+      await snap(page, "24c_refactor_studio_modal.png");
       await minWin(page);
     }
 

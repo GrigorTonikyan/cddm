@@ -10,6 +10,9 @@ export interface SandboxHeaderControlsProps {
   onBranchNameChange: (branch: string) => void;
   isSandboxLoading: boolean;
   onSimulate: () => void;
+  selectedClusterId?: number | null;
+  availableClusters?: Array<{ id: number; occurrencesCount: number; similarity: number }>;
+  onSelectCluster?: (clusterId: number) => void;
 }
 
 export const SandboxHeaderControls: React.FC<SandboxHeaderControlsProps> = ({
@@ -21,6 +24,9 @@ export const SandboxHeaderControls: React.FC<SandboxHeaderControlsProps> = ({
   onBranchNameChange,
   isSandboxLoading,
   onSimulate,
+  selectedClusterId,
+  availableClusters,
+  onSelectCluster,
 }) => {
   return (
     <div className="p-3.5 bg-slate-900/80 border border-slate-800 rounded-xl space-y-3 font-mono text-xs text-slate-300">
@@ -43,6 +49,39 @@ export const SandboxHeaderControls: React.FC<SandboxHeaderControlsProps> = ({
           Re-Simulate Sandbox
         </button>
       </div>
+
+      {availableClusters && availableClusters.length > 0 && (
+        <div className="space-y-1 pb-2 border-b border-slate-800/60">
+          <div className="flex items-center justify-between">
+            <label
+              htmlFor="sandbox-cluster-select"
+              className="text-[11px] text-slate-400 block font-medium"
+            >
+              Target Clone Cluster ({availableClusters.length} Detected)
+            </label>
+            <span className="text-[10px] text-slate-500 font-mono">
+              Select any detected cluster to inspect and refactor
+            </span>
+          </div>
+          <select
+            id="sandbox-cluster-select"
+            aria-label="Target Clone Cluster"
+            value={selectedClusterId ?? ""}
+            onChange={(e) => onSelectCluster && onSelectCluster(Number(e.target.value))}
+            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 font-mono focus:outline-none focus:border-indigo-500/60"
+          >
+            <option value="" disabled>
+              Select a clone cluster...
+            </option>
+            {availableClusters.map((c) => (
+              <option key={c.id} value={c.id}>
+                Cluster #{c.id} — {c.occurrencesCount} occurrence sites (
+                {(c.similarity * 100).toFixed(0)}% match)
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <div className="space-y-1">

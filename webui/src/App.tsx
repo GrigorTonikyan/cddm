@@ -112,6 +112,7 @@ export const App: React.FC = () => {
     setIsLiveEventInspectorOpen,
     isCodeEditorOpen,
     setIsCodeEditorOpen,
+    openRefactorStudio,
   } = useCDDMStore();
 
   React.useEffect(() => {
@@ -246,6 +247,15 @@ export const App: React.FC = () => {
           >
             <Code2 className="w-3.5 h-3.5 text-emerald-400" />
             <span>Code Editor</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => void openRefactorStudio()}
+            className="px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 hover:bg-slate-800 text-slate-300 flex items-center gap-1.5 transition-colors shadow-sm"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+            <span>Refactor Studio</span>
           </button>
 
           {results && (
