@@ -6,7 +6,8 @@ import { ClonePairCard } from "./ClonePairCard";
 import { FilterToolbar } from "./scan-results/FilterToolbar";
 import { SummaryBanner } from "./scan-results/SummaryBanner";
 import { VisualAnalyticsSection } from "./scan-results/VisualAnalyticsSection";
-import { Activity, CheckCircle2, ChevronLeft, ChevronRight, Layers } from "lucide-react";
+import { DeadCodeStudioView } from "./scan-results/DeadCodeStudioView";
+import { Activity, CheckCircle2, ChevronLeft, ChevronRight, Layers, Trash2 } from "lucide-react";
 
 import { lazyModal } from "../utils/lazy-modal";
 
@@ -59,6 +60,7 @@ export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
     results,
     viewMode,
     setViewMode,
+    deadCodeSummary,
     isTreemapModalOpen,
     isLanguageModalOpen,
     isHealthAuditOpen,
@@ -165,7 +167,12 @@ export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
   }, [results?.clone_clusters, searchTerm, minSimilarity, selectedLang, selectedCloneType, sortBy]);
 
   // Pagination Slice based on active viewMode
-  const activeItemsCount = viewMode === "pairs" ? filteredPairs.length : filteredClusters.length;
+  const activeItemsCount =
+    viewMode === "pairs"
+      ? filteredPairs.length
+      : viewMode === "clusters"
+        ? filteredClusters.length
+        : (deadCodeSummary?.total_dead_items ?? 0);
   const totalPages = Math.ceil(activeItemsCount / itemsPerPage) || 1;
 
   const paginatedPairs = useMemo(() => {
@@ -248,11 +255,15 @@ export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
           <div className="flex items-center gap-3">
             <h3 className="text-lg font-bold text-slate-100 flex items-center gap-2">
               <span>
-                {viewMode === "pairs" ? "Detected Clone Pairs" : "Detected Clone Clusters"}
+                {viewMode === "pairs"
+                  ? "Detected Clone Pairs"
+                  : viewMode === "clusters"
+                    ? "Detected Clone Clusters"
+                    : "Polyglot Dead Code Studio"}
               </span>
             </h3>
 
-            {/* View Mode Toggle: Pairs vs Clusters */}
+            {/* View Mode Toggle: Pairs vs Clusters vs Dead Code */}
             <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-lg border border-slate-800 text-xs font-mono">
               <button
                 type="button"
@@ -260,7 +271,7 @@ export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
                   setViewMode("pairs");
                   setCurrentPage(1);
                 }}
-                className={`px-3 py-1 rounded-md flex items-center gap-1.5 transition-all ${
+                className={`px-3 py-1 rounded-md flex items-center gap-1.5 transition-all cursor-pointer ${
                   viewMode === "pairs"
                     ? "bg-indigo-600 text-white font-semibold shadow-sm"
                     : "text-slate-400 hover:text-slate-200"
@@ -275,7 +286,7 @@ export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
                   setViewMode("clusters");
                   setCurrentPage(1);
                 }}
-                className={`px-3 py-1 rounded-md flex items-center gap-1.5 transition-all ${
+                className={`px-3 py-1 rounded-md flex items-center gap-1.5 transition-all cursor-pointer ${
                   viewMode === "clusters"
                     ? "bg-purple-600 text-white font-semibold shadow-sm"
                     : "text-slate-400 hover:text-slate-200"
@@ -284,11 +295,26 @@ export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
                 <Layers className="w-3.5 h-3.5" />
                 <span>N-Way Clusters ({filteredClusters.length})</span>
               </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setViewMode("dead-code");
+                  setCurrentPage(1);
+                }}
+                className={`px-3 py-1 rounded-md flex items-center gap-1.5 transition-all cursor-pointer ${
+                  viewMode === "dead-code"
+                    ? "bg-rose-600 text-white font-semibold shadow-sm"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Dead Code Studio ({deadCodeSummary?.total_dead_items ?? 0})</span>
+              </button>
             </div>
           </div>
 
           {/* Top Pagination Controls */}
-          {totalPages > 1 && (
+          {viewMode !== "dead-code" && totalPages > 1 && (
             <div className="flex items-center gap-2 text-xs font-mono text-slate-400">
               <span>
                 Page {currentPage} of {totalPages}
@@ -314,7 +340,9 @@ export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
         </div>
 
         {/* Cards Rendering */}
-        {viewMode === "pairs" ? (
+        {viewMode === "dead-code" ? (
+          <DeadCodeStudioView />
+        ) : viewMode === "pairs" ? (
           filteredPairs.length === 0 ? (
             <div className="bg-slate-900/60 border border-slate-800/80 rounded-xl p-12 text-center text-slate-400 space-y-3">
               <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto opacity-80" />
@@ -362,7 +390,7 @@ export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
         )}
 
         {/* Bottom Pagination Controls */}
-        {totalPages > 1 && (
+        {viewMode !== "dead-code" && totalPages > 1 && (
           <div className="flex items-center justify-between bg-slate-900/60 border border-slate-800/80 rounded-xl p-4 font-mono text-xs text-slate-400">
             <div>
               Showing {(currentPage - 1) * itemsPerPage + 1}–

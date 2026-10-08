@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-27 | Rust: 402 #[test] units | WebUI: 280 tests across 72 suites | Scripts & MCP: 208 tests across 61 suites | CI Workflows: PASS
+> Last verified: 2026-08-27 | Rust: 402 #[test] units | WebUI: 296 tests across 75 suites | Scripts & MCP: 208 tests across 61 suites | CI Workflows: PASS
 
 ---
 
@@ -358,7 +358,7 @@
 
 ---
 
-## 2. WebUI Frontend — React 19 + TypeScript + Vitest (280 unit tests across 72 suites)
+## 2. WebUI Frontend — React 19 + TypeScript + Vitest (296 unit tests across 75 suites)
 
 | Module                      | Test Suite File                                                                       | Test Cases | Status |
 | :-------------------------- | :------------------------------------------------------------------------------------ | :--------- | :----- |
@@ -394,6 +394,8 @@
 | Editor Surface              | `webui/src/components/editor/EditorSurface.test.tsx`                                  | 3 tests    | PASS   |
 | Editor Toolbar              | `webui/src/components/editor/EditorToolbar.test.tsx`                                  | 4 tests    | PASS   |
 | Extract Module Tab          | `webui/src/components/sandbox/ExtractModuleTab.test.tsx`                              | 3 tests    | PASS   |
+| Dead Code Studio View       | `webui/src/components/scan-results/DeadCodeStudioView.test.tsx`                       | 4 tests    | PASS   |
+| Summary Banner              | `webui/src/components/scan-results/SummaryBanner.test.tsx`                            | 3 tests    | PASS   |
 | Cross Language Explorer Tab | `webui/src/components/semantic/CrossLanguageExplorerTab.test.tsx`                     | 3 tests    | PASS   |
 | Semantic Pairs Table        | `webui/src/components/semantic/SemanticPairsTable.test.tsx`                           | 2 tests    | PASS   |
 | Branch Drift Matrix Section | `webui/src/components/timeline/BranchDriftMatrixSection.test.tsx`                     | 2 tests    | PASS   |
@@ -427,6 +429,7 @@
 | Watch Slice                 | `webui/src/store/watch-slice.test.ts`                                                 | 6 tests    | PASS   |
 | Type System                 | `webui/src/types/cddm-types.test.ts`                                                  | 2 tests    | PASS   |
 | api-client                  | `webui/src/utils/api-client.test.ts`                                                  | 4 tests    | PASS   |
+| dead-code-utils             | `webui/src/utils/dead-code-utils.test.ts`                                             | 9 tests    | PASS   |
 | file-download               | `webui/src/utils/file-download.test.ts`                                               | 1 tests    | PASS   |
 | Graph Layout Engine         | `webui/src/utils/graph-layout.test.ts`                                                | 3 tests    | PASS   |
 | IDE Deeplinks               | `webui/src/utils/ide-links.test.ts`                                                   | 8 tests    | PASS   |

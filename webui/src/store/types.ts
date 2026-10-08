@@ -40,8 +40,8 @@ export interface CDDMStoreState {
   /** Error message if scan failed */
   error: string | null;
 
-  /** Active view mode for results list (pairwise vs n-way clusters) */
-  viewMode: "pairs" | "clusters";
+  /** Active view mode for results list (pairwise vs n-way clusters vs dead-code studio) */
+  viewMode: "pairs" | "clusters" | "dead-code";
   /** Currently selected cluster for inspection or refactoring */
   selectedCluster: CloneCluster | null;
 
@@ -159,7 +159,7 @@ export interface CDDMStoreState {
   resetScan: () => void;
 
   /** View mode and cluster setters */
-  setViewMode: (viewMode: "pairs" | "clusters") => void;
+  setViewMode: (viewMode: "pairs" | "clusters" | "dead-code") => void;
   setSelectedCluster: (selectedCluster: CloneCluster | null) => void;
 
   /** Live watch & IDE preferences setters */
