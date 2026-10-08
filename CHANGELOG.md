@@ -5,6 +5,13 @@ All notable changes to **CDDM** (_Code De-Duplication Meister_) will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.7.0] - 2026-10-08
+
+### Bug Fixes
+
+- **e2e**: align cluster card sandbox button locator in navigation-coverage (#278) (`22dda3c`)
+- **tooling**: ignore binary package archives and packaging directories in check-no-emojis (`0b91eb9`)
+
 ## [4.6.0] - 2026-10-08
 
 ### Features
