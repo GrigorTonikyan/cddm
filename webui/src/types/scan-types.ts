@@ -322,3 +322,50 @@ export interface CacheImportRequest {
   pack_file: string;
   target_cache_dir?: string;
 }
+
+/**
+ * Status of a clone pair in a differential scan.
+ */
+export type CloneStatus = "New" | "Legacy" | "Resolved";
+
+/**
+ * A clone pair annotated with differential status relative to a base git ref.
+ */
+export interface DiffClonePair {
+  clone_pair: ClonePair;
+  status: CloneStatus;
+}
+
+/**
+ * Summary metrics comparing target state to baseline git reference.
+ */
+export interface DiffSummary {
+  base_ref: string;
+  target_ref: string;
+  base_dry_score: number;
+  target_dry_score: number;
+  net_dry_delta: number;
+  total_changed_files: number;
+  new_clones: number;
+  legacy_clones: number;
+  resolved_clones: number;
+}
+
+/**
+ * Full differential scan result returned by /api/diff.
+ */
+export interface DiffScanResult {
+  scan_id: string;
+  summary: DiffSummary;
+  diff_clones: DiffClonePair[];
+  duration_ms: number;
+}
+
+/**
+ * Request payload for POST /api/diff.
+ */
+export interface DiffScanRequest {
+  base_ref: string;
+  target_ref?: string;
+  config: ScanConfig;
+}

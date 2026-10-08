@@ -5,11 +5,13 @@
  * 1. Complete feature parity across the 4 interaction pillars: CLI, WebUI Studio, MCP Server, and TUI Studio.
  * 2. Registration and integrity of all core capabilities in docs/FEATURE_PARITY.md.
  * 3. Existence of code handlers across crates/cddm-cli (CLI & TUI), webui/serve (WebUI), and crates/cddm-mcp (MCP).
- * 4. Zero emojis across all diagnostic output.
+ * 4. Concrete React component existence and active navigation linkage in webui/src/.
+ * 5. Zero emojis across all diagnostic output.
  */
 
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
+import { reportViolationsAndExit } from "./lib/step-runner";
 
 export interface FeatureParityCheck {
   id: string;
@@ -18,31 +20,42 @@ export interface FeatureParityCheck {
   mcpToolPattern: RegExp;
   axumRoutePattern: RegExp;
   tuiViewFile: string;
+  webuiComponentFile: string;
+  webuiNavPattern: RegExp;
 }
 
 const RAW_PARITY_MATRIX = [
-  "scan|Codebase Scan|commands/scan.rs|scan_codebase|/api/scan|overview.rs",
-  "diff|Differential Scan|commands/diff.rs|cddm_diff_scan|/api/diff|overview.rs",
-  "cluster|Clone Graph Clustering|commands/refactor.rs|cddm_get_clone_cluster|/api/refactor-cluster|clones.rs",
-  "diff_viewer|Split Diff Visualizer|formatters/scan.rs|cddm_get_clone_pair|/api/snippet|clones.rs",
-  "semantic|Cross-Language Matching|commands/semantic.rs|cddm_scan_cross_language|/api/semantic|semantic.rs",
-  "refactor|AST Refactoring Sandbox|commands/refactor.rs|cddm_ast_refactor|/api/refactor/ast|refactor.rs",
-  "extract|Shared Module Extraction|commands/extract.rs|cddm_extract_shared_module|/api/extract|extract.rs",
-  "heal|AI Code Surgeon|commands/heal.rs|cddm_heal_refactor|/api/refactor/heal|refactor.rs",
-  "policy|Policy Engine|commands/rules.rs|cddm_check_policies|/api/policy|policy.rs",
-  "suppression|AST Suppression|commands/ignore.rs|cddm_check_suppression|/api/suppression|policy.rs",
-  "timeline|Git History Trends|commands/trend.rs|cddm_get_timeline|/api/timeline|timeline.rs",
-  "workflow|CI/CD & Hook Manager|commands/hook.rs|cddm_export_sarif|/api/workflow/hooks|workflow.rs",
-  "overlap|Ecosystem Library Overlap|commands/overlap.rs|cddm_detect_overlap|/api/overlap|overlap.rs",
-  "hub|Organization Federation Hub|commands/hub.rs|cddm_scan_hub|/api/hub|hub.rs",
-  "coverage|Runtime Execution & Coverage|commands/coverage.rs|cddm_correlate_coverage|/api/coverage|coverage.rs",
-  "dead_code|Polyglot Dead Code Detection|commands/dead_code.rs|cddm_detect_dead_code|/api/dead-code|dead_code.rs",
-  "neural|Neural Embeddings & Algorithmic Clones|commands/semantic.rs|cddm_semantic_neural_scan|/api/semantic/neural|semantic.rs",
+  "scan|Codebase Scan|commands/scan.rs|scan_codebase|/api/scan|overview.rs|ScanResults.tsx|ScanResults",
+  "diff|Differential Scan|commands/diff.rs|cddm_diff_scan|/api/diff|overview.rs|DiffScanResultsModal.tsx|DiffScanResultsModal",
+  "cluster|Clone Graph Clustering|commands/refactor.rs|cddm_get_clone_cluster|/api/refactor-cluster|clones.rs|CloneClusterCard.tsx|CloneClusterCard",
+  "diff_viewer|Split Diff Visualizer|formatters/scan.rs|cddm_get_clone_pair|/api/snippet|clones.rs|DiffViewer.tsx|DiffViewer",
+  "semantic|Cross-Language Matching|commands/semantic.rs|cddm_scan_cross_language|/api/semantic|semantic.rs|SemanticGraphModal.tsx|SemanticGraphModal",
+  "refactor|AST Refactoring Sandbox|commands/refactor.rs|cddm_ast_refactor|/api/refactor/ast|refactor.rs|RefactorSandboxModal.tsx|RefactorSandboxModal",
+  "extract|Shared Module Extraction|commands/extract.rs|cddm_extract_shared_module|/api/extract|extract.rs|sandbox/ExtractModuleTab.tsx|ExtractModuleTab",
+  "heal|AI Code Surgeon|commands/heal.rs|cddm_heal_refactor|/api/refactor/heal|refactor.rs|sandbox/AutoHealTab.tsx|AutoHealTab",
+  "policy|Policy Engine|commands/rules.rs|cddm_check_policies|/api/policy|policy.rs|PolicyRulesModal.tsx|PolicyRulesModal",
+  "suppression|AST Suppression|commands/ignore.rs|cddm_check_suppression|/api/suppression|policy.rs|SuppressionRulesModal.tsx|SuppressionRulesModal",
+  "timeline|Git History Trends|commands/trend.rs|cddm_get_timeline|/api/timeline|timeline.rs|TimelineExplorerModal.tsx|TimelineExplorerModal",
+  "workflow|CI/CD & Hook Manager|commands/hook.rs|cddm_export_sarif|/api/workflow/hooks|workflow.rs|HookManagerModal.tsx|HookManagerModal",
+  "overlap|Ecosystem Library Overlap|commands/overlap.rs|cddm_detect_overlap|/api/overlap|overlap.rs|OverlapDetectorModal.tsx|OverlapDetectorModal",
+  "hub|Organization Federation Hub|commands/hub.rs|cddm_scan_hub|/api/hub|hub.rs|HubFederationModal.tsx|HubFederationModal",
+  "coverage|Runtime Execution & Coverage|commands/coverage.rs|cddm_correlate_coverage|/api/coverage|coverage.rs|CoverageCorrelationModal.tsx|CoverageCorrelationModal",
+  "dead_code|Polyglot Dead Code Detection|commands/dead_code.rs|cddm_detect_dead_code|/api/dead-code|dead_code.rs|DeadCodeExplorerModal.tsx|DeadCodeExplorerModal|DeadCodeStudioView",
+  "neural|Neural Embeddings & Algorithmic Clones|commands/semantic.rs|cddm_semantic_neural_scan|/api/semantic/neural|semantic.rs|semantic/CrossLanguageExplorerTab.tsx|CrossLanguageExplorerTab",
 ] as const;
 
 export const MANDATORY_PARITY_FEATURES: FeatureParityCheck[] = RAW_PARITY_MATRIX.map((entry) => {
   const parts = entry.split("|") as string[];
-  const [id = "", name = "", cliRel = "", mcpPat = "", routePat = "", tuiRel = ""] = parts;
+  const [
+    id = "",
+    name = "",
+    cliRel = "",
+    mcpPat = "",
+    routePat = "",
+    tuiRel = "",
+    compRel = "",
+    navPat = "",
+  ] = parts;
   return {
     id,
     name,
@@ -50,6 +63,8 @@ export const MANDATORY_PARITY_FEATURES: FeatureParityCheck[] = RAW_PARITY_MATRIX
     mcpToolPattern: new RegExp(mcpPat),
     axumRoutePattern: new RegExp(routePat.replace(/\//g, "\\/")),
     tuiViewFile: `crates/cddm-cli/src/tui/views/${tuiRel}`,
+    webuiComponentFile: compRel,
+    webuiNavPattern: new RegExp(navPat),
   };
 });
 
@@ -106,6 +121,21 @@ export function validateFeatureParity(workspaceRoot: string = process.cwd()): Pa
   // Read Axum serve router and handlers content
   const serveContent = readAllDirText(join(workspaceRoot, "crates/cddm-cli/src/serve"));
 
+  // Read primary WebUI navigation entry files
+  const primaryNavFiles = [
+    join(workspaceRoot, "webui/src/App.tsx"),
+    join(workspaceRoot, "webui/src/components/lazy-modals.ts"),
+    join(workspaceRoot, "webui/src/components/ScanResults.tsx"),
+    join(workspaceRoot, "webui/src/components/RefactorSandboxModal.tsx"),
+    join(workspaceRoot, "webui/src/components/SemanticGraphModal.tsx"),
+    join(workspaceRoot, "webui/src/components/ClonePairCard.tsx"),
+  ];
+
+  const navContent = primaryNavFiles
+    .filter((p) => existsSync(p))
+    .map((p) => readFileSync(p, "utf-8"))
+    .join("\n");
+
   for (const feature of MANDATORY_PARITY_FEATURES) {
     // 1. Check Documentation
     if (!docContent.includes(feature.name)) {
@@ -138,13 +168,32 @@ export function validateFeatureParity(workspaceRoot: string = process.cwd()): Pa
       });
     }
 
-    // 4. Check WebUI (Axum Route)
+    // 4. Check WebUI (Axum Route, React Component, and Navigation Linkage)
     if (serveContent && !feature.axumRoutePattern.test(serveContent)) {
       violations.push({
         featureId: feature.id,
         featureName: feature.name,
         missingPillar: "WebUI",
         detail: `Missing Axum REST route pattern: ${feature.axumRoutePattern}`,
+      });
+    }
+
+    const componentPath = join(workspaceRoot, "webui/src/components", feature.webuiComponentFile);
+    if (!existsSync(componentPath)) {
+      violations.push({
+        featureId: feature.id,
+        featureName: feature.name,
+        missingPillar: "WebUI",
+        detail: `Missing frontend React component file: webui/src/components/${feature.webuiComponentFile}`,
+      });
+    }
+
+    if (navContent && !feature.webuiNavPattern.test(navContent)) {
+      violations.push({
+        featureId: feature.id,
+        featureName: feature.name,
+        missingPillar: "WebUI",
+        detail: `Component not wired into navigation (expected pattern: ${feature.webuiNavPattern})`,
       });
     }
 
@@ -162,8 +211,6 @@ export function validateFeatureParity(workspaceRoot: string = process.cwd()): Pa
 
   return violations;
 }
-
-import { reportViolationsAndExit } from "./lib/step-runner";
 
 async function main() {
   console.log(

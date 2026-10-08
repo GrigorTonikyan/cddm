@@ -139,6 +139,24 @@ describe("App Component", () => {
     ).toBeDefined();
   });
 
+  it("should open DiffScanResultsModal when clicking Diff Scan in header", async () => {
+    render(
+      <Win2xManagerProvider>
+        <App />
+      </Win2xManagerProvider>,
+    );
+
+    const diffBtn = screen.getByText("Diff Scan");
+    fireEvent.click(diffBtn);
+    expect(
+      await screen.findByText(
+        "Differential Codebase Scan & Branch Comparison",
+        {},
+        { timeout: 15000 },
+      ),
+    ).toBeDefined();
+  });
+
   it("should open HubFederationModal when clicking Org Hub in header", async () => {
     render(
       <Win2xManagerProvider>
