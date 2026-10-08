@@ -11,7 +11,10 @@ test.describe("CDDM Top-Level Navigation & Discoverability Matrix", () => {
 
     // Helper to open modal, verify title, and close
     const assertModalFlow = async (buttonName: string | RegExp, expectedTitle: string | RegExp) => {
-      const btn = page.getByRole("button", { name: buttonName });
+      const btn =
+        typeof buttonName === "string"
+          ? page.getByRole("button", { name: buttonName, exact: true })
+          : page.getByRole("button", { name: buttonName });
       await expect(btn).toBeVisible({ timeout: 15000 });
       await btn.click();
 
@@ -53,7 +56,7 @@ test.describe("CDDM Top-Level Navigation & Discoverability Matrix", () => {
     await assertModalFlow("Dead Code", "Polyglot Dead Code Explorer & Safe Pruner");
 
     // 8. Refactor Studio (and check Extract Shared Crate tab)
-    const refactorBtn = page.getByRole("button", { name: "Refactor Studio" });
+    const refactorBtn = page.getByRole("button", { name: "Refactor Studio", exact: true });
     await expect(refactorBtn).toBeVisible();
     await refactorBtn.click();
     const studioHeader = page.getByText("Interactive Auto-Refactor Sandbox & Visual Studio");
@@ -146,7 +149,7 @@ test.describe("CDDM Top-Level Navigation & Discoverability Matrix", () => {
     test.setTimeout(60000);
 
     // 1. Open Code Editor from top-level header
-    const editorBtn = page.getByRole("button", { name: "Code Editor" });
+    const editorBtn = page.getByRole("button", { name: "Code Editor", exact: true });
     await expect(editorBtn).toBeVisible();
     await editorBtn.click();
 
