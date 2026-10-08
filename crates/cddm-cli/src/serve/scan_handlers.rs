@@ -154,15 +154,52 @@ pub async fn execute_background_refresh(state: &AppState) {
     }
 }
 
-/// Resolves a file path securely and prevents path traversal out of bounds.
+/// Resolves a file path securely and strictly prevents path traversal outside workspace bounds.
 pub fn resolve_safe_path(file_str: &str) -> Result<PathBuf, (StatusCode, String)> {
+    if file_str.trim().is_empty() {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "File path cannot be empty".to_string(),
+        ));
+    }
+    if file_str.contains('\0') {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "Invalid characters in file path".to_string(),
+        ));
+    }
+
+    let workspace_root = std::env::current_dir().map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("Failed to determine workspace root: {}", e),
+        )
+    })?;
+    let canonical_root = workspace_root.canonicalize().unwrap_or(workspace_root);
+
     let requested = Path::new(file_str);
-    let canonical = requested.canonicalize().map_err(|e| {
+    let target = if requested.is_absolute() {
+        requested.to_path_buf()
+    } else {
+        canonical_root.join(requested)
+    };
+
+    let canonical = target.canonicalize().map_err(|e| {
         (
             StatusCode::NOT_FOUND,
             format!("Failed to resolve file '{}': {}", file_str, e),
         )
     })?;
+
+    if !canonical.starts_with(&canonical_root) {
+        return Err((
+            StatusCode::FORBIDDEN,
+            format!(
+                "Access denied: Path '{}' traverses outside the workspace root",
+                file_str
+            ),
+        ));
+    }
 
     if !canonical.is_file() {
         return Err((

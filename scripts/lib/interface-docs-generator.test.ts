@@ -48,8 +48,8 @@ describe("Interface Documentation Generator", () => {
     expect(MCP_RESOURCES_CATALOG.length).toBe(14);
   });
 
-  test("WebUI catalog contains all 19 modals", () => {
-    expect(WEBUI_MODALS_CATALOG.length).toBe(19);
+  test("WebUI catalog contains all 20 modals", () => {
+    expect(WEBUI_MODALS_CATALOG.length).toBe(20);
   });
 
   test("Table generators produce valid Markdown tables", () => {

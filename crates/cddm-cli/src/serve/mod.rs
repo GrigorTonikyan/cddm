@@ -4,6 +4,7 @@ pub mod assets;
 pub mod coverage_handlers;
 pub mod dead_code_handlers;
 pub mod extract_handlers;
+pub mod file_handlers;
 pub mod hub_handlers;
 pub mod mcp_apps_handlers;
 pub mod metrics_handlers;
@@ -29,6 +30,7 @@ use cddm_core::{CddmWatcher, ScanConfig};
 use coverage_handlers::*;
 use dead_code_handlers::*;
 use extract_handlers::*;
+use file_handlers::*;
 use hub_handlers::*;
 use overlap_handlers::*;
 use policy_handlers::*;
@@ -131,6 +133,11 @@ pub fn build_app_with_state(state: AppState) -> Router {
         .route(ROUTE_API_DEAD_CODE, get(dead_code_get_handler))
         .route(ROUTE_API_MCP_APPS_WIDGETS, get(mcp_apps_widgets_handler))
         .route(ROUTE_API_MCP_APPS_RENDER, post(mcp_apps_render_handler))
+        .route(
+            ROUTE_API_FILE,
+            get(file_read_handler).post(file_save_handler),
+        )
+        .route(ROUTE_API_FILE_TREE, get(file_tree_handler))
         .route(ROUTE_METRICS, get(metrics_handler))
         .route(ROUTE_API_METRICS, get(metrics_handler))
         .fallback(static_asset_handler)

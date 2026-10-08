@@ -56,6 +56,8 @@ export const API_ROUTES = {
   DEAD_CODE: "/api/dead-code",
   MCP_APPS_WIDGETS: "/api/mcp/apps/widgets",
   MCP_APPS_RENDER: "/api/mcp/apps/render",
+  FILE: "/api/file",
+  FILE_TREE: "/api/file/tree",
 } as const;
 
 /**

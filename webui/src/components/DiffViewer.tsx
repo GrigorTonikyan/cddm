@@ -7,13 +7,16 @@ import { useCDDMStore } from "../store/cddm-store";
 import {
   Columns2,
   FileCode,
-  Copy,
-  Check,
   RefreshCw,
   AlertCircle,
   Code2,
-  ExternalLink,
+  Sparkles,
+  FileEdit,
+  Copy,
 } from "lucide-react";
+import { DiffFragmentHeader } from "./diff/DiffFragmentHeader";
+import { renderHighlightedLine } from "./diff/DiffHighlighter";
+import { MonacoDiffViewer } from "./diff/MonacoDiffViewer";
 
 export interface DiffViewerProps {
   fileA: string;
@@ -25,124 +28,6 @@ export interface DiffViewerProps {
   tokenCount?: number;
 }
 
-// Tokenize a code line into syntax-highlighted spans
-const renderHighlightedLine = (text: string) => {
-  if (!text) return <span>&nbsp;</span>;
-
-  // Simple token regex matching strings, comments, numbers, keywords
-  const tokenRegex =
-    /("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|\/\/[^\n]*|#[^\n]*|\b(?:fn|function|def|const|let|var|return|if|else|for|while|import|from|export|class|struct|enum|pub|impl|type|interface|async|await|true|false|null|None)\b|\b\d+\b|[a-zA-Z_]\w*|[^\s\w])/g;
-
-  const parts: React.ReactNode[] = [];
-  let lastIndex = 0;
-  let match: RegExpExecArray | null;
-
-  while ((match = tokenRegex.exec(text)) !== null) {
-    if (match.index > lastIndex) {
-      parts.push(text.slice(lastIndex, match.index));
-    }
-    const token = match[0];
-    if (token.startsWith("//") || token.startsWith("#")) {
-      parts.push(
-        <span key={match.index} className="text-slate-500 italic">
-          {token}
-        </span>,
-      );
-    } else if (
-      (token.startsWith('"') && token.endsWith('"')) ||
-      (token.startsWith("'") && token.endsWith("'"))
-    ) {
-      parts.push(
-        <span key={match.index} className="text-emerald-400">
-          {token}
-        </span>,
-      );
-    } else if (/^\d+$/.test(token)) {
-      parts.push(
-        <span key={match.index} className="text-amber-400">
-          {token}
-        </span>,
-      );
-    } else if (
-      /^(?:fn|function|def|const|let|var|return|if|else|for|while|import|from|export|class|struct|enum|pub|impl|type|interface|async|await|true|false|null|None)$/.test(
-        token,
-      )
-    ) {
-      parts.push(
-        <span key={match.index} className="text-indigo-400 font-semibold">
-          {token}
-        </span>,
-      );
-    } else {
-      parts.push(
-        <span key={match.index} className="text-slate-200">
-          {token}
-        </span>,
-      );
-    }
-    lastIndex = match.index + token.length;
-  }
-
-  if (lastIndex < text.length) {
-    parts.push(text.slice(lastIndex));
-  }
-
-  return <>{parts}</>;
-};
-
-interface FragmentHeaderProps {
-  filePath: string;
-  parsed: { directory: string; filename: string };
-  startLine: number;
-  endLine: number;
-  ideLink: string;
-  editorName: string;
-  copied: boolean;
-  onCopy: () => void;
-}
-
-const FragmentHeader: React.FC<FragmentHeaderProps> = ({
-  filePath,
-  parsed,
-  startLine,
-  endLine,
-  ideLink,
-  editorName,
-  copied,
-  onCopy,
-}) => (
-  <div className="px-3 py-1.5 bg-slate-900/60 border-b border-slate-800/60 flex items-center justify-between text-xs font-mono">
-    <span className="text-slate-300 truncate" title={filePath}>
-      <span className="text-slate-500">{parsed.directory}</span>
-      <span className="font-bold text-indigo-300">{parsed.filename}</span>
-      <span className="text-slate-500 ml-1.5">
-        (L{startLine}–{endLine})
-      </span>
-    </span>
-    <div className="flex items-center gap-1">
-      <a
-        href={ideLink}
-        title={`Open in ${editorName} at line ${startLine}`}
-        className="p-1 hover:bg-slate-800 text-slate-400 hover:text-indigo-300 rounded transition-colors"
-      >
-        <ExternalLink className="w-3.5 h-3.5" />
-      </a>
-      <button
-        type="button"
-        onClick={onCopy}
-        className="p-1 hover:bg-slate-800 text-slate-400 hover:text-slate-200 rounded transition-colors"
-        title="Copy duplicate code"
-      >
-        {copied ? (
-          <Check className="w-3.5 h-3.5 text-emerald-400" />
-        ) : (
-          <Copy className="w-3.5 h-3.5" />
-        )}
-      </button>
-    </div>
-  </div>
-);
-
 export const DiffViewer: React.FC<DiffViewerProps> = ({
   fileA,
   startLineA,
@@ -151,12 +36,12 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
   startLineB,
   endLineB,
 }) => {
-  const { preferredEditor } = useCDDMStore();
+  const { preferredEditor, openDiffInEditor, openFileInEditor } = useCDDMStore();
   const [snippetA, setSnippetA] = useState<SnippetResponse | null>(null);
   const [snippetB, setSnippetB] = useState<SnippetResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<"split" | "unified">("split");
+  const [viewMode, setViewMode] = useState<"split" | "unified" | "monaco">("split");
   const [copiedA, setCopiedA] = useState(false);
   const [copiedB, setCopiedB] = useState(false);
 
@@ -225,8 +110,8 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
     if (isSyncing.current) return;
     if (scrollRefA.current && scrollRefB.current) {
       isSyncing.current = true;
-      scrollRefA.current.scrollTop = scrollRefB.current.scrollTop;
-      scrollRefA.current.scrollLeft = scrollRefB.current.scrollLeft;
+      scrollRefB.current.scrollTop = scrollRefA.current.scrollTop;
+      scrollRefB.current.scrollLeft = scrollRefA.current.scrollLeft;
       requestAnimationFrame(() => {
         isSyncing.current = false;
       });
@@ -282,6 +167,9 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
     );
   }
 
+  const rawCodeA = snippetA?.lines.map((l) => l.content).join("\n") || "";
+  const rawCodeB = snippetB?.lines.map((l) => l.content).join("\n") || "";
+
   return (
     <div className="bg-slate-950 rounded-xl border border-slate-800/90 overflow-hidden shadow-2xl">
       {/* Diff Controls Header */}
@@ -294,41 +182,75 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
           </span>
         </div>
 
-        {/* View Mode Toggle */}
-        <div className="flex items-center gap-1 bg-slate-950 p-0.5 rounded-lg border border-slate-800">
+        <div className="flex items-center gap-2">
+          {/* Studio Code Editor Shortcut */}
           <button
             type="button"
-            onClick={() => setViewMode("split")}
-            className={`px-2.5 py-1 rounded text-[11px] font-semibold flex items-center gap-1.5 transition-all ${
-              viewMode === "split"
-                ? "bg-indigo-600 text-white shadow-sm"
-                : "text-slate-400 hover:text-slate-200"
-            }`}
+            onClick={() => void openDiffInEditor(fileA, fileB)}
+            title="Open in CDDM Studio Code Editor"
+            className="px-2.5 py-1 rounded bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 hover:text-cyan-300 transition-colors flex items-center gap-1.5 text-[11px] font-semibold"
           >
-            <Columns2 className="w-3 h-3" />
-            Side-by-Side
+            <FileEdit className="w-3.5 h-3.5 text-cyan-400" />
+            <span>Open in Studio Editor</span>
           </button>
-          <button
-            type="button"
-            onClick={() => setViewMode("unified")}
-            className={`px-2.5 py-1 rounded text-[11px] font-semibold flex items-center gap-1.5 transition-all ${
-              viewMode === "unified"
-                ? "bg-indigo-600 text-white shadow-sm"
-                : "text-slate-400 hover:text-slate-200"
-            }`}
-          >
-            <FileCode className="w-3 h-3" />
-            Unified
-          </button>
+
+          {/* View Mode Toggle */}
+          <div className="flex items-center gap-1 bg-slate-950 p-0.5 rounded-lg border border-slate-800">
+            <button
+              type="button"
+              onClick={() => setViewMode("split")}
+              className={`px-2.5 py-1 rounded text-[11px] font-semibold flex items-center gap-1.5 transition-all ${
+                viewMode === "split"
+                  ? "bg-indigo-600 text-white shadow-sm"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              <Columns2 className="w-3 h-3" />
+              Side-by-Side
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("unified")}
+              className={`px-2.5 py-1 rounded text-[11px] font-semibold flex items-center gap-1.5 transition-all ${
+                viewMode === "unified"
+                  ? "bg-indigo-600 text-white shadow-sm"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              <FileCode className="w-3 h-3" />
+              Unified
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("monaco")}
+              className={`px-2.5 py-1 rounded text-[11px] font-semibold flex items-center gap-1.5 transition-all ${
+                viewMode === "monaco"
+                  ? "bg-indigo-600 text-white shadow-sm"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              <Sparkles className="w-3 h-3 text-cyan-300" />
+              Monaco Diff
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Code Container */}
-      {viewMode === "split" ? (
+      {viewMode === "monaco" ? (
+        <MonacoDiffViewer
+          original={rawCodeA}
+          modified={rawCodeB}
+          language={snippetA?.language || "typescript"}
+          renderSideBySide={true}
+          readOnly={true}
+          height="320px"
+        />
+      ) : viewMode === "split" ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-slate-800">
           {/* Panel Fragment A */}
           <div className="flex flex-col min-w-0">
-            <FragmentHeader
+            <DiffFragmentHeader
               filePath={fileA}
               parsed={parsedA}
               startLine={startLineA}
@@ -337,6 +259,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
               editorName={getEditorDisplayName(preferredEditor)}
               copied={copiedA}
               onCopy={() => handleCopyCode(snippetA, true)}
+              onOpenInEditor={() => void openFileInEditor(fileA, startLineA)}
             />
             <div
               ref={scrollRefA}
@@ -365,7 +288,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
 
           {/* Panel Fragment B */}
           <div className="flex flex-col min-w-0">
-            <FragmentHeader
+            <DiffFragmentHeader
               filePath={fileB}
               parsed={parsedB}
               startLine={startLineB}
@@ -374,6 +297,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
               editorName={getEditorDisplayName(preferredEditor)}
               copied={copiedB}
               onCopy={() => handleCopyCode(snippetB, false)}
+              onOpenInEditor={() => void openFileInEditor(fileB, startLineB)}
             />
             <div
               ref={scrollRefB}

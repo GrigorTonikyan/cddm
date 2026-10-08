@@ -72,6 +72,23 @@ export interface CDDMStoreState {
   isHubModalOpen: boolean;
   isMcpAppsModalOpen: boolean;
 
+  /** Integrated Code Editor & Split Diff Studio state */
+  isCodeEditorOpen: boolean;
+  activeEditorFile: string | null;
+  activeEditorContent: string;
+  originalEditorContent: string;
+  editorLanguage: string;
+  editorIsDirty: boolean;
+  editorIsLoading: boolean;
+  editorError: string | null;
+  editorSaveSuccess: boolean;
+  editorSplitDiffMode: boolean;
+  editorDiffFileA: string | null;
+  editorDiffFileB: string | null;
+  editorDiffContentA: string;
+  editorDiffContentB: string;
+  editorFilesList: import("../types/editor-types").WorkspaceFileEntry[];
+
   /** Organization Federation Hub state */
   hubConfig: import("../types/cddm-types").HubConfig | null;
   hubSummary: import("../types/cddm-types").HubScanSummary | null;
@@ -259,4 +276,20 @@ export interface CDDMStoreState {
   pruneDeadCode: (
     req?: import("../types/dead-code-types").DeadClonePruneRequest,
   ) => Promise<import("../types/dead-code-types").DeadClonePruneResult>;
+
+  /** Integrated Code Editor & Split Diff Studio actions */
+  setIsCodeEditorOpen: (open: boolean) => void;
+  openFileInEditor: (path: string, line?: number) => Promise<void>;
+  openDiffInEditor: (
+    fileA: string,
+    fileB: string,
+    rangeA?: [number, number],
+    rangeB?: [number, number],
+  ) => Promise<void>;
+  saveActiveEditorFile: () => Promise<boolean>;
+  setActiveEditorContent: (content: string) => void;
+  setEditorLanguage: (lang: string) => void;
+  setEditorSplitDiffMode: (diffMode: boolean) => void;
+  fetchEditorFiles: () => Promise<void>;
+  closeCodeEditor: () => void;
 }
