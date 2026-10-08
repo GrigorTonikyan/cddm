@@ -33,6 +33,10 @@ export const createScanSlice = (set: SetStoreState, get: GetStoreState) => ({
       const results: ScanResult = await res.json();
       if (results && Array.isArray(results.clone_pairs)) {
         set({ results, isScanning: false, activeScanId: results.scan_id, error: null });
+        const { deadCodeSummary, scanDeadCode } = get();
+        if (!deadCodeSummary && typeof scanDeadCode === "function") {
+          void scanDeadCode({ static_only: true });
+        }
       } else {
         set({ isScanning: false, results: null });
       }

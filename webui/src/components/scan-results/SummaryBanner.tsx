@@ -1,6 +1,7 @@
 import React from "react";
 import type { ScanResult } from "../../types/cddm-types";
-import { Activity, Award, Clock, Copy, GitBranch, Layers, Maximize2 } from "lucide-react";
+import { useCDDMStore } from "../../store/cddm-store";
+import { Activity, Award, Clock, Copy, GitBranch, Layers, Maximize2, Trash2 } from "lucide-react";
 
 interface SummaryCardProps {
   title: string;
@@ -28,6 +29,7 @@ export interface SummaryBannerProps {
 }
 
 export const SummaryBanner: React.FC<SummaryBannerProps> = ({ results, onOpenHealthAudit }) => {
+  const { deadCodeSummary, setViewMode } = useCDDMStore();
   const dryScore = typeof results?.dry_health_score === "number" ? results.dry_health_score : 100.0;
   const dupPct =
     typeof results?.duplication_percentage === "number" ? results.duplication_percentage : 0.0;
@@ -48,7 +50,7 @@ export const SummaryBanner: React.FC<SummaryBannerProps> = ({ results, onOpenHea
         : "text-rose-400 border-rose-500/40 bg-rose-950/20 shadow-rose-950/30 hover:border-rose-400/80";
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-7 gap-3">
       {/* DRY Health Score Card (Clickable to open HealthAuditModal) */}
       <div
         onClick={onOpenHealthAudit}
@@ -124,6 +126,28 @@ export const SummaryBanner: React.FC<SummaryBannerProps> = ({ results, onOpenHea
         subtitle="AVX-512 SIMD vector lanes"
         icon={<Clock className="w-5 h-5 text-indigo-400" />}
       />
+
+      {/* Dead Code Candidate Summary (Clickable to switch viewMode to dead-code) */}
+      <div
+        onClick={() => setViewMode("dead-code")}
+        className="bg-slate-900/80 border border-slate-800/80 hover:border-rose-500/60 rounded-xl p-4 flex flex-col justify-between shadow-lg cursor-pointer transition-all group/dead"
+        title="Click to switch to Polyglot Dead Code Studio"
+      >
+        <div className="flex items-center justify-between text-slate-400">
+          <span className="text-xs font-bold uppercase tracking-wider group-hover/dead:text-rose-300 transition-colors">
+            Dead Code
+          </span>
+          <Trash2 className="w-5 h-5 text-rose-400 group-hover/dead:scale-110 transition-transform" />
+        </div>
+        <div className="mt-3">
+          <span className="text-3xl font-extrabold font-mono text-rose-300">
+            {deadCodeSummary?.total_dead_items ?? 0}
+          </span>
+          <p className="text-[11px] text-slate-400 mt-1">
+            ~{deadCodeSummary?.total_dead_lines ?? 0} removable LOC
+          </p>
+        </div>
+      </div>
     </div>
   );
 };

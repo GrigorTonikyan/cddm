@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { CloneCluster, CloneLocation } from "../types/cddm-types";
 import { parsePath } from "../utils/path-utils";
 import { RefactorPatchModal } from "./RefactorPatchModal";
 import { getIdeDeeplink, getEditorDisplayName } from "../utils/ide-links";
 import { useCDDMStore } from "../store/cddm-store";
+import { isCloneClusterDead } from "../utils/dead-code-utils";
 import {
   ChevronDown,
   ChevronRight,
@@ -14,6 +15,7 @@ import {
   Wand2,
   Layers,
   ExternalLink,
+  Trash2,
 } from "lucide-react";
 
 export interface CloneClusterCardProps {
@@ -69,8 +71,13 @@ const LocationItem: React.FC<LocationItemProps> = ({ location, idx }) => {
 };
 
 export const CloneClusterCard: React.FC<CloneClusterCardProps> = ({ cluster, index }) => {
+  const { deadCodeSummary } = useCDDMStore();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isRefactorOpen, setIsRefactorOpen] = useState(false);
+
+  const deadCorrelation = useMemo(() => {
+    return isCloneClusterDead(deadCodeSummary?.items, cluster.occurrences);
+  }, [deadCodeSummary?.items, cluster.occurrences]);
 
   const simPct = (cluster.similarity * 100).toFixed(0);
   const simNum = cluster.similarity * 100;
@@ -124,6 +131,16 @@ export const CloneClusterCard: React.FC<CloneClusterCardProps> = ({ cluster, ind
         {/* Right: Badges and Actions */}
         <div className="flex items-center justify-between md:justify-end gap-3 shrink-0">
           <div className="flex items-center gap-2">
+            {deadCorrelation.isDead && (
+              <span
+                title={`${deadCorrelation.deadLocationsCount} of ${cluster.occurrences.length} occurrences identified as dead code`}
+                className="text-xs px-2.5 py-0.5 rounded-full font-mono font-bold border flex items-center gap-1 bg-rose-950/90 text-rose-300 border-rose-800/80 shadow-sm animate-pulse"
+              >
+                <Trash2 className="w-3 h-3 text-rose-400" />
+                <span>Dead Cluster ({deadCorrelation.deadLocationsCount})</span>
+              </span>
+            )}
+
             <span
               className={`text-xs px-2.5 py-0.5 rounded-full font-semibold border ${cloneTypeBadge}`}
             >

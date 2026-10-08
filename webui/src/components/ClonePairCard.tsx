@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { ClonePair } from "../types/cddm-types";
 import { parsePath, FormattedPath } from "../utils/path-utils";
 import { DiffViewer } from "./DiffViewer";
@@ -6,6 +6,7 @@ import { RefactorPatchModal } from "./RefactorPatchModal";
 import { ClonePairDiffModal } from "./ClonePairDiffModal";
 import { getIdeDeeplink, getEditorDisplayName } from "../utils/ide-links";
 import { useCDDMStore } from "../store/cddm-store";
+import { isClonePairDead } from "../utils/dead-code-utils";
 import {
   ChevronDown,
   ChevronRight,
@@ -19,6 +20,7 @@ import {
   ExternalLink,
   Network,
   Code2,
+  Trash2,
 } from "lucide-react";
 
 export interface ClonePairCardProps {
@@ -60,12 +62,31 @@ const FilePathSummary: React.FC<FilePathSummaryProps> = ({ parsed, startLine, en
 };
 
 export const ClonePairCard: React.FC<ClonePairCardProps> = ({ pair, index }) => {
+  const { deadCodeSummary } = useCDDMStore();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isRefactorOpen, setIsRefactorOpen] = useState(false);
   const [isDiffModalOpen, setIsDiffModalOpen] = useState(false);
 
   const pathA = parsePath(pair.file_a);
   const pathB = parsePath(pair.file_b);
+
+  const deadCorrelation = useMemo(() => {
+    return isClonePairDead(
+      deadCodeSummary?.items,
+      pair.file_a,
+      [pair.start_line_a, pair.end_line_a],
+      pair.file_b,
+      [pair.start_line_b, pair.end_line_b],
+    );
+  }, [
+    deadCodeSummary?.items,
+    pair.file_a,
+    pair.start_line_a,
+    pair.end_line_a,
+    pair.file_b,
+    pair.start_line_b,
+    pair.end_line_b,
+  ]);
 
   const simPct = (pair.similarity * 100).toFixed(0);
   const simNum = pair.similarity * 100;
@@ -126,6 +147,26 @@ export const ClonePairCard: React.FC<ClonePairCardProps> = ({ pair, index }) => 
               <span className="text-[11px] font-mono px-2 py-0.5 rounded border flex items-center gap-1 bg-purple-950/90 text-purple-300 border-purple-800/60 font-semibold shadow-sm">
                 <Sparkles className="w-3 h-3 text-purple-400" />
                 Polyglot
+              </span>
+            )}
+
+            {/* Dead Code Candidate Badge */}
+            {deadCorrelation.isDead && (
+              <span
+                title={
+                  deadCorrelation.itemA?.reason ||
+                  deadCorrelation.itemB?.reason ||
+                  "Detected as dead code candidate"
+                }
+                className="text-[11px] font-mono px-2 py-0.5 rounded border flex items-center gap-1 bg-rose-950/90 text-rose-300 border-rose-800/80 font-bold shadow-sm animate-pulse"
+              >
+                <Trash2 className="w-3 h-3 text-rose-400" />
+                <span>
+                  {deadCorrelation.itemA?.kind === "dead_clone" ||
+                  deadCorrelation.itemB?.kind === "dead_clone"
+                    ? "Dead Clone"
+                    : "Dead Code"}
+                </span>
               </span>
             )}
 
