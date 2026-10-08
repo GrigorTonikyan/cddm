@@ -168,7 +168,7 @@ export const DeadCodeStudioView: React.FC<DeadCodeStudioViewProps> = ({ classNam
               {deadCodeSummary?.total_dead_lines ?? 0}
             </span>
             <span className="text-[11px] font-mono text-emerald-400/80">
-              ~{deadCodeSummary?.estimated_savings_pct.toFixed(1) ?? "0.0"}%
+              ~{deadCodeSummary?.estimated_savings_pct?.toFixed(1) ?? "0.0"}%
             </span>
           </div>
         </div>
@@ -375,7 +375,7 @@ export const DeadCodeStudioView: React.FC<DeadCodeStudioViewProps> = ({ classNam
           <Loader2 className="w-8 h-8 animate-spin mx-auto text-indigo-400" />
           <p className="text-sm font-mono">Running polyglot reachability & dead code analysis...</p>
         </div>
-      ) : !deadCodeSummary || deadCodeSummary.items.length === 0 ? (
+      ) : !deadCodeSummary || (deadCodeSummary.items?.length ?? 0) === 0 ? (
         <div className="p-12 text-center text-slate-400 space-y-3 bg-slate-900/60 border border-slate-800/80 rounded-xl">
           <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto opacity-80" />
           <h4 className="text-base font-semibold text-slate-200">No Dead Code Detected</h4>

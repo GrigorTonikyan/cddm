@@ -12,15 +12,56 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { ModalFooter } from "./ui/ModalFooter";
+import { useCDDMStore } from "../store/cddm-store";
 
 export interface HealthAuditModalProps {
   isOpen: boolean;
   onClose: () => void;
-  results: ScanResult;
+  results?: ScanResult | null;
 }
 
-export const HealthAuditModal: React.FC<HealthAuditModalProps> = ({ isOpen, onClose, results }) => {
+export const HealthAuditModal: React.FC<HealthAuditModalProps> = ({
+  isOpen,
+  onClose,
+  results: propResults,
+}) => {
+  const storeResults = useCDDMStore((state) => state.results);
+  const results = propResults ?? storeResults;
+
   if (!isOpen) return null;
+
+  if (!results) {
+    return (
+      <Win2xWindow
+        id="cddm-health-audit-window"
+        windowType="health-audit"
+        isOpen={isOpen}
+        onClose={onClose}
+        title="DRY Health Score Audit & Diagnostics"
+        subtitle="Architectural health rating, redundancy penalties, and quality gate analysis"
+        badge="Zero Scan Results"
+        icon={<Award className="w-4 h-4 text-indigo-400" />}
+        footer={
+          <ModalFooter
+            infoIcon={<ShieldCheck className="w-3.5 h-3.5 text-indigo-400" />}
+            infoText={`Target Quality Gate: < ${DEFAULT_FAIL_THRESHOLD.toFixed(1)}% duplication`}
+            onClose={onClose}
+          />
+        }
+        initialWidth={880}
+        initialHeight={640}
+      >
+        <div className="p-16 text-center text-slate-400 font-mono text-xs bg-slate-900/40 border border-slate-800 rounded-xl space-y-3">
+          <Award className="w-10 h-10 text-slate-600 mx-auto" />
+          <h3 className="text-sm font-semibold text-slate-300">No Scan Results Available</h3>
+          <p className="text-slate-500 max-w-md mx-auto">
+            Run a codebase scan first to evaluate architectural DRY health score, modularity, and CI
+            quality gates.
+          </p>
+        </div>
+      </Win2xWindow>
+    );
+  }
 
   const isHealthy = results.dry_health_score >= 80;
   const isModerate = results.dry_health_score >= 60;

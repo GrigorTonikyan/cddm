@@ -92,4 +92,18 @@ describe("TimelineExplorerModal Component", () => {
     expect(screen.getByText("[INACTIVE]")).toBeDefined();
     expect(screen.getByText("Install Pre-Commit Hook")).toBeDefined();
   });
+
+  it("should render cleanly in uninitialized default store state", () => {
+    useCDDMStore.setState({
+      timelineData: null,
+      isTimelineLoading: false,
+      timelineError: null,
+      hookStatus: null,
+    });
+
+    renderWithWin2x(<TimelineExplorerModal isOpen={true} onClose={() => {}} />);
+    expect(screen.getByText("Historical Duplication & Git Timeline Evolution")).toBeDefined();
+    expect(screen.getByText("Commit Evolution Timeline")).toBeDefined();
+    expect(screen.getByText("Automated Git Hook Quality Gate")).toBeDefined();
+  });
 });

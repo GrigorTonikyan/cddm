@@ -126,4 +126,21 @@ describe("PolicyRulesModal Component", () => {
       screen.getByPlaceholderText("# Enter architectural policy rules in TOML format..."),
     ).toBeDefined();
   });
+
+  it("should render cleanly in uninitialized default store state", () => {
+    useCDDMStore.setState({
+      policyConfig: null,
+      isPolicyLoading: false,
+      policyError: null,
+      results: null,
+    });
+
+    renderPolicyModal(true);
+    expect(
+      screen.getByText("Architectural Boundary & Anti-Duplication Policy Studio"),
+    ).toBeDefined();
+    expect(screen.getByText("Active Policies (0)")).toBeDefined();
+    expect(screen.getByText("Violations Inspector (0)")).toBeDefined();
+    expect(screen.getByText("No boundary rules configured.")).toBeDefined();
+  });
 });

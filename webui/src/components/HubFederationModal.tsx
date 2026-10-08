@@ -238,7 +238,7 @@ export const HubFederationModal: React.FC<HubFederationModalProps> = ({
               <div className="text-xs text-gray-400 mb-2">
                 Shared clone clusters and token overlap correlated across repository boundaries:
               </div>
-              {summary?.duplication_matrix.map((pair, idx) => (
+              {summary?.duplication_matrix?.map((pair, idx) => (
                 <div
                   key={idx}
                   className="flex items-center justify-between p-3 bg-[#252526] rounded border border-[#333333]"

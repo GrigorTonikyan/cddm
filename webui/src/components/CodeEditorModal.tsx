@@ -22,11 +22,13 @@ export const CodeEditorModal: React.FC<CodeEditorModalProps> = ({ isOpen, onClos
     editorFilesList,
   } = useCDDMStore();
 
+  const filesCount = editorFilesList?.length ?? 0;
+
   useEffect(() => {
-    if (isOpen && editorFilesList.length === 0) {
+    if (isOpen && filesCount === 0 && fetchEditorFiles) {
       void fetchEditorFiles();
     }
-  }, [isOpen, editorFilesList.length, fetchEditorFiles]);
+  }, [isOpen, filesCount, fetchEditorFiles]);
 
   const handleSave = useCallback(async () => {
     if (!editorIsDirty || editorIsLoading || !activeEditorFile) return;

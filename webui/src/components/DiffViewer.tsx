@@ -167,8 +167,8 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
     );
   }
 
-  const rawCodeA = snippetA?.lines.map((l) => l.content).join("\n") || "";
-  const rawCodeB = snippetB?.lines.map((l) => l.content).join("\n") || "";
+  const rawCodeA = snippetA?.lines?.map((l) => l.content).join("\n") || "";
+  const rawCodeB = snippetB?.lines?.map((l) => l.content).join("\n") || "";
 
   return (
     <div className="bg-slate-950 rounded-xl border border-slate-800/90 overflow-hidden shadow-2xl">
@@ -266,7 +266,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
               onScroll={handleScrollA}
               className="max-h-80 overflow-x-auto overflow-y-auto p-2 font-mono text-xs leading-relaxed select-text"
             >
-              {snippetA?.lines.map((line) => (
+              {snippetA?.lines?.map((line) => (
                 <div
                   key={`a-${line.line_number}`}
                   className={`flex items-start gap-3 px-2 py-0.5 rounded transition-colors min-w-fit ${
@@ -304,7 +304,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
               onScroll={handleScrollB}
               className="max-h-80 overflow-x-auto overflow-y-auto p-2 font-mono text-xs leading-relaxed select-text"
             >
-              {snippetB?.lines.map((line) => (
+              {snippetB?.lines?.map((line) => (
                 <div
                   key={`b-${line.line_number}`}
                   className={`flex items-start gap-3 px-2 py-0.5 rounded transition-colors min-w-fit ${
@@ -342,7 +342,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
               </button>
             </div>
             <div className="max-h-60 overflow-x-auto overflow-y-auto p-2 font-mono text-xs leading-relaxed bg-slate-950 rounded-lg border border-slate-800/80">
-              {snippetA?.lines.map((line) => (
+              {snippetA?.lines?.map((line) => (
                 <div
                   key={`ua-${line.line_number}`}
                   className={`flex items-start gap-3 px-2 py-0.5 rounded min-w-fit ${
@@ -377,7 +377,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
               </button>
             </div>
             <div className="max-h-60 overflow-x-auto overflow-y-auto p-2 font-mono text-xs leading-relaxed bg-slate-950 rounded-lg border border-slate-800/80">
-              {snippetB?.lines.map((line) => (
+              {snippetB?.lines?.map((line) => (
                 <div
                   key={`ub-${line.line_number}`}
                   className={`flex items-start gap-3 px-2 py-0.5 rounded min-w-fit ${

@@ -111,4 +111,18 @@ describe("MonorepoWorkspaceModal Component", () => {
 
     expect(screen.getByText("Failed to read root workspace Cargo.toml")).toBeDefined();
   });
+
+  it("should render cleanly in uninitialized default store state", () => {
+    useCDDMStore.setState({
+      monorepoData: null,
+      isMonorepoLoading: false,
+      monorepoError: null,
+      config: undefined as unknown as any,
+    });
+
+    renderWithWin2x(<MonorepoWorkspaceModal isOpen={true} onClose={() => {}} />);
+    expect(screen.getByText("Monorepo Workspace & Multi-Package Architecture")).toBeDefined();
+    expect(screen.getByText("0 Packages")).toBeDefined();
+    expect(screen.getByText("No workspace packages detected")).toBeDefined();
+  });
 });

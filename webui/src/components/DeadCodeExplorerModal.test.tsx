@@ -187,4 +187,19 @@ describe("DeadCodeExplorerModal Component with Win2xWindow", () => {
     expect(screen.getByText("unused_calculator")).toBeDefined();
     expect(screen.queryByText("<unreachable_statement>")).toBeNull();
   });
+
+  it("should render safely in uninitialized default store state without throwing", async () => {
+    useCDDMStore.getState().resetScan();
+    useCDDMStore.setState({
+      deadCodeSummary: null,
+      isDeadCodeLoading: false,
+      deadCodeError: null,
+      lastPruneResult: null,
+    });
+
+    await renderAsyncWithWin2x(<DeadCodeExplorerModal isOpen={true} onClose={vi.fn()} />);
+
+    expect(screen.getByText("Polyglot Dead Code Explorer & Safe Pruner")).toBeDefined();
+    expect(screen.getByText(/0 dead items \/ ~0 removable lines/)).toBeDefined();
+  });
 });

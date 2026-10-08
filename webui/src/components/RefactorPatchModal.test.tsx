@@ -78,4 +78,15 @@ describe("RefactorPatchModal Component", () => {
     fireEvent.click(closeBtn);
     expect(onClose).toHaveBeenCalled();
   });
+
+  it("should render cleanly in uninitialized default state without clonePair or cluster", () => {
+    renderWithWin2x(<RefactorPatchModal isOpen={true} onClose={() => {}} />);
+
+    expect(screen.getByText("Automated Refactoring Advisor")).toBeDefined();
+    expect(
+      screen.getByText(
+        "No clone cluster or file pair selected for refactoring. Select a clone from scan results to synthesize patches.",
+      ),
+    ).toBeDefined();
+  });
 });

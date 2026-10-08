@@ -12,22 +12,27 @@ import {
   Terminal,
 } from "lucide-react";
 
+import { useCDDMStore } from "../store/cddm-store";
+
 export interface ExportReportModalProps {
   isOpen: boolean;
   onClose: () => void;
-  results: ScanResult;
+  results?: ScanResult | null;
 }
 
 export const ExportReportModal: React.FC<ExportReportModalProps> = ({
   isOpen,
   onClose,
-  results,
+  results: propResults,
 }) => {
+  const storeResults = useCDDMStore((state) => state.results);
+  const results = propResults ?? storeResults;
   const [activeTab, setActiveTab] = useState<"sarif" | "json" | "markdown" | "ci">("sarif");
   const [copied, setCopied] = useState<string | null>(null);
 
   // Generate SARIF v2.1.0 compliant report JSON client-side
   const sarifData = useMemo(() => {
+    if (!results) return null;
     return {
       $schema:
         "https://docs.oasis-open.org/sarif/sarif/v2.1.0/cos02/schemas/sarif-schema-2.1.0.json",
@@ -89,10 +94,14 @@ export const ExportReportModal: React.FC<ExportReportModalProps> = ({
     };
   }, [results]);
 
-  const sarifString = useMemo(() => JSON.stringify(sarifData, null, 2), [sarifData]);
-  const jsonString = useMemo(() => JSON.stringify(results, null, 2), [results]);
+  const sarifString = useMemo(
+    () => (sarifData ? JSON.stringify(sarifData, null, 2) : "{}"),
+    [sarifData],
+  );
+  const jsonString = useMemo(() => (results ? JSON.stringify(results, null, 2) : "{}"), [results]);
 
   const markdownString = useMemo(() => {
+    if (!results) return "";
     return `# CDDM Code De-Duplication & Architecture Report
 
 ## Summary
@@ -178,6 +187,32 @@ jobs:
       </button>
     </>
   );
+
+  if (!results) {
+    return (
+      <Win2xWindow
+        id="cddm-export-reports-window"
+        windowType="export-reports"
+        isOpen={isOpen}
+        onClose={onClose}
+        title="Report Center & SARIF Exporter"
+        subtitle="OASIS SARIF v2.1.0, JSON, Markdown, and CI/CD Quality Gate Artifacts"
+        badge="Zero Scan Results"
+        icon={<FileDown className="w-4 h-4 text-indigo-400" />}
+        footer={footerContent}
+        initialWidth={920}
+        initialHeight={680}
+      >
+        <div className="p-16 text-center text-slate-400 font-mono text-xs bg-slate-900/40 border border-slate-800 rounded-xl space-y-3">
+          <FileDown className="w-10 h-10 text-slate-600 mx-auto" />
+          <h3 className="text-sm font-semibold text-slate-300">No Scan Results Available</h3>
+          <p className="text-slate-500 max-w-md mx-auto">
+            Run a codebase scan first to generate SARIF, JSON, Markdown, and CI/CD export artifacts.
+          </p>
+        </div>
+      </Win2xWindow>
+    );
+  }
 
   return (
     <Win2xWindow

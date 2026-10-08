@@ -52,13 +52,13 @@ export const ScanConfigPanel: React.FC<ScanConfigPanelProps> = ({ className = ""
 
           <div className="hidden sm:flex items-center gap-3 text-xs font-mono text-slate-300">
             <span className="text-slate-400">Target:</span>
-            <span className="text-slate-100 font-semibold">{config.directory || "."}</span>
+            <span className="text-slate-100 font-semibold">{config?.directory || "."}</span>
             <span className="text-slate-600">|</span>
             <span className="text-slate-400">Tokens:</span>
-            <span className="text-slate-100 font-semibold">{config.min_tokens}</span>
+            <span className="text-slate-100 font-semibold">{config?.min_tokens ?? 50}</span>
             <span className="text-slate-600">|</span>
             <span className="text-slate-400">Fail:</span>
-            <span className="text-amber-300 font-semibold">{config.fail_threshold ?? 5.0}%</span>
+            <span className="text-amber-300 font-semibold">{config?.fail_threshold ?? 5.0}%</span>
           </div>
         </div>
 
@@ -125,7 +125,7 @@ export const ScanConfigPanel: React.FC<ScanConfigPanelProps> = ({ className = ""
             name="target_directory"
             aria-label="Target Repository Directory"
             type="text"
-            value={config.directory}
+            value={config?.directory ?? ""}
             onChange={(e) => setConfig({ directory: e.target.value })}
             className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm font-mono text-slate-100 focus:outline-none focus:border-indigo-500 transition-colors shadow-inner"
             placeholder="e.g. ./src or /path/to/repo"
@@ -143,7 +143,7 @@ export const ScanConfigPanel: React.FC<ScanConfigPanelProps> = ({ className = ""
               Minimum Token Threshold
             </span>
             <span className="text-xs bg-indigo-950 text-indigo-300 border border-indigo-800/50 px-2.5 py-0.5 rounded font-mono font-bold">
-              {config.min_tokens} tokens
+              {config?.min_tokens ?? 50} tokens
             </span>
           </label>
           <input
@@ -154,7 +154,7 @@ export const ScanConfigPanel: React.FC<ScanConfigPanelProps> = ({ className = ""
             min="10"
             max="200"
             step="5"
-            value={config.min_tokens}
+            value={config?.min_tokens ?? 50}
             onChange={(e) => setConfig({ min_tokens: Number(e.target.value) })}
             className="w-full h-2 bg-slate-950 rounded-lg appearance-none cursor-pointer accent-indigo-500 border border-slate-800"
           />
@@ -176,7 +176,7 @@ export const ScanConfigPanel: React.FC<ScanConfigPanelProps> = ({ className = ""
               Fail Threshold (% Duplication)
             </span>
             <span className="text-xs bg-amber-950 text-amber-300 border border-amber-800/50 px-2.5 py-0.5 rounded font-mono font-bold">
-              {config.fail_threshold ?? 5.0}%
+              {config?.fail_threshold ?? 5.0}%
             </span>
           </label>
           <input
@@ -187,7 +187,7 @@ export const ScanConfigPanel: React.FC<ScanConfigPanelProps> = ({ className = ""
             min="0.5"
             max="30"
             step="0.5"
-            value={config.fail_threshold ?? 5.0}
+            value={config?.fail_threshold ?? 5.0}
             onChange={(e) => setConfig({ fail_threshold: Number(e.target.value) })}
             className="w-full h-2 bg-slate-950 rounded-lg appearance-none cursor-pointer accent-amber-500 border border-slate-800"
           />
@@ -209,7 +209,7 @@ export const ScanConfigPanel: React.FC<ScanConfigPanelProps> = ({ className = ""
               Worker Parallelism Threads
             </span>
             <span className="text-xs bg-indigo-950 text-indigo-300 border border-indigo-800/50 px-2.5 py-0.5 rounded font-mono font-bold">
-              {config.threads ?? 0} {config.threads ? "threads" : "(Auto: all cores)"}
+              {config?.threads ?? 0} {config?.threads ? "threads" : "(Auto: all cores)"}
             </span>
           </label>
           <input
@@ -219,7 +219,7 @@ export const ScanConfigPanel: React.FC<ScanConfigPanelProps> = ({ className = ""
             type="number"
             min="0"
             max="64"
-            value={config.threads ?? 0}
+            value={config?.threads ?? 0}
             onChange={(e) => setConfig({ threads: Number(e.target.value) })}
             className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm font-mono text-slate-100 focus:outline-none focus:border-indigo-500 transition-colors shadow-inner"
             placeholder="0 for all CPU cores"
@@ -240,7 +240,7 @@ export const ScanConfigPanel: React.FC<ScanConfigPanelProps> = ({ className = ""
             name="ignore_patterns"
             aria-label="Ignore Patterns"
             type="text"
-            value={config.ignore_patterns.join(", ")}
+            value={config?.ignore_patterns ? config.ignore_patterns.join(", ") : ""}
             onChange={(e) =>
               setConfig({
                 ignore_patterns: e.target.value
@@ -290,7 +290,7 @@ export const ScanConfigPanel: React.FC<ScanConfigPanelProps> = ({ className = ""
               name="detect_type2"
               aria-label="Type-2 Renamed Clones"
               type="checkbox"
-              checked={config.detect_type2}
+              checked={config?.detect_type2 ?? true}
               onChange={(e) => setConfig({ detect_type2: e.target.checked })}
               className="w-4 h-4 rounded border-slate-700 bg-slate-950 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-slate-900"
             />
@@ -306,7 +306,7 @@ export const ScanConfigPanel: React.FC<ScanConfigPanelProps> = ({ className = ""
               name="detect_type3"
               aria-label="Type-3 Near-Miss Clones"
               type="checkbox"
-              checked={config.detect_type3 ?? true}
+              checked={config?.detect_type3 ?? true}
               onChange={(e) => setConfig({ detect_type3: e.target.checked })}
               className="w-4 h-4 rounded border-slate-700 bg-slate-950 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-slate-900"
             />
@@ -325,7 +325,7 @@ export const ScanConfigPanel: React.FC<ScanConfigPanelProps> = ({ className = ""
               name="detect_type4"
               aria-label="Type-4 Semantic Clones"
               type="checkbox"
-              checked={config.detect_type4 ?? false}
+              checked={config?.detect_type4 ?? false}
               onChange={(e) => setConfig({ detect_type4: e.target.checked })}
               className="w-4 h-4 rounded border-slate-700 bg-slate-950 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-slate-900"
             />
@@ -344,7 +344,7 @@ export const ScanConfigPanel: React.FC<ScanConfigPanelProps> = ({ className = ""
               name="scan_self"
               aria-label="Intra-file Duplication"
               type="checkbox"
-              checked={config.scan_self}
+              checked={config?.scan_self ?? true}
               onChange={(e) => setConfig({ scan_self: e.target.checked })}
               className="w-4 h-4 rounded border-slate-700 bg-slate-950 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-slate-900"
             />
@@ -360,7 +360,7 @@ export const ScanConfigPanel: React.FC<ScanConfigPanelProps> = ({ className = ""
               name="enable_git_blame"
               aria-label="Git Blame Authors"
               type="checkbox"
-              checked={config.enable_git_blame ?? false}
+              checked={config?.enable_git_blame ?? false}
               onChange={(e) => setConfig({ enable_git_blame: e.target.checked })}
               className="w-4 h-4 rounded border-slate-700 bg-slate-950 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-slate-900"
             />
@@ -379,7 +379,7 @@ export const ScanConfigPanel: React.FC<ScanConfigPanelProps> = ({ className = ""
               name="cross_language"
               aria-label="Cross-Language Polyglot Clones"
               type="checkbox"
-              checked={config.cross_language ?? false}
+              checked={config?.cross_language ?? false}
               onChange={(e) => setConfig({ cross_language: e.target.checked })}
               className="w-4 h-4 rounded border-slate-700 bg-slate-950 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-slate-900"
             />
@@ -395,7 +395,7 @@ export const ScanConfigPanel: React.FC<ScanConfigPanelProps> = ({ className = ""
       <div className="flex items-center gap-4 mt-6 pt-4 border-t border-slate-800/80">
         <button
           type="button"
-          onClick={() => void startScan()}
+          onClick={() => void startScan?.()}
           disabled={isScanning}
           className="flex-1 bg-linear-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold py-3 px-6 rounded-lg transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.99] cursor-pointer"
         >

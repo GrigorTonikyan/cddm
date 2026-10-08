@@ -46,7 +46,7 @@ export const SemanticGraphModal: React.FC<SemanticGraphModalProps> = ({ isOpen, 
   const comparison = semanticGraphResponse?.comparison;
 
   const handleRunSandbox = () => {
-    void fetchSemanticGraph({
+    void fetchSemanticGraph?.({
       code: sandboxCodeA,
       language: sandboxLangA,
       code_b: sandboxCodeB,
@@ -56,7 +56,7 @@ export const SemanticGraphModal: React.FC<SemanticGraphModalProps> = ({ isOpen, 
   };
 
   const handleInspectPair = (pair: CrossLanguageClonePair) => {
-    void fetchSemanticGraph({
+    void fetchSemanticGraph?.({
       file: pair.file_a,
       file_b: pair.file_b,
       language: pair.language_a,

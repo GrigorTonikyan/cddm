@@ -164,7 +164,7 @@ export const ExtractModuleTab: React.FC<ExtractModuleTabProps> = ({
             Automated Shared Crate &amp; Module Extraction
           </span>
           <span className="text-slate-400 text-[11px]">
-            Occurrences: {sandboxRequest?.occurrences.length || 0}
+            Occurrences: {sandboxRequest?.occurrences?.length ?? 0}
           </span>
         </div>
 

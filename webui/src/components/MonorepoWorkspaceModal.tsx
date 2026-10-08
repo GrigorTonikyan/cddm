@@ -15,11 +15,11 @@ export const MonorepoWorkspaceModal: React.FC<MonorepoWorkspaceModalProps> = ({
   const { monorepoData, isMonorepoLoading, monorepoError, runMonorepoScan, config } =
     useCDDMStore();
 
-  const [directory, setDirectory] = useState<string>(config.directory || ".");
-  const [minTokens, setMinTokens] = useState<number>(config.min_tokens || 50);
+  const [directory, setDirectory] = useState<string>(config?.directory || ".");
+  const [minTokens, setMinTokens] = useState<number>(config?.min_tokens || 50);
 
   useEffect(() => {
-    if (isOpen && !monorepoData && !isMonorepoLoading) {
+    if (isOpen && !monorepoData && !isMonorepoLoading && runMonorepoScan) {
       void runMonorepoScan(directory, minTokens).catch(() => {});
     }
   }, [isOpen, monorepoData, isMonorepoLoading, runMonorepoScan, directory, minTokens]);
@@ -28,7 +28,7 @@ export const MonorepoWorkspaceModal: React.FC<MonorepoWorkspaceModalProps> = ({
 
   const handleScan = async () => {
     try {
-      await runMonorepoScan(directory, minTokens);
+      await runMonorepoScan?.(directory, minTokens);
     } catch {
       // Handled via store monorepoError
     }

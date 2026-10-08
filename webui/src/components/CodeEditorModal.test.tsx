@@ -101,4 +101,25 @@ describe("CodeEditorModal Component", () => {
     expect(screen.getByRole("textbox", { name: "Original file content" })).toBeDefined();
     expect(screen.getByRole("textbox", { name: "Modified file content" })).toBeDefined();
   });
+
+  it("should render safely in uninitialized default store state without throwing", () => {
+    act(() => {
+      useCDDMStore.getState().resetScan();
+      useCDDMStore.setState({
+        activeEditorFile: null,
+        activeEditorContent: "",
+        originalEditorContent: "",
+        editorFilesList: [],
+      });
+    });
+
+    render(
+      <Win2xManagerProvider>
+        <CodeEditorModal isOpen={true} onClose={vi.fn()} />
+      </Win2xManagerProvider>,
+    );
+
+    expect(screen.getByText("Integrated Code Editor & Split Diff Studio")).toBeDefined();
+    expect(screen.getByText(/Ready — choose a file to begin/)).toBeDefined();
+  });
 });

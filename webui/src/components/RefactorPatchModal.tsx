@@ -220,11 +220,11 @@ export const RefactorPatchModal: React.FC<RefactorPatchModalProps> = ({
     ? "Multi-Site Cluster Refactoring Advisor"
     : "Automated Refactoring Advisor";
   const windowSubtitle = isClusterMode
-    ? `Cluster #${cluster?.id} (${cluster?.occurrences.length} Sites)`
-    : `${parsedA.filename}:${startLineA} <-> ${parsedB.filename}:${startLineB}`;
+    ? `Cluster #${cluster?.id ?? 0} (${cluster?.occurrences?.length ?? 0} Sites)`
+    : `${parsedA.filename}:${startLineA ?? 1} <-> ${parsedB.filename}:${startLineB ?? 1}`;
   const windowBadge = isClusterMode
-    ? `${cluster?.occurrences.length} Occurrences`
-    : `L${startLineA}-${endLineA}`;
+    ? `${cluster?.occurrences?.length ?? 0} Occurrences`
+    : `L${startLineA ?? 1}-${endLineA ?? 1}`;
 
   return (
     <Win2xWindow
@@ -419,7 +419,12 @@ export const RefactorPatchModal: React.FC<RefactorPatchModalProps> = ({
             </div>
           </CollapsibleCard>
         </div>
-      ) : null}
+      ) : (
+        <div className="py-16 text-center text-slate-400 font-mono text-xs bg-slate-900/40 border border-slate-800 rounded-xl">
+          No clone cluster or file pair selected for refactoring. Select a clone from scan results
+          to synthesize patches.
+        </div>
+      )}
     </Win2xWindow>
   );
 };

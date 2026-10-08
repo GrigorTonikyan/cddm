@@ -122,4 +122,14 @@ describe("ScanConfigModal Component", () => {
     expect(onClose).toHaveBeenCalled();
     expect(useCDDMStore.getState().isHookManagerModalOpen).toBe(true);
   });
+
+  it("should render cleanly in uninitialized default store state", () => {
+    useCDDMStore.setState({
+      config: undefined as unknown as any,
+    });
+
+    renderWithWin2x(<ScanConfigModal isOpen={true} onClose={() => {}} />);
+    expect(screen.getByText("Scan Parameters & Centralized Configuration Studio")).toBeDefined();
+    expect(screen.getByText("Engine Parameters & Tuning")).toBeDefined();
+  });
 });

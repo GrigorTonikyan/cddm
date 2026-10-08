@@ -47,16 +47,16 @@ export const TimelineExplorerModal: React.FC<TimelineExplorerModalProps> = ({
   const hasData = snapshots.length > 0;
 
   const handleRefresh = async () => {
-    await fetchTimeline(undefined, maxSamples);
-    await fetchHookStatus();
+    await fetchTimeline?.(undefined, maxSamples);
+    await fetchHookStatus?.();
   };
 
   const handleInstallPreCommit = async () => {
     setIsInstallingHook(true);
     setHookInstallMessage(null);
     try {
-      const msg = await installHook("pre-commit", 15.0);
-      setHookInstallMessage(msg);
+      const msg = await installHook?.("pre-commit", 15.0);
+      setHookInstallMessage(msg ?? null);
     } catch (err) {
       setHookInstallMessage(err instanceof Error ? err.message : "Failed to install hook");
     } finally {
@@ -98,7 +98,7 @@ export const TimelineExplorerModal: React.FC<TimelineExplorerModalProps> = ({
       subtitle="Time-series DRY Health trajectory, commit checkpoints, and cross-branch drift matrix"
       badge={
         timelineData
-          ? `${snapshots.length} Snapshots (${isPositiveDelta ? "+" : ""}${timelineData.score_delta.toFixed(1)} DRY)`
+          ? `${snapshots.length} Snapshots (${isPositiveDelta ? "+" : ""}${timelineData.score_delta?.toFixed(1) ?? "0.0"} DRY)`
           : undefined
       }
       icon={<History className="w-4 h-4 text-indigo-400" />}
@@ -183,13 +183,13 @@ export const TimelineExplorerModal: React.FC<TimelineExplorerModalProps> = ({
                   <div className="flex items-center gap-1.5">
                     <span className="text-slate-400">Baseline:</span>
                     <span className="text-slate-200 font-bold">
-                      {timelineData.initial_score.toFixed(1)}
+                      {timelineData.initial_score?.toFixed(1) ?? "0.0"}
                     </span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <span className="text-slate-400">Current:</span>
                     <span className="text-slate-200 font-bold">
-                      {timelineData.current_score.toFixed(1)}
+                      {timelineData.current_score?.toFixed(1) ?? "0.0"}
                     </span>
                   </div>
                   <div
@@ -204,7 +204,7 @@ export const TimelineExplorerModal: React.FC<TimelineExplorerModalProps> = ({
                     )}
                     <span>
                       {isPositiveDelta ? "+" : ""}
-                      {timelineData.score_delta.toFixed(1)} DRY
+                      {timelineData.score_delta?.toFixed(1) ?? "0.0"} DRY
                     </span>
                   </div>
                 </div>

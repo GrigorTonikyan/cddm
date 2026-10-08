@@ -59,4 +59,19 @@ describe("SuppressionRulesModal Component", () => {
     expect(screen.getByText("Single-Line Suppression Directive")).toBeDefined();
     expect(screen.getByText("Block-Level Suppression Directives")).toBeDefined();
   });
+
+  it("should render cleanly in uninitialized default store state", () => {
+    useCDDMStore.setState({
+      suppressionConfig: null,
+      isSuppressionLoading: false,
+      suppressionError: null,
+    });
+
+    renderWithWin2x(<SuppressionRulesModal isOpen={true} onClose={() => {}} />);
+    expect(screen.getByText("Intelligent AST Suppression & .cddmignore Engine")).toBeDefined();
+    expect(screen.getByText("Active Suppression Rules (0)")).toBeDefined();
+    expect(
+      screen.getByText("No custom path rules parsed. Edit .cddmignore to add custom glob rules."),
+    ).toBeDefined();
+  });
 });

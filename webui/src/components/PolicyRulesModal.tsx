@@ -56,7 +56,7 @@ export const PolicyRulesModal: React.FC<PolicyRulesModalProps> = ({ isOpen, onCl
 
   useEffect(() => {
     if (isOpen) {
-      void fetchPolicyRules();
+      void fetchPolicyRules?.();
     }
   }, [isOpen, fetchPolicyRules]);
 
@@ -84,7 +84,7 @@ export const PolicyRulesModal: React.FC<PolicyRulesModalProps> = ({ isOpen, onCl
         limits: policyConfig?.limits || [],
         raw_toml: rawContent,
       };
-      await savePolicyRules(updatedConfig);
+      await savePolicyRules?.(updatedConfig);
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (err) {
@@ -97,8 +97,8 @@ export const PolicyRulesModal: React.FC<PolicyRulesModalProps> = ({ isOpen, onCl
   const handleEvaluate = async () => {
     setIsEvaluating(true);
     try {
-      const res = await evaluatePolicyRules();
-      setEvalViolations(res.violations || []);
+      const res = await evaluatePolicyRules?.();
+      setEvalViolations(res?.violations || []);
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : "Failed to evaluate policy rules");
     } finally {

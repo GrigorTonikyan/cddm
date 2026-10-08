@@ -185,7 +185,8 @@ export const OverlapDetectorModal: React.FC<OverlapDetectorModalProps> = ({
                   <div className="text-xs font-mono text-slate-400 flex items-center gap-2">
                     <Code2 className="w-3.5 h-3.5 text-cyan-400" />
                     <span>
-                      {m.file_path}:{m.line_span[0]}-{m.line_span[1]} ({m.function_name})
+                      {m.file_path}:{m.line_span?.[0] ?? 0}-{m.line_span?.[1] ?? 0} (
+                      {m.function_name})
                     </span>
                   </div>
 
@@ -194,12 +195,13 @@ export const OverlapDetectorModal: React.FC<OverlapDetectorModalProps> = ({
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-emerald-400 font-semibold flex items-center gap-1.5">
                         <Sparkles className="w-3.5 h-3.5" />
-                        Recommended Replacement: {m.recommended_library.package_name} (
-                        {m.recommended_library.language})
+                        Recommended Replacement: {m.recommended_library?.package_name ??
+                          "Unknown"}{" "}
+                        ({m.recommended_library?.language ?? "Unknown"})
                       </span>
                     </div>
 
-                    {m.recommended_library.install_command && (
+                    {m.recommended_library?.install_command && (
                       <div className="flex items-center justify-between bg-slate-900 px-3 py-1.5 rounded border border-slate-800 font-mono text-xs text-slate-300">
                         <div className="flex items-center gap-2">
                           <Terminal className="w-3.5 h-3.5 text-amber-400" />
@@ -220,7 +222,7 @@ export const OverlapDetectorModal: React.FC<OverlapDetectorModalProps> = ({
                       </div>
                     )}
 
-                    {m.recommended_library.replacement_snippet && (
+                    {m.recommended_library?.replacement_snippet && (
                       <pre className="p-2 bg-slate-900 rounded font-mono text-xs text-slate-300 overflow-x-auto">
                         <code>{m.recommended_library.replacement_snippet}</code>
                       </pre>

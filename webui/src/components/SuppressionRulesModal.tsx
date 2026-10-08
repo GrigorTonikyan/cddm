@@ -42,15 +42,15 @@ export const SuppressionRulesModal: React.FC<SuppressionRulesModalProps> = ({
 
   useEffect(() => {
     if (isOpen) {
-      void fetchSuppressionRules();
+      void fetchSuppressionRules?.();
     }
   }, [isOpen, fetchSuppressionRules]);
 
   useEffect(() => {
     if (suppressionConfig) {
-      setIgnoreTests(suppressionConfig.ignore_tests);
-      setIgnoreMocks(suppressionConfig.ignore_mocks);
-      setIgnoreGenerated(suppressionConfig.ignore_generated);
+      setIgnoreTests(suppressionConfig.ignore_tests ?? false);
+      setIgnoreMocks(suppressionConfig.ignore_mocks ?? false);
+      setIgnoreGenerated(suppressionConfig.ignore_generated ?? true);
       setRawContent(
         suppressionConfig.raw_cddmignore ||
           "# .cddmignore — CDDM Code De-Duplication Meister suppression patterns\n\n# Ignore test files\n**/tests/**\n**/*_test.rs\n**/*.test.ts\n**/*.spec.ts\n\n# Ignore mock files\n**/mocks/**\n**/*_mock.rs\n\n# Ignore generated code\n**/generated/**\n**/*.generated.*\n",
@@ -71,7 +71,7 @@ export const SuppressionRulesModal: React.FC<SuppressionRulesModalProps> = ({
         ignore_generated: ignoreGenerated,
         raw_cddmignore: rawContent,
       };
-      await saveSuppressionRules(updatedConfig);
+      await saveSuppressionRules?.(updatedConfig);
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (err) {
@@ -251,7 +251,7 @@ export const SuppressionRulesModal: React.FC<SuppressionRulesModalProps> = ({
             <div className="space-y-2">
               <span className="text-slate-200 font-semibold text-xs flex items-center gap-2">
                 <FileCode className="w-3.5 h-3.5 text-indigo-400" />
-                Active Suppression Rules ({suppressionConfig?.rules.length || 0})
+                Active Suppression Rules ({suppressionConfig?.rules?.length ?? 0})
               </span>
               {suppressionConfig?.rules && suppressionConfig.rules.length > 0 ? (
                 <div className="overflow-x-auto border border-slate-800 rounded-xl bg-slate-950/60">
