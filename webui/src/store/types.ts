@@ -4,6 +4,7 @@ import type {
   ApplyRefactorBranchResult,
   AstRewriteResult,
   CloneCluster,
+  DiffScanResult,
   ExtractRequest,
   ExtractResult,
   HookStatus,
@@ -74,6 +75,12 @@ export interface CDDMStoreState {
   isOverlapDetectorOpen: boolean;
   isHubModalOpen: boolean;
   isMcpAppsModalOpen: boolean;
+  isDiffScanModalOpen: boolean;
+
+  /** Differential scan state */
+  diffScanResult: DiffScanResult | null;
+  isDiffScanning: boolean;
+  diffScanError: string | null;
 
   /** Integrated Code Editor & Split Diff Studio state */
   isCodeEditorOpen: boolean;
@@ -222,6 +229,8 @@ export interface CDDMStoreState {
   setIsOverlapDetectorOpen: (open: boolean) => void;
   setIsMcpAppsModalOpen: (open: boolean) => void;
   setIsLiveEventInspectorOpen: (open: boolean) => void;
+  setIsDiffScanModalOpen: (open: boolean) => void;
+  startDiffScan: (baseRef: string, targetRef?: string) => Promise<void>;
 
   /** Live Watch Daemon state and actions */
   isLiveEventInspectorOpen: boolean;

@@ -6,6 +6,7 @@ import {
   Building2,
   CheckCheck,
   FileDown,
+  GitCompare,
   History,
   Layers,
   Network,
@@ -28,63 +29,12 @@ import { LiveWatchBar } from "./components/watch/LiveWatchBar";
 import { APP_VERSION } from "./constants/cddm-constants";
 import { useCDDMStore } from "./store/cddm-store";
 
-import { lazyModal } from "./utils/lazy-modal";
-
-// Lazy-loaded modal dialogs for high-speed initial bundle delivery
-const modals = {
-  CoverageCorrelationModal: lazyModal(
-    () => import("./components/CoverageCorrelationModal"),
-    "CoverageCorrelationModal",
-  ),
-  DeadCodeExplorerModal: lazyModal(
-    () => import("./components/DeadCodeExplorerModal"),
-    "DeadCodeExplorerModal",
-  ),
-  HubFederationModal: lazyModal(
-    () => import("./components/HubFederationModal"),
-    "HubFederationModal",
-  ),
-  OverlapDetectorModal: lazyModal(
-    () => import("./components/OverlapDetectorModal"),
-    "OverlapDetectorModal",
-  ),
-  PolicyRulesModal: lazyModal(() => import("./components/PolicyRulesModal"), "PolicyRulesModal"),
-  RefactorSandboxModal: lazyModal(
-    () => import("./components/RefactorSandboxModal"),
-    "RefactorSandboxModal",
-  ),
-  ScanConfigModal: lazyModal(() => import("./components/ScanConfigModal"), "ScanConfigModal"),
-  SemanticGraphModal: lazyModal(
-    () => import("./components/SemanticGraphModal"),
-    "SemanticGraphModal",
-  ),
-  SuppressionRulesModal: lazyModal(
-    () => import("./components/SuppressionRulesModal"),
-    "SuppressionRulesModal",
-  ),
-  TimelineExplorerModal: lazyModal(
-    () => import("./components/TimelineExplorerModal"),
-    "TimelineExplorerModal",
-  ),
-  HookManagerModal: lazyModal(() => import("./components/HookManagerModal"), "HookManagerModal"),
-  MonorepoWorkspaceModal: lazyModal(
-    () => import("./components/MonorepoWorkspaceModal"),
-    "MonorepoWorkspaceModal",
-  ),
-  LiveEventInspectorModal: lazyModal(
-    () => import("./components/watch/LiveEventInspectorModal"),
-    "LiveEventInspectorModal",
-  ),
-  McpAppsPreviewModal: lazyModal(
-    () => import("./components/McpAppsPreviewModal"),
-    "McpAppsPreviewModal",
-  ),
-  CodeEditorModal: lazyModal(() => import("./components/CodeEditorModal"), "CodeEditorModal"),
-};
+import * as modals from "./components/lazy-modals";
 
 const {
   CoverageCorrelationModal,
   DeadCodeExplorerModal,
+  DiffScanResultsModal,
   HubFederationModal,
   OverlapDetectorModal,
   PolicyRulesModal,
@@ -135,6 +85,8 @@ export const App: React.FC = () => {
     setIsDeadCodeModalOpen,
     isMcpAppsModalOpen,
     setIsMcpAppsModalOpen,
+    isDiffScanModalOpen,
+    setIsDiffScanModalOpen,
     isLiveEventInspectorOpen,
     setIsLiveEventInspectorOpen,
     isCodeEditorOpen,
@@ -199,6 +151,15 @@ export const App: React.FC = () => {
           >
             <Sliders className="w-3.5 h-3.5 text-indigo-400" />
             <span>Config Window</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsDiffScanModalOpen(true)}
+            className="px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 hover:bg-slate-800 text-slate-300 flex items-center gap-1.5 transition-colors shadow-sm"
+          >
+            <GitCompare className="w-3.5 h-3.5 text-indigo-400" />
+            <span>Diff Scan</span>
           </button>
 
           <button
@@ -384,6 +345,12 @@ export const App: React.FC = () => {
       <Suspense fallback={null}>
         {/* Global Config Modal */}
         <ScanConfigModal isOpen={isScanConfigOpen} onClose={() => setIsScanConfigOpen(false)} />
+
+        {/* Differential Scan Results Modal */}
+        <DiffScanResultsModal
+          isOpen={isDiffScanModalOpen}
+          onClose={() => setIsDiffScanModalOpen(false)}
+        />
 
         {/* Timeline Trends Explorer Modal */}
         <TimelineExplorerModal

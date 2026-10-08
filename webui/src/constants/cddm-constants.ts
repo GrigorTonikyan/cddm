@@ -16,6 +16,8 @@ export const APP_VERSION: string = pkg.version;
 export const API_ROUTES = {
   HEALTH: "/api/health",
   SCAN: "/api/scan",
+  DIFF: "/api/diff",
+  DIFF_MATRIX: "/api/diff/matrix",
   SNIPPET: "/api/snippet",
   REFACTOR: "/api/refactor",
   REFACTOR_STREAM: "/api/refactor/stream",

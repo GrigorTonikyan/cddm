@@ -10,13 +10,14 @@ describe("4-Pillar Cross-Interface Feature Parity Validator", () => {
       expect(f.cliCommandFile).toBeDefined();
       expect(f.mcpToolPattern).toBeDefined();
       expect(f.axumRoutePattern).toBeDefined();
+      expect(f.webuiComponentFile).toBeDefined();
+      expect(f.webuiNavPattern).toBeDefined();
       expect(f.tuiViewFile).toBeDefined();
     }
   });
 
   it("should validate that all core capabilities have docs and code handlers", () => {
     const violations = validateFeatureParity();
-    // Temporary check while building TUI files: once TUI files are in place, violations must be 0
-    expect(Array.isArray(violations)).toBe(true);
+    expect(violations).toHaveLength(0);
   });
 });

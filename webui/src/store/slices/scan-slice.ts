@@ -1,5 +1,5 @@
 import { API_ROUTES } from "../../constants/cddm-constants";
-import type { ApplyPatchResult, ScanResult } from "../../types/cddm-types";
+import type { ApplyPatchResult, DiffScanResult, ScanResult } from "../../types/cddm-types";
 import type { CDDMStoreState } from "../types";
 
 export type SetStoreState = (
@@ -12,6 +12,38 @@ export const createScanSlice = (set: SetStoreState, get: GetStoreState) => ({
     set((state) => ({
       config: { ...state.config, ...newConfig },
     }));
+  },
+
+  setIsDiffScanModalOpen: (isDiffScanModalOpen: boolean) => set({ isDiffScanModalOpen }),
+
+  startDiffScan: async (baseRef: string, targetRef?: string) => {
+    set({ isDiffScanning: true, diffScanError: null });
+    const { config } = get();
+
+    try {
+      const res = await fetch(API_ROUTES.DIFF, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          base_ref: baseRef,
+          target_ref: targetRef || null,
+          config,
+        }),
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text().catch(() => res.statusText);
+        throw new Error(`Differential scan failed (${res.status}): ${errorText || res.statusText}`);
+      }
+
+      const diffScanResult: DiffScanResult = await res.json();
+      set({ diffScanResult, isDiffScanning: false, diffScanError: null });
+    } catch (err) {
+      set({
+        isDiffScanning: false,
+        diffScanError: err instanceof Error ? err.message : "Differential scan execution failed",
+      });
+    }
   },
 
   startScan: async () => {
@@ -113,6 +145,10 @@ export const createScanSlice = (set: SetStoreState, get: GetStoreState) => ({
       verifyError: null,
       isHookManagerModalOpen: false,
       isMonorepoModalOpen: false,
+      isDiffScanModalOpen: false,
+      diffScanResult: null,
+      isDiffScanning: false,
+      diffScanError: null,
       monorepoData: null,
       monorepoError: null,
     });
