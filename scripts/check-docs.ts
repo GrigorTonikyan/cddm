@@ -10,6 +10,7 @@
 
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
+import { discoverWebUiModals } from "./lib/interface-docs-mcp-webui";
 import { syncFeatureMatrixFile } from "./lib/test-matrix-generator";
 import { syncInterfaceDocs } from "./sync-docs";
 
@@ -154,6 +155,80 @@ export function checkMarkdownTables(filePath: string, content: string): DocCheck
 }
 
 /**
+ * Validate that all WebUI modals on disk are documented and integrated into navigation,
+ * and assert that no phantom modals are documented in docs/WEBUI.md.
+ */
+export function checkWebUiModalsIntegrity(workspaceRoot: string = process.cwd()): DocCheckError[] {
+  const errors: DocCheckError[] = [];
+  const webuiDocPath = join(workspaceRoot, "docs/WEBUI.md");
+  if (!existsSync(webuiDocPath)) return errors;
+
+  const webuiDocContent = readFileSync(webuiDocPath, "utf-8");
+  const modalRowRegex = /\|\s*\*\*`([A-Za-z0-9]+Modal)`\*\*\s*\|/g;
+  const documentedModals = new Set<string>();
+  let match: RegExpExecArray | null = modalRowRegex.exec(webuiDocContent);
+  while (match !== null) {
+    if (match[1]) documentedModals.add(match[1]);
+    match = modalRowRegex.exec(webuiDocContent);
+  }
+
+  let discoveredModals;
+  try {
+    discoveredModals = discoverWebUiModals(workspaceRoot);
+  } catch (err) {
+    errors.push({
+      file: "docs/WEBUI.md",
+      message: `Failed to discover WebUI modals: ${err instanceof Error ? err.message : String(err)}`,
+    });
+    return errors;
+  }
+
+  const discoveredMap = new Map(discoveredModals.map((m) => [m.modal, m]));
+
+  for (const docModal of documentedModals) {
+    if (!discoveredMap.has(docModal)) {
+      errors.push({
+        file: "docs/WEBUI.md",
+        message: `Phantom modal documented in docs/WEBUI.md does not exist on disk: ${docModal}`,
+      });
+    }
+  }
+
+  for (const discModal of discoveredModals) {
+    if (!documentedModals.has(discModal.modal)) {
+      errors.push({
+        file: "docs/WEBUI.md",
+        message: `Undocumented modal component on disk missing from docs/WEBUI.md: ${discModal.modal}`,
+      });
+    }
+  }
+
+  const primaryNavFiles = [
+    join(workspaceRoot, "webui/src/App.tsx"),
+    join(workspaceRoot, "webui/src/components/lazy-modals.ts"),
+    join(workspaceRoot, "webui/src/components/ScanResults.tsx"),
+    join(workspaceRoot, "webui/src/components/ClonePairCard.tsx"),
+    join(workspaceRoot, "webui/src/components/CloneClusterCard.tsx"),
+  ];
+
+  const navContent = primaryNavFiles
+    .filter((p) => existsSync(p))
+    .map((p) => readFileSync(p, "utf-8"))
+    .join("\n");
+
+  for (const discModal of discoveredModals) {
+    if (!navContent.includes(discModal.modal)) {
+      errors.push({
+        file: `webui/src/components/${discModal.modal}.tsx`,
+        message: `Modal component ${discModal.modal} exists on disk but is not integrated into navigation or view tree.`,
+      });
+    }
+  }
+
+  return errors;
+}
+
+/**
  * Execute complete documentation validation.
  */
 export async function validateDocumentation(
@@ -216,6 +291,10 @@ export async function validateDocumentation(
       message: `Failed to validate interface documentation synchronization: ${err instanceof Error ? err.message : String(err)}`,
     });
   }
+
+  // 6. WebUI Modals discovery, component existence, and navigation integration check
+  const modalErrors = checkWebUiModalsIntegrity(workspaceRoot);
+  allErrors.push(...modalErrors);
 
   return {
     filesChecked,
