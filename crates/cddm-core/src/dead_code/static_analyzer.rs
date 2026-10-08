@@ -133,7 +133,7 @@ fn extract_functions_from_node(
     }
 }
 
-fn get_function_name(node: tree_sitter::Node, source: &str) -> Option<String> {
+pub(crate) fn get_function_name(node: tree_sitter::Node, source: &str) -> Option<String> {
     if let Some(name_node) = node.child_by_field_name("name") {
         return Some(source[name_node.byte_range()].trim().to_string());
     }
@@ -149,7 +149,7 @@ fn get_function_name(node: tree_sitter::Node, source: &str) -> Option<String> {
     None
 }
 
-fn is_node_public(node: tree_sitter::Node, source: &str) -> bool {
+pub(crate) fn is_node_public(node: tree_sitter::Node, source: &str) -> bool {
     if let Some(vis) = node.child_by_field_name("visibility") {
         return source[vis.byte_range()].contains("pub");
     }

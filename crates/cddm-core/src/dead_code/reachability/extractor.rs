@@ -22,13 +22,15 @@ pub fn extract_package_functions(
             | "func_declaration"
     );
 
-    if is_func && let Some(name) = get_node_identifier(node, source) {
+    if is_func
+        && let Some(name) = crate::dead_code::static_analyzer::get_function_name(node, source)
+    {
         let line_start = node.start_position().row + 1;
         let line_end = node.end_position().row + 1;
         let byte_range = node.byte_range();
         let snippet = &source[byte_range];
         let token_count = snippet.split_whitespace().count();
-        let is_exported = is_exported_symbol(node, source);
+        let is_exported = crate::dead_code::static_analyzer::is_node_public(node, source);
 
         out.push(PackageFunctionMeta {
             name,
@@ -228,32 +230,5 @@ fn is_terminating_statement(kind: &str, node: tree_sitter::Node, source: &str) -
         return text.contains("panic!") || text.contains("exit(") || text.contains("process.exit");
     }
 
-    false
-}
-
-fn get_node_identifier(node: tree_sitter::Node, source: &str) -> Option<String> {
-    if let Some(name_node) = node.child_by_field_name("name") {
-        return Some(source[name_node.byte_range()].trim().to_string());
-    }
-    let mut cursor = node.walk();
-    for child in node.children(&mut cursor) {
-        if child.kind() == "identifier" || child.kind() == "name" {
-            return Some(source[child.byte_range()].trim().to_string());
-        }
-    }
-    None
-}
-
-fn is_exported_symbol(node: tree_sitter::Node, source: &str) -> bool {
-    if let Some(vis) = node.child_by_field_name("visibility") {
-        return source[vis.byte_range()].contains("pub");
-    }
-    let mut cursor = node.walk();
-    for child in node.children(&mut cursor) {
-        let text = &source[child.byte_range()];
-        if text == "pub" || text == "export" || text == "public" {
-            return true;
-        }
-    }
     false
 }

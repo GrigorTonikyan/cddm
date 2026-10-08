@@ -189,4 +189,77 @@ describe("useCDDMStore Zustand Store", () => {
     store.setPatchStatusMessage("Test message");
     expect(useCDDMStore.getState().patchStatusMessage).toBe("Test message");
   });
+
+  it("should manage isScanConfigCollapsed, HookManager, and Monorepo modal states", () => {
+    const store = useCDDMStore.getState();
+    expect(store.isScanConfigCollapsed).toBe(false);
+    expect(store.isHookManagerModalOpen).toBe(false);
+    expect(store.isMonorepoModalOpen).toBe(false);
+
+    store.setIsScanConfigCollapsed(true);
+    expect(useCDDMStore.getState().isScanConfigCollapsed).toBe(true);
+
+    store.setIsHookManagerModalOpen(true);
+    expect(useCDDMStore.getState().isHookManagerModalOpen).toBe(true);
+
+    store.setIsMonorepoModalOpen(true);
+    expect(useCDDMStore.getState().isMonorepoModalOpen).toBe(true);
+
+    store.resetScan();
+    expect(useCDDMStore.getState().isHookManagerModalOpen).toBe(false);
+    expect(useCDDMStore.getState().isMonorepoModalOpen).toBe(false);
+  });
+
+  it("should execute runMonorepoScan successfully", async () => {
+    const mockMonorepoSummary = {
+      workspaces: [
+        {
+          name: "webui",
+          path: "webui",
+          package_type: "npm",
+          files_count: 50,
+          tokens_count: 2000,
+          clones_count: 3,
+        },
+      ],
+      total_workspaces: 1,
+      total_files: 50,
+      total_tokens: 2000,
+      total_clones: 3,
+      cross_workspace_clones: 0,
+      average_dry_score: 98.5,
+    };
+
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(mockMonorepoSummary),
+    } as Response);
+
+    const summary = await useCDDMStore.getState().runMonorepoScan(".", 50);
+    expect(summary).toEqual(mockMonorepoSummary);
+    expect(useCDDMStore.getState().monorepoData).toEqual(mockMonorepoSummary);
+    expect(useCDDMStore.getState().isMonorepoLoading).toBe(false);
+    expect(useCDDMStore.getState().monorepoError).toBeNull();
+  });
+
+  it("should execute exportCachePack and importCachePack", async () => {
+    const mockCacheSummary = {
+      success: true,
+      entry_count: 42,
+      pack_file: "/tmp/cache.pack",
+      checksum: "sha256abc123",
+      message: "Cache pack written successfully",
+    };
+
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(mockCacheSummary),
+    } as Response);
+
+    const exportRes = await useCDDMStore.getState().exportCachePack(".cddm-cache", "export.pack");
+    expect(exportRes).toEqual(mockCacheSummary);
+
+    const importRes = await useCDDMStore.getState().importCachePack("export.pack", ".cddm-cache");
+    expect(importRes).toEqual(mockCacheSummary);
+  });
 });

@@ -55,7 +55,43 @@ describe("App Component", () => {
     const configBtn = screen.getByText("Config Window");
     fireEvent.click(configBtn);
     expect(
-      await screen.findByText("Scan Parameters & Engine Configuration", {}, { timeout: 15000 }),
+      await screen.findByText(
+        "Scan Parameters & Centralized Configuration Studio",
+        {},
+        { timeout: 15000 },
+      ),
+    ).toBeDefined();
+  });
+
+  it("should open HookManagerModal when clicking Hooks in header", async () => {
+    render(
+      <Win2xManagerProvider>
+        <App />
+      </Win2xManagerProvider>,
+    );
+
+    const hooksBtn = screen.getByText("Hooks");
+    fireEvent.click(hooksBtn);
+    expect(
+      await screen.findByText("Git Hook Manager & CI/CD Studio", {}, { timeout: 15000 }),
+    ).toBeDefined();
+  });
+
+  it("should open MonorepoWorkspaceModal when clicking Monorepo in header", async () => {
+    render(
+      <Win2xManagerProvider>
+        <App />
+      </Win2xManagerProvider>,
+    );
+
+    const monorepoBtn = screen.getByText("Monorepo");
+    fireEvent.click(monorepoBtn);
+    expect(
+      await screen.findByText(
+        "Monorepo Workspace & Multi-Package Architecture",
+        {},
+        { timeout: 15000 },
+      ),
     ).toBeDefined();
   });
 

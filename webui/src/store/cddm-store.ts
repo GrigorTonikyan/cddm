@@ -38,12 +38,15 @@ export const useCDDMStore = create<CDDMStoreState>((set, get) => ({
   patchStatusMessage: null,
 
   isScanConfigOpen: false,
+  isScanConfigCollapsed: false,
   isHealthAuditOpen: false,
   isExportReportOpen: false,
   isTreemapModalOpen: false,
   isLanguageModalOpen: false,
   isClusterRefactorModalOpen: false,
   isTimelineModalOpen: false,
+  isHookManagerModalOpen: false,
+  isMonorepoModalOpen: false,
   isSuppressionModalOpen: false,
   isRefactorSandboxOpen: false,
   isPolicyRulesModalOpen: false,
@@ -59,6 +62,10 @@ export const useCDDMStore = create<CDDMStoreState>((set, get) => ({
   isTimelineLoading: false,
   timelineError: null,
   hookStatus: null,
+
+  monorepoData: null,
+  isMonorepoLoading: false,
+  monorepoError: null,
 
   suppressionConfig: null,
   isSuppressionLoading: false,
@@ -93,6 +100,7 @@ export const useCDDMStore = create<CDDMStoreState>((set, get) => ({
   setPatchStatusMessage: (patchStatusMessage) => set({ patchStatusMessage }),
 
   setIsScanConfigOpen: (isScanConfigOpen) => set({ isScanConfigOpen }),
+  setIsScanConfigCollapsed: (isScanConfigCollapsed) => set({ isScanConfigCollapsed }),
   setIsHealthAuditOpen: (isHealthAuditOpen) => set({ isHealthAuditOpen }),
   setIsExportReportOpen: (isExportReportOpen) => set({ isExportReportOpen }),
   setIsTreemapModalOpen: (isTreemapModalOpen) => set({ isTreemapModalOpen }),
@@ -105,6 +113,18 @@ export const useCDDMStore = create<CDDMStoreState>((set, get) => ({
     if (isOpen && !get().timelineData && !get().isTimelineLoading) {
       void get().fetchTimeline();
       void get().fetchHookStatus();
+    }
+  },
+  setIsHookManagerModalOpen: (isOpen) => {
+    set({ isHookManagerModalOpen: isOpen });
+    if (isOpen && !get().hookStatus) {
+      void get().fetchHookStatus();
+    }
+  },
+  setIsMonorepoModalOpen: (isOpen) => {
+    set({ isMonorepoModalOpen: isOpen });
+    if (isOpen && !get().monorepoData && !get().isMonorepoLoading) {
+      void get().runMonorepoScan();
     }
   },
   setIsSuppressionModalOpen: (isOpen) => {

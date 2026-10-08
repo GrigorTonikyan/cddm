@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-27 | Rust: 402 #[test] units | WebUI: 258 tests across 69 suites | Scripts & MCP: 208 tests across 61 suites | CI Workflows: PASS
+> Last verified: 2026-08-27 | Rust: 402 #[test] units | WebUI: 280 tests across 72 suites | Scripts & MCP: 208 tests across 61 suites | CI Workflows: PASS
 
 ---
 
@@ -358,11 +358,11 @@
 
 ---
 
-## 2. WebUI Frontend — React 19 + TypeScript + Vitest (258 unit tests across 69 suites)
+## 2. WebUI Frontend — React 19 + TypeScript + Vitest (280 unit tests across 72 suites)
 
 | Module                      | Test Suite File                                                                       | Test Cases | Status |
 | :-------------------------- | :------------------------------------------------------------------------------------ | :--------- | :----- |
-| App Shell                   | `webui/src/App.test.tsx`                                                              | 8 tests    | PASS   |
+| App Shell                   | `webui/src/App.test.tsx`                                                              | 10 tests   | PASS   |
 | Clone Cluster Card          | `webui/src/components/CloneClusterCard.test.tsx`                                      | 2 tests    | PASS   |
 | Clone Pair Card             | `webui/src/components/ClonePairCard.test.tsx`                                         | 2 tests    | PASS   |
 | Clone Pair Diff Modal       | `webui/src/components/ClonePairDiffModal.test.tsx`                                    | 3 tests    | PASS   |
@@ -373,21 +373,24 @@
 | Duplication Treemap         | `webui/src/components/DuplicationTreemap.test.tsx`                                    | 3 tests    | PASS   |
 | Export Report Modal         | `webui/src/components/ExportReportModal.test.tsx`                                     | 3 tests    | PASS   |
 | Health Audit Modal          | `webui/src/components/HealthAuditModal.test.tsx`                                      | 3 tests    | PASS   |
+| Hook Manager Modal          | `webui/src/components/HookManagerModal.test.tsx`                                      | 5 tests    | PASS   |
 | Hub Federation Modal        | `webui/src/components/HubFederationModal.test.tsx`                                    | 4 tests    | PASS   |
 | Language Analytics Modal    | `webui/src/components/LanguageAnalyticsModal.test.tsx`                                | 2 tests    | PASS   |
 | Mcp Apps Preview Modal      | `webui/src/components/McpAppsPreviewModal.test.tsx`                                   | 4 tests    | PASS   |
+| Monorepo Workspace Modal    | `webui/src/components/MonorepoWorkspaceModal.test.tsx`                                | 5 tests    | PASS   |
 | Overlap Detector Modal      | `webui/src/components/OverlapDetectorModal.test.tsx`                                  | 3 tests    | PASS   |
 | Policy Rules Modal          | `webui/src/components/PolicyRulesModal.test.tsx`                                      | 4 tests    | PASS   |
 | Refactor Patch Modal        | `webui/src/components/RefactorPatchModal.test.tsx`                                    | 3 tests    | PASS   |
 | Refactor Sandbox Modal      | `webui/src/components/RefactorSandboxModal.test.tsx`                                  | 8 tests    | PASS   |
-| Scan Config Modal           | `webui/src/components/ScanConfigModal.test.tsx`                                       | 2 tests    | PASS   |
-| Scan Config Panel           | `webui/src/components/ScanConfigPanel.test.tsx`                                       | 6 tests    | PASS   |
+| Scan Config Modal           | `webui/src/components/ScanConfigModal.test.tsx`                                       | 5 tests    | PASS   |
+| Scan Config Panel           | `webui/src/components/ScanConfigPanel.test.tsx`                                       | 8 tests    | PASS   |
 | Scan Progress Bar           | `webui/src/components/ScanProgressBar.test.tsx`                                       | 3 tests    | PASS   |
 | Scan Results                | `webui/src/components/ScanResults.test.tsx`                                           | 7 tests    | PASS   |
 | Semantic Graph Modal        | `webui/src/components/SemanticGraphModal.test.tsx`                                    | 3 tests    | PASS   |
 | Suppression Rules Modal     | `webui/src/components/SuppressionRulesModal.test.tsx`                                 | 3 tests    | PASS   |
 | Timeline Explorer Modal     | `webui/src/components/TimelineExplorerModal.test.tsx`                                 | 3 tests    | PASS   |
 | Treemap Explorer Modal      | `webui/src/components/TreemapExplorerModal.test.tsx`                                  | 3 tests    | PASS   |
+| Cache Pack Card             | `webui/src/components/config/CachePackCard.test.tsx`                                  | 2 tests    | PASS   |
 | Editor Surface              | `webui/src/components/editor/EditorSurface.test.tsx`                                  | 3 tests    | PASS   |
 | Editor Toolbar              | `webui/src/components/editor/EditorToolbar.test.tsx`                                  | 4 tests    | PASS   |
 | Extract Module Tab          | `webui/src/components/sandbox/ExtractModuleTab.test.tsx`                              | 3 tests    | PASS   |
@@ -416,7 +419,7 @@
 | use Refactor Stream         | `webui/src/hooks/useRefactorStream.test.ts`                                           | 4 tests    | PASS   |
 | use Treemap Layout          | `webui/src/hooks/useTreemapLayout.test.ts`                                            | 3 tests    | PASS   |
 | use Virtualizer             | `webui/src/hooks/useVirtualizer.test.ts`                                              | 3 tests    | PASS   |
-| Global Store                | `webui/src/store/cddm-store.test.ts`                                                  | 11 tests   | PASS   |
+| Global Store                | `webui/src/store/cddm-store.test.ts`                                                  | 14 tests   | PASS   |
 | hub-slice                   | `webui/src/store/hub-slice.test.ts`                                                   | 6 tests    | PASS   |
 | Semantic Slice              | `webui/src/store/semantic-slice.test.ts`                                              | 7 tests    | PASS   |
 | coverage-slice              | `webui/src/store/slices/coverage-slice.test.ts`                                       | 3 tests    | PASS   |

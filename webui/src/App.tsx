@@ -2,6 +2,7 @@ import {
   Activity,
   AppWindow,
   Award,
+  Boxes,
   Building2,
   CheckCheck,
   FileDown,
@@ -30,52 +31,74 @@ import { useCDDMStore } from "./store/cddm-store";
 import { lazyModal } from "./utils/lazy-modal";
 
 // Lazy-loaded modal dialogs for high-speed initial bundle delivery
-const CoverageCorrelationModal = lazyModal(
-  () => import("./components/CoverageCorrelationModal"),
-  "CoverageCorrelationModal",
-);
-const DeadCodeExplorerModal = lazyModal(
-  () => import("./components/DeadCodeExplorerModal"),
-  "DeadCodeExplorerModal",
-);
-const HubFederationModal = lazyModal(
-  () => import("./components/HubFederationModal"),
-  "HubFederationModal",
-);
-const OverlapDetectorModal = lazyModal(
-  () => import("./components/OverlapDetectorModal"),
-  "OverlapDetectorModal",
-);
-const PolicyRulesModal = lazyModal(
-  () => import("./components/PolicyRulesModal"),
-  "PolicyRulesModal",
-);
-const RefactorSandboxModal = lazyModal(
-  () => import("./components/RefactorSandboxModal"),
-  "RefactorSandboxModal",
-);
-const ScanConfigModal = lazyModal(() => import("./components/ScanConfigModal"), "ScanConfigModal");
-const SemanticGraphModal = lazyModal(
-  () => import("./components/SemanticGraphModal"),
-  "SemanticGraphModal",
-);
-const SuppressionRulesModal = lazyModal(
-  () => import("./components/SuppressionRulesModal"),
-  "SuppressionRulesModal",
-);
-const TimelineExplorerModal = lazyModal(
-  () => import("./components/TimelineExplorerModal"),
-  "TimelineExplorerModal",
-);
-const LiveEventInspectorModal = lazyModal(
-  () => import("./components/watch/LiveEventInspectorModal"),
-  "LiveEventInspectorModal",
-);
-const McpAppsPreviewModal = lazyModal(
-  () => import("./components/McpAppsPreviewModal"),
-  "McpAppsPreviewModal",
-);
-const CodeEditorModal = lazyModal(() => import("./components/CodeEditorModal"), "CodeEditorModal");
+const modals = {
+  CoverageCorrelationModal: lazyModal(
+    () => import("./components/CoverageCorrelationModal"),
+    "CoverageCorrelationModal",
+  ),
+  DeadCodeExplorerModal: lazyModal(
+    () => import("./components/DeadCodeExplorerModal"),
+    "DeadCodeExplorerModal",
+  ),
+  HubFederationModal: lazyModal(
+    () => import("./components/HubFederationModal"),
+    "HubFederationModal",
+  ),
+  OverlapDetectorModal: lazyModal(
+    () => import("./components/OverlapDetectorModal"),
+    "OverlapDetectorModal",
+  ),
+  PolicyRulesModal: lazyModal(() => import("./components/PolicyRulesModal"), "PolicyRulesModal"),
+  RefactorSandboxModal: lazyModal(
+    () => import("./components/RefactorSandboxModal"),
+    "RefactorSandboxModal",
+  ),
+  ScanConfigModal: lazyModal(() => import("./components/ScanConfigModal"), "ScanConfigModal"),
+  SemanticGraphModal: lazyModal(
+    () => import("./components/SemanticGraphModal"),
+    "SemanticGraphModal",
+  ),
+  SuppressionRulesModal: lazyModal(
+    () => import("./components/SuppressionRulesModal"),
+    "SuppressionRulesModal",
+  ),
+  TimelineExplorerModal: lazyModal(
+    () => import("./components/TimelineExplorerModal"),
+    "TimelineExplorerModal",
+  ),
+  HookManagerModal: lazyModal(() => import("./components/HookManagerModal"), "HookManagerModal"),
+  MonorepoWorkspaceModal: lazyModal(
+    () => import("./components/MonorepoWorkspaceModal"),
+    "MonorepoWorkspaceModal",
+  ),
+  LiveEventInspectorModal: lazyModal(
+    () => import("./components/watch/LiveEventInspectorModal"),
+    "LiveEventInspectorModal",
+  ),
+  McpAppsPreviewModal: lazyModal(
+    () => import("./components/McpAppsPreviewModal"),
+    "McpAppsPreviewModal",
+  ),
+  CodeEditorModal: lazyModal(() => import("./components/CodeEditorModal"), "CodeEditorModal"),
+};
+
+const {
+  CoverageCorrelationModal,
+  DeadCodeExplorerModal,
+  HubFederationModal,
+  OverlapDetectorModal,
+  PolicyRulesModal,
+  RefactorSandboxModal,
+  ScanConfigModal,
+  SemanticGraphModal,
+  SuppressionRulesModal,
+  TimelineExplorerModal,
+  HookManagerModal,
+  MonorepoWorkspaceModal,
+  LiveEventInspectorModal,
+  McpAppsPreviewModal,
+  CodeEditorModal,
+} = modals;
 
 export const App: React.FC = () => {
   const {
@@ -90,6 +113,10 @@ export const App: React.FC = () => {
     setIsExportReportOpen,
     isTimelineModalOpen,
     setIsTimelineModalOpen,
+    isHookManagerModalOpen,
+    setIsHookManagerModalOpen,
+    isMonorepoModalOpen,
+    setIsMonorepoModalOpen,
     isSuppressionModalOpen,
     setIsSuppressionModalOpen,
     isRefactorSandboxOpen,
@@ -121,6 +148,21 @@ export const App: React.FC = () => {
       void startScan();
     }
   }, [startScan]);
+
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const activeTag = document.activeElement?.tagName.toLowerCase();
+      if (activeTag === "input" || activeTag === "textarea" || activeTag === "select") {
+        return;
+      }
+      if (e.key === "8" && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        setIsHookManagerModalOpen(!useCDDMStore.getState().isHookManagerModalOpen);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [setIsHookManagerModalOpen]);
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-indigo-500/30 selection:text-indigo-200">
@@ -166,6 +208,24 @@ export const App: React.FC = () => {
           >
             <History className="w-3.5 h-3.5 text-indigo-400" />
             <span>Timeline Trends</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsHookManagerModalOpen(true)}
+            className="px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 hover:bg-slate-800 text-slate-300 flex items-center gap-1.5 transition-colors shadow-sm"
+          >
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Hooks</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsMonorepoModalOpen(true)}
+            className="px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 hover:bg-slate-800 text-slate-300 flex items-center gap-1.5 transition-colors shadow-sm"
+          >
+            <Boxes className="w-3.5 h-3.5 text-purple-400" />
+            <span>Monorepo</span>
           </button>
 
           <button
@@ -329,6 +389,18 @@ export const App: React.FC = () => {
         <TimelineExplorerModal
           isOpen={isTimelineModalOpen}
           onClose={() => setIsTimelineModalOpen(false)}
+        />
+
+        {/* Git Hook Manager & CI/CD Studio Modal */}
+        <HookManagerModal
+          isOpen={isHookManagerModalOpen}
+          onClose={() => setIsHookManagerModalOpen(false)}
+        />
+
+        {/* Monorepo Workspace Modal */}
+        <MonorepoWorkspaceModal
+          isOpen={isMonorepoModalOpen}
+          onClose={() => setIsMonorepoModalOpen(false)}
         />
 
         {/* Suppression Rules Modal */}
