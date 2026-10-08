@@ -131,8 +131,8 @@ test.describe("CDDM Top-Level Navigation & Discoverability Matrix", () => {
     await expect(clusterAdvisorHeader).not.toBeVisible({ timeout: 10000 });
     await page.waitForTimeout(200);
 
-    // 5. Test "Studio" sandbox launch on cluster card (without expanding clone pairs)
-    const clusterStudioBtn = firstClusterCard.getByRole("button", { name: "Studio" });
+    // 5. Test "Sandbox" sandbox launch on cluster card (without expanding clone pairs)
+    const clusterStudioBtn = firstClusterCard.getByRole("button", { name: "Sandbox" });
     await expect(clusterStudioBtn).toBeVisible();
     await clusterStudioBtn.click();
 
