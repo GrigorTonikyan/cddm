@@ -120,4 +120,22 @@ describe("App Component", () => {
       ),
     ).toBeDefined();
   });
+
+  it("should open RefactorSandboxModal when clicking Refactor Studio in header", async () => {
+    render(
+      <Win2xManagerProvider>
+        <App />
+      </Win2xManagerProvider>,
+    );
+
+    const refactorBtn = screen.getByText("Refactor Studio");
+    fireEvent.click(refactorBtn);
+    expect(
+      await screen.findByText(
+        "Interactive Auto-Refactor Sandbox & Visual Studio",
+        {},
+        { timeout: 15000 },
+      ),
+    ).toBeDefined();
+  });
 });

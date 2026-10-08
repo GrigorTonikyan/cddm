@@ -264,6 +264,10 @@ if (import.meta.main) {
 
   if (args.includes("--runners") || args.includes("-r")) {
     const runners = await fetchRunners();
+    if (args.includes("--json")) {
+      console.log(JSON.stringify(runners, null, 2));
+      process.exit(0);
+    }
     console.log(`\n=== Gitea Actions Runners (${runners.length}) ===`);
     for (const r of runners) {
       const labelStr =

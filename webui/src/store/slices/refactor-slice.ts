@@ -35,6 +35,58 @@ async function postExtractRequest(
 }
 
 export const createRefactorSlice = (set: SetStoreState, _get: GetStoreState) => ({
+  openRefactorStudio: async (clusterId?: number) => {
+    const state = _get();
+    let targetCluster =
+      clusterId !== undefined
+        ? (state.results?.clone_clusters || []).find((c) => c.id === clusterId)
+        : undefined;
+
+    if (
+      !targetCluster &&
+      !state.sandboxRequest &&
+      (state.results?.clone_clusters?.length || 0) > 0
+    ) {
+      targetCluster = state.results!.clone_clusters[0];
+    }
+
+    if (targetCluster) {
+      const occurrences = (targetCluster.occurrences || []).map((loc) => ({
+        file: loc.file,
+        start_line: loc.start_line,
+        end_line: loc.end_line,
+        author: loc.author,
+      }));
+      const req: RefactorSandboxRequest = {
+        cluster_id: targetCluster.id,
+        occurrences,
+      };
+      await _get().openRefactorSandbox(req);
+    } else {
+      set({
+        isRefactorSandboxOpen: true,
+      });
+    }
+  },
+
+  selectRefactorCluster: async (clusterId: number) => {
+    const state = _get();
+    const cluster = (state.results?.clone_clusters || []).find((c) => c.id === clusterId);
+    if (cluster) {
+      const occurrences = (cluster.occurrences || []).map((loc) => ({
+        file: loc.file,
+        start_line: loc.start_line,
+        end_line: loc.end_line,
+        author: loc.author,
+      }));
+      const req: RefactorSandboxRequest = {
+        cluster_id: cluster.id,
+        occurrences,
+      };
+      await _get().openRefactorSandbox(req);
+    }
+  },
+
   openRefactorSandbox: async (req: RefactorSandboxRequest) => {
     const normalizedReq = {
       ...req,

@@ -181,6 +181,8 @@ export interface CDDMStoreState {
   evaluatePolicyRules: (directory?: string) => Promise<PolicyEvaluationResult>;
 
   /** Refactor sandbox management */
+  openRefactorStudio: (clusterId?: number) => Promise<void>;
+  selectRefactorCluster: (clusterId: number) => Promise<void>;
   openRefactorSandbox: (req: RefactorSandboxRequest) => Promise<void>;
   previewRefactorSandbox: (req: RefactorSandboxRequest) => Promise<RefactorSandboxResult>;
   previewAstRefactor: (req: RefactorSandboxRequest) => Promise<AstRewriteResult>;

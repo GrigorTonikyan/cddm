@@ -212,4 +212,62 @@ describe("RefactorSandboxModal Component", () => {
       }),
     );
   });
+
+  it("should render safely without crashing when sandboxRequest is null (standalone studio mode)", () => {
+    useCDDMStore.setState({
+      sandboxRequest: null,
+      sandboxResult: null,
+      isSandboxLoading: false,
+      sandboxError: null,
+      results: null,
+    });
+
+    renderWithWin2x(<RefactorSandboxModal isOpen={true} onClose={() => {}} />);
+
+    expectDefinedTexts([
+      "Interactive Auto-Refactor Sandbox & Visual Studio",
+      "Parameterized Refactoring Studio Controls",
+      /No clone clusters detected yet/,
+    ]);
+  });
+
+  it("should display available clusters and allow switching selected cluster", () => {
+    const mockSelectCluster = vi.fn().mockResolvedValue(undefined);
+    useCDDMStore.setState({
+      results: {
+        clone_clusters: [
+          {
+            id: 1,
+            clone_type: "Renamed",
+            similarity: 0.95,
+            token_count: 50,
+            occurrences: [
+              { file: "a.ts", start_line: 1, end_line: 10 },
+              { file: "b.ts", start_line: 1, end_line: 10 },
+            ],
+          },
+          {
+            id: 2,
+            clone_type: "Exact",
+            similarity: 1.0,
+            token_count: 60,
+            occurrences: [
+              { file: "c.ts", start_line: 5, end_line: 20 },
+              { file: "d.ts", start_line: 5, end_line: 20 },
+            ],
+          },
+        ],
+      } as unknown as any,
+      selectRefactorCluster: mockSelectCluster,
+    });
+
+    renderWithWin2x(<RefactorSandboxModal isOpen={true} onClose={() => {}} />);
+
+    const clusterSelect = screen.getByLabelText(/Target Clone Cluster/) as HTMLSelectElement;
+    expect(clusterSelect).toBeDefined();
+    expect(clusterSelect.value).toBe("1");
+
+    fireEvent.change(clusterSelect, { target: { value: "2" } });
+    expect(mockSelectCluster).toHaveBeenCalledWith(2);
+  });
 });

@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-27 | Rust: 402 #[test] units | WebUI: 255 tests across 69 suites | Scripts & MCP: 208 tests across 61 suites | CI Workflows: PASS
+> Last verified: 2026-08-27 | Rust: 402 #[test] units | WebUI: 258 tests across 69 suites | Scripts & MCP: 208 tests across 61 suites | CI Workflows: PASS
 
 ---
 
@@ -358,11 +358,11 @@
 
 ---
 
-## 2. WebUI Frontend — React 19 + TypeScript + Vitest (255 unit tests across 69 suites)
+## 2. WebUI Frontend — React 19 + TypeScript + Vitest (258 unit tests across 69 suites)
 
 | Module                      | Test Suite File                                                                       | Test Cases | Status |
 | :-------------------------- | :------------------------------------------------------------------------------------ | :--------- | :----- |
-| App Shell                   | `webui/src/App.test.tsx`                                                              | 7 tests    | PASS   |
+| App Shell                   | `webui/src/App.test.tsx`                                                              | 8 tests    | PASS   |
 | Clone Cluster Card          | `webui/src/components/CloneClusterCard.test.tsx`                                      | 2 tests    | PASS   |
 | Clone Pair Card             | `webui/src/components/ClonePairCard.test.tsx`                                         | 2 tests    | PASS   |
 | Clone Pair Diff Modal       | `webui/src/components/ClonePairDiffModal.test.tsx`                                    | 3 tests    | PASS   |
@@ -379,7 +379,7 @@
 | Overlap Detector Modal      | `webui/src/components/OverlapDetectorModal.test.tsx`                                  | 3 tests    | PASS   |
 | Policy Rules Modal          | `webui/src/components/PolicyRulesModal.test.tsx`                                      | 4 tests    | PASS   |
 | Refactor Patch Modal        | `webui/src/components/RefactorPatchModal.test.tsx`                                    | 3 tests    | PASS   |
-| Refactor Sandbox Modal      | `webui/src/components/RefactorSandboxModal.test.tsx`                                  | 6 tests    | PASS   |
+| Refactor Sandbox Modal      | `webui/src/components/RefactorSandboxModal.test.tsx`                                  | 8 tests    | PASS   |
 | Scan Config Modal           | `webui/src/components/ScanConfigModal.test.tsx`                                       | 2 tests    | PASS   |
 | Scan Config Panel           | `webui/src/components/ScanConfigPanel.test.tsx`                                       | 6 tests    | PASS   |
 | Scan Progress Bar           | `webui/src/components/ScanProgressBar.test.tsx`                                       | 3 tests    | PASS   |
