@@ -9,6 +9,7 @@ import {
   renderAsyncWithWin2x,
 } from "../test/test-helpers";
 import type { HubScanSummary } from "../types/cddm-types";
+import { useCDDMStore } from "../store/cddm-store";
 
 describe("HubFederationModal Component", () => {
   const mockSummary: HubScanSummary = {
@@ -155,5 +156,19 @@ describe("HubFederationModal Component", () => {
     expect(screen.getByText(/Peering Sync Complete/)).toBeDefined();
     expect(screen.getByText("120")).toBeDefined();
     expect(screen.getByText("140")).toBeDefined();
+  });
+
+  it("should render safely in uninitialized default store state without throwing", async () => {
+    useCDDMStore.getState().resetScan();
+    useCDDMStore.setState({
+      hubSummary: null,
+      isHubLoading: false,
+      runHubScan: vi.fn().mockResolvedValue(undefined),
+    });
+    await renderAsyncWithWin2x(
+      <HubFederationModal isOpen={true} onClose={vi.fn()} initialSummary={null} />,
+    );
+    expect(screen.getByText("Organization Federation Hub (.cddmhub.toml)")).toBeDefined();
+    expect(screen.getByText("Loading organization graph...")).toBeDefined();
   });
 });

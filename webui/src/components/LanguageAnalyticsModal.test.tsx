@@ -52,4 +52,11 @@ describe("LanguageAnalyticsModal Component", () => {
     fireEvent.click(closeBtn);
     expect(onClose).toHaveBeenCalled();
   });
+
+  it("should render cleanly without crashing in uninitialized default state", () => {
+    renderWithWin2x(<LanguageAnalyticsModal isOpen={true} onClose={() => {}} />);
+    expect(screen.getByText("Language & Architectural Composition")).toBeDefined();
+    expect(screen.getByText("0 Languages")).toBeDefined();
+    expect(screen.getByText("0 ecosystems")).toBeDefined();
+  });
 });

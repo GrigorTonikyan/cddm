@@ -68,4 +68,15 @@ describe("TreemapExplorerModal Component", () => {
     expect(onSelectFilter).toHaveBeenCalledWith("src/engine");
     expect(screen.getAllByText("Clear Filter").length).toBeGreaterThan(0);
   });
+
+  it("should render cleanly without crashing in uninitialized default state", () => {
+    render(
+      <Win2xManagerProvider>
+        <TreemapExplorerModal isOpen={true} onClose={() => {}} />
+      </Win2xManagerProvider>,
+    );
+
+    expect(screen.getByText("Duplication Treemap Explorer")).toBeDefined();
+    expect(screen.getByText("0 Clones")).toBeDefined();
+  });
 });

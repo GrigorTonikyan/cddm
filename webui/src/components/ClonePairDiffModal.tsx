@@ -10,7 +10,7 @@ import { useCDDMStore } from "../store/cddm-store";
 export interface ClonePairDiffModalProps {
   isOpen: boolean;
   onClose: () => void;
-  pair: ClonePair;
+  pair?: ClonePair | null;
   index?: number;
 }
 
@@ -24,6 +24,43 @@ export const ClonePairDiffModal: React.FC<ClonePairDiffModalProps> = ({
   const [copiedPaths, setCopiedPaths] = useState(false);
 
   if (!isOpen) return null;
+
+  if (!pair) {
+    return (
+      <Win2xWindow
+        id="clone-pair-diff-modal"
+        windowType="diff-inspector"
+        isOpen={isOpen}
+        onClose={onClose}
+        title="Clone Pair Diff Inspector"
+        subtitle="Side-by-side syntax highlighted comparison and Git blame integration"
+        badge="No Pair Selected"
+        icon={<Columns2 className="w-4 h-4 text-indigo-400" />}
+        footer={
+          <div className="flex justify-end w-full">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        }
+        initialWidth={920}
+        initialHeight={650}
+      >
+        <div className="p-16 text-center text-slate-400 font-mono text-xs bg-slate-900/40 border border-slate-800 rounded-xl space-y-3">
+          <Columns2 className="w-10 h-10 text-slate-600 mx-auto" />
+          <h3 className="text-sm font-semibold text-slate-300">No Clone Pair Selected</h3>
+          <p className="text-slate-500 max-w-md mx-auto">
+            Select a duplicate clone pair card from scan results to inspect side-by-side code diffs
+            and git blame annotations.
+          </p>
+        </div>
+      </Win2xWindow>
+    );
+  }
 
   const pathA = parsePath(pair.file_a);
   const pathB = parsePath(pair.file_b);

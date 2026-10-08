@@ -7,6 +7,7 @@ import {
   expectNullWhenClosed,
   renderWithWin2x,
 } from "../test/test-helpers";
+import { useCDDMStore } from "../store/cddm-store";
 
 describe("ExportReportModal Component", () => {
   const mockResult = createMockScanResult();
@@ -70,5 +71,13 @@ describe("ExportReportModal Component", () => {
     const copyBtn = screen.getByText("Copy SARIF");
     fireEvent.click(copyBtn);
     expect(writeTextMock).toHaveBeenCalled();
+  });
+
+  it("should render safely in uninitialized default store state without throwing", () => {
+    useCDDMStore.getState().resetScan();
+    expect(() =>
+      renderWithWin2x(<ExportReportModal isOpen={true} onClose={vi.fn()} results={null} />),
+    ).not.toThrow();
+    expect(screen.getByText("No Scan Results Available")).toBeDefined();
   });
 });

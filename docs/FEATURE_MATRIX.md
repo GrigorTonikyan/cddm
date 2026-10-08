@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-27 | Rust: 402 #[test] units | WebUI: 303 tests across 76 suites | Scripts & MCP: 209 tests across 61 suites | CI Workflows: PASS
+> Last verified: 2026-08-27 | Rust: 402 #[test] units | WebUI: 332 tests across 77 suites | Scripts & MCP: 209 tests across 61 suites | CI Workflows: PASS
 
 ---
 
@@ -358,39 +358,39 @@
 
 ---
 
-## 2. WebUI Frontend — React 19 + TypeScript + Vitest (303 unit tests across 76 suites)
+## 2. WebUI Frontend — React 19 + TypeScript + Vitest (332 unit tests across 77 suites)
 
 | Module                      | Test Suite File                                                                       | Test Cases | Status |
 | :-------------------------- | :------------------------------------------------------------------------------------ | :--------- | :----- |
-| App Shell                   | `webui/src/App.test.tsx`                                                              | 11 tests   | PASS   |
+| App Shell                   | `webui/src/App.test.tsx`                                                              | 19 tests   | PASS   |
 | Clone Cluster Card          | `webui/src/components/CloneClusterCard.test.tsx`                                      | 2 tests    | PASS   |
 | Clone Pair Card             | `webui/src/components/ClonePairCard.test.tsx`                                         | 2 tests    | PASS   |
-| Clone Pair Diff Modal       | `webui/src/components/ClonePairDiffModal.test.tsx`                                    | 3 tests    | PASS   |
-| Code Editor Modal           | `webui/src/components/CodeEditorModal.test.tsx`                                       | 4 tests    | PASS   |
-| Coverage Correlation Modal  | `webui/src/components/CoverageCorrelationModal.test.tsx`                              | 3 tests    | PASS   |
-| Dead Code Explorer Modal    | `webui/src/components/DeadCodeExplorerModal.test.tsx`                                 | 6 tests    | PASS   |
+| Clone Pair Diff Modal       | `webui/src/components/ClonePairDiffModal.test.tsx`                                    | 4 tests    | PASS   |
+| Code Editor Modal           | `webui/src/components/CodeEditorModal.test.tsx`                                       | 5 tests    | PASS   |
+| Coverage Correlation Modal  | `webui/src/components/CoverageCorrelationModal.test.tsx`                              | 4 tests    | PASS   |
+| Dead Code Explorer Modal    | `webui/src/components/DeadCodeExplorerModal.test.tsx`                                 | 7 tests    | PASS   |
 | Diff Scan Results Modal     | `webui/src/components/DiffScanResultsModal.test.tsx`                                  | 6 tests    | PASS   |
 | Diff Viewer                 | `webui/src/components/DiffViewer.test.tsx`                                            | 3 tests    | PASS   |
 | Duplication Treemap         | `webui/src/components/DuplicationTreemap.test.tsx`                                    | 3 tests    | PASS   |
-| Export Report Modal         | `webui/src/components/ExportReportModal.test.tsx`                                     | 3 tests    | PASS   |
-| Health Audit Modal          | `webui/src/components/HealthAuditModal.test.tsx`                                      | 3 tests    | PASS   |
+| Export Report Modal         | `webui/src/components/ExportReportModal.test.tsx`                                     | 4 tests    | PASS   |
+| Health Audit Modal          | `webui/src/components/HealthAuditModal.test.tsx`                                      | 4 tests    | PASS   |
 | Hook Manager Modal          | `webui/src/components/HookManagerModal.test.tsx`                                      | 5 tests    | PASS   |
-| Hub Federation Modal        | `webui/src/components/HubFederationModal.test.tsx`                                    | 4 tests    | PASS   |
-| Language Analytics Modal    | `webui/src/components/LanguageAnalyticsModal.test.tsx`                                | 2 tests    | PASS   |
+| Hub Federation Modal        | `webui/src/components/HubFederationModal.test.tsx`                                    | 5 tests    | PASS   |
+| Language Analytics Modal    | `webui/src/components/LanguageAnalyticsModal.test.tsx`                                | 3 tests    | PASS   |
 | Mcp Apps Preview Modal      | `webui/src/components/McpAppsPreviewModal.test.tsx`                                   | 4 tests    | PASS   |
-| Monorepo Workspace Modal    | `webui/src/components/MonorepoWorkspaceModal.test.tsx`                                | 5 tests    | PASS   |
-| Overlap Detector Modal      | `webui/src/components/OverlapDetectorModal.test.tsx`                                  | 3 tests    | PASS   |
-| Policy Rules Modal          | `webui/src/components/PolicyRulesModal.test.tsx`                                      | 4 tests    | PASS   |
-| Refactor Patch Modal        | `webui/src/components/RefactorPatchModal.test.tsx`                                    | 3 tests    | PASS   |
+| Monorepo Workspace Modal    | `webui/src/components/MonorepoWorkspaceModal.test.tsx`                                | 6 tests    | PASS   |
+| Overlap Detector Modal      | `webui/src/components/OverlapDetectorModal.test.tsx`                                  | 4 tests    | PASS   |
+| Policy Rules Modal          | `webui/src/components/PolicyRulesModal.test.tsx`                                      | 5 tests    | PASS   |
+| Refactor Patch Modal        | `webui/src/components/RefactorPatchModal.test.tsx`                                    | 4 tests    | PASS   |
 | Refactor Sandbox Modal      | `webui/src/components/RefactorSandboxModal.test.tsx`                                  | 8 tests    | PASS   |
-| Scan Config Modal           | `webui/src/components/ScanConfigModal.test.tsx`                                       | 5 tests    | PASS   |
+| Scan Config Modal           | `webui/src/components/ScanConfigModal.test.tsx`                                       | 6 tests    | PASS   |
 | Scan Config Panel           | `webui/src/components/ScanConfigPanel.test.tsx`                                       | 8 tests    | PASS   |
 | Scan Progress Bar           | `webui/src/components/ScanProgressBar.test.tsx`                                       | 3 tests    | PASS   |
 | Scan Results                | `webui/src/components/ScanResults.test.tsx`                                           | 7 tests    | PASS   |
-| Semantic Graph Modal        | `webui/src/components/SemanticGraphModal.test.tsx`                                    | 3 tests    | PASS   |
-| Suppression Rules Modal     | `webui/src/components/SuppressionRulesModal.test.tsx`                                 | 3 tests    | PASS   |
-| Timeline Explorer Modal     | `webui/src/components/TimelineExplorerModal.test.tsx`                                 | 3 tests    | PASS   |
-| Treemap Explorer Modal      | `webui/src/components/TreemapExplorerModal.test.tsx`                                  | 3 tests    | PASS   |
+| Semantic Graph Modal        | `webui/src/components/SemanticGraphModal.test.tsx`                                    | 4 tests    | PASS   |
+| Suppression Rules Modal     | `webui/src/components/SuppressionRulesModal.test.tsx`                                 | 4 tests    | PASS   |
+| Timeline Explorer Modal     | `webui/src/components/TimelineExplorerModal.test.tsx`                                 | 4 tests    | PASS   |
+| Treemap Explorer Modal      | `webui/src/components/TreemapExplorerModal.test.tsx`                                  | 4 tests    | PASS   |
 | Cache Pack Card             | `webui/src/components/config/CachePackCard.test.tsx`                                  | 2 tests    | PASS   |
 | Editor Surface              | `webui/src/components/editor/EditorSurface.test.tsx`                                  | 3 tests    | PASS   |
 | Editor Toolbar              | `webui/src/components/editor/EditorToolbar.test.tsx`                                  | 4 tests    | PASS   |
@@ -417,6 +417,7 @@
 | Win2x ScrollLock            | `webui/src/components/ui/win2x-manager/hooks/use-body-scroll-lock.test.ts`            | 3 tests    | PASS   |
 | Win2x Drag Hook             | `webui/src/components/ui/win2x-manager/hooks/use-pointer-drag.test.ts`                | 2 tests    | PASS   |
 | Win2x Resize Hook           | `webui/src/components/ui/win2x-manager/hooks/use-pointer-resize.test.ts`              | 2 tests    | PASS   |
+| Live Event Inspector Modal  | `webui/src/components/watch/LiveEventInspectorModal.test.tsx`                         | 4 tests    | PASS   |
 | Live Watch Studio           | `webui/src/components/watch/LiveWatch.test.tsx`                                       | 5 tests    | PASS   |
 | use-form-state              | `webui/src/hooks/use-form-state.test.ts`                                              | 3 tests    | PASS   |
 | use Refactor Stream         | `webui/src/hooks/useRefactorStream.test.ts`                                           | 4 tests    | PASS   |

@@ -3,12 +3,13 @@ import { ClonePair } from "../types/cddm-types";
 import { DuplicationTreemap } from "./DuplicationTreemap";
 import { Win2xWindow } from "./ui/win2x-manager";
 import { LayoutGrid, Layers, Search, Filter } from "lucide-react";
+import { useCDDMStore } from "../store/cddm-store";
 
 export interface TreemapExplorerModalProps {
   isOpen: boolean;
   onClose: () => void;
-  clonePairs: ClonePair[];
-  totalTokens: number;
+  clonePairs?: ClonePair[];
+  totalTokens?: number;
   selectedFilterPath?: string;
   onSelectFilterPath?: (path: string) => void;
 }
@@ -16,11 +17,14 @@ export interface TreemapExplorerModalProps {
 export const TreemapExplorerModal: React.FC<TreemapExplorerModalProps> = ({
   isOpen,
   onClose,
-  clonePairs,
-  totalTokens,
+  clonePairs: propClonePairs,
+  totalTokens: propTotalTokens,
   selectedFilterPath = "",
   onSelectFilterPath,
 }) => {
+  const storeResults = useCDDMStore((state) => state.results);
+  const clonePairs = propClonePairs ?? storeResults?.clone_pairs ?? [];
+  const totalTokens = propTotalTokens ?? storeResults?.total_tokens ?? 0;
   const [internalFilter, setInternalFilter] = useState<string>(selectedFilterPath);
 
   if (!isOpen) return null;

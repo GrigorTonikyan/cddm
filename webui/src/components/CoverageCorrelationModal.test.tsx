@@ -8,6 +8,7 @@ import {
   renderWithWin2x,
 } from "../test/test-helpers";
 import type { CoverageCorrelationSummary } from "../types/cddm-types";
+import { useCDDMStore } from "../store/cddm-store";
 
 describe("CoverageCorrelationModal", () => {
   const mockSummary: CoverageCorrelationSummary = {
@@ -98,5 +99,18 @@ describe("CoverageCorrelationModal", () => {
 
     expect(screen.getByText("src/legacy.ts:1-15")).toBeDefined();
     expect(screen.queryByText("src/auth.ts:10-20")).toBeNull();
+  });
+
+  it("should render safely in uninitialized default store state without throwing", async () => {
+    useCDDMStore.getState().resetScan();
+    useCDDMStore.setState({ coverageSummary: null, isCoverageLoading: false });
+    await renderAsyncWithWin2x(
+      <CoverageCorrelationModal isOpen={true} onClose={vi.fn()} initialSummary={null} />,
+    );
+
+    expect(screen.getByText("Runtime Execution & Coverage-Aware De-duplication")).toBeDefined();
+    expect(
+      screen.getByText("No duplicate clone pairs matched the active coverage filter."),
+    ).toBeDefined();
   });
 });

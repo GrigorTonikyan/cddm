@@ -2,6 +2,7 @@ import { screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vite-plus/test";
 import { HealthAuditModal } from "./HealthAuditModal";
 import { createMockScanResult, renderWithWin2x } from "../test/test-helpers";
+import { useCDDMStore } from "../store/cddm-store";
 
 describe("HealthAuditModal Component", () => {
   it("should return null when not open", () => {
@@ -43,5 +44,13 @@ describe("HealthAuditModal Component", () => {
 
     expect(screen.getByText("[FAIL] Threshold")).toBeDefined();
     expect(screen.getByText(/22\.40% Duplication/i)).toBeDefined();
+  });
+
+  it("should render safely in uninitialized default store state without throwing", () => {
+    useCDDMStore.getState().resetScan();
+    expect(() =>
+      renderWithWin2x(<HealthAuditModal isOpen={true} onClose={vi.fn()} results={null} />),
+    ).not.toThrow();
+    expect(screen.getByText("No Scan Results Available")).toBeDefined();
   });
 });

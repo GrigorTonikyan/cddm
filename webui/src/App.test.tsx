@@ -192,4 +192,136 @@ describe("App Component", () => {
       ),
     ).toBeDefined();
   });
+
+  it("should open TimelineExplorerModal when clicking Timeline Trends in header in default state", async () => {
+    render(
+      <Win2xManagerProvider>
+        <App />
+      </Win2xManagerProvider>,
+    );
+
+    const timelineBtn = screen.getByText("Timeline Trends");
+    fireEvent.click(timelineBtn);
+    expect(
+      await screen.findByText(
+        "Historical Duplication & Git Timeline Evolution",
+        {},
+        { timeout: 15000 },
+      ),
+    ).toBeDefined();
+  });
+
+  it("should open SuppressionRulesModal when clicking Suppression Rules in header in default state", async () => {
+    render(
+      <Win2xManagerProvider>
+        <App />
+      </Win2xManagerProvider>,
+    );
+
+    const suppressionBtn = screen.getByText("Suppression Rules");
+    fireEvent.click(suppressionBtn);
+    expect(
+      await screen.findByText(
+        "Intelligent AST Suppression & .cddmignore Engine",
+        {},
+        { timeout: 15000 },
+      ),
+    ).toBeDefined();
+  });
+
+  it("should open PolicyRulesModal when clicking Policy Studio in header in default state", async () => {
+    render(
+      <Win2xManagerProvider>
+        <App />
+      </Win2xManagerProvider>,
+    );
+
+    const policyBtn = screen.getByText("Policy Studio");
+    fireEvent.click(policyBtn);
+    expect(
+      await screen.findByText(
+        "Architectural Boundary & Anti-Duplication Policy Studio",
+        {},
+        { timeout: 15000 },
+      ),
+    ).toBeDefined();
+  });
+
+  it("should open SemanticGraphModal when clicking Semantic Graph in header in default state", async () => {
+    render(
+      <Win2xManagerProvider>
+        <App />
+      </Win2xManagerProvider>,
+    );
+
+    const semanticBtn = screen.getByText("Semantic Graph");
+    fireEvent.click(semanticBtn);
+    expect(
+      await screen.findByText(
+        "Deep Semantic Graph & Polyglot Isomorphism Engine",
+        {},
+        { timeout: 15000 },
+      ),
+    ).toBeDefined();
+  });
+
+  it("should open CoverageCorrelationModal when clicking Coverage in header in default state", async () => {
+    render(
+      <Win2xManagerProvider>
+        <App />
+      </Win2xManagerProvider>,
+    );
+
+    const coverageBtn = screen.getByText("Coverage");
+    fireEvent.click(coverageBtn);
+    expect(
+      await screen.findByText(
+        "Runtime Execution & Coverage-Aware De-duplication",
+        {},
+        { timeout: 15000 },
+      ),
+    ).toBeDefined();
+  });
+
+  it("should open DeadCodeExplorerModal when clicking Dead Code in header in default state", async () => {
+    render(
+      <Win2xManagerProvider>
+        <App />
+      </Win2xManagerProvider>,
+    );
+
+    const deadCodeBtn = screen.getByText("Dead Code");
+    fireEvent.click(deadCodeBtn);
+    expect(
+      await screen.findByText("Polyglot Dead Code Explorer & Safe Pruner", {}, { timeout: 15000 }),
+    ).toBeDefined();
+  });
+
+  it("should open McpAppsPreviewModal when clicking MCP Apps in header in default state", async () => {
+    render(
+      <Win2xManagerProvider>
+        <App />
+      </Win2xManagerProvider>,
+    );
+
+    const mcpBtn = screen.getByText("MCP Apps");
+    fireEvent.click(mcpBtn);
+    expect(
+      await screen.findByText("MCP Apps Generative UI Studio", {}, { timeout: 15000 }),
+    ).toBeDefined();
+  });
+
+  it("should open CodeEditorModal when clicking Code Editor in header in default state", async () => {
+    render(
+      <Win2xManagerProvider>
+        <App />
+      </Win2xManagerProvider>,
+    );
+
+    const editorBtn = screen.getByText("Code Editor");
+    fireEvent.click(editorBtn);
+    expect(
+      await screen.findByText("Integrated Code Editor & Split Diff Studio", {}, { timeout: 15000 }),
+    ).toBeDefined();
+  });
 });

@@ -5,22 +5,28 @@ import { Win2xWindow } from "./ui/win2x-manager";
 import { PieChart, Sparkles, Layers, FileCode } from "lucide-react";
 
 import { ModalFooter } from "./ui/ModalFooter";
+import { useCDDMStore } from "../store/cddm-store";
 
 export interface LanguageAnalyticsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  languages: LanguageStats[];
-  totalTokens: number;
-  totalFiles: number;
+  languages?: LanguageStats[];
+  totalTokens?: number;
+  totalFiles?: number;
 }
 
 export const LanguageAnalyticsModal: React.FC<LanguageAnalyticsModalProps> = ({
   isOpen,
   onClose,
-  languages,
-  totalTokens,
-  totalFiles,
+  languages: propLanguages,
+  totalTokens: propTotalTokens,
+  totalFiles: propTotalFiles,
 }) => {
+  const storeResults = useCDDMStore((state) => state.results);
+  const languages: LanguageStats[] = propLanguages ?? storeResults?.language_breakdown ?? [];
+  const totalTokens = propTotalTokens ?? storeResults?.total_tokens ?? 0;
+  const totalFiles = propTotalFiles ?? storeResults?.total_files ?? 0;
+
   if (!isOpen) return null;
 
   const totalTokensAllLangs =

@@ -94,4 +94,21 @@ describe("SemanticGraphModal Component", () => {
     fireEvent.click(crossLangTab);
     expect(screen.getByText("Discover Polyglot Clones")).toBeDefined();
   });
+
+  it("should render cleanly in uninitialized default store state", () => {
+    useCDDMStore.setState({
+      semanticGraphResponse: null,
+      isSemanticGraphLoading: false,
+      semanticGraphError: null,
+    });
+
+    renderWithWin2x(<SemanticGraphModal isOpen={true} onClose={() => {}} />);
+    expect(screen.getByText("Deep Semantic Graph & Polyglot Isomorphism Engine")).toBeDefined();
+    expect(screen.getByText("0 CFG Graphs")).toBeDefined();
+    expect(
+      screen.getByText(
+        /No semantic graphs loaded\. Click "Polyglot Sandbox" to test snippets or explore cross-language clones\./i,
+      ),
+    ).toBeDefined();
+  });
 });

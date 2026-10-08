@@ -70,12 +70,12 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ onSave, onReload }
               onChange={handleFileSelect}
               className="bg-transparent text-slate-200 outline-none text-xs w-full truncate cursor-pointer font-mono"
             >
-              {activeEditorFile && !editorFilesList.some((f) => f.path === activeEditorFile) ? (
+              {activeEditorFile && !editorFilesList?.some((f) => f.path === activeEditorFile) ? (
                 <option value={activeEditorFile} className="bg-slate-900 text-slate-200">
                   {activeEditorFile}
                 </option>
               ) : null}
-              {editorFilesList.length === 0 ? (
+              {!editorFilesList || editorFilesList.length === 0 ? (
                 <option value="" disabled className="bg-slate-900 text-slate-400">
                   {activeEditorFile ? activeEditorFile : "No workspace files discovered"}
                 </option>

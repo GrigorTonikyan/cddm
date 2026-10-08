@@ -83,4 +83,23 @@ describe("OverlapDetectorModal Component", () => {
     expect(screen.getByText("Chunking helper")).toBeDefined();
     expect(screen.getByText("Keywords: chunk, batch")).toBeDefined();
   });
+
+  it("should render cleanly in uninitialized default state", async () => {
+    globalThis.fetch = vi.fn().mockImplementation(() =>
+      mockSuccessResponse({
+        matches: [],
+        total_files_scanned: 0,
+        scanned_functions: 0,
+        summary: "No matches",
+      }),
+    );
+
+    await renderAsyncWithWin2x(
+      <OverlapDetectorModal isOpen={true} onClose={vi.fn()} initialScanResult={null} />,
+    );
+
+    expect(screen.getByText("Ecosystem Library Reimplementation & Overlap Detector")).toBeDefined();
+    expect(screen.getByText("Detected Matches (0)")).toBeDefined();
+    expect(screen.getByText("No Ecosystem Library Overlaps Detected")).toBeDefined();
+  });
 });

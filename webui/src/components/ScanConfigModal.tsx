@@ -41,14 +41,16 @@ export const ScanConfigModal: React.FC<ScanConfigModalProps> = ({ isOpen, onClos
   const [activeTab, setActiveTab] = useState<"tuning" | "cache" | "integrations">("tuning");
 
   // Cache pack export state
-  const [exportCacheDir, setExportCacheDir] = useState<string>(config.cache_dir || ".cddm-cache");
+  const [exportCacheDir, setExportCacheDir] = useState<string>(config?.cache_dir || ".cddm-cache");
   const [exportOutputPath, setExportOutputPath] = useState<string>("cddm-cache.pack");
   const [isExporting, setIsExporting] = useState<boolean>(false);
   const [exportSummary, setExportSummary] = useState<CachePackSummary | null>(null);
 
   // Cache pack import state
   const [importPackFile, setImportPackFile] = useState<string>("cddm-cache.pack");
-  const [importTargetDir, setImportTargetDir] = useState<string>(config.cache_dir || ".cddm-cache");
+  const [importTargetDir, setImportTargetDir] = useState<string>(
+    config?.cache_dir || ".cddm-cache",
+  );
   const [isImporting, setIsImporting] = useState<boolean>(false);
   const [importSummary, setImportSummary] = useState<CachePackSummary | null>(null);
 
@@ -175,7 +177,7 @@ export const ScanConfigModal: React.FC<ScanConfigModalProps> = ({ isOpen, onClos
                   <input
                     id="scan-cache-dir"
                     type="text"
-                    value={config.cache_dir || ""}
+                    value={config?.cache_dir || ""}
                     onChange={(e) => setConfig({ cache_dir: e.target.value })}
                     placeholder=".cddm-cache"
                     className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs font-mono text-slate-200 focus:outline-none focus:border-indigo-500"
@@ -189,7 +191,7 @@ export const ScanConfigModal: React.FC<ScanConfigModalProps> = ({ isOpen, onClos
                   <input
                     id="scan-baseline-file"
                     type="text"
-                    value={config.baseline || ""}
+                    value={config?.baseline || ""}
                     onChange={(e) => setConfig({ baseline: e.target.value })}
                     placeholder="e.g. cddm-baseline.json"
                     className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs font-mono text-slate-200 focus:outline-none focus:border-indigo-500"
@@ -201,7 +203,7 @@ export const ScanConfigModal: React.FC<ScanConfigModalProps> = ({ isOpen, onClos
                 <label className="flex items-center gap-2 text-xs font-medium text-slate-300 cursor-pointer select-none">
                   <input
                     type="checkbox"
-                    checked={config.enable_cache ?? true}
+                    checked={config?.enable_cache ?? true}
                     onChange={(e) => setConfig({ enable_cache: e.target.checked })}
                     className="w-4 h-4 rounded border-slate-700 bg-slate-950 text-indigo-500 focus:ring-indigo-500"
                   />
@@ -211,7 +213,7 @@ export const ScanConfigModal: React.FC<ScanConfigModalProps> = ({ isOpen, onClos
                 <label className="flex items-center gap-2 text-xs font-medium text-slate-300 cursor-pointer select-none">
                   <input
                     type="checkbox"
-                    checked={config.in_tree_cache ?? false}
+                    checked={config?.in_tree_cache ?? false}
                     onChange={(e) => setConfig({ in_tree_cache: e.target.checked })}
                     className="w-4 h-4 rounded border-slate-700 bg-slate-950 text-indigo-500 focus:ring-indigo-500"
                   />
@@ -221,7 +223,7 @@ export const ScanConfigModal: React.FC<ScanConfigModalProps> = ({ isOpen, onClos
                 <label className="flex items-center gap-2 text-xs font-medium text-slate-300 cursor-pointer select-none">
                   <input
                     type="checkbox"
-                    checked={config.ignore_tests ?? false}
+                    checked={config?.ignore_tests ?? false}
                     onChange={(e) => setConfig({ ignore_tests: e.target.checked })}
                     className="w-4 h-4 rounded border-slate-700 bg-slate-950 text-indigo-500 focus:ring-indigo-500"
                   />
@@ -231,7 +233,7 @@ export const ScanConfigModal: React.FC<ScanConfigModalProps> = ({ isOpen, onClos
                 <label className="flex items-center gap-2 text-xs font-medium text-slate-300 cursor-pointer select-none">
                   <input
                     type="checkbox"
-                    checked={config.ignore_mocks ?? false}
+                    checked={config?.ignore_mocks ?? false}
                     onChange={(e) => setConfig({ ignore_mocks: e.target.checked })}
                     className="w-4 h-4 rounded border-slate-700 bg-slate-950 text-indigo-500 focus:ring-indigo-500"
                   />

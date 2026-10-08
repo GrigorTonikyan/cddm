@@ -67,4 +67,11 @@ describe("ClonePairDiffModal Component", () => {
     fireEvent.click(copyBtn);
     expect(writeTextMock).toHaveBeenCalledWith("src/a.ts:10-20 <-> src/b.ts:15-25");
   });
+
+  it("should render safely in uninitialized default store state without throwing", () => {
+    expect(() =>
+      renderWithWin2x(<ClonePairDiffModal isOpen={true} onClose={vi.fn()} pair={null} />),
+    ).not.toThrow();
+    expect(screen.getByText("No Clone Pair Selected")).toBeDefined();
+  });
 });

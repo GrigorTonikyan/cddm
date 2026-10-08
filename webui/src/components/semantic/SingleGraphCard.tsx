@@ -142,7 +142,7 @@ export const SingleGraphCard: React.FC<SingleGraphCardProps> = ({
 
           {/* PDG Data Dependency Edges (Def-Use Chains) */}
           {showPdgDataEdges &&
-            pdg?.data_edges.map((dataEdge, idx) => {
+            pdg?.data_edges?.map((dataEdge, idx) => {
               const fromPos = layout.positions.get(dataEdge.from);
               const toPos = layout.positions.get(dataEdge.to);
               if (!fromPos || !toPos) return null;
