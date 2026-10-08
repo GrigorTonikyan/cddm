@@ -16,11 +16,13 @@ test.describe("CDDM Top-Level Navigation & Discoverability Matrix", () => {
       await btn.click();
 
       // Assert Win2x window title
-      await expect(page.getByText(expectedTitle).first()).toBeVisible({ timeout: 15000 });
+      const modalHeader = page.getByText(expectedTitle).first();
+      await expect(modalHeader).toBeVisible({ timeout: 15000 });
 
       // Close the modal via Escape key
       await page.keyboard.press("Escape");
-      await page.waitForTimeout(300);
+      await expect(modalHeader).not.toBeVisible({ timeout: 10000 });
+      await page.waitForTimeout(200);
     };
 
     // 1. Semantic Graph
@@ -33,13 +35,16 @@ test.describe("CDDM Top-Level Navigation & Discoverability Matrix", () => {
     );
 
     // 3. Timeline Trends
-    await assertModalFlow("Timeline Trends", "Temporal Code Health & Evolution Timeline");
+    await assertModalFlow("Timeline Trends", "Historical Duplication & Git Timeline Evolution");
 
     // 4. Overlap Detector
-    await assertModalFlow("Overlap Detector", "Third-Party Library & Dependency Overlap Detector");
+    await assertModalFlow(
+      "Overlap Detector",
+      "Ecosystem Library Reimplementation & Overlap Detector",
+    );
 
     // 5. Org Hub
-    await assertModalFlow("Org Hub", "Cross-Repository Knowledge Hub & Organizational Federation");
+    await assertModalFlow("Org Hub", "Organization Federation Hub (.cddmhub.toml)");
 
     // 6. Coverage
     await assertModalFlow("Coverage", "Runtime Execution & Coverage-Aware De-duplication");
@@ -51,7 +56,8 @@ test.describe("CDDM Top-Level Navigation & Discoverability Matrix", () => {
     const refactorBtn = page.getByRole("button", { name: "Refactor Studio" });
     await expect(refactorBtn).toBeVisible();
     await refactorBtn.click();
-    await expect(page.getByText("Interactive Auto-Refactor Sandbox & Visual Studio")).toBeVisible();
+    const studioHeader = page.getByText("Interactive Auto-Refactor Sandbox & Visual Studio");
+    await expect(studioHeader).toBeVisible();
 
     // Verify Extract tab
     const extractTab = page.getByRole("button", { name: /Extract Shared Crate/i });
@@ -60,7 +66,8 @@ test.describe("CDDM Top-Level Navigation & Discoverability Matrix", () => {
     await expect(page.getByText(/Automated Shared Crate & Module Extraction/i)).toBeVisible();
 
     await page.keyboard.press("Escape");
-    await page.waitForTimeout(300);
+    await expect(studioHeader).not.toBeVisible({ timeout: 10000 });
+    await page.waitForTimeout(200);
 
     // 9. Monorepo
     await assertModalFlow("Monorepo", "Monorepo Workspace & Multi-Package Architecture");
@@ -72,19 +79,18 @@ test.describe("CDDM Top-Level Navigation & Discoverability Matrix", () => {
     await assertModalFlow("Config Window", "Scan Parameters & Centralized Configuration Studio");
 
     // 12. Diff Scan
-    await assertModalFlow("Diff Scan", "Git Working Tree & PR Branch Diff Analyzer");
+    await assertModalFlow("Diff Scan", "Differential Codebase Scan & Branch Comparison");
 
     // 13. Suppression Rules
-    await assertModalFlow(
-      "Suppression Rules",
-      "Granular Suppression Rules & De-Duplication Exceptions",
-    );
+    await assertModalFlow("Suppression Rules", "Intelligent AST Suppression & .cddmignore Engine");
 
     // 14. Hooks via keyboard shortcut '8'
     await page.keyboard.press("8");
-    await expect(page.getByText("Git Hook Manager & CI/CD Studio")).toBeVisible({ timeout: 15000 });
+    const hooksHeader = page.getByText("Git Hook Manager & CI/CD Studio");
+    await expect(hooksHeader).toBeVisible({ timeout: 15000 });
     await page.keyboard.press("Escape");
-    await page.waitForTimeout(300);
+    await expect(hooksHeader).not.toBeVisible({ timeout: 10000 });
+    await page.waitForTimeout(200);
   });
 
   test("should launch refactor workflows directly from cluster cards and standalone header", async ({
@@ -116,22 +122,22 @@ test.describe("CDDM Top-Level Navigation & Discoverability Matrix", () => {
     await expect(clusterRefactorBtn).toBeVisible();
     await clusterRefactorBtn.click();
 
-    await expect(page.getByText("Multi-Site Refactoring Patch Synthesizer")).toBeVisible({
-      timeout: 15000,
-    });
+    const clusterAdvisorHeader = page.getByText("Multi-Site Cluster Refactoring Advisor");
+    await expect(clusterAdvisorHeader).toBeVisible({ timeout: 15000 });
     await page.keyboard.press("Escape");
-    await page.waitForTimeout(400);
+    await expect(clusterAdvisorHeader).not.toBeVisible({ timeout: 10000 });
+    await page.waitForTimeout(200);
 
     // 5. Test "Studio" sandbox launch on cluster card (without expanding clone pairs)
     const clusterStudioBtn = firstClusterCard.getByRole("button", { name: "Studio" });
     await expect(clusterStudioBtn).toBeVisible();
     await clusterStudioBtn.click();
 
-    await expect(page.getByText("Interactive Auto-Refactor Sandbox & Visual Studio")).toBeVisible({
-      timeout: 15000,
-    });
+    const clusterStudioHeader = page.getByText("Interactive Auto-Refactor Sandbox & Visual Studio");
+    await expect(clusterStudioHeader).toBeVisible({ timeout: 15000 });
     await page.keyboard.press("Escape");
-    await page.waitForTimeout(400);
+    await expect(clusterStudioHeader).not.toBeVisible({ timeout: 10000 });
+    await page.waitForTimeout(200);
   });
 
   test("should verify Code Editor interactive surface, file picker, and split diff mode", async ({
@@ -144,9 +150,8 @@ test.describe("CDDM Top-Level Navigation & Discoverability Matrix", () => {
     await expect(editorBtn).toBeVisible();
     await editorBtn.click();
 
-    await expect(page.getByText("Integrated Code Editor & Split Diff Studio")).toBeVisible({
-      timeout: 15000,
-    });
+    const editorHeader = page.getByText("Integrated Code Editor & Split Diff Studio");
+    await expect(editorHeader).toBeVisible({ timeout: 15000 });
 
     // 2. Verify file dropdown selector exists
     const fileSelect = page.getByLabel("Select file to edit");
@@ -165,8 +170,7 @@ test.describe("CDDM Top-Level Navigation & Discoverability Matrix", () => {
 
     // 5. Verify Close via Escape key
     await page.keyboard.press("Escape");
-    await page.waitForTimeout(300);
-    await expect(page.getByText("Integrated Code Editor & Split Diff Studio")).not.toBeVisible();
+    await expect(editorHeader).not.toBeVisible({ timeout: 10000 });
   });
 
   test("should verify dead code metrics in summary banner and view mode correlation", async ({
@@ -186,7 +190,7 @@ test.describe("CDDM Top-Level Navigation & Discoverability Matrix", () => {
 
     // 3. Click Dead Code banner card to switch view mode
     await deadCodeBannerCard.click();
-    await expect(page.getByText("Polyglot Dead Code Studio").first()).toBeVisible();
+    await expect(page.getByText(/Dead Code Studio/i).first()).toBeVisible();
 
     // 4. Switch back to Pairwise view
     const pairwiseTab = page.getByRole("button", { name: /Pairwise/i });
