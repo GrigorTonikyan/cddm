@@ -7,26 +7,11 @@ use crate::protocol::{JsonRpcResponse, make_error_response, make_text_response, 
 
 /// Handle tool `cddm_detect_dead_code`: finds unreferenced functions, unreachable blocks, and dead clones.
 pub async fn handle_detect_dead_code(id: Option<Value>, args: Option<&Value>) -> JsonRpcResponse {
-    let directory = args
-        .and_then(|a| a.get("directory"))
-        .and_then(|d| d.as_str())
-        .unwrap_or(".");
-    let min_tokens = args
-        .and_then(|a| a.get("min_tokens"))
-        .and_then(|m| m.as_u64())
-        .unwrap_or(30) as usize;
-    let static_only = args
-        .and_then(|a| a.get("static_only"))
-        .and_then(|s| s.as_bool())
-        .unwrap_or(false);
-    let report_path = args
-        .and_then(|a| a.get("report_path"))
-        .and_then(|p| p.as_str())
-        .map(String::from);
-    let report_content = args
-        .and_then(|a| a.get("report_content"))
-        .and_then(|c| c.as_str())
-        .map(String::from);
+    let (directory, _) = crate::tools::helpers::parse_dir_and_tokens(args);
+    let min_tokens = crate::tools::helpers::get_usize_param(args, "min_tokens", 30);
+    let static_only = crate::tools::helpers::get_bool_param(args, "static_only", false);
+    let report_path = crate::tools::helpers::get_string_param(args, "report_path");
+    let report_content = crate::tools::helpers::get_string_param(args, "report_content");
     let include_ignored = args
         .and_then(|a| a.get("include_ignored"))
         .and_then(|b| b.as_bool());
@@ -58,22 +43,10 @@ pub async fn handle_detect_dead_code(id: Option<Value>, args: Option<&Value>) ->
 
 /// Handle tool `cddm_prune_dead_clones`: safely prunes dead clone clusters with closed-loop reachability verification.
 pub async fn handle_prune_dead_clones(id: Option<Value>, args: Option<&Value>) -> JsonRpcResponse {
-    let directory = args
-        .and_then(|a| a.get("directory"))
-        .and_then(|d| d.as_str())
-        .unwrap_or(".");
-    let min_tokens = args
-        .and_then(|a| a.get("min_tokens"))
-        .and_then(|m| m.as_u64())
-        .unwrap_or(30) as usize;
-    let dry_run = args
-        .and_then(|a| a.get("dry_run"))
-        .and_then(|s| s.as_bool())
-        .unwrap_or(false);
-    let safe_only = args
-        .and_then(|a| a.get("safe_only"))
-        .and_then(|s| s.as_bool())
-        .unwrap_or(true);
+    let (directory, _) = crate::tools::helpers::parse_dir_and_tokens(args);
+    let min_tokens = crate::tools::helpers::get_usize_param(args, "min_tokens", 30);
+    let dry_run = crate::tools::helpers::get_bool_param(args, "dry_run", false);
+    let safe_only = crate::tools::helpers::get_bool_param(args, "safe_only", true);
     let threshold = args
         .and_then(|a| a.get("threshold"))
         .and_then(|t| t.as_f64())

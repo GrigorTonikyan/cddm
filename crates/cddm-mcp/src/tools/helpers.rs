@@ -72,31 +72,38 @@ pub fn parse_dir_and_tokens(args: Option<&serde_json::Value>) -> (&str, usize) {
     (dir, min_tokens)
 }
 
+pub fn get_bool_param(args: Option<&serde_json::Value>, key: &str, default: bool) -> bool {
+    args.and_then(|a| a.get(key))
+        .and_then(|v| v.as_bool())
+        .unwrap_or(default)
+}
+
+pub fn get_usize_param(args: Option<&serde_json::Value>, key: &str, default: usize) -> usize {
+    args.and_then(|a| a.get(key))
+        .and_then(|v| v.as_u64())
+        .map(|v| v as usize)
+        .unwrap_or(default)
+}
+
+pub fn get_string_param(args: Option<&serde_json::Value>, key: &str) -> Option<String> {
+    args.and_then(|a| a.get(key))
+        .and_then(|v| v.as_str())
+        .map(String::from)
+}
+
 pub async fn run_scan_from_mcp_args(
     args: Option<&serde_json::Value>,
     enable_git_blame: bool,
 ) -> Result<ScanResult, String> {
     let (dir, min_tokens) = parse_dir_and_tokens(args);
-    let cross_language = args
-        .and_then(|a| a.get("cross_language"))
-        .and_then(|b| b.as_bool())
-        .unwrap_or(true);
-    let detect_type3 = args
-        .and_then(|a| a.get("detect_type3"))
-        .and_then(|b| b.as_bool())
-        .unwrap_or(true);
-    let detect_type4 = args
-        .and_then(|a| a.get("detect_type4"))
-        .and_then(|b| b.as_bool())
-        .unwrap_or(true);
+    let cross_language = get_bool_param(args, "cross_language", true);
+    let detect_type3 = get_bool_param(args, "detect_type3", true);
+    let detect_type4 = get_bool_param(args, "detect_type4", true);
     let threads = args
         .and_then(|a| a.get("threads"))
         .and_then(|v| v.as_u64())
         .map(|v| v as usize);
-    let include_ignored = args
-        .and_then(|a| a.get("include_ignored"))
-        .and_then(|b| b.as_bool())
-        .unwrap_or(false);
+    let include_ignored = get_bool_param(args, "include_ignored", false);
 
     let config = ScanConfig {
         directory: dir.to_string(),

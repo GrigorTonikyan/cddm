@@ -133,19 +133,7 @@ pub async fn file_read_handler(
         )
     })?;
 
-    let meta = fs::metadata(&canonical).map_err(|e| {
-        (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            format!("Failed to read metadata for '{}': {}", query.path, e),
-        )
-    })?;
-
-    let modified_timestamp_ms = meta
-        .modified()
-        .ok()
-        .and_then(|t| t.duration_since(UNIX_EPOCH).ok())
-        .map(|d| d.as_millis() as u64)
-        .unwrap_or(0);
+    let modified_timestamp_ms = read_modified_timestamp(&canonical, &query.path)?;
 
     let language = get_grammar_for_path(&canonical)
         .map(|g| g.name.to_string())
@@ -179,22 +167,7 @@ pub async fn file_save_handler(
         )
     })?;
 
-    let meta = fs::metadata(&canonical).map_err(|e| {
-        (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            format!(
-                "Failed to read metadata after writing '{}': {}",
-                req.path, e
-            ),
-        )
-    })?;
-
-    let modified_timestamp_ms = meta
-        .modified()
-        .ok()
-        .and_then(|t| t.duration_since(UNIX_EPOCH).ok())
-        .map(|d| d.as_millis() as u64)
-        .unwrap_or(0);
+    let modified_timestamp_ms = read_modified_timestamp(&canonical, &req.path)?;
 
     let display_path = get_relative_display_path(&canonical);
 
@@ -209,6 +182,25 @@ pub async fn file_save_handler(
         success: true,
         modified_timestamp_ms,
     }))
+}
+
+fn read_modified_timestamp(
+    canonical: &Path,
+    display_path: &str,
+) -> Result<u64, (StatusCode, String)> {
+    let meta = fs::metadata(canonical).map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("Failed to read metadata for '{}': {}", display_path, e),
+        )
+    })?;
+
+    Ok(meta
+        .modified()
+        .ok()
+        .and_then(|t| t.duration_since(UNIX_EPOCH).ok())
+        .map(|d| d.as_millis() as u64)
+        .unwrap_or(0))
 }
 
 /// Recursively scans workspace directories for editable files, ignoring build artifacts.
