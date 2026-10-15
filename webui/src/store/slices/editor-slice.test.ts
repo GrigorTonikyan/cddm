@@ -123,24 +123,54 @@ describe("EditorSlice Store", () => {
       });
     });
 
-    await state.openDiffInEditor("fileA.ts", "fileB.ts");
+    await state.openDiffInEditor("fileA.ts", "fileB.ts", [10, 20], [30, 40]);
 
     expect(state.editorSplitDiffMode).toBe(true);
     expect(state.editorDiffFileA).toBe("fileA.ts");
     expect(state.editorDiffFileB).toBe("fileB.ts");
     expect(state.editorDiffContentA).toBe("const a = 1;");
     expect(state.editorDiffContentB).toBe("const b = 2;");
+    expect(state.targetLine).toBe(30);
+    expect(state.targetRangeA).toEqual([10, 20]);
+    expect(state.targetRangeB).toEqual([30, 40]);
+  });
+
+  it("should record targetLine when opening file with specific line", async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        path: "src/main.rs",
+        content: "line 1\nline 2\nline 3",
+        language: "Rust",
+        size_bytes: 20,
+        total_lines: 3,
+        modified_timestamp_ms: 12345,
+      }),
+    });
+
+    await state.openFileInEditor("src/main.rs", 42);
+
+    expect(state.activeEditorFile).toBe("src/main.rs");
+    expect(state.targetLine).toBe(42);
+    expect(state.targetRangeA).toBeNull();
+    expect(state.targetRangeB).toBeNull();
   });
 
   it("should close editor cleanly", () => {
     state.isCodeEditorOpen = true;
     state.editorError = "some error";
     state.editorSaveSuccess = true;
+    state.targetLine = 42;
+    state.targetRangeA = [1, 2];
+    state.targetRangeB = [3, 4];
 
     state.closeCodeEditor();
 
     expect(state.isCodeEditorOpen).toBe(false);
     expect(state.editorError).toBeNull();
     expect(state.editorSaveSuccess).toBe(false);
+    expect(state.targetLine).toBeNull();
+    expect(state.targetRangeA).toBeNull();
+    expect(state.targetRangeB).toBeNull();
   });
 });

@@ -62,6 +62,8 @@ export const RefactorPatchModal: React.FC<RefactorPatchModalProps> = ({
   const [copiedPatch, setCopiedPatch] = useState<boolean>(false);
   const [downloaded, setDownloaded] = useState<boolean>(false);
   const [applied, setApplied] = useState<boolean>(false);
+  const [aiProvider, setAiProvider] = useState<string>("mock");
+  const [aiModel, setAiModel] = useState<string>("");
 
   const { streamingPatch, isStreaming, streamError, startStream, stopStream, resetStream } =
     useRefactorStream();
@@ -191,6 +193,8 @@ export const RefactorPatchModal: React.FC<RefactorPatchModalProps> = ({
         fileB: fileB || cluster?.occurrences[1]?.file || "",
         startLineB: startLineB ?? cluster?.occurrences[1]?.start_line ?? 1,
         endLineB: endLineB ?? cluster?.occurrences[1]?.end_line ?? 1,
+        provider: aiProvider,
+        model: aiModel || undefined,
       });
     }
   };
@@ -305,6 +309,28 @@ export const RefactorPatchModal: React.FC<RefactorPatchModalProps> = ({
             defaultOpen={true}
             actions={
               <>
+                <select
+                  value={aiProvider}
+                  onChange={(e) => setAiProvider(e.target.value)}
+                  disabled={isStreaming}
+                  className="px-2 py-1 rounded bg-slate-900 border border-slate-700 text-slate-300 text-[11px] font-mono focus:outline-none"
+                  title="AI Provider"
+                >
+                  <option value="mock">Mock</option>
+                  <option value="anthropic">Claude</option>
+                  <option value="openai">OpenAI</option>
+                  <option value="ollama">Ollama</option>
+                  <option value="deepseek">DeepSeek</option>
+                </select>
+                <input
+                  type="text"
+                  value={aiModel}
+                  onChange={(e) => setAiModel(e.target.value)}
+                  placeholder="model"
+                  disabled={isStreaming}
+                  className="w-20 px-1.5 py-1 rounded bg-slate-900 border border-slate-700 text-slate-300 text-[11px] font-mono focus:outline-none"
+                  title="AI Model (optional)"
+                />
                 <button
                   type="button"
                   onClick={handleTriggerStream}

@@ -171,4 +171,14 @@ describe("HubFederationModal Component", () => {
     expect(screen.getByText("Organization Federation Hub (.cddmhub.toml)")).toBeDefined();
     expect(screen.getByText("Loading organization graph...")).toBeDefined();
   });
+
+  it("should switch to config tab and display hub configuration fields", async () => {
+    await renderAsyncWithWin2x(
+      <HubFederationModal isOpen={true} onClose={vi.fn()} initialSummary={mockSummary} />,
+    );
+
+    await clickElementAsync(/Hub Configuration/);
+    expect(screen.getByText("Hub Federation Configuration (.cddmhub.toml)")).toBeDefined();
+    expect(screen.getByText("Hub Organization Name")).toBeDefined();
+  });
 });

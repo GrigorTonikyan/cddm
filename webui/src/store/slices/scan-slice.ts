@@ -195,6 +195,23 @@ export const createScanSlice = (set: SetStoreState, get: GetStoreState) => ({
       { pack_file: packFile, target_cache_dir: targetCacheDir },
       "Cache import failed",
     ),
+
+  activeSimdEngine: null as string | null,
+
+  fetchHealth: async () => {
+    try {
+      const res = await fetch(API_ROUTES.HEALTH);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.simd_engine) {
+          set({ activeSimdEngine: data.simd_engine });
+        }
+        return data;
+      }
+    } catch {
+      // Graceful fallback
+    }
+  },
 });
 
 async function sendCachePackRequest(

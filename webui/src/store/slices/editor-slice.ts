@@ -25,6 +25,9 @@ export const initialEditorState = {
   editorDiffContentA: "",
   editorDiffContentB: "",
   editorFilesList: [] as WorkspaceFileEntry[],
+  targetLine: null as number | null,
+  targetRangeA: null as [number, number] | null,
+  targetRangeB: null as [number, number] | null,
 };
 
 export const createEditorSlice = (set: SetStoreState, get: GetStoreState) => ({
@@ -37,7 +40,7 @@ export const createEditorSlice = (set: SetStoreState, get: GetStoreState) => ({
     }
   },
 
-  openFileInEditor: async (path: string, _line?: number) => {
+  openFileInEditor: async (path: string, line?: number) => {
     set({
       isCodeEditorOpen: true,
       editorIsLoading: true,
@@ -45,6 +48,9 @@ export const createEditorSlice = (set: SetStoreState, get: GetStoreState) => ({
       editorSaveSuccess: false,
       editorSplitDiffMode: false,
       activeEditorFile: path,
+      targetLine: line ?? null,
+      targetRangeA: null,
+      targetRangeB: null,
     });
 
     try {
@@ -70,8 +76,8 @@ export const createEditorSlice = (set: SetStoreState, get: GetStoreState) => ({
   openDiffInEditor: async (
     fileA: string,
     fileB: string,
-    _rangeA?: [number, number],
-    _rangeB?: [number, number],
+    rangeA?: [number, number],
+    rangeB?: [number, number],
   ) => {
     set({
       isCodeEditorOpen: true,
@@ -82,6 +88,9 @@ export const createEditorSlice = (set: SetStoreState, get: GetStoreState) => ({
       editorDiffFileA: fileA,
       editorDiffFileB: fileB,
       activeEditorFile: fileB,
+      targetLine: rangeB ? rangeB[0] : rangeA ? rangeA[0] : null,
+      targetRangeA: rangeA ?? null,
+      targetRangeB: rangeB ?? null,
     });
 
     try {
@@ -188,6 +197,9 @@ export const createEditorSlice = (set: SetStoreState, get: GetStoreState) => ({
       isCodeEditorOpen: false,
       editorError: null,
       editorSaveSuccess: false,
+      targetLine: null,
+      targetRangeA: null,
+      targetRangeB: null,
     });
   },
 });

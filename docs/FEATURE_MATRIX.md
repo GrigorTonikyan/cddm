@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-27 | Rust: 402 #[test] units | WebUI: 332 tests across 77 suites | Scripts & MCP: 215 tests across 61 suites | CI Workflows: PASS
+> Last verified: 2026-08-27 | Rust: 402 #[test] units | WebUI: 334 tests across 77 suites | Scripts & MCP: 215 tests across 61 suites | CI Workflows: PASS
 
 ---
 
@@ -358,7 +358,7 @@
 
 ---
 
-## 2. WebUI Frontend — React 19 + TypeScript + Vitest (332 unit tests across 77 suites)
+## 2. WebUI Frontend — React 19 + TypeScript + Vitest (334 unit tests across 77 suites)
 
 | Module                      | Test Suite File                                                                       | Test Cases | Status |
 | :-------------------------- | :------------------------------------------------------------------------------------ | :--------- | :----- |
@@ -375,7 +375,7 @@
 | Export Report Modal         | `webui/src/components/ExportReportModal.test.tsx`                                     | 4 tests    | PASS   |
 | Health Audit Modal          | `webui/src/components/HealthAuditModal.test.tsx`                                      | 4 tests    | PASS   |
 | Hook Manager Modal          | `webui/src/components/HookManagerModal.test.tsx`                                      | 5 tests    | PASS   |
-| Hub Federation Modal        | `webui/src/components/HubFederationModal.test.tsx`                                    | 5 tests    | PASS   |
+| Hub Federation Modal        | `webui/src/components/HubFederationModal.test.tsx`                                    | 6 tests    | PASS   |
 | Language Analytics Modal    | `webui/src/components/LanguageAnalyticsModal.test.tsx`                                | 3 tests    | PASS   |
 | Mcp Apps Preview Modal      | `webui/src/components/McpAppsPreviewModal.test.tsx`                                   | 4 tests    | PASS   |
 | Monorepo Workspace Modal    | `webui/src/components/MonorepoWorkspaceModal.test.tsx`                                | 6 tests    | PASS   |
@@ -427,7 +427,7 @@
 | hub-slice                   | `webui/src/store/hub-slice.test.ts`                                                   | 6 tests    | PASS   |
 | Semantic Slice              | `webui/src/store/semantic-slice.test.ts`                                              | 7 tests    | PASS   |
 | coverage-slice              | `webui/src/store/slices/coverage-slice.test.ts`                                       | 3 tests    | PASS   |
-| editor-slice                | `webui/src/store/slices/editor-slice.test.ts`                                         | 7 tests    | PASS   |
+| editor-slice                | `webui/src/store/slices/editor-slice.test.ts`                                         | 8 tests    | PASS   |
 | Watch Slice                 | `webui/src/store/watch-slice.test.ts`                                                 | 6 tests    | PASS   |
 | Type System                 | `webui/src/types/cddm-types.test.ts`                                                  | 2 tests    | PASS   |
 | api-client                  | `webui/src/utils/api-client.test.ts`                                                  | 4 tests    | PASS   |

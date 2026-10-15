@@ -69,4 +69,15 @@ export const createDeadCodeSlice = (set: SetStoreState, _get: GetStoreState) => 
       };
     }
   },
+
+  fetchReachability: async () => {
+    try {
+      const res = await fetch(API_ROUTES.DEAD_CODE_REACHABILITY);
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch {
+      // Graceful fallback
+    }
+  },
 });
