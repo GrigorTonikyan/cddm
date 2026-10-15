@@ -24,8 +24,14 @@ pub fn handle_get_semantic_graph(
         }
     };
 
-    let code_opt = args_obj.get("code").and_then(|v| v.as_str());
-    let file_opt = args_obj.get("file").and_then(|v| v.as_str());
+    let code_opt = args_obj
+        .get("code")
+        .or_else(|| args_obj.get("code_content"))
+        .and_then(|v| v.as_str());
+    let file_opt = args_obj
+        .get("file")
+        .or_else(|| args_obj.get("file_path"))
+        .and_then(|v| v.as_str());
     let lang_opt = args_obj.get("language").and_then(|v| v.as_str());
 
     let (path_str, code_str, lang_str) = if let Some(code) = code_opt {
@@ -56,7 +62,7 @@ pub fn handle_get_semantic_graph(
         return make_error_response(
             id,
             rpc_errors::INVALID_PARAMS,
-            "Either 'code' or 'file' must be provided",
+            "Either 'code' (or 'code_content') or 'file' (or 'file_path') must be provided",
         );
     };
 

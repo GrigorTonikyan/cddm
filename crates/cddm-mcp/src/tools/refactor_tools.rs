@@ -1,49 +1,41 @@
 #![forbid(unsafe_code)]
 
-use super::helpers::{get_bool_arg, get_str_arg, parse_clone_pair_args, run_scan_from_mcp_args};
+use super::helpers::{
+    get_bool_arg, get_str_arg, parse_clone_pair_args, parse_occurrences_locations,
+    resolve_occurrences_from_args, run_scan_from_mcp_args,
+};
 use crate::protocol::{
     JsonRpcResponse, make_app_widget_response, make_error_response, make_text_response, mcp_tools,
     rpc_errors,
 };
 use cddm_core::{
-    AiRefactorPromptRequest, CloneLocation, CloneType, DEFAULT_EXTRACTED_FUNCTION_NAME,
-    DEFAULT_HEAL_ITERATIONS, DEFAULT_HEAL_LINES_SAVED_MULTIPLIER, DEFAULT_HEAL_SIMILARITY,
-    DEFAULT_HEAL_TOKEN_COUNT, DEFAULT_PROVIDER_TIMEOUT_SECS, DEFAULT_TARGET_MODULE,
-    DEFAULT_TEMPERATURE, analyze_clone_refactoring, analyze_cluster_refactoring,
-    apply_cluster_refactor_branch, generate_ai_refactor_prompt, generate_ast_cluster_refactor,
-    verify_refactor_test_suite,
+    AiRefactorPromptRequest, CloneType, DEFAULT_EXTRACTED_FUNCTION_NAME, DEFAULT_HEAL_ITERATIONS,
+    DEFAULT_HEAL_LINES_SAVED_MULTIPLIER, DEFAULT_HEAL_SIMILARITY, DEFAULT_HEAL_TOKEN_COUNT,
+    DEFAULT_PROVIDER_TIMEOUT_SECS, DEFAULT_TARGET_MODULE, DEFAULT_TEMPERATURE,
+    analyze_clone_refactoring, analyze_cluster_refactoring, apply_cluster_refactor_branch,
+    generate_ai_refactor_prompt, generate_ast_cluster_refactor, verify_refactor_test_suite,
 };
 use std::path::Path;
 
-fn parse_occurrences_locations(args_val: &serde_json::Value) -> Vec<CloneLocation> {
-    args_val
-        .get("occurrences")
-        .and_then(|v| v.as_array())
-        .map(|arr| {
-            arr.iter()
-                .map(|item| {
-                    let path = item
-                        .get("file")
-                        .or_else(|| item.get("path"))
-                        .and_then(|p| p.as_str())
-                        .unwrap_or("")
-                        .to_string();
-                    let s_line =
-                        item.get("start_line").and_then(|l| l.as_u64()).unwrap_or(1) as usize;
-                    let e_line = item
-                        .get("end_line")
-                        .and_then(|l| l.as_u64())
-                        .unwrap_or(s_line as u64) as usize;
-                    CloneLocation {
-                        file: path,
-                        start_line: s_line,
-                        end_line: e_line,
-                        author: None,
-                    }
-                })
-                .collect()
-        })
-        .unwrap_or_default()
+fn respond_suggestion<T: serde::Serialize>(
+    id: Option<serde_json::Value>,
+    suggestion: &T,
+    widget: Option<crate::apps::types::AppWidget>,
+) -> JsonRpcResponse {
+    if let Some(w) = widget {
+        let widget_val = serde_json::to_value(&w).unwrap_or_default();
+        let mut val = serde_json::to_value(suggestion).unwrap_or_default();
+        if let Some(obj) = val.as_object_mut() {
+            obj.insert("_widget".to_string(), widget_val.clone());
+        }
+        let json_text = serde_json::to_string_pretty(&val).unwrap_or_default();
+        make_app_widget_response(id, json_text, &widget_val)
+    } else {
+        make_text_response(
+            id,
+            serde_json::to_string_pretty(suggestion).unwrap_or_default(),
+        )
+    }
 }
 
 pub fn handle_suggest_refactor(
@@ -53,13 +45,9 @@ pub fn handle_suggest_refactor(
     if let Some((fa, sa, ea, fb, sb, eb)) = parse_clone_pair_args(args) {
         match analyze_clone_refactoring(fa, (sa, ea), fb, (sb, eb)) {
             Ok(suggestion) => {
-                let include_widget = args
-                    .and_then(|a| a.get(mcp_tools::PARAM_INCLUDE_WIDGET))
-                    .and_then(|v| v.as_bool())
-                    .unwrap_or(false);
-                if include_widget {
+                let widget = if get_bool_arg(args, mcp_tools::PARAM_INCLUDE_WIDGET, false) {
                     let common_body = suggestion.common_body_lines.join("\n");
-                    let widget = crate::apps::generate_diff_split_view_widget(
+                    Some(crate::apps::generate_diff_split_view_widget(
                         "Clone Pair Refactoring Diff",
                         fa,
                         (sa, ea),
@@ -68,18 +56,11 @@ pub fn handle_suggest_refactor(
                         &common_body,
                         &common_body,
                         Some(&suggestion.unified_patch),
-                    );
-                    let widget_val = serde_json::to_value(&widget).unwrap_or_default();
-                    let mut val = serde_json::to_value(&suggestion).unwrap_or_default();
-                    if let Some(obj) = val.as_object_mut() {
-                        obj.insert("_widget".to_string(), widget_val.clone());
-                    }
-                    let json_text = serde_json::to_string_pretty(&val).unwrap_or_default();
-                    make_app_widget_response(id, json_text, &widget_val)
+                    ))
                 } else {
-                    let json_text = serde_json::to_string_pretty(&suggestion).unwrap_or_default();
-                    make_text_response(id, json_text)
-                }
+                    None
+                };
+                respond_suggestion(id, &suggestion, widget)
             }
             Err(e) => make_error_response(id, rpc_errors::INVALID_PARAMS, e),
         }
@@ -114,17 +95,13 @@ pub async fn handle_suggest_cluster_refactor(
 
         match analyze_cluster_refactoring("cluster-custom", &explicit_occs) {
             Ok(suggestion) => {
-                let include_widget = args
-                    .and_then(|a| a.get(mcp_tools::PARAM_INCLUDE_WIDGET))
-                    .and_then(|v| v.as_bool())
-                    .unwrap_or(false);
-                if include_widget {
+                let widget = if get_bool_arg(args, mcp_tools::PARAM_INCLUDE_WIDGET, false) {
                     let first_file = explicit_occs
                         .first()
                         .map(|o| o.file.as_str())
                         .unwrap_or("site_a.rs");
                     let common_body = suggestion.common_body_lines.join("\n");
-                    let widget = crate::apps::generate_diff_split_view_widget(
+                    Some(crate::apps::generate_diff_split_view_widget(
                         "Cluster Refactoring Diff",
                         first_file,
                         (1, 1),
@@ -133,64 +110,43 @@ pub async fn handle_suggest_cluster_refactor(
                         &common_body,
                         &common_body,
                         Some(&suggestion.unified_patch),
-                    );
-                    let widget_val = serde_json::to_value(&widget).unwrap_or_default();
-                    let mut val = serde_json::to_value(&suggestion).unwrap_or_default();
-                    if let Some(obj) = val.as_object_mut() {
-                        obj.insert("_widget".to_string(), widget_val.clone());
-                    }
-                    let json_text = serde_json::to_string_pretty(&val).unwrap_or_default();
-                    make_app_widget_response(id, json_text, &widget_val)
+                    ))
                 } else {
-                    let json_text = serde_json::to_string_pretty(&suggestion).unwrap_or_default();
-                    make_text_response(id, json_text)
-                }
+                    None
+                };
+                respond_suggestion(id, &suggestion, widget)
             }
             Err(e) => make_error_response(id, rpc_errors::INVALID_PARAMS, e),
         }
     } else if let Some(target_id) = cluster_id_opt {
         match run_scan_from_mcp_args(args, false).await {
             Ok(scan_res) => {
-                let found = scan_res.clone_clusters.iter().find(|c| c.id == target_id);
-
-                if let Some(cluster) = found {
+                if let Some(cluster) = scan_res.clone_clusters.iter().find(|c| c.id == target_id) {
                     match analyze_cluster_refactoring(&cluster.id.to_string(), &cluster.occurrences)
                     {
                         Ok(suggestion) => {
-                            let include_widget = args
-                                .and_then(|a| a.get(mcp_tools::PARAM_INCLUDE_WIDGET))
-                                .and_then(|v| v.as_bool())
-                                .unwrap_or(false);
-                            if include_widget {
-                                let first_file = cluster
-                                    .occurrences
-                                    .first()
-                                    .map(|o| o.file.as_str())
-                                    .unwrap_or("cluster_site.rs");
-                                let common_body = suggestion.common_body_lines.join("\n");
-                                let widget = crate::apps::generate_diff_split_view_widget(
-                                    &format!("Cluster #{} Refactoring Diff", cluster.id),
-                                    first_file,
-                                    (1, 1),
-                                    &suggestion.target_module_hint,
-                                    (1, 1),
-                                    &common_body,
-                                    &common_body,
-                                    Some(&suggestion.unified_patch),
-                                );
-                                let widget_val = serde_json::to_value(&widget).unwrap_or_default();
-                                let mut val = serde_json::to_value(&suggestion).unwrap_or_default();
-                                if let Some(obj) = val.as_object_mut() {
-                                    obj.insert("_widget".to_string(), widget_val.clone());
-                                }
-                                let json_text =
-                                    serde_json::to_string_pretty(&val).unwrap_or_default();
-                                make_app_widget_response(id, json_text, &widget_val)
-                            } else {
-                                let json_text =
-                                    serde_json::to_string_pretty(&suggestion).unwrap_or_default();
-                                make_text_response(id, json_text)
-                            }
+                            let widget =
+                                if get_bool_arg(args, mcp_tools::PARAM_INCLUDE_WIDGET, false) {
+                                    let first_file = cluster
+                                        .occurrences
+                                        .first()
+                                        .map(|o| o.file.as_str())
+                                        .unwrap_or("cluster_site.rs");
+                                    let common_body = suggestion.common_body_lines.join("\n");
+                                    Some(crate::apps::generate_diff_split_view_widget(
+                                        &format!("Cluster #{} Refactoring Diff", cluster.id),
+                                        first_file,
+                                        (1, 1),
+                                        &suggestion.target_module_hint,
+                                        (1, 1),
+                                        &common_body,
+                                        &common_body,
+                                        Some(&suggestion.unified_patch),
+                                    ))
+                                } else {
+                                    None
+                                };
+                            respond_suggestion(id, &suggestion, widget)
                         }
                         Err(e) => make_error_response(id, rpc_errors::INVALID_PARAMS, e),
                     }
@@ -218,14 +174,37 @@ pub fn handle_apply_cluster_refactor(
     args: Option<&serde_json::Value>,
 ) -> JsonRpcResponse {
     if let Some(patch) = get_str_arg(args, mcp_tools::PARAM_PATCH) {
-        let branch_name = get_str_arg(args, mcp_tools::PARAM_BRANCH_NAME);
-        let create_branch = get_bool_arg(args, mcp_tools::PARAM_CREATE_BRANCH, false);
+        let dry_run = get_bool_arg(args, "dry_run", false);
+        let (branch_name, create_branch) =
+            match args.and_then(|a| a.get(mcp_tools::PARAM_CREATE_BRANCH)) {
+                Some(serde_json::Value::String(s)) => (Some(s.as_str()), true),
+                Some(serde_json::Value::Bool(b)) => {
+                    (get_str_arg(args, mcp_tools::PARAM_BRANCH_NAME), *b)
+                }
+                _ => (get_str_arg(args, mcp_tools::PARAM_BRANCH_NAME), false),
+            };
 
-        match apply_cluster_refactor_branch(Path::new("."), patch, branch_name, create_branch) {
-            Ok(res) => {
-                make_text_response(id, serde_json::to_string_pretty(&res).unwrap_or_default())
+        if dry_run {
+            match cddm_core::apply_patch_to_workspace(patch, true) {
+                Ok(patch_res) => {
+                    let res = cddm_core::types::ApplyRefactorBranchResult {
+                        success: patch_res.success,
+                        branch_created: None,
+                        modified_files: patch_res.modified_files,
+                        hunks_applied: patch_res.hunks_applied,
+                        message: format!("[DRY RUN] {}", patch_res.message),
+                    };
+                    make_text_response(id, serde_json::to_string_pretty(&res).unwrap_or_default())
+                }
+                Err(e) => make_error_response(id, rpc_errors::INTERNAL_ERROR, e),
             }
-            Err(e) => make_error_response(id, rpc_errors::INTERNAL_ERROR, e),
+        } else {
+            match apply_cluster_refactor_branch(Path::new("."), patch, branch_name, create_branch) {
+                Ok(res) => {
+                    make_text_response(id, serde_json::to_string_pretty(&res).unwrap_or_default())
+                }
+                Err(e) => make_error_response(id, rpc_errors::INTERNAL_ERROR, e),
+            }
         }
     } else {
         make_error_response(
@@ -236,13 +215,14 @@ pub fn handle_apply_cluster_refactor(
     }
 }
 
-pub fn handle_generate_ai_prompt(
+pub async fn handle_generate_ai_prompt(
     id: Option<serde_json::Value>,
     args: Option<&serde_json::Value>,
 ) -> JsonRpcResponse {
     if let Some(args_val) = args {
         let fn_name = args_val
             .get("function_name")
+            .or_else(|| args_val.get("custom_function_name"))
             .and_then(|v| v.as_str())
             .unwrap_or(DEFAULT_EXTRACTED_FUNCTION_NAME);
         let target_mod = args_val
@@ -253,10 +233,21 @@ pub fn handle_generate_ai_prompt(
             .get("invariant_body")
             .and_then(|v| v.as_str())
             .unwrap_or("");
-        let custom_inst = args_val
+        let mut custom_inst = args_val
             .get("custom_instructions")
             .and_then(|v| v.as_str())
             .map(|s| s.to_string());
+        if let Some(model_target) = args_val
+            .get("model_target")
+            .or_else(|| args_val.get("model"))
+            .and_then(|v| v.as_str())
+        {
+            let note = format!("Target model: {model_target}");
+            custom_inst = Some(match custom_inst {
+                Some(prev) => format!("{prev}\n{note}"),
+                None => note,
+            });
+        }
         let params: Vec<String> = args_val
             .get("parameters")
             .and_then(|v| v.as_array())
@@ -267,7 +258,7 @@ pub fn handle_generate_ai_prompt(
             })
             .unwrap_or_default();
 
-        let parsed_occs = parse_occurrences_locations(args_val);
+        let parsed_occs = resolve_occurrences_from_args(args).await;
         let occurrences = cddm_core::occurrences_to_ai_context(&parsed_occs);
 
         let prompt_req = AiRefactorPromptRequest {
@@ -385,6 +376,16 @@ pub fn handle_verify_refactor(
         .and_then(|a| a.get("timeout_seconds"))
         .and_then(|v| v.as_u64());
 
+    if let Some(patch) = args.and_then(|a| a.get("patch")).and_then(|v| v.as_str())
+        && let Err(e) = cddm_core::apply_patch_to_workspace_dir(Path::new(dir_str), patch, true)
+    {
+        return make_error_response(
+            id,
+            rpc_errors::INVALID_PARAMS,
+            format!("Patch verification failed: {e}"),
+        );
+    }
+
     match verify_refactor_test_suite(Path::new(dir_str), test_cmd, branch, timeout) {
         Ok(v_res) => {
             let json_str = serde_json::to_string_pretty(&v_res).unwrap_or_default();
@@ -437,9 +438,11 @@ pub async fn handle_heal_refactor(
         let fn_name = get_str("function_name");
         let target_mod = get_str("target_module");
 
+        let occurrences = resolve_occurrences_from_args(args).await;
+
         let provider_kind = match provider_str.to_lowercase().as_str() {
             "gemini" => cddm_core::AiProviderKind::Gemini,
-            "claude" => cddm_core::AiProviderKind::Claude,
+            "claude" | "anthropic" => cddm_core::AiProviderKind::Claude,
             "openai" => cddm_core::AiProviderKind::OpenAi,
             "ollama" => cddm_core::AiProviderKind::Ollama,
             "custom" => cddm_core::AiProviderKind::Custom,
@@ -449,7 +452,7 @@ pub async fn handle_heal_refactor(
         let req = cddm_core::HealRefactorRequest {
             cluster_id,
             pair_id,
-            occurrences: Vec::new(),
+            occurrences,
             function_name: fn_name,
             target_module: target_mod,
             custom_instructions: None,

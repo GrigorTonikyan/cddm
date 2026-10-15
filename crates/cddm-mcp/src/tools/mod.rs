@@ -58,7 +58,7 @@ pub async fn dispatch_tool_call(
         mcp_tools::APPLY_CLUSTER_REFACTOR => {
             refactor_tools::handle_apply_cluster_refactor(id, args)
         }
-        mcp_tools::GENERATE_AI_PROMPT => refactor_tools::handle_generate_ai_prompt(id, args),
+        mcp_tools::GENERATE_AI_PROMPT => refactor_tools::handle_generate_ai_prompt(id, args).await,
         mcp_tools::AST_REFACTOR => refactor_tools::handle_ast_refactor(id, args),
         mcp_tools::VERIFY_REFACTOR => refactor_tools::handle_verify_refactor(id, args),
         mcp_tools::CHECK_POLICIES => policy_tools::handle_check_policies(id, args).await,

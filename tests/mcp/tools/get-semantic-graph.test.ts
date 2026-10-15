@@ -16,6 +16,18 @@ describe("MCP Tool: cddm_get_semantic_graph", () => {
     expect(res.cfgs[0].wl_hash).toBeDefined();
   });
 
+  it("should support schema aliases file_path and code_content", async () => {
+    const res = await executeTool("cddm_get_semantic_graph", {
+      code_content: "fn test_alias(a: i32) -> i32 { a + 1 }",
+      file_path: "alias_test.rs",
+      language: "Rust",
+    });
+
+    expect(res).toBeDefined();
+    expect(res.cfg_count).toBeGreaterThanOrEqual(1);
+    expect(res.pdg_count).toBeGreaterThanOrEqual(1);
+  });
+
   it("should reject invocation when code or file is missing", async () => {
     await assertToolError("cddm_get_semantic_graph", {}, RPC_ERRORS.INVALID_PARAMS);
   });

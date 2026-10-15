@@ -47,7 +47,7 @@ pub async fn handle_extract_shared_module(
     let dry_run = args
         .and_then(|a| a.get("dry_run"))
         .and_then(|d| d.as_bool())
-        .unwrap_or(false);
+        .unwrap_or(true);
 
     let generate_tests = args
         .and_then(|a| a.get("generate_tests").or_else(|| a.get("tests")))
