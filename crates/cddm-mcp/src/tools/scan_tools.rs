@@ -119,7 +119,7 @@ pub fn handle_export_cache_pack(
         .and_then(|v| v.as_str())
         .unwrap_or(&default_db_str);
     let out_path_str = args
-        .and_then(|a| a.get("output_pack_path"))
+        .and_then(|a| a.get("output_file").or_else(|| a.get("output_pack_path")))
         .and_then(|v| v.as_str())
         .unwrap_or("cddm-cache.cddmpack");
 
@@ -140,7 +140,7 @@ pub fn handle_import_cache_pack(
         let default_target_dir = cddm_core::find_workspace_root(Path::new(".")).join(".cddm");
         let default_target_str = default_target_dir.to_string_lossy();
         let target_dir_str = args
-            .and_then(|a| a.get("target_cache_dir"))
+            .and_then(|a| a.get("target_dir").or_else(|| a.get("target_cache_dir")))
             .and_then(|v| v.as_str())
             .unwrap_or(&default_target_str);
 

@@ -126,7 +126,8 @@ pub fn get_tool_definitions() -> Vec<serde_json::Value> {
             obj_schema(
                 json!({
                     "patch": { "type": "string", "description": "Unified diff patch content" },
-                    mcp_tools::PARAM_CREATE_BRANCH: { "type": "string", "description": "Target branch name to create and commit onto (e.g. 'cddm/refactor-cluster-1')" },
+                    mcp_tools::PARAM_CREATE_BRANCH: { "type": "string", "description": "Target branch name to create and commit onto (e.g. 'cddm/refactor-cluster-1') or boolean toggle" },
+                    "branch_name": { "type": "string", "description": "Optional explicit target branch name" },
                     "dry_run": { "type": "boolean", "description": "Validate patch applicability without modifying disk (default: false)" }
                 }),
                 &["patch"],
@@ -139,7 +140,9 @@ pub fn get_tool_definitions() -> Vec<serde_json::Value> {
             obj_schema(
                 json!({
                     mcp_tools::PARAM_CLUSTER_ID: { "type": "number", "description": "1-based cluster index" },
+                    "pair_id": { "type": "number", "description": "1-based clone pair index" },
                     mcp_tools::PARAM_OCCURRENCES: { "type": "array", "items": occurrences_item_schema() },
+                    "function_name": { "type": "string", "description": "Suggested function name (optional, alias: custom_function_name)" },
                     "custom_function_name": { "type": "string", "description": "Suggested function name (optional)" },
                     "target_module": { "type": "string", "description": "Suggested target module path (optional)" },
                     "model_target": { "type": "string", "description": "Target AI model (default: gemini-3.8-pro, supports claude-3-7-sonnet, gpt-4o)" }
@@ -167,11 +170,13 @@ pub fn get_tool_definitions() -> Vec<serde_json::Value> {
              break existing test suites.",
             obj_schema(
                 json!({
-                    "patch": { "type": "string", "description": "Unified diff patch content" },
+                    "patch": { "type": "string", "description": "Unified diff patch content (optional, validated in dry-run mode)" },
+                    mcp_tools::PARAM_DIRECTORY: { "type": "string", "description": "Target directory to run tests in (default: .)" },
                     "test_command": { "type": "string", "description": "Custom test command to execute (e.g. 'cargo test', 'npm test')" },
+                    "branch_name": { "type": "string", "description": "Optional branch name to verify" },
                     "timeout_seconds": { "type": "number", "description": "Execution timeout in seconds (default: 30)" }
                 }),
-                &["patch"],
+                &[],
             ),
         ),
         tool_def(
@@ -196,13 +201,16 @@ pub fn get_tool_definitions() -> Vec<serde_json::Value> {
             obj_schema(
                 json!({
                     "cluster_id": { "type": "number", "description": "1-based cluster index" },
+                    "pair_id": { "type": "number", "description": "1-based clone pair index" },
+                    "occurrences": { "type": "array", "items": occurrences_item_schema(), "description": "Explicit occurrence locations (optional if cluster_id or pair_id provided)" },
+                    mcp_tools::PARAM_DIRECTORY: { "type": "string", "description": "Target directory (default: .)" },
                     "max_iterations": { "type": "number", "description": "Maximum healing retry iterations (default: 3)" },
                     "provider": { "type": "string", "description": "AI provider backend (mock, openai, anthropic, gemini)" },
                     "api_key": { "type": "string", "description": "Optional API key for AI provider" },
                     "model": { "type": "string", "description": "Model identifier (e.g. gemini-3.8-pro, claude-3-7-sonnet, gpt-4o)" },
                     "test_command": { "type": "string", "description": "Test command to verify refactoring (e.g. 'cargo test')" }
                 }),
-                &["cluster_id"],
+                &[],
             ),
         ),
         tool_def(
@@ -211,7 +219,8 @@ pub fn get_tool_definitions() -> Vec<serde_json::Value> {
              archive for CI/CD sharing.",
             obj_schema(
                 json!({
-                    "output_file": { "type": "string", "description": "Destination path for .cddmpack archive (default: cddm-cache.cddmpack)" },
+                    "output_file": { "type": "string", "description": "Destination path for .cddmpack archive (default: cddm-cache.cddmpack, alias: output_pack_path)" },
+                    "output_pack_path": { "type": "string", "description": "Alias for output_file" },
                     "cache_dir": { "type": "string", "description": "Path to persistent cache directory (default: .cddm/cache.db)" }
                 }),
                 &[],
@@ -224,7 +233,8 @@ pub fn get_tool_definitions() -> Vec<serde_json::Value> {
             obj_schema(
                 json!({
                     "pack_file": { "type": "string", "description": "Path to .cddmpack archive file to import" },
-                    "target_dir": { "type": "string", "description": "Destination cache directory (default: .cddm/cache.db)" }
+                    "target_dir": { "type": "string", "description": "Destination cache directory (default: .cddm/cache.db, alias: target_cache_dir)" },
+                    "target_cache_dir": { "type": "string", "description": "Alias for target_dir" }
                 }),
                 &["pack_file"],
             ),
@@ -241,8 +251,10 @@ pub fn get_tool_definitions() -> Vec<serde_json::Value> {
              for AST semantic analysis.",
             obj_schema(
                 json!({
-                    "file_path": { "type": "string", "description": "File path of source code" },
-                    "code_content": { "type": "string", "description": "Source code snippet (optional if file_path is provided)" },
+                    "file_path": { "type": "string", "description": "File path of source code (alias: file)" },
+                    "file": { "type": "string", "description": "Alias for file_path" },
+                    "code_content": { "type": "string", "description": "Source code snippet (alias: code)" },
+                    "code": { "type": "string", "description": "Alias for code_content" },
                     "language": { "type": "string", "description": "Programming language (e.g. rust, typescript, python)" }
                 }),
                 &[],

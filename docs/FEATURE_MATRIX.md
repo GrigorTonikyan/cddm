@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-27 | Rust: 402 #[test] units | WebUI: 332 tests across 77 suites | Scripts & MCP: 211 tests across 61 suites | CI Workflows: PASS
+> Last verified: 2026-08-27 | Rust: 402 #[test] units | WebUI: 332 tests across 77 suites | Scripts & MCP: 215 tests across 61 suites | CI Workflows: PASS
 
 ---
 
@@ -442,7 +442,7 @@
 
 ---
 
-## 3. Repository Scripts & MCP Protocol — Bun Test Suites (211 tests across 61 suites)
+## 3. Repository Scripts & MCP Protocol — Bun Test Suites (215 tests across 61 suites)
 
 ### Repository Tooling & Automation Suites
 
@@ -481,7 +481,7 @@
 | Tool / Protocol Feature             | Test Suite File                                    | Test Cases | Status |
 | :---------------------------------- | :------------------------------------------------- | :--------- | :----- |
 | MCP Dynamic Discovery               | `tests/mcp/discovery.test.ts`                      | 6 tests    | PASS   |
-| Tool: cddm_apply_cluster_refactor   | `tests/mcp/tools/apply-cluster-refactor.test.ts`   | 2 tests    | PASS   |
+| Tool: cddm_apply_cluster_refactor   | `tests/mcp/tools/apply-cluster-refactor.test.ts`   | 3 tests    | PASS   |
 | Tool: cddm_ast_refactor             | `tests/mcp/tools/ast-refactor.test.ts`             | 2 tests    | PASS   |
 | Tool: cddm_check_policies           | `tests/mcp/tools/check-policies.test.ts`           | 2 tests    | PASS   |
 | Tool: cddm_check_suppression        | `tests/mcp/tools/check-suppression.test.ts`        | 2 tests    | PASS   |
@@ -499,9 +499,9 @@
 | Tool: cddm_generate_ai_prompt       | `tests/mcp/tools/generate-ai-prompt.test.ts`       | 2 tests    | PASS   |
 | Tool: cddm_get_clone_cluster        | `tests/mcp/tools/get-clone-cluster.test.ts`        | 2 tests    | PASS   |
 | Tool: cddm_get_clone_pair           | `tests/mcp/tools/get-clone-pair.test.ts`           | 2 tests    | PASS   |
-| Tool: cddm_get_semantic_graph       | `tests/mcp/tools/get-semantic-graph.test.ts`       | 2 tests    | PASS   |
+| Tool: cddm_get_semantic_graph       | `tests/mcp/tools/get-semantic-graph.test.ts`       | 3 tests    | PASS   |
 | Tool: cddm_get_timeline             | `tests/mcp/tools/get-timeline.test.ts`             | 1 tests    | PASS   |
-| Tool: cddm_heal_refactor            | `tests/mcp/tools/heal-refactor.test.ts`            | 1 tests    | PASS   |
+| Tool: cddm_heal_refactor            | `tests/mcp/tools/heal-refactor.test.ts`            | 3 tests    | PASS   |
 | Tool: cddm_import_cache_pack        | `tests/mcp/tools/import-cache-pack.test.ts`        | 2 tests    | PASS   |
 | Tool: cddm_prune_dead_clones        | `tests/mcp/tools/prune-dead-clones.test.ts`        | 2 tests    | PASS   |
 | Tool: cddm_scan_codebase            | `tests/mcp/tools/scan-codebase.test.ts`            | 6 tests    | PASS   |

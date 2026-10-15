@@ -1,7 +1,9 @@
 #![forbid(unsafe_code)]
 
 use crate::protocol::mcp_tools;
-use cddm_core::{DEFAULT_DIRECTORY, DEFAULT_MIN_TOKENS, ScanConfig, ScanResult, run_scan};
+use cddm_core::{
+    CloneLocation, DEFAULT_DIRECTORY, DEFAULT_MIN_TOKENS, ScanConfig, ScanResult, run_scan,
+};
 use serde_json::json;
 use std::sync::{Arc, atomic::AtomicBool};
 use tokio::sync::mpsc;
@@ -162,4 +164,84 @@ pub fn is_summary_requested(args: Option<&serde_json::Value>) -> bool {
     summary_only
         || detail_level.as_deref() == Some("compact")
         || detail_level.as_deref() == Some("summary")
+}
+
+pub fn parse_occurrences_locations(args_val: &serde_json::Value) -> Vec<CloneLocation> {
+    args_val
+        .get("occurrences")
+        .and_then(|v| v.as_array())
+        .map(|arr| {
+            arr.iter()
+                .map(|item| {
+                    let path = item
+                        .get("file")
+                        .or_else(|| item.get("path"))
+                        .and_then(|p| p.as_str())
+                        .unwrap_or("")
+                        .to_string();
+                    let s_line =
+                        item.get("start_line").and_then(|l| l.as_u64()).unwrap_or(1) as usize;
+                    let e_line = item
+                        .get("end_line")
+                        .and_then(|l| l.as_u64())
+                        .unwrap_or(s_line as u64) as usize;
+                    CloneLocation {
+                        file: path,
+                        start_line: s_line,
+                        end_line: e_line,
+                        author: None,
+                    }
+                })
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+pub async fn resolve_occurrences_from_args(args: Option<&serde_json::Value>) -> Vec<CloneLocation> {
+    if let Some(args_val) = args {
+        let explicit = parse_occurrences_locations(args_val);
+        if !explicit.is_empty() {
+            return explicit;
+        }
+
+        let cluster_id = args_val
+            .get("cluster_id")
+            .and_then(|v| v.as_u64())
+            .map(|c| c as usize);
+        let pair_id = args_val
+            .get("pair_id")
+            .and_then(|v| v.as_u64())
+            .map(|p| p as usize);
+
+        if (cluster_id.is_some() || pair_id.is_some())
+            && let Ok(scan_res) = run_scan_from_mcp_args(args, false).await
+        {
+            if let Some(cid) = cluster_id
+                && let Some(cluster) = scan_res.clone_clusters.iter().find(|c| c.id == cid)
+            {
+                return cluster.occurrences.clone();
+            }
+            if let Some(pid) = pair_id
+                && pid > 0
+                && pid <= scan_res.clone_pairs.len()
+            {
+                let pair = &scan_res.clone_pairs[pid - 1];
+                return vec![
+                    CloneLocation {
+                        file: pair.file_a.clone(),
+                        start_line: pair.start_line_a,
+                        end_line: pair.end_line_a,
+                        author: None,
+                    },
+                    CloneLocation {
+                        file: pair.file_b.clone(),
+                        start_line: pair.start_line_b,
+                        end_line: pair.end_line_b,
+                        author: None,
+                    },
+                ];
+            }
+        }
+    }
+    Vec::new()
 }
