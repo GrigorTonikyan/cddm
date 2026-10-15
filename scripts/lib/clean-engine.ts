@@ -102,11 +102,32 @@ export function isProtectedPath(relPath: string): boolean {
 export function discoverPackageRoots(workspaceRoot: string = process.cwd()): string[] {
   const roots = new Set<string>(KNOWN_PACKAGE_ROOTS);
   try {
-    const glob = new Bun.Glob("**/package.json");
-    for (const match of glob.scanSync({ cwd: workspaceRoot })) {
-      const dir = match.replace(/\\/g, "/").replace(/\/package\.json$/, "");
-      if (dir !== "package.json" && !isProtectedPath(dir) && !dir.includes("node_modules")) {
-        roots.add(dir);
+    const queue: Array<{ dir: string; depth: number }> = [
+      { dir: resolve(workspaceRoot), depth: 0 },
+    ];
+    const resolvedRoot = resolve(workspaceRoot);
+    while (queue.length > 0) {
+      const current = queue.shift();
+      if (!current || current.depth > 3) continue;
+      const entries = readdirSync(current.dir, { withFileTypes: true });
+      for (const entry of entries) {
+        if (
+          entry.name === "node_modules" ||
+          entry.name === "target" ||
+          entry.name === ".git" ||
+          entry.name === ".turbo" ||
+          entry.name === "dist"
+        ) {
+          continue;
+        }
+        if (entry.isDirectory()) {
+          const subDir = join(current.dir, entry.name);
+          const relDir = subDir.slice(resolvedRoot.length + 1).replace(/\\/g, "/");
+          if (existsSync(join(subDir, "package.json"))) {
+            roots.add(relDir);
+          }
+          queue.push({ dir: subDir, depth: current.depth + 1 });
+        }
       }
     }
   } catch {
