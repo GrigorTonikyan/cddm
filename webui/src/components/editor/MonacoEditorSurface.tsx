@@ -13,6 +13,9 @@ export const MonacoEditorSurface: React.FC<MonacoEditorSurfaceProps> = ({ onSave
     editorDiffContentA,
     editorSplitDiffMode,
     editorLanguage,
+    targetLine,
+    targetRangeA,
+    targetRangeB,
   } = useCDDMStore();
 
   const commonOptions = {
@@ -44,12 +47,23 @@ export const MonacoEditorSurface: React.FC<MonacoEditorSurfaceProps> = ({ onSave
           }}
           onMount={(diffEditor, monaco) => {
             const modifiedEditor = diffEditor.getModifiedEditor();
+            const originalEditor = diffEditor.getOriginalEditor();
             modifiedEditor.onDidChangeModelContent(() => {
               setActiveEditorContent(modifiedEditor.getValue());
             });
             modifiedEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
               onSave();
             });
+            if (targetRangeB) {
+              modifiedEditor.revealLineInCenter(targetRangeB[0]);
+              modifiedEditor.setPosition({ lineNumber: targetRangeB[0], column: 1 });
+            } else if (targetLine) {
+              modifiedEditor.revealLineInCenter(targetLine);
+              modifiedEditor.setPosition({ lineNumber: targetLine, column: 1 });
+            }
+            if (targetRangeA) {
+              originalEditor.revealLineInCenter(targetRangeA[0]);
+            }
           }}
         />
       </div>
@@ -69,6 +83,10 @@ export const MonacoEditorSurface: React.FC<MonacoEditorSurfaceProps> = ({ onSave
           editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
             onSave();
           });
+          if (targetLine) {
+            editor.revealLineInCenter(targetLine);
+            editor.setPosition({ lineNumber: targetLine, column: 1 });
+          }
         }}
       />
     </div>

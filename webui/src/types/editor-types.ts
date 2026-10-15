@@ -35,3 +35,9 @@ export interface FileTreeResponse {
   root: string;
   files: WorkspaceFileEntry[];
 }
+
+export interface EditorTargetLocation {
+  line?: number | null;
+  rangeA?: [number, number] | null;
+  rangeB?: [number, number] | null;
+}

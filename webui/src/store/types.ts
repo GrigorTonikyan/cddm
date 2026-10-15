@@ -98,6 +98,10 @@ export interface CDDMStoreState {
   editorDiffContentA: string;
   editorDiffContentB: string;
   editorFilesList: import("../types/editor-types").WorkspaceFileEntry[];
+  targetLine: number | null;
+  targetRangeA: [number, number] | null;
+  targetRangeB: [number, number] | null;
+  activeSimdEngine: string | null;
 
   /** Organization Federation Hub state */
   hubConfig: import("../types/cddm-types").HubConfig | null;
@@ -328,4 +332,10 @@ export interface CDDMStoreState {
     packFile: string,
     targetCacheDir?: string,
   ) => Promise<import("../types/cddm-types").CachePackSummary>;
+
+  /** Server health & SIMD status */
+  fetchHealth?: () => Promise<any>;
+
+  /** Dead code cross-package reachability graph */
+  fetchReachability?: () => Promise<any>;
 }

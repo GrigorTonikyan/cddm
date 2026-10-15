@@ -39,11 +39,11 @@ export const createPolicySlice = (set: SetStoreState, get: GetStoreState) => ({
   },
 
   evaluatePolicyRules: async (directory?: string): Promise<PolicyEvaluationResult> => {
-    const { config } = get();
+    const { config, policyConfig } = get();
     const dir = directory ?? config.directory;
     return await postJson<PolicyEvaluationResult>(
       API_ROUTES.POLICY_EVALUATE,
-      { directory: dir },
+      { directory: dir, config: policyConfig },
       "Policy evaluation failed",
     );
   },

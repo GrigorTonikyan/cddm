@@ -238,7 +238,8 @@ async fn test_hooks_handlers() {
 
 #[tokio::test]
 async fn test_suppression_rules_handlers() {
-    let axum::Json(get_res) = suppression_rules_get_handler().await;
+    let (state, _) = build_app();
+    let axum::Json(get_res) = suppression_rules_get_handler(State(state.clone())).await;
     assert!(get_res.ignore_generated);
 
     let config = cddm_core::SuppressionConfig {
@@ -248,7 +249,7 @@ async fn test_suppression_rules_handlers() {
         ignore_generated: true,
         raw_cddmignore: Some("# custom ignore\ntarget/**\n".to_string()),
     };
-    let post_res = suppression_rules_post_handler(axum::Json(config)).await;
+    let post_res = suppression_rules_post_handler(State(state), axum::Json(config)).await;
     assert!(post_res.is_ok());
 }
 
@@ -370,7 +371,11 @@ async fn test_policy_rules_get_and_post_handlers() {
         *latest = Some(scan_result);
     }
 
-    let eval_res = policy_evaluate_handler(State(state), axum::Json(Some(new_cfg))).await;
+    let eval_res = policy_evaluate_handler(
+        State(state),
+        axum::Json(policy_handlers::PolicyEvaluatePayload::Direct(new_cfg)),
+    )
+    .await;
     assert!(eval_res.is_ok());
     let axum::Json(eval_body) = eval_res.unwrap();
     assert!(!eval_body.violations.is_empty());

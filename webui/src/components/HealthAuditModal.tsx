@@ -26,7 +26,15 @@ export const HealthAuditModal: React.FC<HealthAuditModalProps> = ({
   results: propResults,
 }) => {
   const storeResults = useCDDMStore((state) => state.results);
+  const activeSimdEngine = useCDDMStore((state) => state.activeSimdEngine);
+  const fetchHealth = useCDDMStore((state) => state.fetchHealth);
   const results = propResults ?? storeResults;
+
+  React.useEffect(() => {
+    if (isOpen && !activeSimdEngine) {
+      void fetchHealth?.();
+    }
+  }, [isOpen, activeSimdEngine, fetchHealth]);
 
   if (!isOpen) return null;
 
@@ -198,7 +206,9 @@ export const HealthAuditModal: React.FC<HealthAuditModalProps> = ({
 
             <div className="bg-slate-900/60 p-3 rounded-lg border border-slate-800 space-y-1">
               <span className="text-slate-500">SIMD Engine</span>
-              <div className="font-bold text-emerald-400">AVX-512 Vector Lanes</div>
+              <div className="font-bold text-emerald-400">
+                {activeSimdEngine ? `${activeSimdEngine} Vector Lanes` : "AVX-512 Vector Lanes"}
+              </div>
             </div>
 
             <div className="bg-slate-900/60 p-3 rounded-lg border border-slate-800 space-y-1">

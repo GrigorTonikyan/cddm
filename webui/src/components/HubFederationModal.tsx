@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   RefreshCw,
   Network,
+  FileCode,
 } from "lucide-react";
 import type {
   CrossRepoCluster,
@@ -17,6 +18,7 @@ import type {
   HubSyncResult,
 } from "../types/cddm-types";
 import { useCDDMStore } from "../store/cddm-store";
+import { HubConfigTab } from "./hub/HubConfigTab";
 
 export interface HubFederationModalProps {
   isOpen: boolean;
@@ -29,11 +31,24 @@ export const HubFederationModal: React.FC<HubFederationModalProps> = ({
   onClose,
   initialSummary = null,
 }) => {
-  const { hubSummary, isHubLoading, runHubScan, extractHubPackage, syncHubPeering, hubSyncResult } =
-    useCDDMStore();
-  const [activeTab, setActiveTab] = useState<"repos" | "matrix" | "clusters" | "sync">("repos");
+  const {
+    hubSummary,
+    hubConfig,
+    fetchHubConfig,
+    saveHubConfig,
+    isHubLoading,
+    runHubScan,
+    extractHubPackage,
+    syncHubPeering,
+    hubSyncResult,
+  } = useCDDMStore();
+  const [activeTab, setActiveTab] = useState<"repos" | "matrix" | "clusters" | "sync" | "config">(
+    "repos",
+  );
   const [extractResult, setExtractResult] = useState<HubExtractResult | null>(null);
   const [extractingClusterId, setExtractingClusterId] = useState<number | null>(null);
+  const [packageType, setPackageType] = useState<"npm" | "cargo">("npm");
+  const [extractDryRun, setExtractDryRun] = useState<boolean>(true);
   const [remoteEndpoint, setRemoteEndpoint] = useState<string>("http://127.0.0.1:8081");
   const [salt, setSalt] = useState<string>("org-cddm-federation-salt");
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
@@ -42,10 +57,15 @@ export const HubFederationModal: React.FC<HubFederationModalProps> = ({
   const summary = hubSummary || initialSummary;
 
   useEffect(() => {
-    if (isOpen && !summary) {
-      void runHubScan();
+    if (isOpen) {
+      if (!summary) {
+        void runHubScan();
+      }
+      if (!hubConfig) {
+        void fetchHubConfig();
+      }
     }
-  }, [isOpen, summary, runHubScan]);
+  }, [isOpen, summary, hubConfig, runHubScan, fetchHubConfig]);
 
   if (!isOpen) return null;
 
@@ -55,9 +75,10 @@ export const HubFederationModal: React.FC<HubFederationModalProps> = ({
       const res = await extractHubPackage({
         cluster_id: cluster.id,
         target_package_name: cluster.suggested_package || "@org/shared-utils",
-        package_type: "npm",
-        target_dir: "./packages/shared-extracted",
-        dry_run: true,
+        package_type: packageType,
+        target_dir:
+          packageType === "cargo" ? "./crates/shared-extracted" : "./packages/shared-extracted",
+        dry_run: extractDryRun,
       });
       setExtractResult(res);
     } catch {
@@ -185,6 +206,20 @@ export const HubFederationModal: React.FC<HubFederationModalProps> = ({
               Remote Peering & Sync
             </span>
           </button>
+
+          <button
+            onClick={() => setActiveTab("config")}
+            className={`px-3 py-1.5 text-xs font-medium rounded-t border-t border-x transition-colors ${
+              activeTab === "config"
+                ? "bg-[#1e1e1e] text-white border-[#444444]"
+                : "text-gray-400 border-transparent hover:text-gray-200"
+            }`}
+          >
+            <span className="flex items-center gap-1.5">
+              <FileCode className="w-3.5 h-3.5 text-amber-400" />
+              Hub Configuration
+            </span>
+          </button>
         </div>
 
         {/* Tab Content */}
@@ -281,6 +316,31 @@ export const HubFederationModal: React.FC<HubFederationModalProps> = ({
                   </div>
                 </div>
               )}
+
+              <div className="flex items-center justify-between p-2.5 bg-[#252526] rounded border border-[#333333] text-xs">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-gray-400">Package Type:</span>
+                    <select
+                      value={packageType}
+                      onChange={(e) => setPackageType(e.target.value as "npm" | "cargo")}
+                      className="px-2 py-1 bg-[#1e1e1e] border border-[#444] rounded text-white text-xs focus:outline-none"
+                    >
+                      <option value="npm">npm (TypeScript/JavaScript)</option>
+                      <option value="cargo">cargo (Rust Crate)</option>
+                    </select>
+                  </div>
+                  <label className="flex items-center gap-1.5 cursor-pointer text-gray-300">
+                    <input
+                      type="checkbox"
+                      checked={extractDryRun}
+                      onChange={(e) => setExtractDryRun(e.target.checked)}
+                      className="rounded bg-[#1e1e1e] border-[#444] text-indigo-500 focus:ring-0"
+                    />
+                    <span>Dry-run simulation</span>
+                  </label>
+                </div>
+              </div>
 
               {summary?.clusters?.map((cluster) => (
                 <div
@@ -421,6 +481,10 @@ export const HubFederationModal: React.FC<HubFederationModalProps> = ({
                 </div>
               )}
             </div>
+          )}
+
+          {activeTab === "config" && (
+            <HubConfigTab config={hubConfig} onSave={saveHubConfig} isLoading={isHubLoading} />
           )}
         </div>
       </div>
