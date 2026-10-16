@@ -57,6 +57,7 @@ pub fn build_app() -> (AppState, Router) {
         watch_events_log: Arc::new(RwLock::new(Vec::new())),
         last_sync_timestamp: Arc::new(AtomicU64::new(0)),
         sync_count: Arc::new(AtomicUsize::new(0)),
+        debounce_ms: Arc::new(AtomicU64::new(DEFAULT_WATCH_INTERVAL_MS)),
     };
     let router = build_app_with_state(state.clone());
     (state, router)

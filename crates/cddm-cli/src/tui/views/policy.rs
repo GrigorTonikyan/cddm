@@ -14,33 +14,53 @@ pub fn render_policy_view(frame: &mut Frame, app: &TuiApp, area: Rect) {
     render_suppression_rules(frame, app, right_col);
 }
 
-fn render_policy_rules(frame: &mut Frame, _app: &TuiApp, area: Rect) {
-    let rows = vec![
-        Row::new(vec![
-            "Boundary Isolation",
-            "crates/cddm-core <-> webui",
-            "0 Violations (PASS)",
-        ])
-        .style(Style::default().fg(Color::Green)),
-        Row::new(vec![
-            "Zero Duplication Zone",
-            "crates/cddm-core/src/policy/*",
-            "0 Violations (PASS)",
-        ])
-        .style(Style::default().fg(Color::Green)),
-        Row::new(vec![
-            "Zero Duplication Zone",
-            "crates/cddm-core/src/ai/*",
-            "0 Violations (PASS)",
-        ])
-        .style(Style::default().fg(Color::Green)),
-        Row::new(vec![
-            "Clone Token Limit",
-            "Max allowed: 500 tokens",
-            "Compliant",
-        ])
-        .style(Style::default().fg(Color::Cyan)),
-    ];
+fn render_policy_rules(frame: &mut Frame, app: &TuiApp, area: Rect) {
+    let mut rows = Vec::new();
+    if let Some(res) = &app.scan_result {
+        if !res.policy_violations.is_empty() {
+            for v in &res.policy_violations {
+                let color = match v.severity {
+                    cddm_core::PolicySeverity::Error => Color::Red,
+                    cddm_core::PolicySeverity::Warning => Color::Yellow,
+                    cddm_core::PolicySeverity::Info => Color::Cyan,
+                };
+                rows.push(
+                    Row::new(vec![
+                        v.rule_name.clone(),
+                        format!("{} <-> {}", v.file_a, v.file_b.as_deref().unwrap_or("-")),
+                        format!("{:?}: {}", v.severity, v.message),
+                    ])
+                    .style(Style::default().fg(color)),
+                );
+            }
+        } else {
+            rows.push(
+                Row::new(vec![
+                    "Architectural Boundaries".to_string(),
+                    format!("{} files evaluated", res.total_files),
+                    "0 Violations (PASS)".to_string(),
+                ])
+                .style(Style::default().fg(Color::Green)),
+            );
+            rows.push(
+                Row::new(vec![
+                    "Zero Duplication Zones".to_string(),
+                    "Domain & Core Modules".to_string(),
+                    "Compliant (PASS)".to_string(),
+                ])
+                .style(Style::default().fg(Color::Green)),
+            );
+        }
+    } else {
+        rows.push(
+            Row::new(vec![
+                "Policy Engine".to_string(),
+                "No scan executed yet".to_string(),
+                "Press 's' to Scan".to_string(),
+            ])
+            .style(Style::default().fg(Color::DarkGray)),
+        );
+    }
 
     let table = Table::new(
         rows,
@@ -51,7 +71,7 @@ fn render_policy_rules(frame: &mut Frame, _app: &TuiApp, area: Rect) {
         ],
     )
     .header(
-        Row::new(vec!["Policy Type", "Target Scope", "Status"]).style(
+        Row::new(vec!["Policy Rule", "Scope / Violation", "Status"]).style(
             Style::default()
                 .fg(TuiTheme::BRAND)
                 .add_modifier(Modifier::BOLD),
@@ -65,26 +85,37 @@ fn render_policy_rules(frame: &mut Frame, _app: &TuiApp, area: Rect) {
     frame.render_widget(table, area);
 }
 
-fn render_suppression_rules(frame: &mut Frame, _app: &TuiApp, area: Rect) {
+fn render_suppression_rules(frame: &mut Frame, app: &TuiApp, area: Rect) {
     let subchunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
         .split(area);
 
-    let ignore_items = vec![
-        ListItem::new(Line::from(vec![
-            Span::styled(" [glob] ", Style::default().fg(Color::Cyan)),
-            Span::raw("tests/** (ignore test duplication)"),
-        ])),
-        ListItem::new(Line::from(vec![
-            Span::styled(" [glob] ", Style::default().fg(Color::Cyan)),
-            Span::raw("**/mock_*.rs (mock fixtures excluded)"),
-        ])),
-        ListItem::new(Line::from(vec![
-            Span::styled(" [override] ", Style::default().fg(Color::Yellow)),
-            Span::raw("sdk/** min_tokens=100"),
-        ])),
-    ];
+    let mut ignore_items: Vec<ListItem> =
+        if let Ok(cddmignore) = std::fs::read_to_string(".cddmignore") {
+            cddmignore
+                .lines()
+                .filter(|l| !l.trim().is_empty() && !l.starts_with('#'))
+                .take(8)
+                .map(|l| {
+                    ListItem::new(Line::from(vec![
+                        Span::styled(" [ignore] ", Style::default().fg(Color::Cyan)),
+                        Span::raw(l.to_string()),
+                    ]))
+                })
+                .collect()
+        } else {
+            Vec::new()
+        };
+
+    if ignore_items.is_empty() {
+        for pat in app.config.ignore_patterns.iter().take(6) {
+            ignore_items.push(ListItem::new(Line::from(vec![
+                Span::styled(" [glob] ", Style::default().fg(Color::Yellow)),
+                Span::raw(pat.clone()),
+            ])));
+        }
+    }
 
     let list_ignore =
         List::new(ignore_items).block(create_titled_block(" Active .cddmignore Rules ", false));

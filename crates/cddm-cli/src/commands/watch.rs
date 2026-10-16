@@ -59,6 +59,9 @@ pub async fn run_watch_command(
     // Optionally spawn embedded Axum WebUI server
     if let Some(port) = serve_port {
         let (state, app) = build_app();
+        state
+            .debounce_ms
+            .store(debounce_ms, std::sync::atomic::Ordering::SeqCst);
         *state.current_config.write().await = config.clone();
 
         let addr = SocketAddr::from((DEFAULT_HOST_IP, port));

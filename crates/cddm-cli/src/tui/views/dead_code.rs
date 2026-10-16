@@ -10,7 +10,7 @@ use super::helpers::{bold_span, create_titled_block};
 use crate::tui::app::TuiApp;
 
 /// Render Tab 12: Polyglot Dead Code & Unreferenced Functions Explorer.
-pub fn render_dead_code_view(frame: &mut Frame, _app: &TuiApp, area: Rect) {
+pub fn render_dead_code_view(frame: &mut Frame, app: &TuiApp, area: Rect) {
     let vertical_sections = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
@@ -21,6 +21,18 @@ pub fn render_dead_code_view(frame: &mut Frame, _app: &TuiApp, area: Rect) {
         .split(area);
 
     // Top: Codebase Cleanliness Gauge Bar
+    let (pct, label) = if let Some(res) = &app.scan_result {
+        (
+            res.dry_health_score.round().clamp(0.0, 100.0) as u16,
+            format!(
+                "{:.1}% Reachable ({} files / {} tokens analyzed)",
+                res.dry_health_score, res.total_files, res.total_tokens
+            ),
+        )
+    } else {
+        (94, "94.2% Reachable (Cleanliness baseline)".to_string())
+    };
+
     let gauge = Gauge::default()
         .block(create_titled_block(
             " Codebase Reachability & Cleanliness ",
@@ -32,8 +44,8 @@ pub fn render_dead_code_view(frame: &mut Frame, _app: &TuiApp, area: Rect) {
                 .bg(Color::Black)
                 .add_modifier(Modifier::BOLD),
         )
-        .percent(94)
-        .label("94.2% Reachable (18 dead items / ~640 removable lines detected)");
+        .percent(pct)
+        .label(label);
     frame.render_widget(gauge, vertical_sections[0]);
 
     // Middle: Telemetry KPI Cards

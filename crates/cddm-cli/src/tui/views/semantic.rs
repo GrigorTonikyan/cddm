@@ -9,30 +9,48 @@ pub fn render_semantic_view(frame: &mut Frame, app: &TuiApp, area: Rect) {
     render_semantic_details(frame, app, detail_pane);
 }
 
-fn render_semantic_list(frame: &mut Frame, _app: &TuiApp, area: Rect) {
-    let items = vec![
-        ListItem::new(Line::from(vec![
-            Span::styled(
-                " > [Neural] ",
-                Style::default()
-                    .fg(Color::Magenta)
-                    .add_modifier(Modifier::BOLD),
-            ),
-            Span::raw("Rust <-> Python (tokenize_stream vs parse_tokens)"),
-        ])),
-        ListItem::new(Line::from(vec![
-            Span::styled("   [Neural] ", Style::default().fg(Color::Cyan)),
-            Span::raw("TypeScript <-> Go (validate_jwt vs CheckAuthToken)"),
-        ])),
-        ListItem::new(Line::from(vec![
-            Span::styled("   [Neural] ", Style::default().fg(Color::Green)),
-            Span::raw("Java <-> C# (CalculateMetrics vs ComputeStats)"),
-        ])),
-        ListItem::new(Line::from(vec![
-            Span::styled("   [Neural] ", Style::default().fg(Color::Yellow)),
-            Span::raw("Rust <-> C++ (compute_sum vs parallel_accumulate)"),
-        ])),
-    ];
+fn render_semantic_list(frame: &mut Frame, app: &TuiApp, area: Rect) {
+    let mut items = Vec::new();
+    if let Some(res) = &app.scan_result {
+        let semantic_pairs: Vec<&cddm_core::ClonePair> = res
+            .clone_pairs
+            .iter()
+            .filter(|p| p.clone_type == cddm_core::CloneType::Semantic || p.similarity >= 0.85)
+            .collect();
+
+        for (idx, p) in semantic_pairs.iter().take(10).enumerate() {
+            let is_sel = idx == app.selected_semantic_idx;
+            let file_a_name = std::path::Path::new(&p.file_a)
+                .file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or("file_a");
+            let file_b_name = std::path::Path::new(&p.file_b)
+                .file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or("file_b");
+
+            let prefix = if is_sel { " > " } else { "   " };
+            let style = if is_sel {
+                crate::tui::theme::TuiTheme::selected_item_style()
+            } else {
+                Style::default().fg(Color::Cyan)
+            };
+
+            items.push(ListItem::new(Line::from(vec![
+                Span::styled(
+                    format!("{}[{:.0}% WL] ", prefix, p.similarity * 100.0),
+                    style,
+                ),
+                Span::raw(format!("{} <-> {}", file_a_name, file_b_name)),
+            ])));
+        }
+    }
+
+    if items.is_empty() {
+        items.push(ListItem::new(
+            "   No high-similarity semantic clones detected in latest scan.",
+        ));
+    }
 
     let block = create_titled_block(
         " Cross-Language & Neural Algorithmic Clones [HNSW SQ8 4x Compression] ",

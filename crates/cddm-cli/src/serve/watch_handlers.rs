@@ -25,11 +25,12 @@ pub async fn watch_status_handler(State(state): State<AppState>) -> Json<WatchSt
     };
 
     let last_duration_ms = recent_events.last().map(|e| e.duration_ms);
+    let debounce_ms = state.debounce_ms.load(Ordering::SeqCst);
 
     Json(WatchStatusResponse {
         is_active,
         watch_directory: config.directory.clone(),
-        debounce_ms: DEFAULT_WATCH_INTERVAL_MS,
+        debounce_ms,
         last_sync_timestamp,
         sync_count,
         last_duration_ms,

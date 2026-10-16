@@ -268,6 +268,10 @@ pub struct PruneArgs {
     /// Custom file or path ignore patterns
     #[arg(short, long, value_delimiter = ',')]
     pub ignore: Option<Vec<String>>,
+
+    /// Specific dead clone item IDs to prune (comma-separated or multiple flags)
+    #[arg(long, value_delimiter = ',')]
+    pub item_ids: Option<Vec<usize>>,
 }
 
 /// CLI Arguments for `cddm completions`
