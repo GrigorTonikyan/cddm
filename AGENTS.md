@@ -26,7 +26,7 @@ The following rules dictate coding standards, architectural limits, and workflow
 - [Gitea Primary SSoT & GitHub Mirror Governance](.agents/rules/gitea-ssot-mirror-governance.md)
   - Details Gitea as authoritative Single Source of Truth for issues, branches, PRs, and releases, with GitHub as secondary replica mirror.
 - [VCS Project Management Governance Standard](.agents/rules/vcs-project-management.md)
-  - Details strict mandate to use Gitea Issues & Milestones for project tracking and forbids static markdown task lists.
+  - Details strict mandate that every change is tracked by a Gitea Issue (milestones optional for release grouping) and forbids static markdown task lists.
 - [MCP Tool Testing Standard](.agents/rules/test.mcp.md)
   - Details the mandatory 1:1 isolated test suite per MCP tool under `tests/mcp/tools/` and dynamic discovery enforcement.
 - [Permanent Workspace Tooling & Reusability Standard](.agents/rules/workspace-tooling-reusability.md)

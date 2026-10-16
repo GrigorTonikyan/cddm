@@ -57,7 +57,7 @@ This rule governs repository tracking, issue management, branching nomenclature,
 
 ## 5. Milestone & Release Lifecycle
 
-1. **Mandatory Milestone Assignment**: Every issue (not PRs) must be assigned to an active Gitea milestone; PRs inherit via `Fixes #<id>` and need no milestone (e.g. `v3.4.0`). Verified in `vp run verify` via `bun scripts/check-milestones.ts`. Run `bun scripts/sync-milestones.ts` to auto-assign unassigned issues.
+1. **Issues Are Mandatory, Milestones Are Optional**: Every change MUST be tracked by a Gitea issue (PRs reference it via `Fixes #<id>`). Milestones are NOT required on issues or PRs; assign one only when an issue is targeted at a specific release (e.g. `v3.4.0`). `bun scripts/check-milestones.ts` is informational only and never fails verification. `bun scripts/sync-milestones.ts` remains available to bulk-assign milestones on request.
 2. **Milestone Closure & Automagic Release**:
    - Workspace versions are determined strictly by milestones.
    - When all assigned issues for a milestone reach 100% completion (0 open issues remaining), the release MUST be triggered via `bun scripts/milestone-release.ts` (or `vp run release:milestone`).

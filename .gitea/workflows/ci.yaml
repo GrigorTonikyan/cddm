@@ -103,7 +103,7 @@ jobs:
       - name: Validate Documentation Integrity & Synchronization
         run: bun scripts/check-docs.ts
 
-      - name: Validate Milestone Governance Compliance
+      - name: Report Milestone Visibility (informational)
         run: bun scripts/check-milestones.ts
 
   webui-ci:

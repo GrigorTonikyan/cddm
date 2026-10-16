@@ -100,6 +100,6 @@ Every quality check and test suite is strictly executed in `vp run verify` (or `
 15. `tsc -p editors/vscode/tsconfig.json` (VS Code extension TypeScript check)
 16. `bun test scripts/tests/vscode-extension.test.ts` (VS Code extension unit tests)
 17. `bun scripts/package-vscode.ts` (VS Code extension VSIX packaging)
-18. `bun scripts/check-milestones.ts` (Milestone governance & issue assignment gate)
+18. `bun scripts/check-milestones.ts` (Milestone visibility report; informational, non-blocking)
 19. `bun scripts/check-release-notes.ts` (Rich release notes & MCP standard gate)
 20. `cargo run -p cddm-cli --release -- scan . --min-tokens 50 --fail-threshold 5.0` (Strict CDDM dogfooding self-scan)

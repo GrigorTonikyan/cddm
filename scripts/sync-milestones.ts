@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /**
  * Automatically audits and synchronizes Gitea issues to their designated milestones.
- * Guarantees that 100% of issues belong to a milestone.
+ * Milestones are optional; this utility bulk-assigns them on request.
  */
 
 import { giteaFetch } from "./lib/gitea-client";
