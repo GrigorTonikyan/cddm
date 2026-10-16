@@ -153,36 +153,36 @@ fn render_diff_viewer(frame: &mut Frame, app: &TuiApp, area: Rect) {
         match app.diff_mode {
             DiffMode::Split => {
                 let (left_col, right_col) = split_horizontal_2(diff_area, 50, 50);
+                let snippet_a =
+                    read_source_snippet(&pair.file_a, pair.start_line_a, pair.end_line_a);
+                let snippet_b =
+                    read_source_snippet(&pair.file_b, pair.start_line_b, pair.end_line_b);
 
-                let left_content = vec![
-                    Line::from(vec![Span::styled(
-                        "--- Fragment A (Original Site) ---",
-                        Style::default()
-                            .fg(Color::Cyan)
-                            .add_modifier(Modifier::BOLD),
-                    )]),
-                    Line::from(format!("1 | // Duplicate block in {}", pair.file_a)),
-                    Line::from("2 | pub fn process_data(input: &str) -> bool {"),
-                    Line::from("3 |     if input.is_empty() { return false; }"),
-                    Line::from("4 |     let tokens = input.split_whitespace();"),
-                    Line::from("5 |     tokens.count() > 0"),
-                    Line::from("6 | }"),
-                ];
+                let mut left_content = vec![Line::from(vec![Span::styled(
+                    format!(
+                        "--- Fragment A: {} ({}-{}) ---",
+                        pair.file_a, pair.start_line_a, pair.end_line_a
+                    ),
+                    Style::default()
+                        .fg(Color::Cyan)
+                        .add_modifier(Modifier::BOLD),
+                )])];
+                for line in snippet_a {
+                    left_content.push(Line::from(line));
+                }
 
-                let right_content = vec![
-                    Line::from(vec![Span::styled(
-                        "+++ Fragment B (Counterpart Site) +++",
-                        Style::default()
-                            .fg(Color::Yellow)
-                            .add_modifier(Modifier::BOLD),
-                    )]),
-                    Line::from(format!("1 | // Counterpart in {}", pair.file_b)),
-                    Line::from("2 | pub fn process_items(text: &str) -> bool {"),
-                    Line::from("3 |     if text.is_empty() { return false; }"),
-                    Line::from("4 |     let items = text.split_whitespace();"),
-                    Line::from("5 |     items.count() > 0"),
-                    Line::from("6 | }"),
-                ];
+                let mut right_content = vec![Line::from(vec![Span::styled(
+                    format!(
+                        "+++ Fragment B: {} ({}-{}) +++",
+                        pair.file_b, pair.start_line_b, pair.end_line_b
+                    ),
+                    Style::default()
+                        .fg(Color::Yellow)
+                        .add_modifier(Modifier::BOLD),
+                )])];
+                for line in snippet_b {
+                    right_content.push(Line::from(line));
+                }
 
                 let left_p = Paragraph::new(left_content)
                     .block(Block::default().borders(Borders::RIGHT))
@@ -197,19 +197,24 @@ fn render_diff_viewer(frame: &mut Frame, app: &TuiApp, area: Rect) {
                 frame.render_widget(right_p, right_col);
             }
             DiffMode::Unified => {
-                let unified_lines = vec![
-                    Line::from(vec![bold_span(
-                        "@@ Unified Deduplication Refactoring Patch @@",
-                        Color::Magenta,
-                    )]),
-                    diff_del_line("- pub fn process_data(input: &str) -> bool {"),
-                    diff_del_line("- pub fn process_items(text: &str) -> bool {"),
-                    diff_add_line("+ pub fn process_text(input: &str) -> bool {"),
-                    Line::from("      if input.is_empty() { return false; }"),
-                    Line::from("      let tokens = input.split_whitespace();"),
-                    Line::from("      tokens.count() > 0"),
-                    Line::from("  }"),
-                ];
+                let snippet_a =
+                    read_source_snippet(&pair.file_a, pair.start_line_a, pair.end_line_a);
+                let snippet_b =
+                    read_source_snippet(&pair.file_b, pair.start_line_b, pair.end_line_b);
+
+                let mut unified_lines = vec![Line::from(vec![bold_span(
+                    format!(
+                        "@@ Deduplication Refactoring: {} <-> {} @@",
+                        pair.file_a, pair.file_b
+                    ),
+                    Color::Magenta,
+                )])];
+                for line in snippet_a {
+                    unified_lines.push(diff_del_line(format!("- {}", line)));
+                }
+                for line in snippet_b {
+                    unified_lines.push(diff_add_line(format!("+ {}", line)));
+                }
 
                 let unified_p =
                     Paragraph::new(unified_lines).scroll((app.diff_scroll_offset as u16, 0));
@@ -221,4 +226,23 @@ fn render_diff_viewer(frame: &mut Frame, app: &TuiApp, area: Rect) {
             .block(block);
         frame.render_widget(empty_p, area);
     }
+}
+
+fn read_source_snippet(path: &str, start_line: usize, end_line: usize) -> Vec<String> {
+    if let Ok(content) = std::fs::read_to_string(path) {
+        let lines: Vec<&str> = content.lines().collect();
+        let start = start_line.saturating_sub(1);
+        let end = end_line.min(lines.len());
+        if start < lines.len() && start <= end {
+            return lines[start..end]
+                .iter()
+                .enumerate()
+                .map(|(i, l)| format!("{} | {}", start + i + 1, l))
+                .collect();
+        }
+    }
+    vec![
+        format!("// Fragment site (lines {}-{})", start_line, end_line),
+        format!("// File: {}", path),
+    ]
 }

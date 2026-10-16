@@ -5,7 +5,6 @@ use cddm_core::{
     ExtractRequest, ExtractResult, ExtractTargetKind, ScanConfig, apply_shared_extraction,
     generate_shared_extraction, run_scan,
 };
-use std::path::Path;
 
 /// Executes the CLI `cddm extract` command.
 pub async fn run_extract_command(args: ExtractArgs) -> Result<(), Box<dyn std::error::Error>> {
@@ -95,9 +94,9 @@ pub async fn run_extract_command(args: ExtractArgs) -> Result<(), Box<dyn std::e
     };
 
     let result = if args.apply && !args.dry_run {
-        apply_shared_extraction(Path::new("."), &request)?
+        apply_shared_extraction(&args.directory, &request)?
     } else {
-        generate_shared_extraction(Path::new("."), &request)?
+        generate_shared_extraction(&args.directory, &request)?
     };
 
     print_extraction_summary(&result, args.apply && !args.dry_run);

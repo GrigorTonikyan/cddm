@@ -128,6 +128,7 @@ pub struct AppState {
     pub watch_events_log: Arc<RwLock<Vec<cddm_core::WatchDeltaReport>>>,
     pub last_sync_timestamp: Arc<std::sync::atomic::AtomicU64>,
     pub sync_count: Arc<std::sync::atomic::AtomicUsize>,
+    pub debounce_ms: Arc<std::sync::atomic::AtomicU64>,
 }
 
 impl std::fmt::Debug for AppState {

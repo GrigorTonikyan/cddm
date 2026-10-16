@@ -25,7 +25,7 @@ pub async fn run_prune_command(args: PruneArgs) -> Result<(), Box<dyn Error>> {
         dry_run: args.dry_run,
         safe_only: args.safe_only,
         confidence_threshold: args.threshold,
-        item_ids: None,
+        item_ids: args.item_ids,
         languages: args.languages,
         ignore: args.ignore,
     };

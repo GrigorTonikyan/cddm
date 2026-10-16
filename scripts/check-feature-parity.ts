@@ -36,12 +36,28 @@ const RAW_PARITY_MATRIX = [
   "policy|Policy Engine|commands/rules.rs|cddm_check_policies|/api/policy|policy.rs|PolicyRulesModal.tsx|PolicyRulesModal",
   "suppression|AST Suppression|commands/ignore.rs|cddm_check_suppression|/api/suppression|policy.rs|SuppressionRulesModal.tsx|SuppressionRulesModal",
   "timeline|Git History Trends|commands/trend.rs|cddm_get_timeline|/api/timeline|timeline.rs|TimelineExplorerModal.tsx|TimelineExplorerModal",
-  "workflow|CI/CD & Hook Manager|commands/hook.rs|cddm_export_sarif|/api/workflow/hooks|workflow.rs|HookManagerModal.tsx|HookManagerModal",
+  "sarif|SARIF Diagnostic Export|commands/scan.rs|cddm_export_sarif|/api/scan|overview.rs|ExportReportModal.tsx|ExportReportModal",
+  "ai_prompt|AI Prompt Synthesis|commands/refactor.rs|cddm_generate_ai_prompt|/api/refactor/ai-prompt|refactor.rs|RefactorSandboxModal.tsx|RefactorSandboxModal",
+  "monorepo|Monorepo Discovery|commands/monorepo.rs|cddm_scan_monorepo|/api/monorepo|overview.rs|MonorepoWorkspaceModal.tsx|MonorepoWorkspaceModal",
   "overlap|Ecosystem Library Overlap|commands/overlap.rs|cddm_detect_overlap|/api/overlap|overlap.rs|OverlapDetectorModal.tsx|OverlapDetectorModal",
-  "hub|Organization Federation Hub|commands/hub.rs|cddm_scan_hub|/api/hub|hub.rs|HubFederationModal.tsx|HubFederationModal",
+  "hub_scan|Organization Federation Hub|commands/hub.rs|cddm_scan_hub|/api/hub|hub.rs|HubFederationModal.tsx|HubFederationModal",
+  "hub_sync|Hub Federation Sync|commands/hub.rs|cddm_sync_hub|/api/hub/sync|hub.rs|HubFederationModal.tsx|HubFederationModal",
+  "hub_extract|Hub Package Extraction|commands/hub.rs|cddm_extract_hub_package|/api/hub/extract|hub.rs|HubFederationModal.tsx|HubFederationModal",
   "coverage|Runtime Execution & Coverage|commands/coverage.rs|cddm_correlate_coverage|/api/coverage|coverage.rs|CoverageCorrelationModal.tsx|CoverageCorrelationModal",
   "dead_code|Polyglot Dead Code Detection|commands/dead_code.rs|cddm_detect_dead_code|/api/dead-code|dead_code.rs|DeadCodeExplorerModal.tsx|DeadCodeExplorerModal|DeadCodeStudioView",
+  "dead_clones|Dead Clone Detection|commands/dead_code.rs|cddm_detect_dead_clones|/api/dead-code|dead_code.rs|DeadCodeExplorerModal.tsx|DeadCodeExplorerModal",
+  "prune|Dead Clone Automated Pruning|commands/prune.rs|cddm_prune_dead_clones|/api/dead-code/prune|dead_code.rs|DeadCodeExplorerModal.tsx|DeadCodeExplorerModal",
+  "reachability|Symbol Call Reachability|commands/dead_code.rs|cddm_trace_reachability|/api/dead-code/reachability|dead_code.rs|DeadCodeExplorerModal.tsx|DeadCodeExplorerModal",
   "neural|Neural Embeddings & Algorithmic Clones|commands/semantic.rs|cddm_semantic_neural_scan|/api/semantic/neural|semantic.rs|semantic/CrossLanguageExplorerTab.tsx|CrossLanguageExplorerTab",
+  "matrix|Multi-Branch Drift Matrix|commands/diff.rs|cddm_diff_matrix|/api/diff/matrix|timeline.rs|TimelineExplorerModal.tsx|TimelineExplorerModal",
+  "suggest_refactor|Refactoring Synthesis|commands/refactor.rs|cddm_suggest_refactor|/api/refactor|refactor.rs|RefactorSandboxModal.tsx|RefactorSandboxModal",
+  "suggest_cluster|Cluster Refactoring Synthesis|commands/refactor.rs|cddm_suggest_cluster_refactor|/api/refactor-cluster|refactor.rs|RefactorSandboxModal.tsx|RefactorSandboxModal",
+  "apply_cluster|Cluster Refactoring Application|commands/refactor.rs|cddm_apply_cluster_refactor|/api/refactor/apply|refactor.rs|RefactorSandboxModal.tsx|RefactorSandboxModal",
+  "verify_refactor|Closed-Loop Refactor Verification|commands/refactor.rs|cddm_verify_refactor|/api/refactor/verify|refactor.rs|RefactorSandboxModal.tsx|RefactorSandboxModal",
+  "cache_export|Offline Cache Export|commands/cache_pack.rs|cddm_export_cache_pack|/api/cache/export|overview.rs|ScanConfigPanel.tsx|ScanConfigPanel",
+  "cache_import|Offline Cache Import|commands/cache_pack.rs|cddm_import_cache_pack|/api/cache/import|overview.rs|ScanConfigPanel.tsx|ScanConfigPanel",
+  "semantic_graph|AST Semantic Graph Export|commands/semantic.rs|cddm_get_semantic_graph|/api/semantic-graph|semantic.rs|SemanticGraphModal.tsx|SemanticGraphModal",
+  "compare_semantic_graphs|Semantic Graph Comparison|commands/semantic.rs|cddm_compare_semantic_graphs|/api/semantic-graph|semantic.rs|SemanticGraphModal.tsx|SemanticGraphModal",
 ] as const;
 
 export const MANDATORY_PARITY_FEATURES: FeatureParityCheck[] = RAW_PARITY_MATRIX.map((entry) => {
@@ -114,6 +130,20 @@ export function validateFeatureParity(workspaceRoot: string = process.cwd()): Pa
   }
 
   const docContent = readFileSync(docPath, "utf-8");
+
+  // Verify that all registered MCP tools under tests/mcp/tools have corresponding entries
+  const mcpTestDir = join(workspaceRoot, "tests/mcp/tools");
+  if (existsSync(mcpTestDir)) {
+    const testFiles = readdirSync(mcpTestDir).filter((f) => f.endsWith(".test.ts"));
+    if (RAW_PARITY_MATRIX.length < testFiles.length) {
+      violations.push({
+        featureId: "mcp-coverage",
+        featureName: "MCP Toolset Parity",
+        missingPillar: "MCP",
+        detail: `Expected parity matrix to cover at least ${testFiles.length} MCP tools, but only found ${RAW_PARITY_MATRIX.length}`,
+      });
+    }
+  }
 
   // Read MCP codebase content across all tools and resources
   const mcpContent = readAllDirText(join(workspaceRoot, "crates/cddm-mcp/src"));
