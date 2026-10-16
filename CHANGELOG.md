@@ -5,6 +5,18 @@ All notable changes to **CDDM** (_Code De-Duplication Meister_) will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.8.0] - 2026-10-16
+
+### Features
+
+- **parity**: wire TUI views to live scan data and expand parity gate to 33 MCP tools (`58f0166`)
+
+### Bug Fixes
+
+- **webui**: resolve policy evaluate payload, suppression persistence, and editor navigation (`1d6438b`)
+- **mcp**: resolve schema mismatches and heal occurrences resolution (`1065fd1`)
+- **ci**: harmonize release workflow with internal composite actions and REGISTRY_TOKEN (`79507c2`)
+
 ## [4.7.0] - 2026-10-08
 
 ### Bug Fixes
