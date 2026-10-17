@@ -175,7 +175,7 @@ CDDM enforces [Gitea (`git.gt-web-dev.com`)](https://git.gt-web-dev.com/gt-dev/c
    ```
 
 2. Open the primary Pull Request on [Gitea](https://git.gt-web-dev.com/gt-dev/cddm/pulls) merging into `main`.
-3. Include closing keywords (`Fixes #19` or `Closes #19`) in the PR description and assign the target Milestone (e.g. `v1.11.0`).
+3. Include closing keywords (`Fixes #19` or `Closes #19`) in the PR description. Every PR must reference an issue; milestones are optional and only used when an issue targets a specific release (e.g. `v1.11.0`).
 4. Merges into `main` are executed via the official Gitea REST API (`POST /repos/{owner}/{repo}/pulls/{id}/merge`), automatically marking the PR as merged, closing the linked issue, and deleting the feature branch.
 
 ### 4. Automated Semantic Releases

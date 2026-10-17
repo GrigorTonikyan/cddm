@@ -15,7 +15,7 @@ This rule governs the exclusive use of Gitea as the Single Source of Truth (SSoT
    - Every active milestone must have a corresponding semantic version number.
 2. **Issues = Epics / Requirements / Tasks**:
    - **Requirements (FR)** and **Enhancement Proposals (EP)** are tracked as Gitea Issues (acting as "Epics").
-   - Every Issue MUST be assigned to the target Version Milestone in which it is delivered.
+   - Every change MUST be tracked by an Issue. Assigning a Version Milestone is optional and only done when the Issue targets a specific release.
 3. **Labels = Categorization**:
    - Use standardized Gitea labels (\eat: *\, \ug\, \priority: *\) to categorize and filter Issues.
 
@@ -27,10 +27,11 @@ This rule governs the exclusive use of Gitea as the Single Source of Truth (SSoT
 
 ## 4. Automagic Milestone Releases & Agent Enforcement
 
-1. **Strict 100% Milestone Assignment**:
-   - Every issue in Gitea MUST be assigned to an active milestone corresponding to its target release.
-   - Verified automatically in CI and local verification via `bun scripts/check-milestones.ts` (`vp run verify`).
-   - Run `bun scripts/sync-milestones.ts` to automatically synchronize issue milestone assignments based on metadata, proposals, and active version phases.
+1. **Issues Mandatory, Milestones Optional**:
+   - Every change MUST be tracked by a Gitea issue; this is the hard requirement.
+   - Milestones are optional. When an issue targets a release, assign it to the matching milestone; otherwise leave it unassigned.
+   - `bun scripts/check-milestones.ts` (`vp run verify`) only reports unassigned issues and never fails.
+   - Run `bun scripts/sync-milestones.ts` to bulk-assign milestones from metadata, proposals, and active version phases when desired.
 2. **Automagic Milestone Versioning & Release**:
    - Workspace versions are determined strictly by milestones.
    - When all assigned issues in an active milestone reach 100% completion (zero open issues remaining), the release MUST be executed via `bun scripts/milestone-release.ts` (or `vp run release:milestone`).
