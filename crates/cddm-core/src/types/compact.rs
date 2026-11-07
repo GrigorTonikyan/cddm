@@ -197,6 +197,8 @@ mod tests {
                 end_line_b: None,
                 cluster_id: None,
                 token_count: 50,
+                snippet: None,
+                remediation: None,
             }],
         };
 

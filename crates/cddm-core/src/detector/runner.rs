@@ -79,6 +79,7 @@ pub async fn run_scan(
             duration_ms: start_time.elapsed().as_millis() as u64,
             language_breakdown: vec![],
             policy_violations: vec![],
+            target_directory: Some(config.directory.clone()),
         });
     }
 
@@ -410,6 +411,7 @@ pub async fn run_scan(
         duration_ms: start_time.elapsed().as_millis() as u64,
         language_breakdown: metrics.language_breakdown,
         policy_violations: Vec::new(),
+        target_directory: Some(config.directory.clone()),
     };
 
     let policy_eval = policy_engine.evaluate(&scan_result);

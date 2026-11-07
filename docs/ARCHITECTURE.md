@@ -278,7 +278,37 @@ To ensure high-throughput execution, real-time live watch subscriptions, and cle
 
 ---
 
-## 13. Single Source of Truth (SSoT), Release Management & CI/CD Topology
+## 13. Architectural Policy Enforcement & Governance Engine (.cddmrules.toml)
+
+CDDM provides in-process architectural policy enforcement and governance across 4 pillars:
+
+1. **Cross-Layer Boundary Rules (`[[boundaries]]`)**:
+   - Enforces unidirectional dependency boundaries, forbidding duplication across architectural layers or domains (e.g., domain logic leaking into presentation).
+
+2. **Zero-Duplication Zones (`[[zero_duplication]]`)**:
+   - Enforces 0% clone tolerance within security-critical modules (auth, crypto, token generation).
+
+3. **Clone & Occurrence Limits (`[[limits]]`)**:
+   - Imposes maximum token limits and cluster occurrence counts on specific subsystems.
+
+4. **Prohibited Code Patterns (`[[prohibited_patterns]]`)**:
+   - Scans repository files for forbidden code patterns via Regex or Tree-sitter AST queries with glob inclusion/exclusion filters, severity assignment, and actionable remediation advice.
+
+5. **Built-in Zero-Emoji Codebase Sensor (`zero_emojis = true`)**:
+   - Scans code, documentation, and configuration files for pictographic and emoji glyphs with exact line/column tracking.
+
+6. **Token Budget Constraints (`[[token_budgets]]`)**:
+   - Enforces per-file (`max_file_tokens`) and combined total (`max_total_tokens`) token budgets across glob paths (e.g. `.agents/rules/*.md`) to prevent LLM context bloat.
+
+7. **4-Pillar Cross-Interface Parity**:
+   - **CLI**: `cddm rules check` executes policy evaluation with formatted console, Markdown, JSON, and SARIF summaries.
+   - **MCP Server**: `cddm_check_policies` returns structured violations (file, line, pattern, snippet, remediation) and updates `cddm://workspace/policies`.
+   - **WebUI Studio**: `PolicyRulesModal` provides dedicated inspection tabs for Active Policies, Violations Inspector, and `.cddmrules.toml` editor.
+   - **TUI Studio**: Tab 6 displays real-time compliance status for boundaries, zero duplication, prohibited patterns, zero-emoji, and token budgets.
+
+---
+
+## 14. Single Source of Truth (SSoT), Release Management & CI/CD Topology
 
 CDDM enforces an authoritative governance architecture separating primary repository operations from downstream distribution mirrors:
 

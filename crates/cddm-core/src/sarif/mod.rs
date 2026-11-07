@@ -47,6 +47,7 @@ mod tests {
                 clones: 1,
             }],
             policy_violations: Vec::new(),
+            target_directory: None,
         }
     }
 
@@ -210,6 +211,8 @@ mod tests {
                 message: "Boundary violation".to_string(),
                 cluster_id: None,
                 token_count: 50,
+                snippet: None,
+                remediation: None,
             },
             PolicyViolation {
                 rule_name: "strict-core".to_string(),
@@ -224,6 +227,8 @@ mod tests {
                 message: "Zero dup violation".to_string(),
                 cluster_id: None,
                 token_count: 25,
+                snippet: None,
+                remediation: None,
             },
         ];
 

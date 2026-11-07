@@ -1,5 +1,7 @@
 #![forbid(unsafe_code)]
 
+pub use super::budgets::CompiledTokenBudget;
+pub use super::patterns::CompiledProhibitedPattern;
 use crate::types::{BoundaryRule, LimitRule, ZeroDuplicationRule};
 use ignore::gitignore::Gitignore;
 use std::path::Path;

@@ -154,6 +154,9 @@ pub struct ScanResult {
     /// Architectural policy violations detected during scan
     #[serde(default)]
     pub policy_violations: Vec<PolicyViolation>,
+    /// Root directory that was scanned
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub target_directory: Option<String>,
 }
 
 /// Configuration options for running a code scan.

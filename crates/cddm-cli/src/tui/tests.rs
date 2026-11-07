@@ -49,6 +49,7 @@ fn make_sample_scan_result(pairs: Vec<ClonePair>, dup_pct: f64, dry_score: f64) 
         duration_ms: 10,
         language_breakdown: Vec::new(),
         policy_violations: Vec::new(),
+        target_directory: None,
     }
 }
 

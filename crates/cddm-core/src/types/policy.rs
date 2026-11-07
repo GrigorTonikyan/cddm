@@ -10,6 +10,10 @@ fn default_warning_severity() -> PolicySeverity {
     PolicySeverity::Warning
 }
 
+fn default_pattern_type() -> String {
+    "regex".to_string()
+}
+
 /// Severity level for an architectural policy rule violation.
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
@@ -86,6 +90,52 @@ pub struct LimitRule {
     pub severity: PolicySeverity,
 }
 
+/// A rule forbidding specific code patterns via regex or Tree-sitter AST queries.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct ProhibitedPatternRule {
+    /// Unique identifier / name of the rule
+    pub name: String,
+    /// Optional human-readable description
+    pub description: Option<String>,
+    /// Regex pattern or Tree-sitter AST query
+    pub pattern: String,
+    /// Pattern kind: "regex" (default) or "ast"
+    #[serde(default = "default_pattern_type")]
+    pub pattern_type: String,
+    /// Glob patterns for files to include
+    #[serde(default)]
+    pub include: Vec<String>,
+    /// Glob patterns for files to exclude
+    #[serde(default)]
+    pub exclude: Vec<String>,
+    /// Violation severity
+    #[serde(default = "default_error_severity")]
+    pub severity: PolicySeverity,
+    /// Actionable remediation advice
+    #[serde(default)]
+    pub remediation: Option<String>,
+}
+
+/// A rule constraining token count per file or across a set of files matching a glob.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct TokenBudgetRule {
+    /// Unique identifier / name of the token budget rule
+    pub name: String,
+    /// Optional human-readable description
+    pub description: Option<String>,
+    /// Glob pattern representing the target files (e.g. ".agents/rules/*.md")
+    pub pattern: String,
+    /// Maximum allowed tokens per individual file
+    #[serde(default)]
+    pub max_file_tokens: Option<usize>,
+    /// Maximum allowed combined tokens across all matching files
+    #[serde(default)]
+    pub max_total_tokens: Option<usize>,
+    /// Violation severity
+    #[serde(default = "default_error_severity")]
+    pub severity: PolicySeverity,
+}
+
 /// Complete architectural policies configuration.
 #[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq, Eq)]
 pub struct PolicyConfig {
@@ -98,6 +148,15 @@ pub struct PolicyConfig {
     /// Limit rules constraining clone sizes and cluster counts
     #[serde(default)]
     pub limits: Vec<LimitRule>,
+    /// Prohibited pattern rules (regex and AST queries)
+    #[serde(default)]
+    pub prohibited_patterns: Vec<ProhibitedPatternRule>,
+    /// Built-in zero-emoji sensor flag
+    #[serde(default)]
+    pub zero_emojis: Option<bool>,
+    /// Token budget rules constraining file and total token limits
+    #[serde(default)]
+    pub token_budgets: Vec<TokenBudgetRule>,
     /// Raw `.cddmrules.toml` content if loaded from disk/string
     pub raw_toml: Option<String>,
 }
@@ -107,7 +166,7 @@ pub struct PolicyConfig {
 pub struct PolicyViolation {
     /// Name of the violated rule
     pub rule_name: String,
-    /// Category of rule ("boundary", "zero_duplication", "limit")
+    /// Category of rule ("boundary", "zero_duplication", "limit", "prohibited_pattern", "zero_emojis", "token_budget")
     pub rule_type: String,
     /// Severity level
     pub severity: PolicySeverity,
@@ -129,6 +188,33 @@ pub struct PolicyViolation {
     pub cluster_id: Option<usize>,
     /// Number of matching tokens in the violating fragment
     pub token_count: usize,
+    /// Code/text snippet where violation occurred
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub snippet: Option<String>,
+    /// Suggested remediation guidance
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub remediation: Option<String>,
+}
+
+impl Default for PolicyViolation {
+    fn default() -> Self {
+        Self {
+            rule_name: String::new(),
+            rule_type: String::new(),
+            severity: PolicySeverity::Error,
+            message: String::new(),
+            file_a: String::new(),
+            start_line_a: 1,
+            end_line_a: 1,
+            file_b: None,
+            start_line_b: None,
+            end_line_b: None,
+            cluster_id: None,
+            token_count: 0,
+            snippet: None,
+            remediation: None,
+        }
+    }
 }
 
 /// Aggregated result of evaluating architectural policies against a scan result.

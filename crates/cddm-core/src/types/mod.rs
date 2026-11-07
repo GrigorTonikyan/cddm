@@ -17,7 +17,7 @@ pub use compact::{
 pub use diff::{CloneStatus, DiffClonePair, DiffScanResult, DiffSummary};
 pub use policy::{
     BoundaryRule, LimitRule, PolicyConfig, PolicyEvaluationResult, PolicySeverity, PolicyViolation,
-    ZeroDuplicationRule,
+    ProhibitedPatternRule, TokenBudgetRule, ZeroDuplicationRule,
 };
 pub use refactor::{
     ApplyRefactorBranchRequest, ApplyRefactorBranchResult, AstRewriteResult, AstRewrittenFile,
@@ -155,6 +155,7 @@ mod tests {
                 clones: 5,
             }],
             policy_violations: Vec::new(),
+            target_directory: None,
         };
         assert_serde_roundtrip(&result);
     }
@@ -397,6 +398,9 @@ mod tests {
             boundaries: vec![boundary],
             zero_duplication: vec![zero_dup],
             limits: vec![limit],
+            prohibited_patterns: Vec::new(),
+            zero_emojis: Some(false),
+            token_budgets: Vec::new(),
             raw_toml: Some("[[boundaries]]\nname = \"domain-isolation\"\n".to_string()),
         };
         assert_serde_roundtrip(&config);
@@ -414,6 +418,8 @@ mod tests {
             end_line_b: Some(45),
             cluster_id: Some(1),
             token_count: 75,
+            snippet: None,
+            remediation: None,
         };
         assert_serde_roundtrip(&violation);
 

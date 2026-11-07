@@ -54,6 +54,8 @@ pub fn evaluate_scan_policies(
                             end_line_b: Some(pair.end_line_b),
                             cluster_id: None,
                             token_count: pair.token_count,
+                            snippet: None,
+                            remediation: None,
                         });
                     }
                 }
@@ -97,6 +99,8 @@ pub fn evaluate_scan_policies(
                     end_line_b: Some(pair.end_line_b),
                     cluster_id: None,
                     token_count: pair.token_count,
+                    snippet: None,
+                    remediation: None,
                 });
             }
         }
@@ -127,6 +131,8 @@ pub fn evaluate_scan_policies(
                     end_line_b: Some(pair.end_line_b),
                     cluster_id: None,
                     token_count: pair.token_count,
+                    snippet: None,
+                    remediation: None,
                 });
             }
         }
@@ -175,6 +181,8 @@ pub fn evaluate_scan_policies(
                             end_line_b: None,
                             cluster_id: Some(cluster.id),
                             token_count: cluster.token_count,
+                            snippet: None,
+                            remediation: None,
                         });
                     }
                 }

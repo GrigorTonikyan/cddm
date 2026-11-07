@@ -144,6 +144,7 @@ mod tests {
             duration_ms: 120,
             language_breakdown: vec![],
             policy_violations: vec![],
+            target_directory: None,
         };
 
         let comment = generate_pr_markdown_comment(&scan_result, 15.0, WorkflowPlatform::GitHub);
@@ -181,6 +182,7 @@ mod tests {
             duration_ms: 250,
             language_breakdown: vec![],
             policy_violations: vec![],
+            target_directory: None,
         };
 
         let comment = generate_pr_markdown_comment(&scan_result, 15.0, WorkflowPlatform::GitLab);

@@ -75,12 +75,41 @@ export interface LimitRule {
 }
 
 /**
+ * Prohibited pattern rule for regex or Tree-sitter AST queries.
+ */
+export interface ProhibitedPatternRule {
+  name: string;
+  description?: string;
+  pattern: string;
+  pattern_type?: "regex" | "ast";
+  include?: string[];
+  exclude?: string[];
+  severity: PolicySeverity;
+  remediation?: string;
+}
+
+/**
+ * Token budget rule constraining file or total tokens across a glob pattern.
+ */
+export interface TokenBudgetRule {
+  name: string;
+  description?: string;
+  pattern: string;
+  max_file_tokens?: number;
+  max_total_tokens?: number;
+  severity: PolicySeverity;
+}
+
+/**
  * Complete architectural policy configuration.
  */
 export interface PolicyConfig {
   boundaries: BoundaryRule[];
   zero_duplication: ZeroDuplicationRule[];
   limits: LimitRule[];
+  prohibited_patterns?: ProhibitedPatternRule[];
+  zero_emojis?: boolean;
+  token_budgets?: TokenBudgetRule[];
   raw_toml?: string;
 }
 
@@ -100,6 +129,8 @@ export interface PolicyViolation {
   end_line_b?: number;
   cluster_id?: number;
   token_count: number;
+  snippet?: string;
+  remediation?: string;
 }
 
 /**
