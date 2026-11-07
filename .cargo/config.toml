@@ -1,2 +1,15 @@
+[env]
+# CXXFLAGS = "/Zm2000 /EHsc"
+
 [build]
 rustflags = ["-Z", "threads=8"]
+
+
+[profile.dev]
+incremental = true # Retain fast local code rebuild speeds
+debug = 1 # Drops deep variable tracking lines (instantly reduces PDB size)
+
+# Force overall third-party packages to be optimized to clear build artifact footprint
+[profile.dev.package."*"]
+opt-level = 2
+
