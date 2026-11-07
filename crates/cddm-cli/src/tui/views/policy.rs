@@ -50,6 +50,30 @@ fn render_policy_rules(frame: &mut Frame, app: &TuiApp, area: Rect) {
                 ])
                 .style(Style::default().fg(Color::Green)),
             );
+            rows.push(
+                Row::new(vec![
+                    "Prohibited Patterns".to_string(),
+                    "Regex & AST Sensors".to_string(),
+                    "Compliant (PASS)".to_string(),
+                ])
+                .style(Style::default().fg(Color::Green)),
+            );
+            rows.push(
+                Row::new(vec![
+                    "Zero-Emoji Sensor".to_string(),
+                    "Codebase Glyph Scanner".to_string(),
+                    "Compliant (PASS)".to_string(),
+                ])
+                .style(Style::default().fg(Color::Green)),
+            );
+            rows.push(
+                Row::new(vec![
+                    "Token Budgets".to_string(),
+                    "File & Total Limits".to_string(),
+                    "Within Limits (PASS)".to_string(),
+                ])
+                .style(Style::default().fg(Color::Green)),
+            );
         }
     } else {
         rows.push(

@@ -34,6 +34,26 @@ describe("PolicyRulesModal Component", () => {
         severity: "Warning",
       },
     ],
+    prohibited_patterns: [
+      {
+        name: "no-console-log",
+        description: "Disallow console.log",
+        pattern: "console\\.log",
+        pattern_type: "regex",
+        severity: "Error",
+        remediation: "Use logger",
+      },
+    ],
+    zero_emojis: true,
+    token_budgets: [
+      {
+        name: "agent-rules-budget",
+        description: "Rule files token budget",
+        pattern: ".agents/rules/*.md",
+        max_file_tokens: 2500,
+        severity: "Error",
+      },
+    ],
     raw_toml: "# Test rules TOML\n",
   };
 
@@ -89,7 +109,7 @@ describe("PolicyRulesModal Component", () => {
 
     expectDefinedTexts([
       "Architectural Boundary & Anti-Duplication Policy Studio",
-      "Active Policies (3)",
+      "Active Policies (6)",
       "Violations Inspector (1)",
       ".cddmrules.toml Editor",
       "domain-isolation",
@@ -99,6 +119,10 @@ describe("PolicyRulesModal Component", () => {
       "src/auth/**",
       "api-cluster-limit",
       "src/api/**",
+      "no-console-log",
+      "ENFORCED (Active)",
+      "agent-rules-budget",
+      ".agents/rules/*.md",
     ]);
   });
 

@@ -27,13 +27,21 @@ pub fn print_policy_violations_console(violations: &[PolicyViolation]) {
             } else {
                 "-".to_string()
             };
+        let message_text = match (&v.snippet, &v.remediation) {
+            (Some(snip), Some(rem)) => {
+                format!("{}\nSnippet: {}\nRemediation: {}", v.message, snip, rem)
+            }
+            (Some(snip), None) => format!("{}\nSnippet: {}", v.message, snip),
+            (None, Some(rem)) => format!("{}\nRemediation: {}", v.message, rem),
+            (None, None) => v.message.clone(),
+        };
         policy_table.add_row(vec![
             Cell::new(&v.rule_name),
             Cell::new(&v.rule_type),
             sev_cell,
             Cell::new(loc_a),
             Cell::new(loc_b),
-            Cell::new(&v.message),
+            Cell::new(message_text),
         ]);
     }
     println!("{}", policy_table);
@@ -51,9 +59,17 @@ pub fn print_policy_violations_markdown(violations: &[PolicyViolation]) {
             } else {
                 "-".to_string()
             };
+        let message_text = match (&v.snippet, &v.remediation) {
+            (Some(snip), Some(rem)) => {
+                format!("{} (Snippet: `{}`; Remediation: {})", v.message, snip, rem)
+            }
+            (Some(snip), None) => format!("{} (Snippet: `{}`)", v.message, snip),
+            (None, Some(rem)) => format!("{} (Remediation: {})", v.message, rem),
+            (None, None) => v.message.clone(),
+        };
         println!(
             "| `{}` | `{}` | `{:?}` | `{}` | `{}` | {} |",
-            v.rule_name, v.rule_type, v.severity, loc_a, loc_b, v.message
+            v.rule_name, v.rule_type, v.severity, loc_a, loc_b, message_text
         );
     }
 }

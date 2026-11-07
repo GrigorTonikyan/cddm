@@ -1,12 +1,21 @@
 #![forbid(unsafe_code)]
 
+pub mod budgets;
 pub mod compiled;
+pub mod emoji;
 pub mod engine;
 pub mod eval;
+pub mod patterns;
 
-pub use compiled::{CompiledBoundary, CompiledLimit, CompiledZeroDuplication, path_matches_glob};
+pub use budgets::{CompiledTokenBudget, count_file_tokens, evaluate_token_budgets};
+pub use compiled::{
+    CompiledBoundary, CompiledLimit, CompiledProhibitedPattern, CompiledZeroDuplication,
+    path_matches_glob,
+};
+pub use emoji::{evaluate_zero_emoji, is_emoji_char};
 pub use engine::PolicyEngine;
 pub use eval::evaluate_scan_policies;
+pub use patterns::{CompiledProhibitedPattern as ProhibitedPattern, evaluate_prohibited_patterns};
 
 #[cfg(test)]
 mod tests {
@@ -53,6 +62,7 @@ severity = "error"
             duration_ms: 50,
             language_breakdown: Vec::new(),
             policy_violations: Vec::new(),
+            target_directory: None,
         };
 
         let eval = engine.evaluate(&scan_result);
@@ -101,6 +111,7 @@ severity = "error"
             duration_ms: 20,
             language_breakdown: Vec::new(),
             policy_violations: Vec::new(),
+            target_directory: None,
         };
 
         let eval = engine.evaluate(&scan_result);
@@ -175,11 +186,97 @@ severity = "warning"
             duration_ms: 30,
             language_breakdown: Vec::new(),
             policy_violations: Vec::new(),
+            target_directory: None,
         };
 
         let eval = engine.evaluate(&scan_result);
         assert!(eval.passed); // Warnings only
         assert_eq!(eval.warning_count, 2); // 1 for pair token_count, 1 for cluster max_occurrences
         assert_eq!(eval.error_count, 0);
+    }
+
+    #[test]
+    fn test_policy_engine_prohibited_patterns_and_budgets() {
+        let temp_dir = tempfile::tempdir().expect("Failed to create tempdir");
+        let root = temp_dir.path();
+
+        let source_file = root.join("bad_file.rs");
+        std::fs::write(
+            &source_file,
+            "fn dangerous() { let _x = 1; println!(\"alert\"); }",
+        )
+        .expect("Failed to write test file");
+
+        let toml_content = r#"
+[[prohibited_patterns]]
+name = "no-dangerous-fn"
+description = "Do not use dangerous functions"
+pattern = "fn dangerous"
+pattern_type = "regex"
+severity = "error"
+remediation = "Refactor into safe module"
+
+[[token_budgets]]
+name = "max-source-tokens"
+pattern = "*.rs"
+max_file_tokens = 5
+severity = "warning"
+"#;
+        let engine = toml_content
+            .parse::<PolicyEngine>()
+            .expect("Failed to parse policy TOML");
+
+        let scan_result = ScanResult {
+            scan_id: "test-patterns".to_string(),
+            total_files: 1,
+            target_directory: Some(root.to_string_lossy().to_string()),
+            ..Default::default()
+        };
+
+        let eval = engine.evaluate(&scan_result);
+        assert!(!eval.passed);
+        assert_eq!(eval.error_count, 1); // prohibited pattern error
+        assert_eq!(eval.warning_count, 1); // token budget warning
+        assert_eq!(eval.violations.len(), 2);
+
+        let p_violation = eval
+            .violations
+            .iter()
+            .find(|v| v.rule_name == "no-dangerous-fn")
+            .expect("Expected prohibited pattern violation");
+        assert_eq!(p_violation.rule_type, "prohibited_pattern");
+        assert!(p_violation.snippet.is_some());
+        assert_eq!(
+            p_violation.remediation.as_deref(),
+            Some("Refactor into safe module")
+        );
+    }
+
+    #[test]
+    fn test_policy_engine_zero_emoji_detection() {
+        let temp_dir = tempfile::tempdir().expect("Failed to create tempdir");
+        let root = temp_dir.path();
+
+        let doc_file = root.join("README.md");
+        std::fs::write(&doc_file, "# Project\nThis is great \u{1F680} rockets!\n")
+            .expect("Failed to write doc file");
+
+        let toml_content = "zero_emojis = true\n";
+        let engine = toml_content
+            .parse::<PolicyEngine>()
+            .expect("Failed to parse policy TOML");
+
+        let scan_result = ScanResult {
+            scan_id: "test-emoji".to_string(),
+            total_files: 1,
+            target_directory: Some(root.to_string_lossy().to_string()),
+            ..Default::default()
+        };
+
+        let eval = engine.evaluate(&scan_result);
+        assert!(!eval.passed);
+        assert_eq!(eval.error_count, 1);
+        assert_eq!(eval.violations[0].rule_type, "zero_emojis");
+        assert_eq!(eval.violations[0].rule_name, "zero-emoji");
     }
 }

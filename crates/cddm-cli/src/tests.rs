@@ -61,6 +61,7 @@ fn make_test_result() -> ScanResult {
             clones: 1,
         }],
         policy_violations: Vec::new(),
+        target_directory: None,
     }
 }
 

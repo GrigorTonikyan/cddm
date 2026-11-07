@@ -358,6 +358,9 @@ async fn test_policy_rules_get_and_post_handlers() {
         }],
         zero_duplication: vec![],
         limits: vec![],
+        prohibited_patterns: vec![],
+        zero_emojis: None,
+        token_budgets: vec![],
         raw_toml: None,
     };
 
@@ -468,5 +471,6 @@ pub(crate) fn create_dummy_scan_result(file_a: &str, file_b: &str) -> ScanResult
         duration_ms: 50,
         language_breakdown: vec![],
         policy_violations: vec![],
+        target_directory: None,
     }
 }

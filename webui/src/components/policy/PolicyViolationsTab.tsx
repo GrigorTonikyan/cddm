@@ -62,6 +62,19 @@ export const PolicyViolationsTab: React.FC<PolicyViolationsTabProps> = ({
 
               <p className="text-xs text-slate-300 font-sans">{v.message}</p>
 
+              {v.snippet && (
+                <div className="p-2 rounded bg-slate-950 border border-slate-800 text-[11px] font-mono text-amber-200 overflow-x-auto">
+                  <span className="text-slate-500 block text-[10px]">SNIPPET:</span>
+                  <code>{v.snippet}</code>
+                </div>
+              )}
+
+              {v.remediation && (
+                <div className="p-2 rounded bg-emerald-950/40 border border-emerald-800/40 text-xs text-emerald-300 font-sans">
+                  <span className="font-semibold">Remediation:</span> {v.remediation}
+                </div>
+              )}
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-1">
                 <div className="p-2 rounded bg-slate-950 border border-slate-800/80">
                   <span className="text-slate-500 block text-[10px]">PRIMARY LOCATION:</span>

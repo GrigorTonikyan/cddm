@@ -34,6 +34,26 @@ pattern = "src/api/**"
 max_tokens = 100
 max_occurrences = 3
 severity = "warning"
+
+[[prohibited_patterns]]
+name = "no-console-log"
+description = "Disallow debugging console.log statements in production code"
+pattern = "console\\.log"
+pattern_type = "regex"
+include = ["src/**/*.ts", "src/**/*.tsx"]
+exclude = ["src/**/*.test.ts"]
+severity = "error"
+remediation = "Use structured logger or remove debug console statements"
+
+zero_emojis = true
+
+[[token_budgets]]
+name = "agent-rules-budget"
+description = "Agent rule files must not exceed token budgets to prevent LLM context bloat"
+pattern = ".agents/rules/*.md"
+max_file_tokens = 2500
+max_total_tokens = 20000
+severity = "error"
 `;
 
 export const PolicyRulesModal: React.FC<PolicyRulesModalProps> = ({ isOpen, onClose }) => {
@@ -82,6 +102,9 @@ export const PolicyRulesModal: React.FC<PolicyRulesModalProps> = ({ isOpen, onCl
         boundaries: policyConfig?.boundaries || [],
         zero_duplication: policyConfig?.zero_duplication || [],
         limits: policyConfig?.limits || [],
+        prohibited_patterns: policyConfig?.prohibited_patterns || [],
+        zero_emojis: policyConfig?.zero_emojis,
+        token_budgets: policyConfig?.token_budgets || [],
         raw_toml: rawContent,
       };
       await savePolicyRules?.(updatedConfig);
@@ -206,7 +229,10 @@ export const PolicyRulesModal: React.FC<PolicyRulesModalProps> = ({ isOpen, onCl
               Active Policies (
               {(policyConfig?.boundaries?.length || 0) +
                 (policyConfig?.zero_duplication?.length || 0) +
-                (policyConfig?.limits?.length || 0)}
+                (policyConfig?.limits?.length || 0) +
+                (policyConfig?.prohibited_patterns?.length || 0) +
+                (policyConfig?.token_budgets?.length || 0) +
+                (policyConfig?.zero_emojis ? 1 : 0)}
               )
             </button>
             <button
