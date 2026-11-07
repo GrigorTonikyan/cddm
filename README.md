@@ -7,7 +7,7 @@
 [![Rust](https://img.shields.io/badge/rust-2024%20edition-orange.svg)](https://www.rust-lang.org)
 [![Vite Plus](https://img.shields.io/badge/vite%2B-0.3.0-purple.svg)](https://viteplus.dev)
 [![TypeScript](https://img.shields.io/badge/typescript-7.0-blue.svg)](https://www.typescriptlang.org)
-[![React](https://img.shields.io/badge/react-19.2-61dafb.svg)](https://react.dev)
+[![React](https://img.shields.io/badge/react-19.3-61dafb.svg)](https://react.dev)
 [![npm version](https://img.shields.io/badge/npm-4.8.0-red.svg)](https://www.npmjs.com/package/cddm)
 [![crates.io](https://img.shields.io/badge/crates.io-4.8.0-brightgreen.svg)](https://crates.io/crates/cddm)
 
@@ -169,7 +169,7 @@ For comprehensive technical manuals on each interaction surface, explore our ded
 - **[Embedded Studio WebUI](docs/WEBUI.md)** — React 19 Studio guide, 19 interactive modals, REST & SSE API catalog.
 - **[Terminal UI (TUI) Studio](docs/TUI.md)** — Keyboard shortcuts and 12-tab navigation guide.
 - **[Language Server & IDE Setup](docs/LSP_SETUP.md)** — Real-time in-editor setup for VS Code, Cursor, Neovim, Zed, Helix, Sublime.
-- **[4-Pillar Feature Parity Matrix](docs/FEATURE_PARITY.md)** — Authoritative governance matrix across all 21 core capabilities.
+- **[4-Pillar Feature Parity Matrix](docs/FEATURE_PARITY.md)** — Authoritative governance matrix across all 33 core capabilities.
 
 ---
 

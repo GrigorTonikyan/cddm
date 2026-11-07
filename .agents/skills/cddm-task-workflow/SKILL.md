@@ -22,7 +22,7 @@ Inspect all output. Every check must pass with zero errors and zero warnings.
 For UI or user-facing changes:
 
 1. Start the dev server: `vp -C webui run dev`
-2. Spawn a `/browser` subagent to navigate `http://localhost:5173`
+2. Spawn a `/browser` subagent to navigate `http://localhost:3000`
 3. Exercise all pages, modals, buttons, keyboard shortcuts, themes
 4. Confirm zero console errors and zero visual defects
 

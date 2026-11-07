@@ -12,7 +12,7 @@ Run `vp run verify` (or `bun scripts/verify.ts`). Inspect the output and confirm
 
 ## Step 2: Interactive Browser UI/UX Verification
 
-For frontend or user-facing changes, spawn a `/browser` subagent in Chrome to interactively verify the WebUI at `http://localhost:5173`. Exercise all pages, modals, buttons, keyboard shortcuts, themes, and responsive states. Confirm zero console errors and zero visual defects.
+For frontend or user-facing changes, spawn a `/browser` subagent in Chrome to interactively verify the WebUI at `http://localhost:3000`. Exercise all pages, modals, buttons, keyboard shortcuts, themes, and responsive states. Confirm zero console errors and zero visual defects.
 
 ## Step 3: MCP Server Live Testing
 

@@ -39,7 +39,7 @@ For comprehensive manuals on specific interaction surfaces, consult:
 ### Prerequisites
 
 - **Rust**: 2024 edition (Rust Nightly 1.100.0+ configured via `rust-toolchain.toml`). Install via [rustup.rs](https://rustup.rs).
-- **Vite Plus**: `0.3.0` via [viteplus.dev](https://viteplus.dev) or **Bun**: `1.4.0` via [bun.sh](https://bun.sh).
+- **Vite Plus**: `0.3.0` via [viteplus.dev](https://viteplus.dev) or **Bun**: `1.4+` via [bun.sh](https://bun.sh).
 
 ### Setting Up Development Workspace
 
@@ -84,7 +84,7 @@ For comprehensive manuals on specific interaction surfaces, consult:
 You can run the complete quality pipeline, auto-fix, clean, or workspace reset across both Rust backend, WebUI, and scripts with single cross-platform commands:
 
 ```bash
-# 1. Run all 18 checks, tests, typechecks, lints, builds, and dogfood self-scan (Read-Only)
+# 1. Run all 20 checks, tests, typechecks, lints, builds, and dogfood self-scan (Read-Only)
 vp run verify
 # or directly:
 bun scripts/verify.ts
@@ -164,7 +164,7 @@ CDDM enforces [Gitea (`git.gt-web-dev.com`)](https://git.gt-web-dev.com/gt-dev/c
    - `fix(webui): correct slider token threshold calculation (#19)`
    - `docs(mcp): update MCP tool setup guide (#19)`
 4. Commit messages are automatically validated via `@commitlint/cli` and `commitlint.config.ts`.
-5. Run `vp run verify` to confirm all 18 quality checks pass.
+5. Run `vp run verify` to confirm all 20 quality checks pass.
 
 ### 3. Pull Requests, Auto-Closing & API Merge
 
@@ -175,7 +175,7 @@ CDDM enforces [Gitea (`git.gt-web-dev.com`)](https://git.gt-web-dev.com/gt-dev/c
    ```
 
 2. Open the primary Pull Request on [Gitea](https://git.gt-web-dev.com/gt-dev/cddm/pulls) merging into `main`.
-3. Include closing keywords (`Fixes #19` or `Closes #19`) in the PR description. Every PR must reference an issue; milestones are optional and only used when an issue targets a specific release (e.g. `v1.11.0`).
+3. Include closing keywords (`Fixes #19` or `Closes #19`) in the PR description. Every PR must reference an issue; milestones are optional and only used when an issue targets a specific release (e.g. `v4.8.0`).
 4. Merges into `main` are executed via the official Gitea REST API (`POST /repos/{owner}/{repo}/pulls/{id}/merge`), automatically marking the PR as merged, closing the linked issue, and deleting the feature branch.
 
 ### 4. Automated Semantic Releases
@@ -186,7 +186,7 @@ Releases synchronize all 10 project manifests (`package.json`, `Cargo.toml`, `we
 # Preview calculated version and changelog entry (dry-run)
 vp run version:check
 
-# Synchronize all 10 manifests and tag release (e.g. v1.11.0)
+# Synchronize all 10 manifests and tag release (e.g. v4.8.0)
 vp run version:release
 # or:
 vp run bump
