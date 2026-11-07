@@ -1,9 +1,46 @@
-import { describe, it, expect, beforeEach } from "vite-plus/test";
+import { describe, it, expect, beforeEach, beforeAll } from "vite-plus/test";
 import { LocalStorageAdapter, MemoryAdapter } from "./storage-adapter";
+
+class MockLocalStorage {
+  private store = new Map<string, string>();
+
+  get length(): number {
+    return this.store.size;
+  }
+
+  clear(): void {
+    this.store.clear();
+  }
+
+  getItem(key: string): string | null {
+    return this.store.get(key) ?? null;
+  }
+
+  key(index: number): string | null {
+    return Array.from(this.store.keys())[index] ?? null;
+  }
+
+  removeItem(key: string): void {
+    this.store.delete(key);
+  }
+
+  setItem(key: string, value: string): void {
+    this.store.set(key, String(value));
+  }
+}
 
 describe("Storage Adapters", () => {
   describe("LocalStorageAdapter", () => {
     let adapter: LocalStorageAdapter;
+    const mockStorage = new MockLocalStorage();
+
+    beforeAll(() => {
+      Object.defineProperty(window, "localStorage", {
+        value: mockStorage,
+        writable: true,
+        configurable: true,
+      });
+    });
 
     beforeEach(() => {
       window.localStorage.clear();
