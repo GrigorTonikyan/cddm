@@ -4,20 +4,20 @@ This rule governs the exclusive use of Gitea as the Single Source of Truth (SSoT
 
 ## 1. Prohibition of Static Markdown Tracking
 
-1. **Zero Markdown Task Lists**: Never create, maintain, or update static markdown files (e.g., \docs/TODO.md\, \docs/ROADMAP.md\, \docs/REQUIREMENTS.md\) to track active tasks, open bugs, or future milestones.
+1. **Zero Markdown Task Lists**: Never create, maintain, or update static markdown files (e.g., `docs/TODO.md`, `docs/ROADMAP.md`, `docs/REQUIREMENTS.md`) to track active tasks, open bugs, or future milestones.
 2. **Zero Redundant Documentation**: Do not duplicate requirement specifications or acceptance criteria across multiple files. All actionable specifications MUST live in Gitea Issues.
-3. **No Scratchpad Commits**: Do not commit draft conversation logs, raw chat transcripts, or scratchpad RFCs (e.g., \docs/rfc/_.md\, \docs/win2x/_.md\) to the repository. These must be synthesized into official Gitea Wiki pages or Gitea PR descriptions.
+3. **No Scratchpad Commits**: Do not commit draft conversation logs, raw chat transcripts, or scratchpad RFCs (e.g., `docs/rfc/*.md`, `docs/win2x/*.md`) to the repository. These must be synthesized into official Gitea Wiki pages or Gitea PR descriptions.
 
 ## 2. Gitea Entity Mapping Mandate
 
 1. **Milestones = Version Releases**:
-   - Gitea Milestones are strictly reserved for time-bound, semantic version releases (e.g., \1.0.0\, \3.2.0\).
+   - Gitea Milestones are strictly reserved for time-bound, semantic version releases (e.g., `v1.0.0`, `v3.2.0`).
    - Every active milestone must have a corresponding semantic version number.
 2. **Issues = Epics / Requirements / Tasks**:
    - **Requirements (FR)** and **Enhancement Proposals (EP)** are tracked as Gitea Issues (acting as "Epics").
    - Every change MUST be tracked by an Issue. Assigning a Version Milestone is optional and only done when the Issue targets a specific release.
 3. **Labels = Categorization**:
-   - Use standardized Gitea labels (\eat: *\, \ug\, \priority: *\) to categorize and filter Issues.
+   - Use standardized Gitea labels (`feat: *`, `bug`, `priority: *`) to categorize and filter Issues.
 
 ## 3. Project Management Workflow
 

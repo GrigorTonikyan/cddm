@@ -13,7 +13,7 @@
 
 ## 4-Tier Troubleshooting Boundary Hierarchy (STRICT MANDATE)
 
-- **Tier 1 (Local Workspace)**: Debug locally first (`bun run all:check`, `uv run pytest`, `vp fmt --check`, `vp lint`).
+- **Tier 1 (Local Workspace)**: Debug locally first (`vp run verify`, `cargo test --workspace`, `vp check`, `vp -C webui run test`).
 - **Tier 2 (VCS & CI/CD Observability — `gitea-mcp`)**: When debugging CI pipeline checks, PR merge gates, or build failures, use strictly `gitea-mcp` tools (`gitea_list_workflow_runs`, `gitea_get_job_logs`, `gitea_runner_status`, `gitea_get_runner_logs`) and `forge gitea runs|run|jobs|job-logs`.
 - **Tier 3 (PaaS Runtime — `coolify-mcp`)**: Only query Coolify when specifically tasked with inspecting a live deployed service or routing issue in staging/production.
 - **Tier 4 (Hypervisor — `forge-mcp`)**: **STRICT ISOLATION**: Never probe TrueNAS host containers (`truenas_app_*`, `truenas_vm_*`) when debugging repository or CI issues.

@@ -25,7 +25,7 @@ description: >-
 
 ## Ratchet Cap Updating
 
-After decomposing a grandfathered file in [`scripts/check-file-length.ts`](scripts/check-file-length.ts):
+After decomposing a grandfathered file in [`scripts/check-file-length.ts`](../../../scripts/check-file-length.ts):
 
 1. Run `bun scripts/check-file-length.ts` to get the new line count
 2. Lower the ceiling in `GRANDFATHERED_LINE_CAPS` to the new count
