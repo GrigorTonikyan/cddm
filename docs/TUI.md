@@ -26,20 +26,20 @@ cddm tui . --fail-threshold 10.0
 
 <!-- AUTOGEN:TUI_TABS:START -->
 
-| Tab #  | Tab Title          |      Hotkey      | Description                                                                       |
-| :----: | :----------------- | :--------------: | :-------------------------------------------------------------------------------- |
-| **1**  | **Overview**       |     `1 or s`     | Workspace summary metrics, DRY health gauge, language breakdown & scan trigger    |
-| **2**  | **Clones & Diffs** |   `2 or c / d`   | Clone pairs, N-way cluster trees, and split/unified Monaco-style diff viewer      |
-| **3**  | **Semantic**       |       `3`        | Cross-language Weisfeiler-Lehman AST graph isomorphisms and neural embeddings     |
-| **4**  | **Refactor**       | `4 or r / a / p` | AST-native refactoring sandbox, AI Prompt generator, and AI Code Surgeon          |
-| **5**  | **Extract**        |     `5 or e`     | Standalone shared crate/package synthesizer with multi-ecosystem manifest updates |
-| **6**  | **Policies**       |       `6`        | Architectural rules checker (.cddmrules.toml) and .cddmignore suppression manager |
-| **7**  | **Timeline**       |       `7`        | Git commit history time-series trajectories and multi-branch clone drift matrix   |
-| **8**  | **CI/CD & Hooks**  |       `8`        | Turnkey workflow generator (Gitea/GitHub/GitLab/Azure) and Git pre-commit hooks   |
-| **9**  | **Overlap**        |       `9`        | Ecosystem library duplication detector for reimplemented utility functions        |
-| **10** | **Hub**            |       `0`        | Multi-repository Organization Federation Hub viewer and cross-repo extractor      |
-| **11** | **Coverage**       |     `C or v`     | Runtime execution trace correlation, hot-path analysis, and risk scoring          |
-| **12** | **Dead Code**      |       `D`        | Unreferenced functions, unreachable code blocks, and 0-hit duplicate clones       |
+| Tab #  | Tab Title          |      Hotkey      | Description                                                                                                                                   |
+| :----: | :----------------- | :--------------: | :-------------------------------------------------------------------------------------------------------------------------------------------- |
+| **1**  | **Overview**       |     `1 or s`     | Workspace summary metrics, DRY health gauge, language breakdown & scan trigger                                                                |
+| **2**  | **Clones & Diffs** |   `2 or c / d`   | Clone pairs, N-way cluster trees, and split/unified Monaco-style diff viewer                                                                  |
+| **3**  | **Semantic**       |       `3`        | Cross-language Weisfeiler-Lehman AST graph isomorphisms and neural embeddings                                                                 |
+| **4**  | **Refactor**       | `4 or r / a / p` | AST-native refactoring sandbox, AI Prompt generator, and AI Code Surgeon                                                                      |
+| **5**  | **Extract**        |     `5 or e`     | Standalone shared crate/package synthesizer with multi-ecosystem manifest updates                                                             |
+| **6**  | **Policies**       |       `6`        | Architectural rules checker (.cddmrules.toml: boundaries, prohibited patterns, zero-emoji, token budgets) and .cddmignore suppression manager |
+| **7**  | **Timeline**       |       `7`        | Git commit history time-series trajectories and multi-branch clone drift matrix                                                               |
+| **8**  | **CI/CD & Hooks**  |       `8`        | Turnkey workflow generator (Gitea/GitHub/GitLab/Azure) and Git pre-commit hooks                                                               |
+| **9**  | **Overlap**        |       `9`        | Ecosystem library duplication detector for reimplemented utility functions                                                                    |
+| **10** | **Hub**            |       `0`        | Multi-repository Organization Federation Hub viewer and cross-repo extractor                                                                  |
+| **11** | **Coverage**       |     `C or v`     | Runtime execution trace correlation, hot-path analysis, and risk scoring                                                                      |
+| **12** | **Dead Code**      |       `D`        | Unreferenced functions, unreachable code blocks, and 0-hit duplicate clones                                                                   |
 
 <!-- AUTOGEN:TUI_TABS:END -->
 

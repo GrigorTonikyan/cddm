@@ -46,11 +46,11 @@ This rule governs repository tracking, issue management, branching nomenclature,
 
 1. **Gitea Push (Sole Push Target)**: Always push working branches to `origin` (Gitea: `https://git.gt-web-dev.com/gt-dev/cddm.git`).
 2. **Automated Server-Side Mirroring (Zero Manual Push)**: Gitea is configured with automated server-side push mirroring (`sync_on_commit: true`) to GitHub (`https://github.com/GrigorTonikyan/cddm.git`). Never push manually to the `github` remote—doing so causes redundant network traffic, race conditions, and reference lock collisions (e.g. `cannot lock ref ... reference already exists`).
-3. **Primary PR Creation**: Open the primary Pull Request via Forge MCP (`gitea_create_pull_request` or `forge pr create`) targeting `main`.
+3. **Primary PR Creation**: Open the primary Pull Request via Forge MCP (`gitea_create_pr` or `forge pr create`) targeting `main`.
 4. **Auto-Closing Issue Citations**: PR descriptions MUST include closing keywords (`Fixes #<id>`, `Closes #<id>`, `Resolves #<id>`) pointing to the primary Gitea issue.
 5. **CI Quality Gate Verification**: Verify all CI workflow checks pass before merging using Forge MCP (`gitea_wait_for_ci_gate` or `gitea_get_commit_statuses`). Never bypass CI gates (`--no-verify` and bypasses are strictly forbidden).
 6. **API-Driven Merge Enforcement**:
-   - Merging PRs into `main` MUST be executed via Forge MCP (`gitea_merge_pull_request` or `forge pr merge <id> --delete-branch`).
+   - Merging PRs into `main` MUST be executed via Forge MCP (`gitea_merge_pr` or `forge pr merge <id> --delete-branch`).
    - Merging via Forge MCP ensures Gitea automatically marks the PR as **`merged: true`** with state **`closed`**, auto-closes the linked issue, and prevents orphan PRs lingering in the UI.
    - Never bypass the Gitea merge endpoint with silent local fast-forward pushes to `main`.
 7. **Automatic Branch Deletion**: Merged feature branches must be deleted immediately after merge (enforced by Gitea `default_delete_branch_after_merge: true`).

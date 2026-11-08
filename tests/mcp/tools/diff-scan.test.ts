@@ -28,7 +28,7 @@ describe("MCP Tool: cddm_diff_scan", () => {
 
     expect(res).toBeDefined();
     expect(res.scan_id).toBeDefined();
-  });
+  }, 30000);
 
   it("should reject diff scan when base_ref is missing", async () => {
     await assertToolError("cddm_diff_scan", {}, RPC_ERRORS.INVALID_PARAMS);

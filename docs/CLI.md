@@ -39,7 +39,7 @@ The CDDM CLI provides 24 subcommands for high-speed terminal-based duplication a
 | **`cddm trend`**                    | `cddm trend [OPTIONS] [DIRECTORY]`            | Analyze historical duplication trajectories and DRY score across Git commits         | `--max-samples`, `--min-tokens`, `--format`                                                                                                                |
 | **`cddm hook`**                     | `cddm hook <install                           | uninstall                                                                            | status> [OPTIONS]`                                                                                                                                         | Manage automated Git pre-commit and pre-push duplication gate enforcement hooks | `--type`, `--fail-threshold`, `--min-tokens`                                  |
 | **`cddm ignore`**                   | `cddm ignore <init                            | check> [OPTIONS]`                                                                    | Manage .cddmignore suppression rules and inspect file/line suppression status                                                                              | `--force`, `--line`, `--ignore-tests`, `--ignore-mocks`, `--ignore-generated`   |
-| **`cddm rules`**                    | `cddm rules <init                             | check> [OPTIONS]`                                                                    | Manage architectural boundary policies and zero-duplication zones (.cddmrules.toml)                                                                        | `--rules`, `--enforce-policies`, `--format`, `--force`                          |
+| **`cddm rules`**                    | `cddm rules <init                             | check> [OPTIONS]`                                                                    | Manage architectural boundary policies, prohibited patterns, token budgets, and zero-emoji rules (.cddmrules.toml)                                         | `--rules`, `--enforce-policies`, `--format`, `--force`                          |
 | **`cddm init`**                     | `cddm init <gitea                             | github                                                                               | gitlab                                                                                                                                                     | azure> [OPTIONS]`                                                               | Generate turnkey CI/CD workflows for Gitea Actions, GitHub, GitLab, and Azure | `--fail-threshold`, `--min-tokens`, `--output`, `--write`                                              |
 | **`cddm comment`**                  | `cddm comment [OPTIONS] [DIRECTORY]`          | Generate formatted Markdown DRY health tables for Pull / Merge Request comments      | `--platform`, `--fail-threshold`, `--min-tokens`, `--output`                                                                                               |
 | **`cddm heal`**                     | `cddm heal [OPTIONS]`                         | Autonomous AI Code Surgeon refactoring with closed-loop test repair loop             | `--cluster`, `--pair`, `--provider`, `--model`, `--api-key`, `--verify`, `--test-cmd`, `--branch`, `--max-iterations`                                      |
@@ -79,6 +79,12 @@ cddm heal --cluster 1 --provider gemini --model gemini-3.8-pro --verify --test-c
 
 ```bash
 cddm init gitea --fail-threshold 5.0 --write
+```
+
+### Architectural Policy & Prohibited Pattern Enforcement
+
+```bash
+cddm rules check --rules .cddmrules.toml --enforce-policies --format console
 ```
 
 ---

@@ -5,7 +5,7 @@
 [![CI](https://git.gt-web-dev.com/gt-dev/cddm/actions/workflows/ci.yml/badge.svg)](https://git.gt-web-dev.com/gt-dev/cddm/actions/workflows/ci.yml)
 [![License: MIT / Apache 2.0](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)](LICENSE)
 [![Rust](https://img.shields.io/badge/rust-2024%20edition-orange.svg)](https://www.rust-lang.org)
-[![Vite Plus](https://img.shields.io/badge/vite%2B-0.3.0-purple.svg)](https://viteplus.dev)
+[![Vite Plus](https://img.shields.io/badge/vite%2B-1.5.0-purple.svg)](https://viteplus.dev)
 [![TypeScript](https://img.shields.io/badge/typescript-7.0-blue.svg)](https://www.typescriptlang.org)
 [![React](https://img.shields.io/badge/react-19.3-61dafb.svg)](https://react.dev)
 [![npm version](https://img.shields.io/badge/npm-4.8.0-red.svg)](https://www.npmjs.com/package/cddm)
