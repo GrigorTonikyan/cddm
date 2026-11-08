@@ -159,7 +159,8 @@ export const CLI_COMMANDS_CATALOG: CliCommandMetadata[] = [
   },
   {
     name: "rules",
-    summary: "Manage architectural boundary policies and zero-duplication zones (.cddmrules.toml)",
+    summary:
+      "Manage architectural boundary policies, prohibited patterns, token budgets, and zero-emoji rules (.cddmrules.toml)",
     usage: "cddm rules <init|check> [OPTIONS]",
     keyFlags: ["--rules", "--enforce-policies", "--format", "--force"],
   },
@@ -281,7 +282,7 @@ export const TUI_TABS_CATALOG: TuiTabMetadata[] = [
     title: "Policies",
     key: "6",
     description:
-      "Architectural rules checker (.cddmrules.toml) and .cddmignore suppression manager",
+      "Architectural rules checker (.cddmrules.toml: boundaries, prohibited patterns, zero-emoji, token budgets) and .cddmignore suppression manager",
   },
   {
     index: 7,

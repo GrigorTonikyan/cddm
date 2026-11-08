@@ -106,7 +106,8 @@ export const MCP_TOOLS_CATALOG: McpToolDef[] = [
   {
     name: "cddm_check_policies",
     category: "Policies",
-    summary: "Evaluates architectural boundary rules and zero-duplication zones",
+    summary:
+      "Evaluates boundary policies, prohibited patterns, token budgets, and zero-emoji sensors",
     keyParams: "directory, rules_file, enforce",
   },
   {
@@ -255,7 +256,8 @@ export const MCP_RESOURCES_CATALOG: McpResourceDef[] = [
   {
     uri: "cddm://workspace/policies",
     name: "Workspace Policy Rules",
-    summary: "Active .cddmrules.toml boundary and anti-duplication policy rules",
+    summary:
+      "Active .cddmrules.toml policies: boundaries, prohibited patterns, token budgets, and zero-emoji rules",
   },
   {
     uri: "cddm://workspace/semantic-graph",
@@ -366,7 +368,8 @@ export const WEBUI_MODAL_METADATA_REGISTRY: Record<string, WebUiModalMeta> = {
   },
   PolicyRulesModal: {
     trigger: "Header 'Policies' / Key 6",
-    description: "Architectural boundary rules, zero-duplication zones, and policy violations",
+    description:
+      "Architectural boundary rules, prohibited patterns, token budgets, zero-emoji sensors, and violations",
   },
   RefactorPatchModal: {
     trigger: "Clone Card 'View Patch'",

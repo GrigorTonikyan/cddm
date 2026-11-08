@@ -26,7 +26,7 @@ trigger: always_on
    - Every change must be preceded by an issue on Gitea.
    - Canonical branches MUST be derived strictly from the issue: `feat/issue-<id>-<slug>`, `fix/issue-<id>-<slug>`.
    - Commits must adhere to Conventional Commits referencing the issue (`Fixes #<id>`).
-   - Direct commits/pushes to `main` are strictly banned. All merges must proceed through Gitea PRs and be executed via Forge MCP (`gitea_merge_pull_request` with `delete_branch_after_merge: true`) or `forge pr merge <id> --delete-branch`. CI gates must be strictly verified with zero bypasses (`gitea_wait_for_ci_gate`).
+   - Direct commits/pushes to `main` are strictly banned. All merges must proceed through Gitea PRs and be executed via Forge MCP (`gitea_merge_pr` with `delete_branch_after_merge: true`) or `forge pr merge <id> --delete-branch`. CI gates must be strictly verified with zero bypasses (`gitea_wait_for_ci_gate`).
 9. **Strict Dogfooding Quality Gate**:
    - Every verification must run `cddm scan . --min-tokens 50 --fail-threshold 5.0` on release binaries. Loose thresholds (e.g. 15.0%) are strictly prohibited.
 10. **Zero Hardcoding Enforcement**:
