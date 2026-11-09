@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-27 | Rust: 409 #[test] units | WebUI: 334 tests across 77 suites | Scripts & MCP: 216 tests across 61 suites | CI Workflows: PASS
+> Last verified: 2026-08-27 | Rust: 416 #[test] units | WebUI: 334 tests across 77 suites | Scripts & MCP: 217 tests across 61 suites | CI Workflows: PASS
 
 ---
 
@@ -442,7 +442,7 @@
 
 ---
 
-## 3. Repository Scripts & MCP Protocol — Bun Test Suites (216 tests across 61 suites)
+## 3. Repository Scripts & MCP Protocol — Bun Test Suites (217 tests across 61 suites)
 
 ### Repository Tooling & Automation Suites
 
@@ -483,7 +483,7 @@
 | MCP Dynamic Discovery               | `tests/mcp/discovery.test.ts`                      | 6 tests    | PASS   |
 | Tool: cddm_apply_cluster_refactor   | `tests/mcp/tools/apply-cluster-refactor.test.ts`   | 3 tests    | PASS   |
 | Tool: cddm_ast_refactor             | `tests/mcp/tools/ast-refactor.test.ts`             | 2 tests    | PASS   |
-| Tool: cddm_check_policies           | `tests/mcp/tools/check-policies.test.ts`           | 3 tests    | PASS   |
+| Tool: cddm_check_policies           | `tests/mcp/tools/check-policies.test.ts`           | 4 tests    | PASS   |
 | Tool: cddm_check_suppression        | `tests/mcp/tools/check-suppression.test.ts`        | 2 tests    | PASS   |
 | Tool: cddm_compare_semantic_graphs  | `tests/mcp/tools/compare-semantic-graphs.test.ts`  | 2 tests    | PASS   |
 | Tool: cddm_correlate_coverage       | `tests/mcp/tools/correlate-coverage.test.ts`       | 3 tests    | PASS   |

@@ -136,6 +136,90 @@ pub struct TokenBudgetRule {
     pub severity: PolicySeverity,
 }
 
+/// A rule forbidding specific files, conflicting tooling, or legacy lockfiles.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct ForbiddenFileRule {
+    /// Unique identifier / name of the forbidden file rule
+    pub name: String,
+    /// Optional human-readable description
+    pub description: Option<String>,
+    /// Single glob pattern (e.g. ".eslintrc*", "yarn.lock")
+    #[serde(default)]
+    pub pattern: Option<String>,
+    /// Multiple glob patterns
+    #[serde(default)]
+    pub patterns: Vec<String>,
+    /// Violation severity
+    #[serde(default = "default_error_severity")]
+    pub severity: PolicySeverity,
+    /// Actionable remediation advice
+    #[serde(default)]
+    pub remediation: Option<String>,
+}
+
+/// A rule asserting that constants, versions, or configuration values stay synchronized across files.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct SyncRule {
+    /// Unique identifier / name of the sync rule
+    pub name: String,
+    /// Optional human-readable description
+    pub description: Option<String>,
+    /// Source file path where authoritative value is defined (e.g. "package.json", "Cargo.toml")
+    pub source_file: String,
+    /// Key path in source JSON or TOML (e.g. "version", "package.version")
+    #[serde(default)]
+    pub source_key: Option<String>,
+    /// Regex pattern with a capture group to extract source value
+    #[serde(default)]
+    pub source_regex: Option<String>,
+    /// Target file path(s) to check (e.g. ["src/constants.ts", "webui/package.json"])
+    #[serde(default)]
+    pub target_files: Vec<String>,
+    /// Single target file fallback if target_files is empty
+    #[serde(default)]
+    pub target_file: Option<String>,
+    /// Key path in target JSON or TOML (if target is JSON/TOML)
+    #[serde(default)]
+    pub target_key: Option<String>,
+    /// Target regex pattern with a capture group (e.g. r#"APP_VERSION\s*=\s*["']([^"']+)["']"#)
+    #[serde(default)]
+    pub target_regex: Option<String>,
+    /// Violation severity
+    #[serde(default = "default_error_severity")]
+    pub severity: PolicySeverity,
+    /// Actionable remediation advice
+    #[serde(default)]
+    pub remediation: Option<String>,
+}
+
+/// A policy verifying that framework routes discovered on disk are documented in project Markdown files.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct RouteDocsPolicy {
+    /// Optional unique identifier / name of the route docs policy
+    #[serde(default)]
+    pub name: Option<String>,
+    /// Framework type: "nextjs", "astro", "axum", or "auto"
+    #[serde(default)]
+    pub framework: Option<String>,
+    /// Root directory containing route definitions (e.g. "src/app", "src/pages")
+    pub routes_dir: String,
+    /// Primary documentation file path (e.g. "README.md")
+    #[serde(default)]
+    pub doc_file: Option<String>,
+    /// Multiple documentation file paths
+    #[serde(default)]
+    pub doc_files: Vec<String>,
+    /// Routes or glob patterns to ignore (e.g. ["api/**", "_components/**"])
+    #[serde(default)]
+    pub ignore_routes: Vec<String>,
+    /// Violation severity
+    #[serde(default = "default_error_severity")]
+    pub severity: PolicySeverity,
+    /// Actionable remediation advice
+    #[serde(default)]
+    pub remediation: Option<String>,
+}
+
 /// Complete architectural policies configuration.
 #[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq, Eq)]
 pub struct PolicyConfig {
@@ -157,6 +241,18 @@ pub struct PolicyConfig {
     /// Token budget rules constraining file and total token limits
     #[serde(default)]
     pub token_budgets: Vec<TokenBudgetRule>,
+    /// Forbidden files and artifacts rules
+    #[serde(default)]
+    pub forbidden_files: Vec<ForbiddenFileRule>,
+    /// SSoT constant and version synchronization rules
+    #[serde(default)]
+    pub sync_rules: Vec<SyncRule>,
+    /// Route documentation completeness policy
+    #[serde(default)]
+    pub route_docs_sync: Option<RouteDocsPolicy>,
+    /// Multiple route documentation completeness policies
+    #[serde(default)]
+    pub route_docs: Vec<RouteDocsPolicy>,
     /// Raw `.cddmrules.toml` content if loaded from disk/string
     pub raw_toml: Option<String>,
 }

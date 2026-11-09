@@ -25,6 +25,12 @@ pub mod sarif_rules {
     pub const RULE_ID_BOUNDARY: &str = "CDDM_BOUNDARY";
     pub const RULE_ID_ZERO_DUP: &str = "CDDM_ZERO_DUP";
     pub const RULE_ID_LIMIT: &str = "CDDM_LIMIT";
+    pub const RULE_ID_FORBIDDEN_FILE: &str = "CDDM_FORBIDDEN_FILE";
+    pub const RULE_ID_SYNC_DRIFT: &str = "CDDM_SYNC_DRIFT";
+    pub const RULE_ID_ROUTE_DOCS: &str = "CDDM_ROUTE_DOCS";
+    pub const RULE_ID_PROHIBITED_PATTERN: &str = "CDDM_PROHIBITED_PATTERN";
+    pub const RULE_ID_ZERO_EMOJIS: &str = "CDDM_ZERO_EMOJIS";
+    pub const RULE_ID_TOKEN_BUDGET: &str = "CDDM_TOKEN_BUDGET";
 }
 
 pub mod sarif_tags {

@@ -300,11 +300,21 @@ CDDM provides in-process architectural policy enforcement and governance across 
 6. **Token Budget Constraints (`[[token_budgets]]`)**:
    - Enforces per-file (`max_file_tokens`) and combined total (`max_total_tokens`) token budgets across glob paths (e.g. `.agents/rules/*.md`) to prevent LLM context bloat.
 
-7. **4-Pillar Cross-Interface Parity**:
-   - **CLI**: `cddm rules check` executes policy evaluation with formatted console, Markdown, JSON, and SARIF summaries.
-   - **MCP Server**: `cddm_check_policies` returns structured violations (file, line, pattern, snippet, remediation) and updates `cddm://workspace/policies`.
-   - **WebUI Studio**: `PolicyRulesModal` provides dedicated inspection tabs for Active Policies, Violations Inspector, and `.cddmrules.toml` editor.
-   - **TUI Studio**: Tab 6 displays real-time compliance status for boundaries, zero duplication, prohibited patterns, zero-emoji, and token budgets.
+7. **Forbidden Files & Conflicting Tooling (`[[forbidden_files]]`)**:
+   - Bans deprecated configuration files, conflicting tooling (e.g., `.eslintrc*`, `.prettierrc*`), and foreign lockfiles (`yarn.lock`, `package-lock.json`, `pnpm-lock.yaml`) with glob matching and actionable remediation advice.
+
+8. **SSoT Constant & Version Synchronization (`[[sync_rules]]`)**:
+   - Enforces that versions and constants across configuration files (e.g. `package.json`, `Cargo.toml`) and source code constants (e.g. `src/constants.ts` `APP_VERSION`) stay 100% in sync without drift.
+
+9. **Route Documentation Drift & Living Completeness (`[route_docs_sync]` / `[[route_docs]]`)**:
+   - Scans framework route roots (Next.js App Router `src/app/**/page.tsx`, Astro `src/pages/**`, route handlers) and verifies that all discovered routes are documented in project Markdown files (e.g. `README.md`).
+
+10. **4-Pillar Cross-Interface Parity**:
+
+- **CLI**: `cddm rules check` executes policy evaluation with formatted console, Markdown, JSON, and SARIF summaries.
+- **MCP Server**: `cddm_check_policies` returns structured violations (file, line, pattern, snippet, remediation) and updates `cddm://workspace/policies`.
+- **WebUI Studio**: `PolicyRulesModal` provides dedicated inspection tabs for Active Policies, Violations Inspector, and `.cddmrules.toml` editor.
+- **TUI Studio**: Tab 6 displays real-time compliance status for boundaries, zero duplication, prohibited patterns, zero-emoji, token budgets, forbidden files, SSoT sync, and route documentation.
 
 ---
 

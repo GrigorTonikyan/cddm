@@ -62,7 +62,7 @@ mod tests {
 
         let run = &report.runs[0];
         assert_eq!(run.tool.driver.name, TOOL_NAME);
-        assert_eq!(run.tool.driver.rules.len(), 7);
+        assert_eq!(run.tool.driver.rules.len(), 10);
         assert_eq!(run.results.len(), 1);
 
         let result = &run.results[0];

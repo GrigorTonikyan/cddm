@@ -101,6 +101,49 @@ export interface TokenBudgetRule {
 }
 
 /**
+ * Forbidden file rule banning conflicting tooling or deprecated lockfiles.
+ */
+export interface ForbiddenFileRule {
+  name: string;
+  description?: string;
+  pattern?: string;
+  patterns?: string[];
+  severity: PolicySeverity;
+  remediation?: string;
+}
+
+/**
+ * SSoT constant and version synchronization rule.
+ */
+export interface SyncRule {
+  name: string;
+  description?: string;
+  source_file: string;
+  source_key?: string;
+  source_regex?: string;
+  target_files?: string[];
+  target_file?: string;
+  target_key?: string;
+  target_regex?: string;
+  severity: PolicySeverity;
+  remediation?: string;
+}
+
+/**
+ * Route documentation completeness policy.
+ */
+export interface RouteDocsPolicy {
+  name?: string;
+  framework?: string;
+  routes_dir: string;
+  doc_file?: string;
+  doc_files?: string[];
+  ignore_routes?: string[];
+  severity: PolicySeverity;
+  remediation?: string;
+}
+
+/**
  * Complete architectural policy configuration.
  */
 export interface PolicyConfig {
@@ -110,6 +153,10 @@ export interface PolicyConfig {
   prohibited_patterns?: ProhibitedPatternRule[];
   zero_emojis?: boolean;
   token_budgets?: TokenBudgetRule[];
+  forbidden_files?: ForbiddenFileRule[];
+  sync_rules?: SyncRule[];
+  route_docs_sync?: RouteDocsPolicy;
+  route_docs?: RouteDocsPolicy[];
   raw_toml?: string;
 }
 
