@@ -25,20 +25,13 @@ This rule governs the exclusive use of Gitea as the Single Source of Truth (SSoT
 2. **Documentation Pointers**: Files like `docs/ROADMAP.md` or `docs/TODO.md` MUST only contain high-level strategic summaries and absolute links pointing directly to the Gitea Milestone and Issue Tracker endpoints.
 3. **Continuous Sync**: If the roadmap changes, update the Gitea Milestone/Issue first via Forge MCP (`gitea_update_issue` or `forge issue`). Do not update a local markdown file as a substitute.
 
-## 4. Automagic Milestone Releases & Agent Enforcement
+## 4. PR-Time Lockstep Versioning & Automated Tag Releases
 
 1. **Issues Mandatory, Milestones Optional**:
    - Every change MUST be tracked by a Gitea issue; this is the hard requirement.
-   - Milestones are optional. When an issue targets a release, assign it to the matching milestone; otherwise leave it unassigned.
-   - `bun scripts/check-milestones.ts` (`vp run verify`) only reports unassigned issues and never fails.
-   - Run `bun scripts/sync-milestones.ts` to bulk-assign milestones from metadata, proposals, and active version phases when desired.
-2. **Automagic Milestone Versioning & Release**:
-   - Workspace versions are determined strictly by milestones.
-   - When all assigned issues in an active milestone reach 100% completion (zero open issues remaining), the release MUST be executed via `bun scripts/milestone-release.ts` (or `vp run release:milestone`).
-   - The engine automatically:
-     1. Synchronizes all 10 manifests (`Cargo.toml`, `package.json`, `webui/package.json`, etc.) to the milestone's target semantic version via `bun scripts/sync-version.ts`.
-     2. Commits the release manifests (`chore(release): vX.Y.Z [skip ci]`).
-     3. Tags the release `vX.Y.Z`.
-     4. Pushes the commit and tag to Gitea `origin` (which automatically push-mirrors to GitHub).
-     5. Closes the milestone on Gitea (`state: "closed"`).
-     6. Creates the authoritative Gitea release with auto-generated release notes.
+   - Milestones are optional roadmap groupings and do not gate or trigger releases.
+2. **PR-Level SemVer Bump & Automated Release on `main`**:
+   - Workspace versions are calculated deterministically from Conventional Commits since the latest Git tag via `bun scripts/version.ts` (or `vp run version:bump`).
+   - Every PR introducing features, fixes, or optimizations MUST run `bun scripts/version.ts` before opening the PR to synchronize all 10 manifests (`Cargo.toml`, `Cargo.lock`, `package.json`, `webui/package.json`, `npm/cddm/package.json`, `editors/vscode/package.json`, Homebrew, Scoop, Winget, and `README.md`) and `CHANGELOG.md`.
+   - `bun scripts/version.ts --check` and `bun scripts/version.ts --check-pr` enforce 100% SSoT version synchronization and PR version bumps in local verification and CI.
+   - Merging a bumped PR into `main` automatically triggers the `auto-tag-release` job in `.gitea/workflows/ci.yaml`, which creates and pushes tag `vX.Y.Z` to Gitea `origin` and triggers `.gitea/workflows/release.yaml` to publish release binaries, VSIX packages, and SHA-256 checksummed distribution manifests.

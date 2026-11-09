@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-27 | Rust: 416 #[test] units | WebUI: 334 tests across 77 suites | Scripts & MCP: 217 tests across 61 suites | CI Workflows: PASS
+> Last verified: 2026-08-27 | Rust: 416 #[test] units | WebUI: 334 tests across 77 suites | Scripts & MCP: 211 tests across 57 suites | CI Workflows: PASS
 
 ---
 
@@ -442,7 +442,7 @@
 
 ---
 
-## 3. Repository Scripts & MCP Protocol — Bun Test Suites (217 tests across 61 suites)
+## 3. Repository Scripts & MCP Protocol — Bun Test Suites (211 tests across 57 suites)
 
 ### Repository Tooling & Automation Suites
 
@@ -450,14 +450,11 @@
 | :---------------------------- | :--------------------------------------------- | :--------- | :----- |
 | clean-engine                  | `scripts/lib/clean-engine.test.ts`             | 14 tests   | PASS   |
 | interface-docs-generator      | `scripts/lib/interface-docs-generator.test.ts` | 6 tests    | PASS   |
-| milestone-release-engine      | `scripts/lib/milestone-release-engine.test.ts` | 2 tests    | PASS   |
-| milestone-sync-engine         | `scripts/lib/milestone-sync-engine.test.ts`    | 5 tests    | PASS   |
 | release-notes-engine          | `scripts/lib/release-notes-engine.test.ts`     | 7 tests    | PASS   |
 | step-runner                   | `scripts/lib/step-runner.test.ts`              | 4 tests    | PASS   |
 | test-matrix-generator         | `scripts/lib/test-matrix-generator.test.ts`    | 3 tests    | PASS   |
-| version-updater               | `scripts/lib/version-updater.test.ts`          | 2 tests    | PASS   |
+| version-updater               | `scripts/lib/version-updater.test.ts`          | 4 tests    | PASS   |
 | bun-only                      | `scripts/tests/bun-only.test.ts`               | 2 tests    | PASS   |
-| check-milestones              | `scripts/tests/check-milestones.test.ts`       | 1 tests    | PASS   |
 | check-release-notes           | `scripts/tests/check-release-notes.test.ts`    | 2 tests    | PASS   |
 | Workspace Engine & Reset      | `scripts/tests/clean-reset.test.ts`            | 10 tests   | PASS   |
 | Documentation Integrity       | `scripts/tests/docs.test.ts`                   | 5 tests    | PASS   |
@@ -465,15 +462,14 @@
 | 4-Pillar Feature Parity       | `scripts/tests/feature-parity.test.ts`         | 2 tests    | PASS   |
 | File Length Cap & Modularity  | `scripts/tests/file-length.test.ts`            | 7 tests    | PASS   |
 | mcp-manual-audit              | `scripts/tests/mcp-manual-audit.test.ts`       | 0 tests    | PASS   |
-| milestone-release             | `scripts/tests/milestone-release.test.ts`      | 2 tests    | PASS   |
 | monitor-ci                    | `scripts/tests/monitor-ci.test.ts`             | 2 tests    | PASS   |
 | Zero-Emoji Policy             | `scripts/tests/no-emojis.test.ts`              | 9 tests    | PASS   |
 | VSIX Packaging Pipeline       | `scripts/tests/package-vscode.test.ts`         | 5 tests    | PASS   |
 | populate-gitea-portal         | `scripts/tests/populate-gitea-portal.test.ts`  | 5 tests    | PASS   |
-| publish-release               | `scripts/tests/publish-release.test.ts`        | 4 tests    | PASS   |
+| publish-release               | `scripts/tests/publish-release.test.ts`        | 5 tests    | PASS   |
 | setup-deps                    | `scripts/tests/setup-deps.test.ts`             | 5 tests    | PASS   |
 | ui-ux-qa-verification         | `scripts/tests/ui-ux-qa-verification.test.ts`  | 4 tests    | PASS   |
-| Semantic Versioning & Commits | `scripts/tests/version.test.ts`                | 9 tests    | PASS   |
+| Semantic Versioning & Commits | `scripts/tests/version.test.ts`                | 10 tests   | PASS   |
 | Polyglot Language Matrix      | `scripts/tests/vscode-extension.test.ts`       | 2 tests    | PASS   |
 
 ### Model Context Protocol (MCP) 1:1 Tool Test Suites
@@ -522,7 +518,7 @@
 | Layer                        | Validation Target                                              | Status     |
 | :--------------------------- | :------------------------------------------------------------- | :--------- |
 | **Commit Message Linter**    | `@commitlint/cli` + `commitlint.config.ts` in `.vite-hooks`    | Enforced   |
-| **Semantic Versioning**      | `bumpp` + `conventional-changelog` via `vp run bump`           | Enforced   |
+| **Semantic Versioning**      | `bun scripts/version.ts` (`--check`, `--check-pr`, `--auto`)   | Enforced   |
 | **CI Automation**            | `.github/workflows/ci.yml` (Matrix build, clippy, fmt, vitest) | Configured |
 | **Release Automation**       | `.github/workflows/release.yml` (Cross-compiling 4 targets)    | Configured |
 | **Documentation Integrity**  | `bun scripts/check-docs.ts` (Links, tables, roadmap sync)      | Enforced   |

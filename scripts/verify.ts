@@ -77,8 +77,8 @@ const STEPS: ScriptStep[] = [
     command: ["bun", "scripts/package-vscode.ts"],
   },
   {
-    title: "Milestone visibility report, informational (bun scripts/check-milestones.ts)",
-    command: ["bun", "scripts/check-milestones.ts"],
+    title: "SSoT workspace version synchronization check (bun scripts/version.ts --check)",
+    command: ["bun", "scripts/version.ts", "--check"],
   },
   {
     title: "Rich release notes & MCP standard enforcement (bun scripts/check-release-notes.ts)",

@@ -2,6 +2,20 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { ParsedCommit } from "../version";
 
+export interface VersionMismatch {
+  file: string;
+  field: string;
+  expected: string;
+  actual: string;
+}
+
+export interface VersionSyncCheckResult {
+  synchronized: boolean;
+  canonicalVersion: string;
+  checkedFiles: number;
+  mismatches: VersionMismatch[];
+}
+
 /**
  * Generate a Markdown changelog section for a release.
  */
@@ -87,7 +101,191 @@ export function generateChangelogSection(
 }
 
 /**
- * Update all version manifests across the repository.
+ * Verify that all workspace manifests and distribution URLs match Cargo.toml SSoT version.
+ */
+export function checkWorkspaceVersionSync(
+  workspaceRoot: string = process.cwd(),
+): VersionSyncCheckResult {
+  const cargoPath = join(workspaceRoot, "Cargo.toml");
+  if (!existsSync(cargoPath)) {
+    throw new Error(`Cargo.toml not found at ${cargoPath}`);
+  }
+  const cargoContent = readFileSync(cargoPath, "utf-8");
+  const cargoMatch = /\[workspace\.package\][\s\S]*?version\s*=\s*"([^"]+)"/.exec(cargoContent);
+  const canonicalVersion = cargoMatch?.[1] ?? "";
+  if (!canonicalVersion) {
+    throw new Error("Could not extract [workspace.package].version from Cargo.toml");
+  }
+
+  const mismatches: VersionMismatch[] = [];
+  let checkedFiles = 1; // Cargo.toml
+
+  const jsonFiles = [
+    "package.json",
+    "webui/package.json",
+    "npm/cddm/package.json",
+    "editors/vscode/package.json",
+  ];
+
+  for (const relPath of jsonFiles) {
+    const fullPath = join(workspaceRoot, relPath);
+    if (!existsSync(fullPath)) continue;
+    checkedFiles++;
+    const pkg = JSON.parse(readFileSync(fullPath, "utf-8")) as {
+      version?: string;
+      optionalDependencies?: Record<string, string>;
+    };
+    if (pkg.version !== canonicalVersion) {
+      mismatches.push({
+        file: relPath,
+        field: "version",
+        expected: canonicalVersion,
+        actual: pkg.version ?? "<missing>",
+      });
+    }
+    if (relPath === "npm/cddm/package.json" && pkg.optionalDependencies) {
+      for (const [depName, depVer] of Object.entries(pkg.optionalDependencies)) {
+        if (depVer !== canonicalVersion) {
+          mismatches.push({
+            file: relPath,
+            field: `optionalDependencies.${depName}`,
+            expected: canonicalVersion,
+            actual: depVer,
+          });
+        }
+      }
+    }
+  }
+
+  // Homebrew formula
+  const brewPath = join(workspaceRoot, "packaging", "homebrew", "cddm.rb");
+  if (existsSync(brewPath)) {
+    checkedFiles++;
+    const brewContent = readFileSync(brewPath, "utf-8");
+    const brewMatch = /version\s+"([^"]+)"/.exec(brewContent);
+    const actualBrew = brewMatch?.[1] ?? "<missing>";
+    if (actualBrew !== canonicalVersion) {
+      mismatches.push({
+        file: "packaging/homebrew/cddm.rb",
+        field: "version",
+        expected: canonicalVersion,
+        actual: actualBrew,
+      });
+    }
+  }
+
+  // Scoop manifest
+  const scoopPath = join(workspaceRoot, "packaging", "scoop", "cddm.json");
+  if (existsSync(scoopPath)) {
+    checkedFiles++;
+    const scoopJson = JSON.parse(readFileSync(scoopPath, "utf-8")) as {
+      version?: string;
+      architecture?: Record<string, { url?: string }>;
+    };
+    if (scoopJson.version !== canonicalVersion) {
+      mismatches.push({
+        file: "packaging/scoop/cddm.json",
+        field: "version",
+        expected: canonicalVersion,
+        actual: scoopJson.version ?? "<missing>",
+      });
+    }
+    const expected64Url = `https://git.gt-web-dev.com/gt-dev/cddm/releases/download/v${canonicalVersion}/cddm-v${canonicalVersion}-x86_64-pc-windows-gnu.zip`;
+    const actual64Url = scoopJson.architecture?.["64bit"]?.url ?? "<missing>";
+    if (actual64Url !== expected64Url) {
+      mismatches.push({
+        file: "packaging/scoop/cddm.json",
+        field: "architecture.64bit.url",
+        expected: expected64Url,
+        actual: actual64Url,
+      });
+    }
+  }
+
+  // Winget manifest
+  const wingetPath = join(workspaceRoot, "packaging", "winget", "GrigorTonikyan.cddm.yaml");
+  if (existsSync(wingetPath)) {
+    checkedFiles++;
+    const wingetContent = readFileSync(wingetPath, "utf-8");
+    const verMatch = /PackageVersion:\s*([\d.]+)/.exec(wingetContent);
+    const actualWinget = verMatch?.[1] ?? "<missing>";
+    if (actualWinget !== canonicalVersion) {
+      mismatches.push({
+        file: "packaging/winget/GrigorTonikyan.cddm.yaml",
+        field: "PackageVersion",
+        expected: canonicalVersion,
+        actual: actualWinget,
+      });
+    }
+    const expectedWingetX64 = `https://git.gt-web-dev.com/gt-dev/cddm/releases/download/v${canonicalVersion}/cddm-v${canonicalVersion}-x86_64-pc-windows-gnu.zip`;
+    if (!wingetContent.includes(expectedWingetX64)) {
+      mismatches.push({
+        file: "packaging/winget/GrigorTonikyan.cddm.yaml",
+        field: "InstallerUrl (x64)",
+        expected: expectedWingetX64,
+        actual: "<stale InstallerUrl>",
+      });
+    }
+  }
+
+  // README.md badges
+  const readmePath = join(workspaceRoot, "README.md");
+  if (existsSync(readmePath)) {
+    checkedFiles++;
+    const readmeContent = readFileSync(readmePath, "utf-8");
+    const npmBadge = /badge\/npm-([\d.]+)-red\.svg/.exec(readmeContent)?.[1] ?? "<missing>";
+    const cratesBadge =
+      /badge\/crates\.io-([\d.]+)-brightgreen\.svg/.exec(readmeContent)?.[1] ?? "<missing>";
+    if (npmBadge !== canonicalVersion) {
+      mismatches.push({
+        file: "README.md",
+        field: "npm badge",
+        expected: canonicalVersion,
+        actual: npmBadge,
+      });
+    }
+    if (cratesBadge !== canonicalVersion) {
+      mismatches.push({
+        file: "README.md",
+        field: "crates.io badge",
+        expected: canonicalVersion,
+        actual: cratesBadge,
+      });
+    }
+  }
+
+  // Cargo.lock workspace crates
+  const cargoLockPath = join(workspaceRoot, "Cargo.lock");
+  if (existsSync(cargoLockPath)) {
+    checkedFiles++;
+    const lockContent = readFileSync(cargoLockPath, "utf-8");
+    const crateRe = /name\s*=\s*"(cddm-(?:core|cli|mcp|lsp))"\r?\nversion\s*=\s*"([^"]+)"/g;
+    let match: RegExpExecArray | null = crateRe.exec(lockContent);
+    while (match !== null) {
+      const crateName = match[1]!;
+      const crateVer = match[2]!;
+      if (crateVer !== canonicalVersion) {
+        mismatches.push({
+          file: "Cargo.lock",
+          field: crateName,
+          expected: canonicalVersion,
+          actual: crateVer,
+        });
+      }
+      match = crateRe.exec(lockContent);
+    }
+  }
+
+  return {
+    synchronized: mismatches.length === 0,
+    canonicalVersion,
+    checkedFiles,
+    mismatches,
+  };
+}
+
+/**
+ * Update all version manifests across the repository in strict lockstep.
  */
 export function updateWorkspaceVersions(
   newVersion: string,
@@ -123,13 +321,20 @@ export function updateWorkspaceVersions(
     console.log(`\x1b[32m[OK] Updated webui/package.json -> ${newVersion}\x1b[0m`);
   }
 
-  // 4. npm/cddm/package.json
+  // 4. npm/cddm/package.json (including optionalDependencies)
   const npmPkgPath = join(workspaceRoot, "npm", "cddm", "package.json");
   if (existsSync(npmPkgPath)) {
     const pkg = JSON.parse(readFileSync(npmPkgPath, "utf-8"));
     pkg.version = newVersion;
+    if (pkg.optionalDependencies && typeof pkg.optionalDependencies === "object") {
+      for (const dep of Object.keys(pkg.optionalDependencies)) {
+        pkg.optionalDependencies[dep] = newVersion;
+      }
+    }
     writeFileSync(npmPkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf-8");
-    console.log(`\x1b[32m[OK] Updated npm/cddm/package.json -> ${newVersion}\x1b[0m`);
+    console.log(
+      `\x1b[32m[OK] Updated npm/cddm/package.json (+ optionalDependencies) -> ${newVersion}\x1b[0m`,
+    );
   }
 
   // 5. editors/vscode/package.json
@@ -155,6 +360,26 @@ export function updateWorkspaceVersions(
   if (existsSync(scoopPath)) {
     const scoopJson = JSON.parse(readFileSync(scoopPath, "utf-8"));
     scoopJson.version = newVersion;
+    if (scoopJson.architecture) {
+      if (scoopJson.architecture["64bit"]) {
+        scoopJson.architecture["64bit"].url =
+          `https://git.gt-web-dev.com/gt-dev/cddm/releases/download/v${newVersion}/cddm-v${newVersion}-x86_64-pc-windows-gnu.zip`;
+      }
+      if (scoopJson.architecture["arm64"]) {
+        scoopJson.architecture["arm64"].url =
+          `https://git.gt-web-dev.com/gt-dev/cddm/releases/download/v${newVersion}/cddm-v${newVersion}-aarch64-pc-windows-gnu.zip`;
+      }
+    }
+    if (scoopJson.autoupdate?.architecture) {
+      if (scoopJson.autoupdate.architecture["64bit"]) {
+        scoopJson.autoupdate.architecture["64bit"].url =
+          "https://git.gt-web-dev.com/gt-dev/cddm/releases/download/v$version/cddm-v$version-x86_64-pc-windows-gnu.zip";
+      }
+      if (scoopJson.autoupdate.architecture["arm64"]) {
+        scoopJson.autoupdate.architecture["arm64"].url =
+          "https://git.gt-web-dev.com/gt-dev/cddm/releases/download/v$version/cddm-v$version-aarch64-pc-windows-gnu.zip";
+      }
+    }
     writeFileSync(scoopPath, JSON.stringify(scoopJson, null, 2) + "\n", "utf-8");
     console.log(`\x1b[32m[OK] Updated packaging/scoop/cddm.json -> ${newVersion}\x1b[0m`);
   }
@@ -163,10 +388,16 @@ export function updateWorkspaceVersions(
   const wingetPath = join(workspaceRoot, "packaging", "winget", "GrigorTonikyan.cddm.yaml");
   if (existsSync(wingetPath)) {
     const wingetContent = readFileSync(wingetPath, "utf-8");
-    const updatedWinget = wingetContent.replace(
-      /PackageVersion:\s*[\d.]+/,
-      `PackageVersion: ${newVersion}`,
-    );
+    const updatedWinget = wingetContent
+      .replace(/PackageVersion:\s*[\d.]+/, `PackageVersion: ${newVersion}`)
+      .replace(
+        /releases\/download\/v[\d.]+\/cddm-v[\d.]+-x86_64-pc-windows-(?:msvc|gnu)\.zip/g,
+        `releases/download/v${newVersion}/cddm-v${newVersion}-x86_64-pc-windows-gnu.zip`,
+      )
+      .replace(
+        /releases\/download\/v[\d.]+\/cddm-v[\d.]+-aarch64-pc-windows-(?:msvc|gnu)\.zip/g,
+        `releases/download/v${newVersion}/cddm-v${newVersion}-aarch64-pc-windows-gnu.zip`,
+      );
     writeFileSync(wingetPath, updatedWinget, "utf-8");
     console.log(
       `\x1b[32m[OK] Updated packaging/winget/GrigorTonikyan.cddm.yaml -> ${newVersion}\x1b[0m`,
@@ -187,17 +418,29 @@ export function updateWorkspaceVersions(
     console.log(`\x1b[32m[OK] Updated README.md -> ${newVersion}\x1b[0m`);
   }
 
-  // 10. Cargo.lock
-  Bun.spawnSync(["cargo", "check", "--workspace"], { cwd: workspaceRoot });
+  // 10. Cargo.lock (instant in-place workspace crate version sync)
+  const cargoLockPath = join(workspaceRoot, "Cargo.lock");
+  if (existsSync(cargoLockPath)) {
+    const lockContent = readFileSync(cargoLockPath, "utf-8");
+    const updatedLock = lockContent.replace(
+      /(name\s*=\s*"cddm-(?:core|cli|mcp|lsp)"\r?\nversion\s*=\s*)"[^"]+"/g,
+      `$1"${newVersion}"`,
+    );
+    writeFileSync(cargoLockPath, updatedLock, "utf-8");
+    console.log(`\x1b[32m[OK] Updated Cargo.lock -> ${newVersion}\x1b[0m`);
+  }
 }
 
 /**
- * Prepend a new section to CHANGELOG.md.
+ * Idempotently prepend or replace a version section in CHANGELOG.md.
  */
 export function updateChangelog(newSection: string, workspaceRoot: string = process.cwd()): void {
   const changelogPath = join(workspaceRoot, "CHANGELOG.md");
   let header =
     "# Changelog\n\nAll notable changes to **CDDM** will be documented in this file.\n\nThe format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),\nand this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).\n\n";
+
+  const versionHeaderMatch = /^## \[([^\]]+)\]/.exec(newSection.trim());
+  const targetHeading = versionHeaderMatch?.[1] ? `## [${versionHeaderMatch[1]}]` : null;
 
   let existingContent = "";
   if (existsSync(changelogPath)) {
@@ -206,6 +449,13 @@ export function updateChangelog(newSection: string, workspaceRoot: string = proc
     if (firstSectionIndex !== -1) {
       header = full.slice(0, firstSectionIndex + 1);
       existingContent = full.slice(firstSectionIndex + 1);
+
+      // If the top section already matches this version, replace it in-place (idempotent)
+      if (targetHeading && existingContent.startsWith(targetHeading)) {
+        const secondSectionIndex = existingContent.indexOf("\n## [", targetHeading.length);
+        existingContent =
+          secondSectionIndex !== -1 ? existingContent.slice(secondSectionIndex + 1) : "";
+      }
     } else {
       existingContent = full;
     }

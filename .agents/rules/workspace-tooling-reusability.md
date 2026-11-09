@@ -12,7 +12,7 @@ This rule governs the creation, evolution, consolidation, and reuse of automatio
    - Instead of re-implementing logic across tasks, agents MUST always discover, reuse, and extend the existing canonical workspace tools:
      - `scripts/monitor-ci.ts`: Live Gitea Actions CI/CD pipeline monitoring, polling, and job auditing.
      - `scripts/lib/gitea-client.ts`: Canonical Gitea REST API client, auth headers, and retry logic.
-     - `scripts/version.ts` & `scripts/sync-version.ts`: Multi-manifest semantic release and version bumping.
+     - `scripts/version.ts` & `scripts/lib/version-updater.ts`: Unified lockstep SemVer calculation, 10-manifest SSoT synchronization, and PR version gate verification.
      - `scripts/clean.ts` & `scripts/lib/clean-engine.ts`: Safe workspace cleaning and build artifact pruning.
      - `scripts/verify.ts`: 18-step synchronous workspace verification pipeline.
      - `scripts/sync-feature-matrix.ts` & `scripts/sync-docs.ts`: Living documentation and parity matrix synchronization.

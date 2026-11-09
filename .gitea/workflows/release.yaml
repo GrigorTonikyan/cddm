@@ -74,7 +74,11 @@ jobs:
           cp target/${{ matrix.target }}/release/cddm${{ matrix.exe_ext }} dist-package/
           cp target/${{ matrix.target }}/release/cddm-mcp${{ matrix.exe_ext }} dist-package/
           cp target/${{ matrix.target }}/release/cddm-lsp${{ matrix.exe_ext }} dist-package/
-          TAG_NAME="${GITHUB_REF_NAME:-v4.1.0}"
+          if [[ "${GITHUB_REF_NAME:-}" == v* ]]; then
+            TAG_NAME="${GITHUB_REF_NAME}"
+          else
+            TAG_NAME="v$(bun scripts/version.ts --get-current)"
+          fi
           if [ "${{ matrix.archive_ext }}" = ".zip" ]; then
             cd dist-package && zip -r "../cddm-${TAG_NAME}-${{ matrix.target }}.zip" ./* && cd ..
           else
@@ -179,5 +183,9 @@ jobs:
           GITEA_REPO: "gt-dev/cddm"
           GITEA_TOKEN: ${{ secrets.REGISTRY_TOKEN || secrets.GITEA_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
-          TAG_NAME="${GITHUB_REF_NAME:-v4.1.0}"
+          if [[ "${GITHUB_REF_NAME:-}" == v* ]]; then
+            TAG_NAME="${GITHUB_REF_NAME}"
+          else
+            TAG_NAME="v$(bun scripts/version.ts --get-current)"
+          fi
           bun scripts/publish-release.ts --tag "${TAG_NAME}" --dist-dir "dist-release"

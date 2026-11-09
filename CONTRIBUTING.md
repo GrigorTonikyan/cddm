@@ -178,18 +178,19 @@ CDDM enforces [Gitea (`git.gt-web-dev.com`)](https://git.gt-web-dev.com/gt-dev/c
 3. Include closing keywords (`Fixes #19` or `Closes #19`) in the PR description. Every PR must reference an issue; milestones are optional and only used when an issue targets a specific release (e.g. `v4.8.0`).
 4. Merges into `main` are executed via the official Gitea REST API (`POST /repos/{owner}/{repo}/pulls/{id}/merge`), automatically marking the PR as merged, closing the linked issue, and deleting the feature branch.
 
-### 4. Automated Semantic Releases
+### 4. Automated Lockstep Semantic Versioning & Releases
 
-Releases synchronize all 10 project manifests (`package.json`, `Cargo.toml`, `webui/package.json`, NPM packages, VS Code extension, Homebrew, Scoop, Winget, and README badges) and trigger multi-platform CI cross-compilation:
+Every pull request introducing features, bug fixes, or optimizations bumps the workspace SemVer in lockstep across all 10 project manifests (`Cargo.toml`, `Cargo.lock`, `package.json`, `webui/package.json`, `npm/cddm/package.json`, `editors/vscode/package.json`, Homebrew, Scoop, Winget, and `README.md` badges) and updates `CHANGELOG.md`. When merged to `main`, Gitea Actions automatically tags `vX.Y.Z` and triggers multi-platform CI cross-compilation and release publishing:
 
 ```bash
-# Preview calculated version and changelog entry (dry-run)
+# Verify 100% SSoT version synchronization across all 10 manifests
 vp run version:check
 
-# Synchronize all 10 manifests and tag release (e.g. v4.8.0)
-vp run version:release
-# or:
-vp run bump
+# Bump workspace version from Conventional Commits since latest tag and sync all manifests
+vp run version:bump
+
+# Verify PR branch version bump & changelog gate
+vp run version:check-pr
 ```
 
 ---

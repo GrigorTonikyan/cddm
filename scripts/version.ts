@@ -1,19 +1,32 @@
 #!/usr/bin/env bun
 /**
- * Automated Semantic Versioning and Changelog Generator for CDDM.
- * Enforces Conventional Commits and calculates the next semantic version
- * by analyzing git commit history since the last release tag.
+ * Unified Lockstep Semantic Versioning, SSoT Manifest Synchronizer & PR Gate for CDDM.
  *
- * Synchronizes versions across:
- * - Cargo.toml ([workspace.package] version)
- * - package.json (root workspace)
- * - webui/package.json
- * - npm/cddm/package.json
- * - CHANGELOG.md
+ * Single canonical engine that:
+ * 1. Enforces Conventional Commits and calculates the next semantic version from git history.
+ * 2. Synchronizes all 10 workspace manifests, distribution URLs, Cargo.lock, and CHANGELOG.md.
+ * 3. Verifies 100% SSoT manifest synchronization (--check) and PR version bumps (--check-pr).
  */
 
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import {
+  checkWorkspaceVersionSync,
+  generateChangelogSection,
+  updateChangelog,
+  updateWorkspaceVersions,
+  type VersionSyncCheckResult,
+} from "./lib/version-updater";
+import { CONVENTIONAL_COMMIT_REGEX as COMMIT_REGEX } from "./validate-commit-msg";
+
+export {
+  COMMIT_REGEX,
+  checkWorkspaceVersionSync,
+  generateChangelogSection,
+  updateChangelog,
+  updateWorkspaceVersions,
+  type VersionSyncCheckResult,
+};
 
 export interface ParsedCommit {
   hash: string;
@@ -33,6 +46,15 @@ export interface SemanticVersion {
   raw: string;
 }
 
+export interface PrVersionCheckResult {
+  passed: boolean;
+  currentVersion: string;
+  baselineVersion: string;
+  requiredBump: BumpType;
+  commitCount: number;
+  errors: string[];
+}
+
 export const CONVENTIONAL_TYPES = [
   "feat",
   "fix",
@@ -46,9 +68,6 @@ export const CONVENTIONAL_TYPES = [
   "chore",
   "revert",
 ] as const;
-
-import { CONVENTIONAL_COMMIT_REGEX as COMMIT_REGEX } from "./validate-commit-msg";
-export { COMMIT_REGEX };
 
 /**
  * Parse a single commit message into a structured Conventional Commit object.
@@ -93,6 +112,19 @@ export function parseSemver(version: string): SemanticVersion {
     patch,
     raw: `${major}.${minor}.${patch}`,
   };
+}
+
+/**
+ * Compare two semantic versions: returns 1 if a > b, -1 if a < b, 0 if a === b.
+ */
+export function compareSemver(a: SemanticVersion | string, b: SemanticVersion | string): number {
+  const va = typeof a === "string" ? parseSemver(a) : a;
+  const vb = typeof b === "string" ? parseSemver(b) : b;
+
+  if (va.major !== vb.major) return va.major > vb.major ? 1 : -1;
+  if (va.minor !== vb.minor) return va.minor > vb.minor ? 1 : -1;
+  if (va.patch !== vb.patch) return va.patch > vb.patch ? 1 : -1;
+  return 0;
 }
 
 /**
@@ -182,24 +214,33 @@ export function getCurrentVersion(workspaceRoot: string = process.cwd()): string
 }
 
 /**
- * Retrieve recent git commits since the last tag or initial commit.
+ * Retrieve the latest semantic version git tag (e.g. "4.8.0" from "v4.8.0"), or null if none.
  */
-export function getCommitsSinceLastTag(workspaceRoot: string = process.cwd()): ParsedCommit[] {
-  let lastTag = "";
+export function getLatestTagVersion(workspaceRoot: string = process.cwd()): string | null {
   try {
     const tagProc = Bun.spawnSync(["git", "describe", "--tags", "--abbrev=0"], {
       cwd: workspaceRoot,
       stderr: "pipe",
     });
     if (tagProc.exitCode === 0) {
-      lastTag = tagProc.stdout.toString().trim();
+      const rawTag = tagProc.stdout.toString().trim();
+      if (rawTag) {
+        return parseSemver(rawTag).raw;
+      }
     }
   } catch {
-    // No git tags exist yet
+    // No git tags exist
   }
+  return null;
+}
 
-  const logArgs = lastTag
-    ? ["git", "log", `${lastTag}..HEAD`, "--pretty=format:%h%x09%s"]
+/**
+ * Retrieve recent git commits since the last tag or initial commit.
+ */
+export function getCommitsSinceLastTag(workspaceRoot: string = process.cwd()): ParsedCommit[] {
+  const latestTagVer = getLatestTagVersion(workspaceRoot);
+  const logArgs = latestTagVer
+    ? ["git", "log", `v${latestTagVer}..HEAD`, "--pretty=format:%h%x09%s"]
     : ["git", "log", "--pretty=format:%h%x09%s", "-n", "100"];
 
   const logProc = Bun.spawnSync(logArgs, {
@@ -228,27 +269,73 @@ export function getCommitsSinceLastTag(workspaceRoot: string = process.cwd()): P
   return parsed;
 }
 
-import {
-  generateChangelogSection,
-  updateChangelog,
-  updateWorkspaceVersions,
-} from "./lib/version-updater";
+/**
+ * Verify that a PR branch has properly bumped the workspace version and updated CHANGELOG.md
+ * when release-worthy commits exist since the latest release tag.
+ */
+export function checkPrVersionBump(workspaceRoot: string = process.cwd()): PrVersionCheckResult {
+  const errors: string[] = [];
+  const syncRes = checkWorkspaceVersionSync(workspaceRoot);
+  if (!syncRes.synchronized) {
+    for (const m of syncRes.mismatches) {
+      errors.push(`${m.file} (${m.field}): expected "${m.expected}", found "${m.actual}"`);
+    }
+  }
 
-export { generateChangelogSection, updateChangelog, updateWorkspaceVersions };
+  const currentVersion = syncRes.canonicalVersion;
+  const baselineVersion = getLatestTagVersion(workspaceRoot) ?? currentVersion;
+  const commits = getCommitsSinceLastTag(workspaceRoot);
+  const releaseWorthyCommits = commits.filter(
+    (c) => c.breaking || ["feat", "fix", "perf", "refactor", "revert"].includes(c.type),
+  );
+  const requiredBump = determineBump(releaseWorthyCommits);
+
+  if (requiredBump !== "none") {
+    if (compareSemver(currentVersion, baselineVersion) <= 0) {
+      const expectedNext = incrementVersion(parseSemver(baselineVersion), requiredBump).raw;
+      errors.push(
+        `Workspace version (${currentVersion}) has not been bumped above latest release tag (v${baselineVersion}) despite ${releaseWorthyCommits.length} release-worthy commit(s) requiring a ${requiredBump.toUpperCase()} bump (expected >= ${expectedNext}). Run 'bun scripts/version.ts' to bump and sync manifests.`,
+      );
+    }
+
+    const changelogPath = join(workspaceRoot, "CHANGELOG.md");
+    if (existsSync(changelogPath)) {
+      const changelogContent = readFileSync(changelogPath, "utf-8");
+      if (!changelogContent.includes(`## [${currentVersion}]`)) {
+        errors.push(
+          `CHANGELOG.md is missing a release entry for current version "## [${currentVersion}]". Run 'bun scripts/version.ts' to generate it.`,
+        );
+      }
+    }
+  }
+
+  return {
+    passed: errors.length === 0,
+    currentVersion,
+    baselineVersion,
+    requiredBump,
+    commitCount: commits.length,
+    errors,
+  };
+}
 
 async function main() {
   const args = process.argv.slice(2);
 
   if (args.includes("--help") || args.includes("-h")) {
     console.log(`
-CDDM Automated Semantic Versioning & Conventional Commits Tool
+CDDM Unified Lockstep Semantic Versioning & SSoT Manifest Synchronizer
 
 Usage:
   bun scripts/version.ts [options]
 
 Options:
+  --check                   Verify all 10 workspace manifests & packaging URLs match Cargo.toml
+  --check-pr                Verify PR branch bumped version & CHANGELOG.md over latest release tag
+  --auto                    Idempotently calculate and apply SemVer bump from latest release tag
   --dry-run                 Preview version bump and changelog without writing files
-  --get-current             Print current version and exit
+  --get-current             Print current Cargo.toml workspace version and exit
+  --get-latest-tag          Print latest Git tag version and exit
   --get-next                Calculate and print next version and exit
   --release-as <version>    Force a specific bump ("major", "minor", "patch", or explicit "1.2.3")
   --git-tag                 Create git release commit and tag (v<version>)
@@ -258,16 +345,56 @@ Options:
   }
 
   const currentVersionStr = getCurrentVersion();
-  const currentSemver = parseSemver(currentVersionStr);
 
   if (args.includes("--get-current")) {
     console.log(currentVersionStr);
     process.exit(0);
   }
 
+  if (args.includes("--get-latest-tag")) {
+    console.log(getLatestTagVersion() ?? currentVersionStr);
+    process.exit(0);
+  }
+
+  if (args.includes("--check")) {
+    console.log("--> Verifying SSoT workspace version synchronization across all manifests...");
+    const res = checkWorkspaceVersionSync();
+    if (!res.synchronized) {
+      console.error(
+        `\x1b[31m[FAIL] Found ${res.mismatches.length} version synchronization drift error(s) against Cargo.toml (${res.canonicalVersion}):\x1b[0m`,
+      );
+      for (const m of res.mismatches) {
+        console.error(`  - ${m.file} [${m.field}]: expected "${m.expected}", found "${m.actual}"`);
+      }
+      console.error("\nRun 'bun scripts/version.ts' to synchronize all workspace manifests.");
+      process.exit(1);
+    }
+    console.log(
+      `\x1b[32m[PASS] All ${res.checkedFiles} workspace manifests and packaging URLs are 100% synchronized at v${res.canonicalVersion}.\x1b[0m`,
+    );
+    process.exit(0);
+  }
+
+  if (args.includes("--check-pr")) {
+    console.log("--> Verifying PR branch version bump and manifest synchronization...");
+    const prRes = checkPrVersionBump();
+    if (!prRes.passed) {
+      console.error(`\x1b[31m[FAIL] PR version gate check failed:\x1b[0m`);
+      for (const err of prRes.errors) {
+        console.error(`  - ${err}`);
+      }
+      process.exit(1);
+    }
+    console.log(
+      `\x1b[32m[PASS] PR version gate passed (baseline: v${prRes.baselineVersion} -> current: v${prRes.currentVersion}, commits: ${prRes.commitCount}).\x1b[0m`,
+    );
+    process.exit(0);
+  }
+
+  // Use latest git tag as baseline for idempotent branch bumping
+  const baselineVersionStr = getLatestTagVersion() ?? currentVersionStr;
+  const baselineSemver = parseSemver(baselineVersionStr);
   const commits = getCommitsSinceLastTag();
-  console.log(`\x1b[36mCurrent Version:\x1b[0m ${currentVersionStr}`);
-  console.log(`\x1b[36mFound Commits Since Last Tag:\x1b[0m ${commits.length}`);
 
   let bumpType: BumpType = determineBump(commits);
   let nextSemver: SemanticVersion;
@@ -277,16 +404,16 @@ Options:
     const override = args[releaseAsIndex + 1]!;
     if (["major", "minor", "patch"].includes(override)) {
       bumpType = override as BumpType;
-      nextSemver = incrementVersion(currentSemver, bumpType);
+      nextSemver = incrementVersion(baselineSemver, bumpType);
     } else {
       nextSemver = parseSemver(override);
       bumpType = "none";
     }
   } else {
     if (bumpType === "none") {
-      bumpType = "patch"; // Default to patch bump if invoked explicitly
+      bumpType = "patch";
     }
-    nextSemver = incrementVersion(currentSemver, bumpType);
+    nextSemver = incrementVersion(baselineSemver, bumpType);
   }
 
   if (args.includes("--get-next")) {
@@ -294,8 +421,11 @@ Options:
     process.exit(0);
   }
 
+  console.log(`\x1b[36mCurrent Workspace Version:\x1b[0m ${currentVersionStr}`);
+  console.log(`\x1b[36mBaseline Release Tag:\x1b[0m      v${baselineVersionStr}`);
+  console.log(`\x1b[36mCommits Since Last Tag:\x1b[0m    ${commits.length}`);
   console.log(
-    `\x1b[35mCalculated Bump:\x1b[0m ${bumpType.toUpperCase()} -> \x1b[32m${nextSemver.raw}\x1b[0m\n`,
+    `\x1b[35mCalculated Target Version:\x1b[0m ${bumpType.toUpperCase()} -> \x1b[32m${nextSemver.raw}\x1b[0m\n`,
   );
 
   const dateStr = new Date().toISOString().split("T")[0]!;
@@ -308,11 +438,9 @@ Options:
     process.exit(0);
   }
 
-  // Write updates to all files
   updateWorkspaceVersions(nextSemver.raw);
   updateChangelog(changelogSection);
 
-  // Auto-tag if requested
   if (args.includes("--git-tag")) {
     const tagName = `v${nextSemver.raw}`;
     console.log(`\n\x1b[36mCreating release commit and tag ${tagName}...\x1b[0m`);
@@ -343,7 +471,7 @@ Options:
   }
 
   console.log(
-    `\n\x1b[32m[OK] Successfully updated workspace to version ${nextSemver.raw}!\x1b[0m\n`,
+    `\n\x1b[32m[OK] Successfully synchronized workspace to version ${nextSemver.raw}!\x1b[0m\n`,
   );
 }
 

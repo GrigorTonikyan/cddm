@@ -103,8 +103,15 @@ jobs:
       - name: Validate Documentation Integrity & Synchronization
         run: bun scripts/check-docs.ts
 
-      - name: Report Milestone Visibility (informational)
-        run: bun scripts/check-milestones.ts
+      - name: Validate SSoT Workspace Version Synchronization
+        run: bun scripts/version.ts --check
+
+      - name: Validate PR Version Bump & Changelog Gate
+        if: github.event_name == 'pull_request'
+        run: bun scripts/version.ts --check-pr
+
+      - name: Validate Rich Release Notes & MCP Standard
+        run: bun scripts/check-release-notes.ts
 
   webui-ci:
     name: WebUI Frontend Suite & Production Bundle
@@ -218,6 +225,52 @@ jobs:
     steps:
       - name: Verification Gate
         run: echo "All quality gates, compiler checks, MCP test suites, and browser E2E workflows passed successfully."
+
+  auto-tag-release:
+    name: Auto-Tag & Publish Release on Main
+    if: github.ref == 'refs/heads/main'
+    needs: [merge-gate]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: builtin:checkout
+        with:
+          fetch-depth: 0
+
+      - name: Setup Enterprise Toolchains
+        uses: self:gt-dev/actions/setup-toolchains@v1
+        with:
+          bun: "true"
+
+      - name: Check Workspace Version & Create Release Tag
+        env:
+          GITEA_HOST: "git.gt-web-dev.com"
+          GITEA_REPO: "gt-dev/cddm"
+          GITEA_TOKEN: ${{ secrets.REGISTRY_TOKEN || secrets.GITEA_TOKEN || secrets.GITHUB_TOKEN }}
+          GIT_TERMINAL_PROMPT: "0"
+          GCM_INTERACTIVE: "never"
+        run: |
+          CURRENT_VER="$(bun scripts/version.ts --get-current)"
+          TAG_NAME="v${CURRENT_VER}"
+          echo "Workspace version on main: ${CURRENT_VER} (Tag: ${TAG_NAME})"
+
+          if git rev-parse "${TAG_NAME}" >/dev/null 2>&1; then
+            echo "[INFO] Tag ${TAG_NAME} already exists. Skipping auto-tag."
+            exit 0
+          fi
+
+          echo "--> Creating and pushing new release tag ${TAG_NAME}..."
+          git config user.name "gitea-actions[bot]"
+          git config user.email "actions@git.gt-web-dev.com"
+          git tag -a "${TAG_NAME}" -m "Release ${TAG_NAME}"
+
+          GIT_CONFIG_COUNT=1 \
+            GIT_CONFIG_KEY_0="http.https://git.gt-web-dev.com/.extraHeader" \
+            GIT_CONFIG_VALUE_0="Authorization: token ${GITEA_TOKEN}" \
+            git push origin "${TAG_NAME}"
+
+          echo "--> Initializing Gitea release entry for ${TAG_NAME}..."
+          bun scripts/publish-release.ts --tag "${TAG_NAME}"
 
   container-ci:
     name: Build & Push Container to Private VCS Registry
