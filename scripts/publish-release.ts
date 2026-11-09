@@ -5,10 +5,91 @@
  * VS Code extension VSIX packages, and SHA256 checksums.
  */
 
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
 import { generateReleaseNotes } from "./lib/release-notes-engine";
 import { getCurrentVersion } from "./version";
+
+/**
+ * Parse SHA256SUMS.txt content into a map of filename -> sha256 hex digest.
+ */
+export function parseSha256Sums(content: string): Map<string, string> {
+  const map = new Map<string, string>();
+  for (const line of content.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    const match = /^([a-fA-F0-9]{64})\s+\*?(.+)$/.exec(trimmed);
+    if (match && match[1] && match[2]) {
+      map.set(basename(match[2].trim()), match[1].toLowerCase());
+    }
+  }
+  return map;
+}
+
+/**
+ * Inject real SHA-256 checksums from SHA256SUMS.txt into packaged distribution manifests
+ * (Homebrew, Scoop, Winget) inside distDir so published release manifests have valid hashes.
+ */
+export function injectPackagingChecksums(
+  tag: string,
+  distDir: string,
+  workspaceRoot: string = process.cwd(),
+): string[] {
+  const sumsPath = join(distDir, "SHA256SUMS.txt");
+  if (!existsSync(sumsPath)) return [];
+
+  const checksums = parseSha256Sums(readFileSync(sumsPath, "utf-8"));
+  if (checksums.size === 0) return [];
+
+  const cleanVer = tag.replace(/^v/, "");
+  const linuxX64Hash = checksums.get(`cddm-v${cleanVer}-x86_64-unknown-linux-gnu.tar.gz`);
+  const winX64Hash = checksums.get(`cddm-v${cleanVer}-x86_64-pc-windows-gnu.zip`);
+  const generatedFiles: string[] = [];
+
+  // 1. Homebrew formula
+  const brewSrc = join(workspaceRoot, "packaging", "homebrew", "cddm.rb");
+  if (existsSync(brewSrc)) {
+    let brewContent = readFileSync(brewSrc, "utf-8");
+    if (linuxX64Hash) {
+      brewContent = brewContent.replace(
+        /(cddm-v#\{version\}-x86_64-unknown-linux-gnu\.tar\.gz"\r?\n\s*sha256\s+)"[a-fA-F0-9]{64}"/,
+        `$1"${linuxX64Hash}"`,
+      );
+    }
+    const outBrew = join(distDir, "cddm.rb");
+    writeFileSync(outBrew, brewContent, "utf-8");
+    generatedFiles.push(outBrew);
+  }
+
+  // 2. Scoop manifest
+  const scoopSrc = join(workspaceRoot, "packaging", "scoop", "cddm.json");
+  if (existsSync(scoopSrc)) {
+    const scoopJson = JSON.parse(readFileSync(scoopSrc, "utf-8"));
+    if (winX64Hash && scoopJson.architecture?.["64bit"]) {
+      scoopJson.architecture["64bit"].hash = winX64Hash;
+    }
+    const outScoop = join(distDir, "cddm.json");
+    writeFileSync(outScoop, JSON.stringify(scoopJson, null, 2) + "\n", "utf-8");
+    generatedFiles.push(outScoop);
+  }
+
+  // 3. Winget manifest
+  const wingetSrc = join(workspaceRoot, "packaging", "winget", "GrigorTonikyan.cddm.yaml");
+  if (existsSync(wingetSrc)) {
+    let wingetContent = readFileSync(wingetSrc, "utf-8");
+    if (winX64Hash) {
+      wingetContent = wingetContent.replace(
+        /(cddm-v[\d.]+-x86_64-pc-windows-gnu\.zip\r?\n\s*InstallerSha256:\s*)[a-fA-F0-9]{64}/,
+        `$1${winX64Hash}`,
+      );
+    }
+    const outWinget = join(distDir, "GrigorTonikyan.cddm.yaml");
+    writeFileSync(outWinget, wingetContent, "utf-8");
+    generatedFiles.push(outWinget);
+  }
+
+  return generatedFiles;
+}
 
 export interface ReleaseOptions {
   host: string;
@@ -243,6 +324,13 @@ export async function runPublishPipeline(options: ReleaseOptions): Promise<void>
       `\x1b[33mArtifacts directory '${options.distDir}' does not exist, skipping asset upload.\x1b[0m`,
     );
     return;
+  }
+
+  const injected = injectPackagingChecksums(options.tag, fullDistPath);
+  if (injected.length > 0) {
+    console.log(
+      `\x1b[32m[OK] Injected SHA-256 checksums into ${injected.length} packaging manifest(s).\x1b[0m`,
+    );
   }
 
   const files = readdirSync(fullDistPath)

@@ -55,12 +55,13 @@ This rule governs repository tracking, issue management, branching nomenclature,
    - Never bypass the Gitea merge endpoint with silent local fast-forward pushes to `main`.
 7. **Automatic Branch Deletion**: Merged feature branches must be deleted immediately after merge (enforced by Gitea `default_delete_branch_after_merge: true`).
 
-## 5. Milestone & Release Lifecycle
+## 5. Semantic Versioning & Automated Release Lifecycle
 
-1. **Issues Are Mandatory, Milestones Are Optional**: Every change MUST be tracked by a Gitea issue (PRs reference it via `Fixes #<id>`). Milestones are NOT required on issues or PRs; assign one only when an issue is targeted at a specific release (e.g. `v3.4.0`). `bun scripts/check-milestones.ts` is informational only and never fails verification. `bun scripts/sync-milestones.ts` remains available to bulk-assign milestones on request.
-2. **Milestone Closure & Automagic Release**:
-   - Workspace versions are determined strictly by milestones.
-   - When all assigned issues for a milestone reach 100% completion (0 open issues remaining), the release MUST be triggered via `bun scripts/milestone-release.ts` (or `vp run release:milestone`).
-   - The engine automatically synchronizes all 10 project manifests (`package.json`, `Cargo.toml`, `webui/package.json`, NPM packages, VS Code VSIX, Homebrew, Scoop, Winget, and README badges) via `bun scripts/sync-version.ts`.
-   - Generates the commit `chore(release): vX.Y.Z [skip ci]`, creates the signed semantic Git tag `vX.Y.Z`, pushes to Gitea `origin` (auto-mirrored to GitHub), closes the milestone, and publishes the Gitea release.
+1. **Issues Are Mandatory, Milestones Are Optional**: Every change MUST be tracked by a Gitea issue (PRs reference it via `Fixes #<id>`). Milestones are NOT required on issues or PRs; assign one only when an issue is targeted at a specific roadmap grouping.
+2. **PR-Time Lockstep SemVer Bump & Automated Tag Release on `main`**:
+   - Workspace versions are calculated deterministically from Conventional Commits since the latest release tag via `bun scripts/version.ts` (or `vp run version:bump`).
+   - Every PR introducing features (`feat`), bug fixes (`fix`), or optimizations (`perf`, `refactor`) MUST bump the workspace version on the PR branch before opening the PR.
+   - `bun scripts/version.ts` idempotently synchronizes all 10 project manifests (`Cargo.toml`, `Cargo.lock`, `package.json`, `webui/package.json`, `npm/cddm/package.json` + `optionalDependencies`, `editors/vscode/package.json`, Homebrew, Scoop, Winget, and `README.md` badges) and updates `CHANGELOG.md`.
+   - `vp run verify` and PR CI enforce `bun scripts/version.ts --check` (100% manifest SSoT sync) and `bun scripts/version.ts --check-pr` (PR version bump gate).
+   - When the PR is merged into `main`, the `auto-tag-release` CI job in `.gitea/workflows/ci.yaml` automatically detects the new version in `Cargo.toml`, creates and pushes the annotated Git tag `vX.Y.Z` to Gitea `origin`, and triggers `.gitea/workflows/release.yaml` to build and publish multi-platform binaries, VSIX packages, SHA-256 checksummed package manifests, and the Gitea release.
 3. **Downstream Mirror Sync**: Release commits, tags, and assets pushed to Gitea `origin` are automatically mirrored downstream to GitHub via Gitea's server-side push mirror (`sync_on_commit: true`). Never push manually to `github`.

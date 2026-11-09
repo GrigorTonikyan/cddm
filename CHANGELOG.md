@@ -5,6 +5,26 @@ All notable changes to **CDDM** (_Code De-Duplication Meister_) will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.9.0] - 2026-11-09
+
+### Features
+
+- **release**: unify lockstep SemVer engine and automate tag releases (Fixes #301) (`569db35`)
+- **policy**: forbidden files, SSoT sync, and route docs rules (Fixes #298) (`0e6009a`)
+- **policy**: prohibited patterns, token budgets & zero-emojis (Fixes #294) (`78f21b2`)
+
+### Documentation
+
+- **governance**: require issues for every change, make milestones optional (`de5d458`)
+- **governance**: require milestones on issues only, not PRs (`c64ac69`)
+
+### Tooling & Maintenance
+
+- **deps-docs**: audit docs, rules, skills, and upgrade deps (Fixes #296) (`e5be78d`)
+- **docs**: audit and synchronize docs, rules, skills, and deps (`958566e`)
+- **webui**: mock localStorage in storage-adapter test for Node 26 compatibility (`db62b56`)
+- **build**: tune cargo dev profile to reduce build artifact footprint (`6fd2ed7`)
+
 ## [4.8.0] - 2026-10-16
 
 ### Features

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import {
+  compareSemver,
   determineBump,
   incrementVersion,
   parseCommitLine,
@@ -46,6 +47,13 @@ describe("Semantic Versioning Engine", () => {
   it("should parse semver strings correctly", () => {
     expect(parseSemver("0.1.2")).toEqual({ major: 0, minor: 1, patch: 2, raw: "0.1.2" });
     expect(parseSemver("v1.4.0")).toEqual({ major: 1, minor: 4, patch: 0, raw: "1.4.0" });
+  });
+
+  it("should compare semantic versions accurately", () => {
+    expect(compareSemver("4.9.0", "4.8.0")).toBe(1);
+    expect(compareSemver("4.8.0", "4.9.0")).toBe(-1);
+    expect(compareSemver("4.8.0", "v4.8.0")).toBe(0);
+    expect(compareSemver("5.0.0", "4.99.99")).toBe(1);
   });
 
   it("should calculate version increments accurately", () => {
