@@ -117,6 +117,30 @@ pub fn build_rule_catalog() -> Vec<SarifRule> {
             "### Recommendation\nRefactor top duplicate hotspots to bring module duplication \
              within policy limits.",
         ),
+        make_sarif_rule(
+            sarif_rules::RULE_ID_FORBIDDEN_FILE,
+            "ForbiddenFileDetected",
+            "Forbidden file or conflicting tooling discovered on disk",
+            "CDDM detected a forbidden file matching an active architectural policy rule.",
+            "Remove forbidden file or update policy configuration.",
+            "### Recommendation\nDelete deprecated config or migrate to approved toolchain.",
+        ),
+        make_sarif_rule(
+            sarif_rules::RULE_ID_SYNC_DRIFT,
+            "SyncDriftDetected",
+            "SSoT constant or version drift detected across files",
+            "CDDM detected a drift between canonical source and target configuration or code.",
+            "Update target file to match the authoritative Single Source of Truth.",
+            "### Recommendation\nSynchronize versions and constants across all target files.",
+        ),
+        make_sarif_rule(
+            sarif_rules::RULE_ID_ROUTE_DOCS,
+            "RouteDocsDriftDetected",
+            "Undocumented framework route discovered on disk",
+            "CDDM detected a framework route that is missing documentation in specified Markdown files.",
+            "Document the discovered route in the project documentation.",
+            "### Recommendation\nAdd route descriptions to README.md or project documentation.",
+        ),
     ]
 }
 
@@ -142,6 +166,9 @@ fn map_policy_violation_to_rule(violation: &PolicyViolation) -> (&'static str, u
         "boundary" => (sarif_rules::RULE_ID_BOUNDARY, 4, level),
         "zero_duplication" => (sarif_rules::RULE_ID_ZERO_DUP, 5, level),
         "limit" => (sarif_rules::RULE_ID_LIMIT, 6, level),
+        "forbidden_file" => (sarif_rules::RULE_ID_FORBIDDEN_FILE, 7, level),
+        "sync_drift" => (sarif_rules::RULE_ID_SYNC_DRIFT, 8, level),
+        "route_docs" => (sarif_rules::RULE_ID_ROUTE_DOCS, 9, level),
         _ => (sarif_rules::RULE_ID_EXACT, 0, level),
     }
 }

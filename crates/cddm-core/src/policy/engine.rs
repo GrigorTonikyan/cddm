@@ -4,8 +4,13 @@ use super::budgets::{CompiledTokenBudget, evaluate_token_budgets};
 use super::compiled::{CompiledBoundary, CompiledLimit, CompiledZeroDuplication};
 use super::emoji::evaluate_zero_emoji;
 use super::eval::evaluate_scan_policies;
+use super::forbidden_files::{CompiledForbiddenFile, evaluate_forbidden_files};
 use super::patterns::{CompiledProhibitedPattern, evaluate_prohibited_patterns};
-use crate::types::{PolicyConfig, PolicyEvaluationResult, PolicySeverity, ScanResult};
+use super::route_docs::evaluate_route_docs_policies;
+use super::sync::evaluate_sync_rules;
+use crate::types::{
+    PolicyConfig, PolicyEvaluationResult, PolicySeverity, RouteDocsPolicy, ScanResult, SyncRule,
+};
 use ignore::gitignore::GitignoreBuilder;
 use std::path::Path;
 
@@ -24,6 +29,12 @@ pub struct PolicyEngine {
     compiled_prohibited_patterns: Vec<CompiledProhibitedPattern>,
     /// Compiled token budget matchers
     compiled_token_budgets: Vec<CompiledTokenBudget>,
+    /// Compiled forbidden file matchers
+    compiled_forbidden_files: Vec<CompiledForbiddenFile>,
+    /// Active SSoT constant and version synchronization rules
+    sync_rules: Vec<SyncRule>,
+    /// Active route documentation completeness policies
+    route_docs_policies: Vec<RouteDocsPolicy>,
 }
 
 impl PolicyEngine {
@@ -97,6 +108,19 @@ impl PolicyEngine {
             compiled_token_budgets.push(tb);
         }
 
+        let mut compiled_forbidden_files = Vec::new();
+        for rule in &config.forbidden_files {
+            let cf = CompiledForbiddenFile::compile(rule)?;
+            compiled_forbidden_files.push(cf);
+        }
+
+        let sync_rules = config.sync_rules.clone();
+
+        let mut route_docs_policies = config.route_docs.clone();
+        if let Some(ref rds) = config.route_docs_sync {
+            route_docs_policies.push(rds.clone());
+        }
+
         if config.raw_toml.is_none() {
             config.raw_toml = toml::to_string_pretty(&config).ok();
         }
@@ -108,6 +132,9 @@ impl PolicyEngine {
             compiled_limits,
             compiled_prohibited_patterns,
             compiled_token_budgets,
+            compiled_forbidden_files,
+            sync_rules,
+            route_docs_policies,
         })
     }
 
@@ -120,6 +147,9 @@ impl PolicyEngine {
             compiled_limits: Vec::new(),
             compiled_prohibited_patterns: Vec::new(),
             compiled_token_budgets: Vec::new(),
+            compiled_forbidden_files: Vec::new(),
+            sync_rules: Vec::new(),
+            route_docs_policies: Vec::new(),
         }
     }
 
@@ -176,6 +206,26 @@ impl PolicyEngine {
                 let budget_violations =
                     evaluate_token_budgets(target_path, &self.compiled_token_budgets);
                 eval.violations.extend(budget_violations);
+            }
+
+            // 7. Forbidden file rules
+            if !self.compiled_forbidden_files.is_empty() {
+                let forbidden_violations =
+                    evaluate_forbidden_files(target_path, &self.compiled_forbidden_files);
+                eval.violations.extend(forbidden_violations);
+            }
+
+            // 8. SSoT constant & version synchronization rules
+            if !self.sync_rules.is_empty() {
+                let sync_violations = evaluate_sync_rules(target_path, &self.sync_rules);
+                eval.violations.extend(sync_violations);
+            }
+
+            // 9. Route documentation drift rules
+            if !self.route_docs_policies.is_empty() {
+                let route_violations =
+                    evaluate_route_docs_policies(target_path, &self.route_docs_policies);
+                eval.violations.extend(route_violations);
             }
 
             // Recalculate aggregation metrics
@@ -271,6 +321,38 @@ impl PolicyEngine {
 # max_file_tokens = 2500
 # max_total_tokens = 20000
 # severity = "error"
+
+# [[forbidden_files]]
+# Bans deprecated tooling, conflicting config files, or non-canonical lockfiles.
+# [[forbidden_files]]
+# name = "banned-legacy-tooling"
+# description = "Disallow legacy linters and foreign lockfiles"
+# patterns = [".eslintrc*", ".prettierrc*", "yarn.lock", "package-lock.json", "pnpm-lock.yaml"]
+# severity = "error"
+# remediation = "Use Vite+ unified toolchain with oxlint/oxfmt and canonical package manager"
+
+# [[sync_rules]]
+# Enforces that versions and constants across configuration and code stay strictly in sync.
+# [[sync_rules]]
+# name = "version-sync"
+# description = "Ensure package.json version matches constants.ts"
+# source_file = "package.json"
+# source_key = "version"
+# target_files = ["src/constants.ts"]
+# target_regex = 'APP_VERSION\s*=\s*"([^"]+)"'
+# severity = "error"
+# remediation = "Update target constant to match package.json version"
+
+# [route_docs_sync]
+# Ensures all discovered framework routes (Next.js, Astro, etc.) are documented in Markdown.
+# [route_docs_sync]
+# name = "route-docs-completeness"
+# framework = "nextjs"
+# routes_dir = "src/app"
+# doc_file = "README.md"
+# ignore_routes = ["api/**", "_components/**"]
+# severity = "error"
+# remediation = "Document missing routes in README.md"
 "#
     }
 }

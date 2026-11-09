@@ -74,6 +74,30 @@ fn render_policy_rules(frame: &mut Frame, app: &TuiApp, area: Rect) {
                 ])
                 .style(Style::default().fg(Color::Green)),
             );
+            rows.push(
+                Row::new(vec![
+                    "Forbidden Files".to_string(),
+                    "Conflicting Tooling & Lockfiles".to_string(),
+                    "Compliant (PASS)".to_string(),
+                ])
+                .style(Style::default().fg(Color::Green)),
+            );
+            rows.push(
+                Row::new(vec![
+                    "SSoT Synchronization".to_string(),
+                    "Config & Code Version Sync".to_string(),
+                    "In Sync (PASS)".to_string(),
+                ])
+                .style(Style::default().fg(Color::Green)),
+            );
+            rows.push(
+                Row::new(vec![
+                    "Route Documentation".to_string(),
+                    "Living Route Completeness".to_string(),
+                    "Documented (PASS)".to_string(),
+                ])
+                .style(Style::default().fg(Color::Green)),
+            );
         }
     } else {
         rows.push(

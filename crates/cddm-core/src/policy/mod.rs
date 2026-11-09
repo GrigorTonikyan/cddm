@@ -5,7 +5,10 @@ pub mod compiled;
 pub mod emoji;
 pub mod engine;
 pub mod eval;
+pub mod forbidden_files;
 pub mod patterns;
+pub mod route_docs;
+pub mod sync;
 
 pub use budgets::{CompiledTokenBudget, count_file_tokens, evaluate_token_budgets};
 pub use compiled::{
@@ -15,7 +18,10 @@ pub use compiled::{
 pub use emoji::{evaluate_zero_emoji, is_emoji_char};
 pub use engine::PolicyEngine;
 pub use eval::evaluate_scan_policies;
+pub use forbidden_files::{CompiledForbiddenFile, evaluate_forbidden_files};
 pub use patterns::{CompiledProhibitedPattern as ProhibitedPattern, evaluate_prohibited_patterns};
+pub use route_docs::evaluate_route_docs_policies;
+pub use sync::evaluate_sync_rules;
 
 #[cfg(test)]
 mod tests {
@@ -278,5 +284,99 @@ severity = "warning"
         assert_eq!(eval.error_count, 1);
         assert_eq!(eval.violations[0].rule_type, "zero_emojis");
         assert_eq!(eval.violations[0].rule_name, "zero-emoji");
+    }
+
+    #[test]
+    fn test_policy_engine_forbidden_files_and_sync() {
+        let temp_dir = tempfile::tempdir().expect("Failed to create tempdir");
+        let root = temp_dir.path();
+
+        let yarn_lock = root.join("yarn.lock");
+        std::fs::write(&yarn_lock, "# lock").expect("write yarn.lock");
+
+        let pkg_json = root.join("package.json");
+        std::fs::write(&pkg_json, r#"{"version": "3.0.0"}"#).expect("write package.json");
+
+        let const_file = root.join("constants.ts");
+        std::fs::write(&const_file, r#"export const VERSION = "2.9.0";"#)
+            .expect("write constants.ts");
+
+        let toml_content = r#"
+[[forbidden_files]]
+name = "no-yarn"
+patterns = ["yarn.lock"]
+severity = "error"
+remediation = "Use bun.lock"
+
+[[sync_rules]]
+name = "version-sync"
+source_file = "package.json"
+source_key = "version"
+target_files = ["constants.ts"]
+target_regex = 'VERSION\s*=\s*"([^"]+)"'
+severity = "error"
+"#;
+        let engine = toml_content
+            .parse::<PolicyEngine>()
+            .expect("parse policy TOML");
+
+        let scan_result = ScanResult {
+            scan_id: "test-forbidden-sync".to_string(),
+            total_files: 3,
+            target_directory: Some(root.to_string_lossy().to_string()),
+            ..Default::default()
+        };
+
+        let eval = engine.evaluate(&scan_result);
+        assert!(!eval.passed);
+        assert_eq!(eval.error_count, 2);
+        assert!(
+            eval.violations
+                .iter()
+                .any(|v| v.rule_type == "forbidden_file")
+        );
+        assert!(eval.violations.iter().any(|v| v.rule_type == "sync_drift"));
+    }
+
+    #[test]
+    fn test_policy_engine_route_docs_sync() {
+        let temp_dir = tempfile::tempdir().expect("Failed to create tempdir");
+        let root = temp_dir.path();
+
+        let app_dir = root.join("src").join("app");
+        std::fs::create_dir_all(app_dir.join("analytics")).expect("create app dir");
+        std::fs::write(
+            app_dir.join("analytics").join("page.tsx"),
+            "export default function Analytics() { return null; }",
+        )
+        .expect("write page");
+
+        let readme = root.join("README.md");
+        std::fs::write(&readme, "# App Docs\nNo routes listed yet.\n").expect("write readme");
+
+        let toml_content = r#"
+[route_docs_sync]
+name = "route-sync"
+framework = "nextjs"
+routes_dir = "src/app"
+doc_file = "README.md"
+severity = "warning"
+"#;
+        let engine = toml_content
+            .parse::<PolicyEngine>()
+            .expect("parse policy TOML");
+
+        let scan_result = ScanResult {
+            scan_id: "test-route-docs".to_string(),
+            total_files: 2,
+            target_directory: Some(root.to_string_lossy().to_string()),
+            ..Default::default()
+        };
+
+        let eval = engine.evaluate(&scan_result);
+        assert!(eval.passed); // Warning severity
+        assert_eq!(eval.warning_count, 1);
+        assert_eq!(eval.violations[0].rule_type, "route_docs");
+        assert!(eval.violations[0].message.contains("/analytics"));
     }
 }

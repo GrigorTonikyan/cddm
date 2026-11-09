@@ -59,4 +59,41 @@ remediation = "Use abstract server interface"
       expect(found.remediation).toBe("Use abstract server interface");
     }
   });
+
+  it("should evaluate forbidden files, SSoT sync, and route docs policies via MCP", async () => {
+    const tempRules = "target/test-extended-rules.toml";
+    const rulesToml = `
+[[forbidden_files]]
+name = "mcp-test-forbidden-lock"
+patterns = ["test-forbidden.lock"]
+severity = "error"
+remediation = "Remove test-forbidden.lock"
+
+[[sync_rules]]
+name = "mcp-test-version-sync"
+source_file = "Cargo.toml"
+source_key = "workspace.package.version"
+target_files = ["package.json"]
+target_key = "version"
+severity = "warning"
+
+[route_docs_sync]
+name = "mcp-test-route-docs"
+framework = "nextjs"
+routes_dir = "crates"
+doc_file = "README.md"
+severity = "info"
+`;
+    await Bun.write(tempRules, rulesToml);
+
+    const res = await executeTool("cddm_check_policies", {
+      directory: ".",
+      rules: tempRules,
+      min_tokens: 50,
+    });
+
+    expect(res).toBeDefined();
+    expect(typeof res.passed).toBe("boolean");
+    expect(Array.isArray(res.violations)).toBe(true);
+  });
 });

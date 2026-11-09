@@ -361,6 +361,10 @@ async fn test_policy_rules_get_and_post_handlers() {
         prohibited_patterns: vec![],
         zero_emojis: None,
         token_budgets: vec![],
+        forbidden_files: vec![],
+        sync_rules: vec![],
+        route_docs_sync: None,
+        route_docs: vec![],
         raw_toml: None,
     };
 
