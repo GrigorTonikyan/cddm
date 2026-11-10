@@ -19,7 +19,7 @@ export const completionFiles = {
 export const requiredPackagingFiles = [
   "packaging/homebrew/cddm.rb",
   "packaging/scoop/cddm.json",
-  "packaging/winget/gt-dev.cddm.yaml",
+  "packaging/winget/cddm.yaml",
   "packaging/install.sh",
   "packaging/install.ps1",
   "docs/JETBRAINS_SETUP.md",

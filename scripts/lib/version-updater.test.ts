@@ -104,7 +104,7 @@ describe("version-updater utility", () => {
         }),
       );
       writeFileSync(
-        join(tempRoot, "packaging", "winget", "gt-dev.cddm.yaml"),
+        join(tempRoot, "packaging", "winget", "cddm.yaml"),
         `PackageVersion: 4.7.0\nInstallers:\n  - Architecture: x64\n    InstallerUrl: https://git.gt-web-dev.com/gt-dev/cddm/releases/download/v1.9.0/cddm-v1.9.0-x86_64-pc-windows-msvc.zip\n`,
       );
       writeFileSync(

@@ -135,7 +135,7 @@ jobs:
       - name: Log in to Private Gitea Container Registry
         uses: self:gt-dev/actions/docker-login@v1
         with:
-          registry: git.gt-web-dev.com
+          registry: ${{ vars.GITEA_HOST || 'git.gt-web-dev.com' }}
           username: ${{ github.repository_owner }}
           password: ${{ secrets.REGISTRY_TOKEN }}
 
@@ -146,8 +146,8 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            git.gt-web-dev.com/gt-dev/cddm:latest
-            git.gt-web-dev.com/gt-dev/cddm:${{ github.ref_name }}
+            ${{ vars.GITEA_HOST || 'git.gt-web-dev.com' }}/${{ github.repository }}:latest
+            ${{ vars.GITEA_HOST || 'git.gt-web-dev.com' }}/${{ github.repository }}:${{ github.ref_name }}
 
   gitea-publish:
     name: Publish Gitea Release & Ecosystem Packages
@@ -177,10 +177,15 @@ jobs:
           sha256sum * > SHA256SUMS.txt
           cat SHA256SUMS.txt
 
-      - name: Publish Release to Gitea
+      - name: Publish Release & Dispatch Package Manifests
         env:
-          GITEA_HOST: "git.gt-web-dev.com"
-          GITEA_REPO: "gt-dev/cddm"
+          GITEA_HOST: ${{ vars.GITEA_HOST || 'git.gt-web-dev.com' }}
+          GITEA_REPO: ${{ github.repository }}
+          PACKAGE_PUBLISHER: ${{ vars.PUBLISHER || github.repository_owner }}
+          PACKAGE_PUBLISHER_NAME: ${{ vars.PUBLISHER_NAME }}
+          HOMEBREW_TAP_REPO: ${{ vars.HOMEBREW_TAP_REPO }}
+          SCOOP_BUCKET_REPO: ${{ vars.SCOOP_BUCKET_REPO }}
+          WINGET_REPO: ${{ vars.WINGET_REPO }}
           GITEA_TOKEN: ${{ secrets.REGISTRY_TOKEN || secrets.GITEA_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
           if [[ "${GITHUB_REF_NAME:-}" == v* ]]; then
@@ -188,4 +193,4 @@ jobs:
           else
             TAG_NAME="v$(bun scripts/version.ts --get-current)"
           fi
-          bun scripts/publish-release.ts --tag "${TAG_NAME}" --dist-dir "dist-release"
+          bun scripts/publish-release.ts --tag "${TAG_NAME}" --dist-dir "dist-release" --dispatch-packages

@@ -1,6 +1,6 @@
 {
   "name": "cddm",
-  "version": "4.9.1",
+  "version": "4.9.2",
   "description": "CDDM — Code De-Duplication Meister: High-Performance Polyglot Code Clone & Modularity Analyzer",
   "keywords": [
     "ast",
@@ -33,9 +33,9 @@
   },
   "main": "./bin/cddm.js",
   "optionalDependencies": {
-    "@cddm/darwin-arm64": "4.9.1",
-    "@cddm/darwin-x64": "4.9.1",
-    "@cddm/linux-x64": "4.9.1",
-    "@cddm/win32-x64": "4.9.1"
+    "@cddm/darwin-arm64": "4.9.2",
+    "@cddm/darwin-x64": "4.9.2",
+    "@cddm/linux-x64": "4.9.2",
+    "@cddm/win32-x64": "4.9.2"
   }
 }
