@@ -25,18 +25,30 @@
 
 ## Standard Tool Mapping
 
-| Target System                   | Deprecated / Prohibited Pattern              | Required Server / Tool                                                                             |
-| :------------------------------ | :------------------------------------------- | :------------------------------------------------------------------------------------------------- |
-| **TrueNAS Compose Apps**        | `ssh ... midclt call app.compose.*`          | `forge-mcp`: `truenas_app_list`, `truenas_app_status`, `truenas_app_update`, `truenas_app_upgrade` |
-| **Container Exec**              | `ssh ... docker exec ...`                    | `forge-mcp`: `truenas_app_exec(app_name, container_name, command)`                                 |
-| **Virtual Machines**            | `ssh dev@<vm_ip>`                            | `forge-mcp`: `truenas_vm_exec(vm_name, command)` (QEMU Agent, no SSH)                              |
-| **VM Lifecycle**                | `midclt call vm.start/stop`                  | `forge-mcp`: `truenas_vm_start`, `truenas_vm_stop`, `truenas_vm_status`                            |
-| **ZFS Storage**                 | `ssh ... zfs snapshot/list`                  | `forge-mcp`: `truenas_storage_snapshot`, `truenas_storage_datasets`                                |
-| **Coolify PaaS**                | Direct curl to Coolify API / `mcp-bridge.py` | Official Coolify MCP (`/mcp`) / `coolify_setup_gitea_webhook`                                      |
-| **CI/CD Actions Observability** | Probing TrueNAS host / runner containers     | `gitea-mcp`: `gitea_list_workflow_runs`, `gitea_get_job_logs`, `gitea_runner_status`               |
-| **VCS Defect Reporting**        | Ad-hoc local hacks / monkey-patching         | `gitea-mcp`: `gitea_create_issue` / `forge-mcp`: `forge_report_bug`                                |
-| **VCS Issue Tracking**          | Manual curl to `git.gt-web-dev.com`          | `gitea-mcp`: `gitea_list_issues`, `gitea_get_issue` / `forge issue` CLI                            |
-| **Pull Requests & CI Gates**    | Manual web UI / ad-hoc scripts               | `gitea-mcp`: `gitea_create_pr`, `gitea_merge_pr`, `gitea_wait_for_ci_gate`                         |
+| Target System                   | Deprecated / Prohibited Pattern              | Required Server / Tool                                                                                   |
+| :------------------------------ | :------------------------------------------- | :------------------------------------------------------------------------------------------------------- |
+| **TrueNAS Compose Apps**        | `ssh ... midclt call app.compose.*`          | `forge-mcp`: `truenas_app_list`, `truenas_app_status`, `truenas_app_update`, `truenas_app_upgrade`       |
+| **Container Exec**              | `ssh ... docker exec ...`                    | `forge-mcp`: `truenas_app_exec(app_name, container_name, command)`                                       |
+| **Virtual Machines**            | `ssh dev@<vm_ip>`                            | `forge-mcp`: `truenas_vm_exec(vm_name, command)` (QEMU Agent, no SSH)                                    |
+| **VM Lifecycle**                | `midclt call vm.start/stop`                  | `forge-mcp`: `truenas_vm_start`, `truenas_vm_stop`, `truenas_vm_status`                                  |
+| **ZFS Storage**                 | `ssh ... zfs snapshot/list`                  | `forge-mcp`: `truenas_storage_snapshot`, `truenas_storage_datasets`                                      |
+| **Coolify PaaS**                | Direct curl to Coolify API / `mcp-bridge.py` | Official Coolify MCP (`/mcp`) / `coolify_setup_gitea_webhook`                                            |
+| **CI/CD Actions Observability** | Probing TrueNAS host / runner containers     | `gitea-mcp`: `gitea_list_workflow_runs`, `gitea_get_job_logs`, `gitea_runner_status`                     |
+| **VCS Defect Reporting**        | Ad-hoc local hacks / monkey-patching         | `gitea-mcp`: `gitea_create_issue` / `forge-mcp`: `forge_report_bug`                                      |
+| **VCS Issue Tracking**          | Manual curl to `git.gt-web-dev.com`          | `gitea-mcp`: `gitea_list_issues`, `gitea_get_issue` / `forge issue` CLI                                  |
+| **Pull Requests & CI Gates**    | Manual web UI / ad-hoc scripts               | `gitea-mcp`: `gitea_create_pr`, `gitea_merge_pr`, `gitea_wait_for_ci_gate`                               |
+| **Release Asset Management**    | Raw unauthenticated curl / manual deletes    | `gitea-mcp`: `gitea_delete_release_attachment` (or `bun scripts/publish-release.ts --delete-asset <id>`) |
+| **Secrets & Credentials**       | Passing via CLI argument flags (`--token`)   | Strictly inject via `env:` mapping in workflows; use `maskSecret` in tooling                             |
+
+## Active Upstream Tooling Enhancements (Tracked on Gitea SSoT)
+
+The following upstream Forge and Actions capabilities are tracked and active:
+
+- [`gt-dev/forge#299`](https://git.gt-web-dev.com/gt-dev/forge/issues/299): `feat(mcp,cli): support deleting release assets in forge-mcp and forge release`
+- [`gt-dev/forge#300`](https://git.gt-web-dev.com/gt-dev/forge/issues/300): `fix(mcp): prevent 3-minute transport timeout during gitea_wait_for_ci_gate polling`
+- [`gt-dev/forge#301`](https://git.gt-web-dev.com/gt-dev/forge/issues/301): `feat(release): release asset whitelisting and automated package manager distribution dispatch`
+- [`gt-dev/forge#302`](https://git.gt-web-dev.com/gt-dev/forge/issues/302): `feat(security): secrets governance audit, cli argument leak prevention, and log masking`
+- [`gt-dev/actions#30`](https://git.gt-web-dev.com/gt-dev/actions/issues/30): `perf(actions): provide pre-cached enterprise toolchain container images to reduce CI setup latency`
 
 ## Enforcement Directives
 

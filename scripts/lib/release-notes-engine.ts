@@ -9,6 +9,7 @@
 
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { resolvePublisherConfig } from "./publisher-config";
 
 export interface ReleaseNotesOptions {
   milestoneTitle?: string;
@@ -95,15 +96,17 @@ CDDM strictly enforces complete feature parity across all four primary interacti
 export function buildInstallationSection(version: string): string {
   const cleanVersion = version.replace(/^v/, "").trim();
   const tag = `v${cleanVersion}`;
+  const pubConfig = resolvePublisherConfig();
+  const repoUrl = `https://${pubConfig.vcsHost}/${pubConfig.vcsRepo}`;
 
   return `### Installation & Distribution Ecosystem
 
 #### Standalone Prebuilt Binaries
 Download standalone binaries containing \`cddm\` (CLI), \`cddm-mcp\` (MCP Server), and \`cddm-lsp\` (Language Server):
 
-- **Linux (x86_64)**: [\`cddm-${tag}-x86_64-unknown-linux-gnu.tar.gz\`](https://git.gt-web-dev.com/gt-dev/cddm/releases/download/${tag}/cddm-${tag}-x86_64-unknown-linux-gnu.tar.gz)
-- **Windows (x86_64)**: [\`cddm-${tag}-x86_64-pc-windows-gnu.zip\`](https://git.gt-web-dev.com/gt-dev/cddm/releases/download/${tag}/cddm-${tag}-x86_64-pc-windows-gnu.zip)
-- **VS Code Extension**: [\`cddm-${cleanVersion}.vsix\`](https://git.gt-web-dev.com/gt-dev/cddm/releases/download/${tag}/cddm-${cleanVersion}.vsix)
+- **Linux (x86_64)**: [\`cddm-${tag}-x86_64-unknown-linux-gnu.tar.gz\`](${repoUrl}/releases/download/${tag}/cddm-${tag}-x86_64-unknown-linux-gnu.tar.gz)
+- **Windows (x86_64)**: [\`cddm-${tag}-x86_64-pc-windows-gnu.zip\`](${repoUrl}/releases/download/${tag}/cddm-${tag}-x86_64-pc-windows-gnu.zip)
+- **VS Code Extension**: [\`cddm-${cleanVersion}.vsix\`](${repoUrl}/releases/download/${tag}/cddm-${cleanVersion}.vsix)
 - **SHA-256 Checksums**: Verify all package downloads with \`SHA256SUMS.txt\`.
 
 #### Ecosystem Package Managers
@@ -115,18 +118,20 @@ cargo install cddm-cli cddm-mcp
 npm install -g cddm
 npx cddm-mcp
 
-# Homebrew (macOS / Linux)
-brew install gt-dev/cddm/cddm
+# Homebrew (macOS / Linux — Central Tap)
+brew tap ${pubConfig.publisherId}/tap https://${pubConfig.vcsHost}/${pubConfig.homebrewTapRepo}
+brew install cddm
 
-# Scoop (Windows)
+# Scoop (Windows — Central Bucket)
+scoop bucket add ${pubConfig.publisherId} https://${pubConfig.vcsHost}/${pubConfig.scoopBucketRepo}
 scoop install cddm
 
 # WinGet (Windows Package Manager)
-winget install gt-dev.cddm
+winget install ${pubConfig.publisherId}.cddm
 
 # Turnkey Install Scripts
-curl -fsSL https://git.gt-web-dev.com/gt-dev/cddm/raw/branch/main/packaging/install.sh | bash
-irm https://git.gt-web-dev.com/gt-dev/cddm/raw/branch/main/packaging/install.ps1 | iex
+curl -fsSL ${repoUrl}/raw/branch/main/packaging/install.sh | bash
+irm ${repoUrl}/raw/branch/main/packaging/install.ps1 | iex
 \`\`\``;
 }
 
@@ -138,6 +143,7 @@ export function generateReleaseNotes(version: string, options: ReleaseNotesOptio
   const tag = `v${cleanVersion}`;
   const rootDir = options.rootDir || process.cwd();
   const title = options.milestoneTitle ? ` — ${options.milestoneTitle}` : "";
+  const pubConfig = resolvePublisherConfig(rootDir);
 
   const changelog = extractChangelogSection(cleanVersion, rootDir);
   const mcpSection = options.includeMcpHighlight !== false ? `\n\n${buildMcpServerSection()}` : "";
@@ -150,7 +156,7 @@ export function generateReleaseNotes(version: string, options: ReleaseNotesOptio
 ${changelog}${mcpSection}${paritySection}${installSection}
 
 ---
-*Authoritative Single Source of Truth: [Gitea Portal](https://git.gt-web-dev.com/gt-dev/cddm)*`;
+*Authoritative Single Source of Truth: [Gitea Portal](https://${pubConfig.vcsHost}/${pubConfig.vcsRepo})*`;
 }
 
 /**

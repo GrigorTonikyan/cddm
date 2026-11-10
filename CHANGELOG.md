@@ -5,6 +5,12 @@ All notable changes to **CDDM** (_Code De-Duplication Meister_) will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.9.2] - 2026-11-10
+
+### Tooling & Maintenance
+
+- **governance**: enforce dynamic VCS variables, multi-app repos, and Forge SSoT (`e42986f`)
+
 ## [4.9.1] - 2026-11-10
 
 ## [4.9.0] - 2026-11-09

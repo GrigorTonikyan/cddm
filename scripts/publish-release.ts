@@ -7,6 +7,8 @@
 
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
+import { dispatchDistribution } from "./dispatch-distribution";
+import { resolvePublisherConfig } from "./lib/publisher-config";
 import { generateReleaseNotes } from "./lib/release-notes-engine";
 import { getCurrentVersion } from "./version";
 
@@ -95,9 +97,13 @@ export function injectPackagingChecksums(
     updatedFiles.push(scoopSrc);
   }
 
-  // 3. Winget manifest (rebranded to gt-dev.cddm.yaml)
-  const wingetSrc = join(workspaceRoot, "packaging", "winget", "gt-dev.cddm.yaml");
-  if (existsSync(wingetSrc)) {
+  // 3. Winget manifest (neutral cddm.yaml or publisher-prefixed)
+  const wingetCandidates = [
+    join(workspaceRoot, "packaging", "winget", "cddm.yaml"),
+    join(workspaceRoot, "packaging", "winget", "gt-dev.cddm.yaml"),
+  ];
+  const wingetSrc = wingetCandidates.find((f) => existsSync(f));
+  if (wingetSrc) {
     let wingetContent = readFileSync(wingetSrc, "utf-8");
     if (winX64Hash) {
       wingetContent = wingetContent.replace(
@@ -125,6 +131,7 @@ export interface ReleaseOptions {
   distDir: string;
   dryRun: boolean;
   deleteAssetId?: number;
+  dispatchPackages?: boolean;
 }
 
 export interface GiteaReleaseResponse {
@@ -139,9 +146,10 @@ export interface GiteaReleaseResponse {
 
 export function parseArgs(args: string[]): ReleaseOptions {
   const version = getCurrentVersion();
+  const pubConfig = resolvePublisherConfig();
   let tag = `v${version}`;
-  let host = process.env.GITEA_HOST || "git.gt-web-dev.com";
-  let repo = process.env.GITEA_REPO || "gt-dev/cddm";
+  let host = process.env.GITEA_HOST || pubConfig.vcsHost;
+  let repo = process.env.GITEA_REPO || pubConfig.vcsRepo;
   let token = process.env.GITEA_TOKEN || process.env.GITHUB_TOKEN;
   let distDir = "dist-release";
   let dryRun = false;
@@ -150,12 +158,14 @@ export function parseArgs(args: string[]): ReleaseOptions {
   let title = `Release ${tag}`;
   let target = "main";
   let deleteAssetId: number | undefined;
+  let dispatchPackages = false;
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
     if (arg === "--dry-run") dryRun = true;
     else if (arg === "--draft") draft = true;
     else if (arg === "--prerelease") prerelease = true;
+    else if (arg === "--dispatch-packages") dispatchPackages = true;
     else if (arg === "--tag" && args[i + 1]) tag = args[++i]!;
     else if (arg === "--target" && args[i + 1]) target = args[++i]!;
     else if (arg === "--host" && args[i + 1]) host = args[++i]!;
@@ -184,6 +194,7 @@ export function parseArgs(args: string[]): ReleaseOptions {
     distDir,
     dryRun,
     deleteAssetId,
+    dispatchPackages,
   };
 }
 
@@ -406,6 +417,19 @@ export async function runPublishPipeline(options: ReleaseOptions): Promise<void>
   console.log(`Found ${files.length} release artifacts to publish.`);
   for (const file of files) {
     await uploadAssetToGitea(options, release.id, file);
+  }
+
+  if (options.dispatchPackages) {
+    console.log("\n--> Dispatching package manifests to central ecosystem repositories...");
+    await dispatchDistribution({
+      packageName: "cddm",
+      version: options.tag.replace(/^v/, ""),
+      tag: options.tag,
+      workspaceRoot: process.cwd(),
+      distDir: options.distDir,
+      token: options.token,
+      dryRun: options.dryRun,
+    });
   }
 
   console.log(`\x1b[32m[SUCCESS] Release ${options.tag} published successfully!\x1b[0m\n`);

@@ -19,8 +19,8 @@ trigger: always_on
    - Use **`vp outdated`** or **`bun outdated`** to check for package updates. Never execute `bun pm outdated`.
 7. **Modular Docker Containerization & Private VCS Registry Standard**:
    - Image versions in Dockerfiles must NOT be pinned to brittle specific hashes or patch digests; least-specific versions, preferably **`latest`** tags (e.g. `rust:latest`, `oven/bun:latest`, `debian:latest`), must be used.
-   - VCS Action runners on Gitea (`highperf`/DinD) are responsible for building container images from `Dockerfile`.
-   - Built container images MUST be published directly into the private VCS Container Registry (`git.gt-web-dev.com/<owner>/<repo>:latest`) and consumed from that same registry.
+   - Container image builds and publication MUST be gated strictly to authoritative release tag workflows (`.gitea/workflows/release.yaml`) rather than PR CI pipelines, eliminating redundant compilation runs and runner contention.
+   - Built container images MUST be published directly into the private VCS Container Registry (`git.gt-web-dev.com/<owner>/<repo>:latest` and `:vX.Y.Z`) and consumed from that same registry.
 8. **VCS-Driven Development (Gitea SSoT)**:
    - Gitea is the authoritative Single Source of Truth for issues, milestones, branches, PRs, and releases.
    - Every change must be preceded by an issue on Gitea.
@@ -63,3 +63,12 @@ trigger: always_on
 24. **Zero Tolerance for Warning, Error, or Deprecation Silencing**:
     - AI coding agents and engineers MUST NEVER suppress, hide, or silence compiler warnings, runtime warnings, deprecation notices, or linter errors using suppression environment variables (such as `NODE_NO_WARNINGS`, `NODE_OPTIONS=--no-deprecation`, or similar flags), blanket bypasses, or comment disables.
     - All warnings and deprecations MUST be addressed directly and permanently at the root cause by modernizing dependencies, updating APIs, refactoring code, or replacing legacy tools.
+25. **Universal Secrets, Dynamic Variables & Multi-App Distribution Standard**:
+    - Zero plaintext credentials, private keys, API tokens, or `.env` files in VCS.
+    - SSoT store for CI/CD configuration is Gitea Actions Encrypted Secrets (`/settings/actions/secrets`) and Variables (`/settings/actions/variables`).
+    - Absolute ban on hardcoding publishers, organizations, secrets, or variables in code or manifests.
+    - Strict resolution precedence: VCS Actions variables/secrets (`vars.*`, `secrets.*`) -> `.env` file (as last-resort fallback for local execution) -> dynamic git remote origin inspection.
+    - Secrets must strictly be injected via `env:` keys in workflow steps (`env: TOKEN: ${{ secrets.TOKEN }}`), NEVER as CLI argument flags (`--token ...`) which leak into OS process tables (`/proc/$PID/cmdline`).
+    - Package manager repositories (Homebrew tap, Scoop bucket, WinGet pkgs) MUST NEVER be application-specific; they must be centralized, reusable organization-level repositories (`<owner>/homebrew-tap`, `<owner>/scoop-bucket`, `<owner>/winget-pkgs`) capable of distributing any current or future applications.
+    - Release download assets are strictly reserved for compiled binaries (`.tar.gz`, `.zip`, `.vsix`) and checksums (`SHA256SUMS.txt`); package manager distribution manifests (`.rb`, `.json`, `.yaml`) are dispatched to central package repositories, never uploaded as binary download assets.
+    - All tooling scripts and log outputs must sanitize and mask tokens (`maskSecret`).

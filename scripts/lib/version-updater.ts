@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { ParsedCommit } from "../version";
+import { resolvePublisherConfig } from "./publisher-config";
 
 export interface VersionMismatch {
   file: string;
@@ -174,6 +175,9 @@ export function checkWorkspaceVersionSync(
     }
   }
 
+  const pubConfig = resolvePublisherConfig(workspaceRoot);
+  const repoBaseUrl = `https://${pubConfig.vcsHost}/${pubConfig.vcsRepo}`;
+
   // Scoop manifest
   const scoopPath = join(workspaceRoot, "packaging", "scoop", "cddm.json");
   if (existsSync(scoopPath)) {
@@ -190,7 +194,7 @@ export function checkWorkspaceVersionSync(
         actual: scoopJson.version ?? "<missing>",
       });
     }
-    const expected64Url = `https://git.gt-web-dev.com/gt-dev/cddm/releases/download/v${canonicalVersion}/cddm-v${canonicalVersion}-x86_64-pc-windows-gnu.zip`;
+    const expected64Url = `${repoBaseUrl}/releases/download/v${canonicalVersion}/cddm-v${canonicalVersion}-x86_64-pc-windows-gnu.zip`;
     const actual64Url = scoopJson.architecture?.["64bit"]?.url ?? "<missing>";
     if (actual64Url !== expected64Url) {
       mismatches.push({
@@ -203,24 +207,31 @@ export function checkWorkspaceVersionSync(
   }
 
   // Winget manifest
-  const wingetPath = join(workspaceRoot, "packaging", "winget", "gt-dev.cddm.yaml");
-  if (existsSync(wingetPath)) {
+  const wingetCandidates = [
+    join(workspaceRoot, "packaging", "winget", "cddm.yaml"),
+    join(workspaceRoot, "packaging", "winget", `${pubConfig.publisherId}.cddm.yaml`),
+  ];
+  const wingetPath = wingetCandidates.find((p) => existsSync(p));
+  if (wingetPath) {
     checkedFiles++;
+    const wingetRel = wingetPath.endsWith("cddm.yaml")
+      ? "packaging/winget/cddm.yaml"
+      : `packaging/winget/${pubConfig.publisherId}.cddm.yaml`;
     const wingetContent = readFileSync(wingetPath, "utf-8");
     const verMatch = /PackageVersion:\s*([\d.]+)/.exec(wingetContent);
     const actualWinget = verMatch?.[1] ?? "<missing>";
     if (actualWinget !== canonicalVersion) {
       mismatches.push({
-        file: "packaging/winget/gt-dev.cddm.yaml",
+        file: wingetRel,
         field: "PackageVersion",
         expected: canonicalVersion,
         actual: actualWinget,
       });
     }
-    const expectedWingetX64 = `https://git.gt-web-dev.com/gt-dev/cddm/releases/download/v${canonicalVersion}/cddm-v${canonicalVersion}-x86_64-pc-windows-gnu.zip`;
+    const expectedWingetX64 = `${repoBaseUrl}/releases/download/v${canonicalVersion}/cddm-v${canonicalVersion}-x86_64-pc-windows-gnu.zip`;
     if (!wingetContent.includes(expectedWingetX64)) {
       mismatches.push({
-        file: "packaging/winget/gt-dev.cddm.yaml",
+        file: wingetRel,
         field: "InstallerUrl (x64)",
         expected: expectedWingetX64,
         actual: "<stale InstallerUrl>",
@@ -355,6 +366,9 @@ export function updateWorkspaceVersions(
     console.log(`\x1b[32m[OK] Updated packaging/homebrew/cddm.rb -> ${newVersion}\x1b[0m`);
   }
 
+  const pubConfig = resolvePublisherConfig(workspaceRoot);
+  const repoBaseUrl = `https://${pubConfig.vcsHost}/${pubConfig.vcsRepo}`;
+
   // 7. packaging/scoop/cddm.json
   const scoopPath = join(workspaceRoot, "packaging", "scoop", "cddm.json");
   if (existsSync(scoopPath)) {
@@ -363,32 +377,38 @@ export function updateWorkspaceVersions(
     if (scoopJson.architecture) {
       if (scoopJson.architecture["64bit"]) {
         scoopJson.architecture["64bit"].url =
-          `https://git.gt-web-dev.com/gt-dev/cddm/releases/download/v${newVersion}/cddm-v${newVersion}-x86_64-pc-windows-gnu.zip`;
+          `${repoBaseUrl}/releases/download/v${newVersion}/cddm-v${newVersion}-x86_64-pc-windows-gnu.zip`;
       }
       if (scoopJson.architecture["arm64"]) {
         scoopJson.architecture["arm64"].url =
-          `https://git.gt-web-dev.com/gt-dev/cddm/releases/download/v${newVersion}/cddm-v${newVersion}-aarch64-pc-windows-gnu.zip`;
+          `${repoBaseUrl}/releases/download/v${newVersion}/cddm-v${newVersion}-aarch64-pc-windows-gnu.zip`;
       }
     }
     if (scoopJson.autoupdate?.architecture) {
       if (scoopJson.autoupdate.architecture["64bit"]) {
         scoopJson.autoupdate.architecture["64bit"].url =
-          "https://git.gt-web-dev.com/gt-dev/cddm/releases/download/v$version/cddm-v$version-x86_64-pc-windows-gnu.zip";
+          `${repoBaseUrl}/releases/download/v$version/cddm-v$version-x86_64-pc-windows-gnu.zip`;
       }
       if (scoopJson.autoupdate.architecture["arm64"]) {
         scoopJson.autoupdate.architecture["arm64"].url =
-          "https://git.gt-web-dev.com/gt-dev/cddm/releases/download/v$version/cddm-v$version-aarch64-pc-windows-gnu.zip";
+          `${repoBaseUrl}/releases/download/v$version/cddm-v$version-aarch64-pc-windows-gnu.zip`;
       }
     }
     writeFileSync(scoopPath, JSON.stringify(scoopJson, null, 2) + "\n", "utf-8");
     console.log(`\x1b[32m[OK] Updated packaging/scoop/cddm.json -> ${newVersion}\x1b[0m`);
   }
 
-  // 8. packaging/winget/gt-dev.cddm.yaml
-  const wingetPath = join(workspaceRoot, "packaging", "winget", "gt-dev.cddm.yaml");
-  if (existsSync(wingetPath)) {
+  // 8. packaging/winget/cddm.yaml
+  const wingetCandidates = [
+    join(workspaceRoot, "packaging", "winget", "cddm.yaml"),
+    join(workspaceRoot, "packaging", "winget", `${pubConfig.publisherId}.cddm.yaml`),
+  ];
+  const wingetPath = wingetCandidates.find((p) => existsSync(p));
+  if (wingetPath) {
     const wingetContent = readFileSync(wingetPath, "utf-8");
     const updatedWinget = wingetContent
+      .replace(/PackageIdentifier:\s*[^\r\n]+/, `PackageIdentifier: ${pubConfig.publisherId}.cddm`)
+      .replace(/Publisher:\s*[^\r\n]+/, `Publisher: ${pubConfig.publisherId}`)
       .replace(/PackageVersion:\s*[\d.]+/, `PackageVersion: ${newVersion}`)
       .replace(
         /releases\/download\/v[\d.]+\/cddm-v[\d.]+-x86_64-pc-windows-(?:msvc|gnu)\.zip/g,
@@ -399,7 +419,7 @@ export function updateWorkspaceVersions(
         `releases/download/v${newVersion}/cddm-v${newVersion}-aarch64-pc-windows-gnu.zip`,
       );
     writeFileSync(wingetPath, updatedWinget, "utf-8");
-    console.log(`\x1b[32m[OK] Updated packaging/winget/gt-dev.cddm.yaml -> ${newVersion}\x1b[0m`);
+    console.log(`\x1b[32m[OK] Updated ${wingetPath} -> ${newVersion}\x1b[0m`);
   }
 
   // 9. README.md badges

@@ -121,7 +121,7 @@ describe("Gitea Release Publisher Engine", () => {
         }),
       );
       writeFileSync(
-        join(tempDir, "packaging", "winget", "gt-dev.cddm.yaml"),
+        join(tempDir, "packaging", "winget", "cddm.yaml"),
         `PackageVersion: 4.9.0\nInstallers:\n  - Architecture: x64\n    InstallerUrl: https://git.gt-web-dev.com/gt-dev/cddm/releases/download/v4.9.0/cddm-v4.9.0-x86_64-pc-windows-gnu.zip\n    InstallerSha256: 0000000000000000000000000000000000000000000000000000000000000000\n`,
       );
 
@@ -139,12 +139,13 @@ describe("Gitea Release Publisher Engine", () => {
       expect(readFileSync(join(tempDir, "packaging", "scoop", "cddm.json"), "utf-8")).toContain(
         winHash,
       );
-      expect(
-        readFileSync(join(tempDir, "packaging", "winget", "gt-dev.cddm.yaml"), "utf-8"),
-      ).toContain(winHash);
+      expect(readFileSync(join(tempDir, "packaging", "winget", "cddm.yaml"), "utf-8")).toContain(
+        winHash,
+      );
 
       expect(existsSync(join(distDir, "cddm.rb"))).toBe(false);
       expect(existsSync(join(distDir, "cddm.json"))).toBe(false);
+      expect(existsSync(join(distDir, "cddm.yaml"))).toBe(false);
       expect(existsSync(join(distDir, "gt-dev.cddm.yaml"))).toBe(false);
     } finally {
       rmSync(tempDir, { recursive: true, force: true });
