@@ -96,6 +96,7 @@ export interface ReleaseOptions {
   repo: string;
   token?: string;
   tag: string;
+  target?: string;
   title: string;
   body: string;
   draft: boolean;
@@ -125,6 +126,7 @@ export function parseArgs(args: string[]): ReleaseOptions {
   let draft = false;
   let prerelease = false;
   let title = `Release ${tag}`;
+  let target = "main";
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
@@ -132,6 +134,7 @@ export function parseArgs(args: string[]): ReleaseOptions {
     else if (arg === "--draft") draft = true;
     else if (arg === "--prerelease") prerelease = true;
     else if (arg === "--tag" && args[i + 1]) tag = args[++i]!;
+    else if (arg === "--target" && args[i + 1]) target = args[++i]!;
     else if (arg === "--host" && args[i + 1]) host = args[++i]!;
     else if (arg === "--repo" && args[i + 1]) repo = args[++i]!;
     else if (arg === "--token" && args[i + 1]) token = args[++i]!;
@@ -148,6 +151,7 @@ export function parseArgs(args: string[]): ReleaseOptions {
     repo,
     token,
     tag,
+    target,
     title,
     body: releaseBody,
     draft,
@@ -254,6 +258,7 @@ export async function createOrGetGiteaRelease(
     },
     body: JSON.stringify({
       tag_name: options.tag,
+      target_commitish: options.target || "main",
       name: options.title,
       body: options.body,
       draft: options.draft,

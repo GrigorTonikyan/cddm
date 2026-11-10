@@ -18,6 +18,7 @@ describe("Gitea Release Publisher Engine", () => {
     expect(defaultOpts.repo).toBe("gt-dev/cddm");
     expect(defaultOpts.tag).toMatch(/^v\d+\.\d+\.\d+/);
     expect(defaultOpts.dryRun).toBe(false);
+    expect(defaultOpts.target).toBe("main");
 
     const customOpts = parseArgs([
       "--host",
@@ -26,12 +27,15 @@ describe("Gitea Release Publisher Engine", () => {
       "myorg/myrepo",
       "--tag",
       "v2.0.0",
+      "--target",
+      "feat/my-branch",
       "--dry-run",
       "--draft",
     ]);
     expect(customOpts.host).toBe("git.example.com");
     expect(customOpts.repo).toBe("myorg/myrepo");
     expect(customOpts.tag).toBe("v2.0.0");
+    expect(customOpts.target).toBe("feat/my-branch");
     expect(customOpts.dryRun).toBe(true);
     expect(customOpts.draft).toBe(true);
   });
