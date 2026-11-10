@@ -27,5 +27,6 @@ Summarize the core architectural changes, algorithms introduced, or bug resolved
 - [ ] Code formatting & linting clean (`cargo fmt --check`, `cargo clippy`, `vp check`).
 - [ ] Modularity Standard satisfied (all files <= 500 lines, verified with `bun scripts/check-file-length.ts`).
 - [ ] Living documentation synchronized (`bun scripts/sync-feature-matrix.ts`, `bun scripts/check-docs.ts`).
+- [ ] Workspace SemVer bumped and synchronized across all 10 manifests (`bun scripts/version.ts` / `bun scripts/version.ts --check-pr`).
 - [ ] Conventional Commits formatting strictly adhered to (`@commitlint/cli`).
-- [ ] Dogfooding quality gate passes (`cddm scan . --min-tokens 50`).
+- [ ] Dogfooding quality gate passes (`cddm scan . --min-tokens 50 --fail-threshold 5.0`).

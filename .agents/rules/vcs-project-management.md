@@ -10,12 +10,12 @@ This rule governs the exclusive use of Gitea as the Single Source of Truth (SSoT
 
 ## 2. Gitea Entity Mapping Mandate
 
-1. **Milestones = Version Releases**:
-   - Gitea Milestones are strictly reserved for time-bound, semantic version releases (e.g., `v1.0.0`, `v3.2.0`).
-   - Every active milestone must have a corresponding semantic version number.
+1. **Milestones (Optional Roadmap Groupings)**:
+   - Gitea Milestones are strictly optional roadmap or epoch groupings (e.g., `v5.0-initiative`, `q4-performance`).
+   - Versioning and releases are NOT gated by milestones. Releases are triggered automatically upon merge to `main` when PRs bump SemVer in lockstep via `bun scripts/version.ts`.
 2. **Issues = Epics / Requirements / Tasks**:
    - **Requirements (FR)** and **Enhancement Proposals (EP)** are tracked as Gitea Issues (acting as "Epics").
-   - Every change MUST be tracked by an Issue. Assigning a Version Milestone is optional and only done when the Issue targets a specific release.
+   - Every change MUST be tracked by an Issue. Assigning a Milestone is optional and only done when the Issue aligns with a specific strategic roadmap grouping.
 3. **Labels = Categorization**:
    - Use standardized Gitea labels (`feat: *`, `bug`, `priority: *`) to categorize and filter Issues.
 

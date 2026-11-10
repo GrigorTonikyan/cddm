@@ -246,7 +246,7 @@ jobs:
         env:
           GITEA_HOST: "git.gt-web-dev.com"
           GITEA_REPO: "gt-dev/cddm"
-          GITEA_TOKEN: ${{ secrets.REGISTRY_TOKEN || secrets.GITEA_TOKEN || secrets.GITHUB_TOKEN }}
+          GITEA_TOKEN: ${{ secrets.REGISTRY_TOKEN }}
           GIT_TERMINAL_PROMPT: "0"
           GCM_INTERACTIVE: "never"
         run: |

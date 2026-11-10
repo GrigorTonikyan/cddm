@@ -32,7 +32,7 @@
     {
       "label": "CDDM: Dogfood Self-Scan",
       "type": "shell",
-      "command": "cargo run -p cddm-cli -- scan . --min-tokens 50 --fail-threshold 15.0",
+      "command": "cargo run -p cddm-cli -- scan . --min-tokens 50 --fail-threshold 5.0",
       "group": "test",
       "problemMatcher": []
     },

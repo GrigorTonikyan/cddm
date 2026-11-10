@@ -341,5 +341,5 @@ graph LR
 
 1. **Primary SSoT (Gitea)**: Authoritative repository for issue tracking, milestones, PRs, reviews, and primary binary packaging.
 2. **Automated API-Driven Merges**: Pull requests are merged exclusively via the Gitea REST API, ensuring PRs are marked `merged: true`, closed in the UI, and linked issues are automatically resolved.
-3. **Automated Multi-Manifest Release Pipeline**: `vp run version:release` synchronizes all 10 manifests (`package.json`, `Cargo.toml`, `webui/package.json`, NPM packages, VS Code extension, Homebrew, Scoop, Winget, and README badges) and triggers cross-compilation for Linux AMD64 and Windows x86_64 binaries.
+3. **Automated Multi-Manifest Release Pipeline**: Workspace SemVer is calculated deterministically from Conventional Commits and synchronized across all 10 manifests during PR preparation (`bun scripts/version.ts` / `vp run version:bump`). Merging into `main` automatically triggers the Gitea Actions `auto-tag-release` job, cutting release tag `vX.Y.Z` and triggering multi-platform cross-compilation and packaging (`.gitea/workflows/release.yaml`).
 4. **Downstream Mirroring**: Commits, tags, and assets are synchronized downstream to GitHub.

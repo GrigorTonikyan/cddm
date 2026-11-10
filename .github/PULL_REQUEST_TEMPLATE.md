@@ -20,9 +20,10 @@ Summarize the changes made and the motivation behind them.
 
 ## Checklist
 
-- [ ] My code follows the code style of this project (`cargo fmt`).
+- [ ] My code follows the code style of this project (`cargo fmt`, `vp check`).
 - [ ] I have run `cargo clippy` without warnings.
 - [ ] I have added tests that prove my fix is effective or that my feature works.
-- [ ] All new and existing unit tests pass locally (`cargo test` / `bun run test`).
-- [ ] Documentation has been updated accordingly.
-- [ ] CDDM Dogfooding self-scan passes (`cddm scan . --min-tokens 50`).
+- [ ] All new and existing unit tests pass locally (`cargo test` / `bun test`).
+- [ ] Workspace SemVer bumped and synchronized across all 10 manifests (`bun scripts/version.ts` / `bun scripts/version.ts --check-pr`).
+- [ ] Documentation has been updated accordingly (`bun scripts/check-docs.ts`).
+- [ ] CDDM Dogfooding self-scan passes (`cddm scan . --min-tokens 50 --fail-threshold 5.0`).

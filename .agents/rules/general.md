@@ -27,6 +27,7 @@ trigger: always_on
    - Canonical branches MUST be derived strictly from the issue: `feat/issue-<id>-<slug>`, `fix/issue-<id>-<slug>`.
    - Commits must adhere to Conventional Commits referencing the issue (`Fixes #<id>`).
    - Direct commits/pushes to `main` are strictly banned. All merges must proceed through Gitea PRs and be executed via Forge MCP (`gitea_merge_pr` with `delete_branch_after_merge: true`) or `forge pr merge <id> --delete-branch`. CI gates must be strictly verified with zero bypasses (`gitea_wait_for_ci_gate`).
+   - Every PR introducing features, fixes, or optimizations must bump workspace SemVer via `bun scripts/version.ts` before opening the PR, verified by `bun scripts/version.ts --check-pr`. Merging into `main` automatically cuts tag `vX.Y.Z` and triggers multi-platform release publishing.
 9. **Strict Dogfooding Quality Gate**:
    - Every verification must run `cddm scan . --min-tokens 50 --fail-threshold 5.0` on release binaries. Loose thresholds (e.g. 15.0%) are strictly prohibited.
 10. **Zero Hardcoding Enforcement**:
