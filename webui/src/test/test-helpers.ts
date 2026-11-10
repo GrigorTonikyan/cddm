@@ -32,8 +32,8 @@ export function createMockClonePair(overrides: Partial<ClonePair> = {}): ClonePa
     similarity: 0.95,
     fragment_hash: "hash123",
     clone_type: "Exact",
-    author_a: "Grigor",
-    author_b: "Grigor",
+    author_a: "gt-dev",
+    author_b: "gt-dev",
     ...overrides,
   };
 }
@@ -46,8 +46,8 @@ export function createMockCluster(overrides: Partial<CloneCluster> = {}): CloneC
     similarity: 1.0,
     fragment_hash: "hash_cluster_abc123456",
     occurrences: [
-      { file: "src/auth/login.ts", start_line: 10, end_line: 25, author: "Grigor" },
-      { file: "src/auth/register.ts", start_line: 15, end_line: 30, author: "Grigor" },
+      { file: "src/auth/login.ts", start_line: 10, end_line: 25, author: "gt-dev" },
+      { file: "src/auth/register.ts", start_line: 15, end_line: 30, author: "gt-dev" },
       { file: "src/auth/reset.ts", start_line: 5, end_line: 20, author: "Alice" },
     ],
     ...overrides,

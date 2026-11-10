@@ -433,8 +433,7 @@ export const App: React.FC = () => {
 
       {/* Footer */}
       <footer className="border-t border-slate-900 py-6 text-center text-xs text-slate-500 font-mono bg-slate-950/80">
-        CDDM — Code De-Duplication Meister &copy; 2026 Grigor Tonikyan. Open Source MIT /
-        Apache-2.0.
+        CDDM — Code De-Duplication Meister &copy; 2026 gt-dev. Open Source MIT / Apache-2.0.
       </footer>
     </div>
   );

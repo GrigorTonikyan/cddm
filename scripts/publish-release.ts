@@ -11,6 +11,29 @@ import { generateReleaseNotes } from "./lib/release-notes-engine";
 import { getCurrentVersion } from "./version";
 
 /**
+ * Allowed binary & release artifact file extensions for Gitea release downloads.
+ * Package manager recipes (.rb, .json, .yaml, .yml) are strictly excluded.
+ */
+export const FORBIDDEN_RELEASE_EXTENSIONS = [".rb", ".json", ".yaml", ".yml", ".sh", ".ps1"];
+export const ALLOWED_RELEASE_EXTENSIONS = [".tar.gz", ".zip", ".vsix", ".txt", ".tar.xz", ".sig"];
+
+export function isReleaseAsset(fileName: string): boolean {
+  const lower = fileName.toLowerCase();
+  for (const forbidden of FORBIDDEN_RELEASE_EXTENSIONS) {
+    if (lower.endsWith(forbidden)) return false;
+  }
+  for (const allowed of ALLOWED_RELEASE_EXTENSIONS) {
+    if (lower.endsWith(allowed)) return true;
+  }
+  return false;
+}
+
+export function maskSecret(secret?: string): string {
+  if (!secret || secret.length < 8) return "***";
+  return `${secret.slice(0, 3)}...${secret.slice(-3)}`;
+}
+
+/**
  * Parse SHA256SUMS.txt content into a map of filename -> sha256 hex digest.
  */
 export function parseSha256Sums(content: string): Map<string, string> {
@@ -27,8 +50,9 @@ export function parseSha256Sums(content: string): Map<string, string> {
 }
 
 /**
- * Inject real SHA-256 checksums from SHA256SUMS.txt into packaged distribution manifests
- * (Homebrew, Scoop, Winget) inside distDir so published release manifests have valid hashes.
+ * Inject real SHA-256 checksums from SHA256SUMS.txt into packaging/ manifests
+ * (Homebrew, Scoop, Winget) so repository manifests have valid hashes.
+ * Manifests are kept strictly in packaging/ and NEVER placed into distDir.
  */
 export function injectPackagingChecksums(
   tag: string,
@@ -44,7 +68,7 @@ export function injectPackagingChecksums(
   const cleanVer = tag.replace(/^v/, "");
   const linuxX64Hash = checksums.get(`cddm-v${cleanVer}-x86_64-unknown-linux-gnu.tar.gz`);
   const winX64Hash = checksums.get(`cddm-v${cleanVer}-x86_64-pc-windows-gnu.zip`);
-  const generatedFiles: string[] = [];
+  const updatedFiles: string[] = [];
 
   // 1. Homebrew formula
   const brewSrc = join(workspaceRoot, "packaging", "homebrew", "cddm.rb");
@@ -56,9 +80,8 @@ export function injectPackagingChecksums(
         `$1"${linuxX64Hash}"`,
       );
     }
-    const outBrew = join(distDir, "cddm.rb");
-    writeFileSync(outBrew, brewContent, "utf-8");
-    generatedFiles.push(outBrew);
+    writeFileSync(brewSrc, brewContent, "utf-8");
+    updatedFiles.push(brewSrc);
   }
 
   // 2. Scoop manifest
@@ -68,13 +91,12 @@ export function injectPackagingChecksums(
     if (winX64Hash && scoopJson.architecture?.["64bit"]) {
       scoopJson.architecture["64bit"].hash = winX64Hash;
     }
-    const outScoop = join(distDir, "cddm.json");
-    writeFileSync(outScoop, JSON.stringify(scoopJson, null, 2) + "\n", "utf-8");
-    generatedFiles.push(outScoop);
+    writeFileSync(scoopSrc, JSON.stringify(scoopJson, null, 2) + "\n", "utf-8");
+    updatedFiles.push(scoopSrc);
   }
 
-  // 3. Winget manifest
-  const wingetSrc = join(workspaceRoot, "packaging", "winget", "GrigorTonikyan.cddm.yaml");
+  // 3. Winget manifest (rebranded to gt-dev.cddm.yaml)
+  const wingetSrc = join(workspaceRoot, "packaging", "winget", "gt-dev.cddm.yaml");
   if (existsSync(wingetSrc)) {
     let wingetContent = readFileSync(wingetSrc, "utf-8");
     if (winX64Hash) {
@@ -83,12 +105,11 @@ export function injectPackagingChecksums(
         `$1${winX64Hash}`,
       );
     }
-    const outWinget = join(distDir, "GrigorTonikyan.cddm.yaml");
-    writeFileSync(outWinget, wingetContent, "utf-8");
-    generatedFiles.push(outWinget);
+    writeFileSync(wingetSrc, wingetContent, "utf-8");
+    updatedFiles.push(wingetSrc);
   }
 
-  return generatedFiles;
+  return updatedFiles;
 }
 
 export interface ReleaseOptions {
@@ -103,6 +124,7 @@ export interface ReleaseOptions {
   prerelease: boolean;
   distDir: string;
   dryRun: boolean;
+  deleteAssetId?: number;
 }
 
 export interface GiteaReleaseResponse {
@@ -127,6 +149,7 @@ export function parseArgs(args: string[]): ReleaseOptions {
   let prerelease = false;
   let title = `Release ${tag}`;
   let target = "main";
+  let deleteAssetId: number | undefined;
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
@@ -140,6 +163,8 @@ export function parseArgs(args: string[]): ReleaseOptions {
     else if (arg === "--token" && args[i + 1]) token = args[++i]!;
     else if (arg === "--dist-dir" && args[i + 1]) distDir = args[++i]!;
     else if (arg === "--title" && args[i + 1]) title = args[++i]!;
+    else if (arg === "--delete-asset" && args[i + 1])
+      deleteAssetId = Number.parseInt(args[++i]!, 10);
   }
 
   const releaseBody = generateReleaseNotes(tag.replace(/^v/, ""), {
@@ -158,6 +183,7 @@ export function parseArgs(args: string[]): ReleaseOptions {
     prerelease,
     distDir,
     dryRun,
+    deleteAssetId,
   };
 }
 
@@ -310,6 +336,36 @@ export async function uploadAssetToGitea(
   return true;
 }
 
+export async function deleteReleaseAsset(
+  options: ReleaseOptions,
+  releaseId: number,
+  assetId: number,
+): Promise<boolean> {
+  const deleteUrl = `https://${options.host}/api/v1/repos/${options.repo}/releases/${releaseId}/assets/${assetId}`;
+
+  if (options.dryRun || !options.token) {
+    console.log(`\x1b[33m[DRY-RUN] Would delete asset ${assetId} from release ${releaseId}\x1b[0m`);
+    return true;
+  }
+
+  const res = await fetch(deleteUrl, {
+    method: "DELETE",
+    headers: {
+      Authorization: getAuthHeader(options.token),
+      Accept: "application/json",
+    },
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    console.error(`\x1b[31mFailed to delete asset ${assetId} (${res.status}): ${errText}\x1b[0m`);
+    return false;
+  }
+
+  console.log(`\x1b[32m[OK] Deleted release asset ${assetId}\x1b[0m`);
+  return true;
+}
+
 export async function runPublishPipeline(options: ReleaseOptions): Promise<void> {
   console.log(
     `\x1b[36m--> Initializing CDDM Release Publisher for Gitea (${options.host})...\x1b[0m`,
@@ -321,6 +377,11 @@ export async function runPublishPipeline(options: ReleaseOptions): Promise<void>
   const release = await createOrGetGiteaRelease(options);
   if (!release) {
     throw new Error("Could not initialize release on Gitea");
+  }
+
+  if (options.deleteAssetId) {
+    await deleteReleaseAsset(options, release.id, options.deleteAssetId);
+    return;
   }
 
   const fullDistPath = resolve(process.cwd(), options.distDir);
@@ -340,7 +401,7 @@ export async function runPublishPipeline(options: ReleaseOptions): Promise<void>
 
   const files = readdirSync(fullDistPath)
     .map((f) => join(fullDistPath, f))
-    .filter((p) => statSync(p).isFile());
+    .filter((p) => statSync(p).isFile() && isReleaseAsset(basename(p)));
 
   console.log(`Found ${files.length} release artifacts to publish.`);
   for (const file of files) {

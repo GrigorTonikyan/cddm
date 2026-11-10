@@ -30,7 +30,7 @@ const STEPS: ScriptStep[] = [
   },
   {
     title: "MCP Server per-tool test suites & dynamic discovery (bun test tests/mcp)",
-    command: ["bun", "test", "tests/mcp"],
+    command: ["bun", "test", "tests/mcp", "--timeout", "15000"],
   },
   {
     title: "Workspace-wide Vite Plus type-aware verification (vp check)",

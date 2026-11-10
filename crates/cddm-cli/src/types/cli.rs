@@ -12,7 +12,7 @@ use std::path::PathBuf;
 #[derive(Parser, Debug)]
 #[command(
     name = "cddm",
-    author = "Grigor Tonikyan",
+    author = "gt-dev",
     version,
     about = "CDDM — Code De-Duplication Meister: High-Performance Polyglot Code Clone & \
              Modularity Analyzer",

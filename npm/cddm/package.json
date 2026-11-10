@@ -1,6 +1,6 @@
 {
   "name": "cddm",
-  "version": "4.9.0",
+  "version": "4.9.1",
   "description": "CDDM — Code De-Duplication Meister: High-Performance Polyglot Code Clone & Modularity Analyzer",
   "keywords": [
     "ast",
@@ -22,7 +22,7 @@
     "url": "https://git.gt-web-dev.com/gt-dev/cddm/issues"
   },
   "license": "MIT OR Apache-2.0",
-  "author": "Grigor Tonikyan <grigor@tonikyan.com>",
+  "author": "gt-dev <contact@gt-web-dev.com>",
   "repository": {
     "type": "git",
     "url": "https://git.gt-web-dev.com/gt-dev/cddm.git"
@@ -33,9 +33,9 @@
   },
   "main": "./bin/cddm.js",
   "optionalDependencies": {
-    "@cddm/darwin-arm64": "4.9.0",
-    "@cddm/darwin-x64": "4.9.0",
-    "@cddm/linux-x64": "4.9.0",
-    "@cddm/win32-x64": "4.9.0"
+    "@cddm/darwin-arm64": "4.9.1",
+    "@cddm/darwin-x64": "4.9.1",
+    "@cddm/linux-x64": "4.9.1",
+    "@cddm/win32-x64": "4.9.1"
   }
 }

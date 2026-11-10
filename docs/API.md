@@ -77,8 +77,8 @@ Execute a code duplication scan asynchronously.
       "similarity": 1.0,
       "fragment_hash": "a1b2c3-d4e5f6",
       "clone_type": "Exact",
-      "author_a": "Grigor Tonikyan (line 10, 2026-08-08)",
-      "author_b": "Grigor Tonikyan (line 15, 2026-08-08)"
+      "author_a": "gt-dev (line 10, 2026-08-08)",
+      "author_b": "gt-dev (line 15, 2026-08-08)"
     }
   ],
   "clone_clusters": [
@@ -89,19 +89,19 @@ Execute a code duplication scan asynchronously.
           "file": "src/auth/login.rs",
           "start_line": 10,
           "end_line": 25,
-          "author": "Grigor Tonikyan"
+          "author": "gt-dev"
         },
         {
           "file": "src/auth/register.rs",
           "start_line": 15,
           "end_line": 30,
-          "author": "Grigor Tonikyan"
+          "author": "gt-dev"
         },
         {
           "file": "src/auth/reset.rs",
           "start_line": 5,
           "end_line": 20,
-          "author": "Grigor Tonikyan"
+          "author": "gt-dev"
         }
       ],
       "token_count": 50,

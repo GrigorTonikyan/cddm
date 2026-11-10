@@ -23,7 +23,7 @@ describe("ClonePairCard Component", () => {
     const header = screen.getByText("#1").closest("div");
     fireEvent.click(header!);
     expect(screen.getByText("Fragment Hash: hash123")).toBeDefined();
-    expect(screen.getByText("Author A: Grigor")).toBeDefined();
+    expect(screen.getByText("Author A: gt-dev")).toBeDefined();
     await waitFor(() => {
       expect(screen.getByText("Diff Inspector")).toBeDefined();
       expect(screen.getByText("Refactor Advisor")).toBeDefined();

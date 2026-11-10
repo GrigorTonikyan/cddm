@@ -66,7 +66,7 @@ package models
 "#;
         assert!(SuppressionEngine::is_generated_header(generated_code));
 
-        let normal_code = r#"// Copyright 2026 Grigor Tonikyan
+        let normal_code = r#"// Copyright 2026 gt-dev
 package models
 
 func Calculate() int { return 42 }

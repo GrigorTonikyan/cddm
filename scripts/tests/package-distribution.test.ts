@@ -34,9 +34,10 @@ describe("Ecosystem Distribution & Packaging Validator", () => {
   });
 
   it("should validate Winget manifest YAML structure", () => {
-    const wingetPath = resolve(rootDir, "packaging/winget/GrigorTonikyan.cddm.yaml");
+    const wingetPath = resolve(rootDir, "packaging/winget/gt-dev.cddm.yaml");
     const wingetContent = readFileSync(wingetPath, "utf-8");
-    expect(wingetContent).toContain("PackageIdentifier: GrigorTonikyan.cddm");
+    expect(wingetContent).toContain("PackageIdentifier: gt-dev.cddm");
+    expect(wingetContent).toContain("Publisher: gt-dev");
     expect(wingetContent).toContain("NestedInstallerType: portable");
   });
 
