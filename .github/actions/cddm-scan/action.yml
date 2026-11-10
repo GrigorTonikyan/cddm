@@ -1,6 +1,6 @@
 name: "CDDM Code Duplication & DRY Health Scan"
 description: "Scan codebases for duplicate code fragments, evaluate DRY Health Scores, and generate OASIS SARIF v2.1.0 reports."
-author: "Grigor Tonikyan"
+author: "gt-dev"
 
 inputs:
   directory:

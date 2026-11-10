@@ -1,6 +1,6 @@
 name: "CDDM Automated Deduplication & Fix-Bot"
 description: "High-performance code clone detection, automated PR commentary, and AI-driven refactoring fixer for CDDM."
-author: "Grigor Tonikyan"
+author: "gt-dev"
 
 inputs:
   fail_threshold:

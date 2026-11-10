@@ -233,7 +233,7 @@ mod tests {
         let snapshot = TimelineSnapshot {
             commit_hash: "0123456789abcdef0123456789abcdef01234567".to_string(),
             short_hash: "0123456".to_string(),
-            author: "Grigor Tonikyan".to_string(),
+            author: "gt-dev".to_string(),
             commit_time: 1700000000,
             formatted_date: "2026-08-24 12:00:00".to_string(),
             message: "feat: add timeline".to_string(),

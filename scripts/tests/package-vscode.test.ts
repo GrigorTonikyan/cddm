@@ -46,7 +46,7 @@ describe("VSIX Manifest & Content Types Generator", () => {
     const pkg = {
       name: "cddm",
       version: "1.7.0",
-      publisher: "grigortonikyan",
+      publisher: "gt-dev",
       displayName: "CDDM — Code De-Duplication Meister",
       description: "Real-time polyglot code clone detection",
       categories: ["Linters", "Programming Languages"],
@@ -57,7 +57,7 @@ describe("VSIX Manifest & Content Types Generator", () => {
     const manifest = generateVsixManifest(pkg);
     expect(manifest).toContain('Id="cddm"');
     expect(manifest).toContain('Version="1.7.0"');
-    expect(manifest).toContain('Publisher="grigortonikyan"');
+    expect(manifest).toContain('Publisher="gt-dev"');
     expect(manifest).toContain("<DisplayName>CDDM — Code De-Duplication Meister</DisplayName>");
     expect(manifest).toContain('Id="Microsoft.VisualStudio.Code"');
     expect(manifest).toContain('Path="extension/package.json"');

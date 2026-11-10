@@ -52,6 +52,18 @@ bun.log*
 .env.*
 !.env.example
 
+# Secrets, credentials & certificates
+*.token
+*.secret
+*.key
+*.pem
+*.p12
+*.pfx
+credentials.json
+secrets.json
+*.id_rsa
+*.id_ed25519
+
 # OS metadata
 .DS_Store
 Thumbs.db

@@ -11,7 +11,7 @@ describe("TimelineExplorerModal Component", () => {
       {
         commit_hash: "1111111111111111111111111111111111111111",
         short_hash: "1111111",
-        author: "Grigor Tonikyan",
+        author: "gt-dev",
         commit_time: 1700000000,
         formatted_date: "2026-08-20 10:00:00",
         message: "feat: initial commit",
@@ -26,7 +26,7 @@ describe("TimelineExplorerModal Component", () => {
       {
         commit_hash: "2222222222222222222222222222222222222222",
         short_hash: "2222222",
-        author: "Grigor Tonikyan",
+        author: "gt-dev",
         commit_time: 1700100000,
         formatted_date: "2026-08-24 10:00:00",
         message: "refactor: eliminate duplication",

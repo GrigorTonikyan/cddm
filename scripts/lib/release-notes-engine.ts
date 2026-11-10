@@ -116,10 +116,13 @@ npm install -g cddm
 npx cddm-mcp
 
 # Homebrew (macOS / Linux)
-brew install GrigorTonikyan/cddm/cddm
+brew install gt-dev/cddm/cddm
 
 # Scoop (Windows)
 scoop install cddm
+
+# WinGet (Windows Package Manager)
+winget install gt-dev.cddm
 
 # Turnkey Install Scripts
 curl -fsSL https://git.gt-web-dev.com/gt-dev/cddm/raw/branch/main/packaging/install.sh | bash

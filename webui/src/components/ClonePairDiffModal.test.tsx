@@ -33,7 +33,7 @@ describe("ClonePairDiffModal Component", () => {
     expect(screen.getByText("55 tokens")).toBeDefined();
     expect(screen.getByText("95% similarity")).toBeDefined();
     expect(screen.getByText("Hash: hash123")).toBeDefined();
-    expect(screen.getByText("Author A: Grigor")).toBeDefined();
+    expect(screen.getByText("Author A: gt-dev")).toBeDefined();
 
     await waitFor(() => {
       expect(screen.getByText("Interactive Code Diff Visualizer")).toBeDefined();

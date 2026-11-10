@@ -1,7 +1,7 @@
 {
   "name": "cddm",
   "displayName": "CDDM — Code De-Duplication Meister",
-  "version": "4.9.0",
+  "version": "4.9.1",
   "description": "Real-time polyglot code clone detection, DRY health scoring, embedded Studio WebUI, and automated deduplication refactoring for VS Code, Cursor, and Antigravity.",
   "categories": [
     "Linters",
@@ -23,7 +23,7 @@
     "type": "git",
     "url": "https://git.gt-web-dev.com/gt-dev/cddm.git"
   },
-  "publisher": "grigortonikyan",
+  "publisher": "gt-dev",
   "main": "./out/extension.js",
   "scripts": {
     "build": "tsc -p .",

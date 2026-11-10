@@ -1,11 +1,14 @@
 import { describe, expect, it } from "bun:test";
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
   createOrGetGiteaRelease,
+  deleteReleaseAsset,
   getChangelogForVersion,
   injectPackagingChecksums,
+  isReleaseAsset,
+  maskSecret,
   parseArgs,
   parseSha256Sums,
   uploadAssetToGitea,
@@ -60,6 +63,31 @@ describe("Gitea Release Publisher Engine", () => {
     expect(success).toBe(true);
   });
 
+  it("should validate allowed and forbidden release download asset extensions", () => {
+    expect(isReleaseAsset("cddm-v4.9.0-x86_64-pc-windows-gnu.zip")).toBe(true);
+    expect(isReleaseAsset("cddm-v4.9.0-x86_64-unknown-linux-gnu.tar.gz")).toBe(true);
+    expect(isReleaseAsset("cddm-4.9.0.vsix")).toBe(true);
+    expect(isReleaseAsset("SHA256SUMS.txt")).toBe(true);
+
+    expect(isReleaseAsset("cddm.json")).toBe(false);
+    expect(isReleaseAsset("cddm.rb")).toBe(false);
+    expect(isReleaseAsset("gt-dev.cddm.yaml")).toBe(false);
+    expect(isReleaseAsset("manifest.yml")).toBe(false);
+    expect(isReleaseAsset("install.sh")).toBe(false);
+  });
+
+  it("should mask sensitive tokens in logs", () => {
+    expect(maskSecret("")).toBe("***");
+    expect(maskSecret("short")).toBe("***");
+    expect(maskSecret("3a5b58eb053ec28f0c99a94b56f372c3698027b3")).toBe("3a5...7b3");
+  });
+
+  it("should simulate asset deletion in dry-run mode", async () => {
+    const opts = parseArgs(["--dry-run"]);
+    const success = await deleteReleaseAsset(opts, 434, 255);
+    expect(success).toBe(true);
+  });
+
   it("should parse SHA256SUMS.txt and inject real checksums into packaging manifests", () => {
     const tempDir = join(tmpdir(), `cddm-publish-checksum-test-${Date.now()}`);
     const distDir = join(tempDir, "dist-release");
@@ -93,7 +121,7 @@ describe("Gitea Release Publisher Engine", () => {
         }),
       );
       writeFileSync(
-        join(tempDir, "packaging", "winget", "GrigorTonikyan.cddm.yaml"),
+        join(tempDir, "packaging", "winget", "gt-dev.cddm.yaml"),
         `PackageVersion: 4.9.0\nInstallers:\n  - Architecture: x64\n    InstallerUrl: https://git.gt-web-dev.com/gt-dev/cddm/releases/download/v4.9.0/cddm-v4.9.0-x86_64-pc-windows-gnu.zip\n    InstallerSha256: 0000000000000000000000000000000000000000000000000000000000000000\n`,
       );
 
@@ -104,9 +132,20 @@ describe("Gitea Release Publisher Engine", () => {
       const injected = injectPackagingChecksums("v4.9.0", distDir, tempDir);
       expect(injected.length).toBe(3);
 
-      expect(readFileSync(join(distDir, "cddm.rb"), "utf-8")).toContain(linuxHash);
-      expect(readFileSync(join(distDir, "cddm.json"), "utf-8")).toContain(winHash);
-      expect(readFileSync(join(distDir, "GrigorTonikyan.cddm.yaml"), "utf-8")).toContain(winHash);
+      // Manifests must be updated in packaging/ and NOT written to distDir
+      expect(readFileSync(join(tempDir, "packaging", "homebrew", "cddm.rb"), "utf-8")).toContain(
+        linuxHash,
+      );
+      expect(readFileSync(join(tempDir, "packaging", "scoop", "cddm.json"), "utf-8")).toContain(
+        winHash,
+      );
+      expect(
+        readFileSync(join(tempDir, "packaging", "winget", "gt-dev.cddm.yaml"), "utf-8"),
+      ).toContain(winHash);
+
+      expect(existsSync(join(distDir, "cddm.rb"))).toBe(false);
+      expect(existsSync(join(distDir, "cddm.json"))).toBe(false);
+      expect(existsSync(join(distDir, "gt-dev.cddm.yaml"))).toBe(false);
     } finally {
       rmSync(tempDir, { recursive: true, force: true });
     }

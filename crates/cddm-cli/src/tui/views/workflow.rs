@@ -42,7 +42,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: GrigorTonikyan/cddm-action@v2
+      - uses: gt-dev/cddm-action@v2
         with:
           fail-threshold: 5.0
           format: sarif

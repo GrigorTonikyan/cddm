@@ -203,7 +203,7 @@ export function checkWorkspaceVersionSync(
   }
 
   // Winget manifest
-  const wingetPath = join(workspaceRoot, "packaging", "winget", "GrigorTonikyan.cddm.yaml");
+  const wingetPath = join(workspaceRoot, "packaging", "winget", "gt-dev.cddm.yaml");
   if (existsSync(wingetPath)) {
     checkedFiles++;
     const wingetContent = readFileSync(wingetPath, "utf-8");
@@ -211,7 +211,7 @@ export function checkWorkspaceVersionSync(
     const actualWinget = verMatch?.[1] ?? "<missing>";
     if (actualWinget !== canonicalVersion) {
       mismatches.push({
-        file: "packaging/winget/GrigorTonikyan.cddm.yaml",
+        file: "packaging/winget/gt-dev.cddm.yaml",
         field: "PackageVersion",
         expected: canonicalVersion,
         actual: actualWinget,
@@ -220,7 +220,7 @@ export function checkWorkspaceVersionSync(
     const expectedWingetX64 = `https://git.gt-web-dev.com/gt-dev/cddm/releases/download/v${canonicalVersion}/cddm-v${canonicalVersion}-x86_64-pc-windows-gnu.zip`;
     if (!wingetContent.includes(expectedWingetX64)) {
       mismatches.push({
-        file: "packaging/winget/GrigorTonikyan.cddm.yaml",
+        file: "packaging/winget/gt-dev.cddm.yaml",
         field: "InstallerUrl (x64)",
         expected: expectedWingetX64,
         actual: "<stale InstallerUrl>",
@@ -384,8 +384,8 @@ export function updateWorkspaceVersions(
     console.log(`\x1b[32m[OK] Updated packaging/scoop/cddm.json -> ${newVersion}\x1b[0m`);
   }
 
-  // 8. packaging/winget/GrigorTonikyan.cddm.yaml
-  const wingetPath = join(workspaceRoot, "packaging", "winget", "GrigorTonikyan.cddm.yaml");
+  // 8. packaging/winget/gt-dev.cddm.yaml
+  const wingetPath = join(workspaceRoot, "packaging", "winget", "gt-dev.cddm.yaml");
   if (existsSync(wingetPath)) {
     const wingetContent = readFileSync(wingetPath, "utf-8");
     const updatedWinget = wingetContent
@@ -399,9 +399,7 @@ export function updateWorkspaceVersions(
         `releases/download/v${newVersion}/cddm-v${newVersion}-aarch64-pc-windows-gnu.zip`,
       );
     writeFileSync(wingetPath, updatedWinget, "utf-8");
-    console.log(
-      `\x1b[32m[OK] Updated packaging/winget/GrigorTonikyan.cddm.yaml -> ${newVersion}\x1b[0m`,
-    );
+    console.log(`\x1b[32m[OK] Updated packaging/winget/gt-dev.cddm.yaml -> ${newVersion}\x1b[0m`);
   }
 
   // 9. README.md badges

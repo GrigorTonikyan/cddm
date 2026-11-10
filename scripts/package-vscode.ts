@@ -69,7 +69,7 @@ export interface VscodePackageManifest {
 export function generateVsixManifest(pkg: VscodePackageManifest): string {
   const name = typeof pkg.name === "string" ? pkg.name : "cddm";
   const version = typeof pkg.version === "string" ? pkg.version : "1.7.0";
-  const publisher = typeof pkg.publisher === "string" ? pkg.publisher : "grigortonikyan";
+  const publisher = typeof pkg.publisher === "string" ? pkg.publisher : "gt-dev";
   const displayName = typeof pkg.displayName === "string" ? pkg.displayName : "CDDM";
   const description = typeof pkg.description === "string" ? pkg.description : "";
   const vscodeEngine =
