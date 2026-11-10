@@ -1,4 +1,4 @@
-name: Gitea Continuous Integration
+name: GitHub Continuous Integration (Mirror)
 
 on:
   push:
@@ -50,7 +50,7 @@ jobs:
         run: cargo build -p cddm-cli
 
       - name: CDDM Dogfooding Quality Gate
-        run: ./target/debug/cddm scan . --min-tokens 50 --fail-threshold 15.0
+        run: ./target/debug/cddm scan . --min-tokens 50 --fail-threshold 5.0
 
   webui-ci:
     name: WebUI Frontend Quality Gate
@@ -139,3 +139,13 @@ jobs:
 
       - name: Validate Documentation Integrity & Synchronization
         run: bun scripts/check-docs.ts
+
+      - name: Validate SSoT Workspace Version Synchronization
+        run: bun scripts/version.ts --check
+
+      - name: Validate PR Version Bump & Changelog Gate
+        if: github.event_name == 'pull_request'
+        run: bun scripts/version.ts --check-pr
+
+      - name: Validate Rich Release Notes & MCP Standard
+        run: bun scripts/check-release-notes.ts
