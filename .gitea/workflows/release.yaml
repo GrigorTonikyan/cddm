@@ -192,9 +192,10 @@ jobs:
 
       - name: Publish Workspace Crates (cddm-core, cddm-lsp, cddm-mcp, cddm-cli)
         env:
-          GITEA_HOST: ${{ vars.GITEA_HOST || 'git.gt-web-dev.com' }}
+          GITHUB_SERVER_URL: ${{ github.server_url }}
           CARGO_REGISTRY_OWNER: ${{ vars.PUBLISHER || github.repository_owner }}
-          CARGO_REGISTRY_TOKEN: ${{ secrets.REGISTRY_TOKEN || secrets.GITEA_TOKEN || secrets.GITHUB_TOKEN }}
+          CARGO_REGISTRIES_GITEA_INDEX: "sparse+${{ github.server_url }}/api/packages/${{ vars.PUBLISHER || github.repository_owner }}/cargo/"
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN || secrets.RELEASE_BOT_TOKEN || secrets.REGISTRY_TOKEN || secrets.GITEA_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
           bun install --frozen-lockfile || bun install
           bun scripts/publish-cargo.ts --registry gitea

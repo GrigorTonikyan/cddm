@@ -9,6 +9,7 @@
 
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { buildCargoRegistryIndexUrl, type CargoChannelAvailability } from "./cargo-registry";
 import { resolvePublisherConfig } from "./publisher-config";
 
 export interface ReleaseNotesOptions {
@@ -16,6 +17,7 @@ export interface ReleaseNotesOptions {
   rootDir?: string;
   includeMcpHighlight?: boolean;
   includeInstallGuides?: boolean;
+  cargoChannels?: CargoChannelAvailability;
 }
 
 export interface ReleaseNotesValidationResult {
@@ -90,14 +92,40 @@ CDDM strictly enforces complete feature parity across all four primary interacti
 4. **TUI Studio (\`cddm tui\`)**: Keyboard-driven Ratatui terminal dashboard for power users and SSH workflows.`;
 }
 
+function buildCargoInstallSnippet(
+  pubConfig: ReturnType<typeof resolvePublisherConfig>,
+  cargoChannels?: CargoChannelAvailability,
+): string {
+  const giteaIndex = buildCargoRegistryIndexUrl(pubConfig.vcsHost, pubConfig.publisherId);
+  const giteaBlock = `# Cargo (Gitea Private Cargo Registry)\nCARGO_REGISTRIES_GITEA_INDEX=${giteaIndex} cargo install cddm-cli cddm-mcp --registry gitea`;
+  const cratesIoBlock = `# Cargo (crates.io)\ncargo install cddm-cli cddm-mcp`;
+
+  if (!cargoChannels) {
+    return `${giteaBlock}\n\n`;
+  }
+
+  const sections: string[] = [];
+  if (cargoChannels.cratesIo) {
+    sections.push(cratesIoBlock);
+  }
+  if (cargoChannels.gitea) {
+    sections.push(giteaBlock);
+  }
+  return sections.length > 0 ? `${sections.join("\n\n")}\n\n` : "";
+}
+
 /**
  * Builds the download and installation guides section.
  */
-export function buildInstallationSection(version: string): string {
+export function buildInstallationSection(
+  version: string,
+  options: Pick<ReleaseNotesOptions, "rootDir" | "cargoChannels"> = {},
+): string {
   const cleanVersion = version.replace(/^v/, "").trim();
   const tag = `v${cleanVersion}`;
-  const pubConfig = resolvePublisherConfig();
+  const pubConfig = resolvePublisherConfig(options.rootDir);
   const repoUrl = `https://${pubConfig.vcsHost}/${pubConfig.vcsRepo}`;
+  const cargoSnippet = buildCargoInstallSnippet(pubConfig, options.cargoChannels);
 
   return `### Installation & Distribution Ecosystem
 
@@ -111,10 +139,7 @@ Download standalone binaries containing \`cddm\` (CLI), \`cddm-mcp\` (MCP Server
 
 #### Ecosystem Package Managers
 \`\`\`bash
-# Cargo (Gitea Private Cargo Registry / crates.io)
-cargo install cddm-cli cddm-mcp --registry gitea
-
-# NPM / NPX (global CLI & MCP server)
+${cargoSnippet}# NPM / NPX (global CLI & MCP server)
 npm install -g cddm
 npx cddm-mcp
 
@@ -149,7 +174,9 @@ export function generateReleaseNotes(version: string, options: ReleaseNotesOptio
   const mcpSection = options.includeMcpHighlight !== false ? `\n\n${buildMcpServerSection()}` : "";
   const paritySection = `\n\n${buildInterfaceParitySection()}`;
   const installSection =
-    options.includeInstallGuides !== false ? `\n\n${buildInstallationSection(cleanVersion)}` : "";
+    options.includeInstallGuides !== false
+      ? `\n\n${buildInstallationSection(cleanVersion, { rootDir, cargoChannels: options.cargoChannels })}`
+      : "";
 
   return `## CDDM ${tag}${title}
 

@@ -119,19 +119,25 @@ scoop install cddm
 winget install gt-dev.cddm
 ```
 
-### Via Cargo (Private Gitea Registry & Source)
+### Via Cargo (`crates.io` & Private Gitea Registry)
 
-Configure the Gitea Cargo sparse index once in `~/.cargo/config.toml`:
-
-```toml
-[registries.gitea]
-index = "sparse+https://git.gt-web-dev.com/api/packages/gt-dev/cargo/"
-```
-
-Then install the CLI, MCP server, and LSP binaries directly:
+Install directly from public `crates.io`:
 
 ```bash
-cargo install cddm-cli cddm-mcp cddm-lsp --registry gitea
+cargo install cddm-cli cddm-mcp cddm-lsp
+```
+
+Or install from the Private Gitea Cargo Registry (zero-config via `CARGO_REGISTRIES_GITEA_INDEX` or one-time `~/.cargo/config.toml`):
+
+```bash
+CARGO_REGISTRIES_GITEA_INDEX=sparse+https://git.gt-web-dev.com/api/packages/gt-dev/cargo/ \
+  cargo install cddm-cli cddm-mcp cddm-lsp --registry gitea
+```
+
+```toml
+# Optional persistent ~/.cargo/config.toml configuration:
+[registries.gitea]
+index = "sparse+https://git.gt-web-dev.com/api/packages/gt-dev/cargo/"
 ```
 
 ### Via npm (Cross-platform binary wrapper)

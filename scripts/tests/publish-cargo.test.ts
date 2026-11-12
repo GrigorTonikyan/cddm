@@ -1,5 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import {
+  buildCargoPublishCommand,
   buildCargoPublishEnv,
   buildCargoRegistryIndexUrl,
   formatCargoAuthToken,
@@ -11,7 +12,7 @@ import {
   WORKSPACE_CRATES,
 } from "../publish-cargo";
 
-describe("Gitea Cargo Registry Publisher", () => {
+describe("Gitea Cargo Registry & crates.io Publisher", () => {
   it("should define workspace crates in strict dependency order", () => {
     expect([...WORKSPACE_CRATES]).toEqual(["cddm-core", "cddm-lsp", "cddm-mcp", "cddm-cli"]);
   });
@@ -40,10 +41,11 @@ describe("Gitea Cargo Registry Publisher", () => {
     expect(versions.has("4.9.3")).toBe(false);
   });
 
-  it("should format Cargo Bearer auth headers idempotently", () => {
+  it("should format Cargo Bearer auth headers idempotently for Gitea", () => {
     expect(formatCargoAuthToken("abc123")).toBe("Bearer abc123");
     expect(formatCargoAuthToken("Bearer abc123")).toBe("Bearer abc123");
     expect(formatCargoAuthToken("token abc123")).toBe("token abc123");
+    expect(formatCargoAuthToken("cio-raw-token", "crates-io")).toBe("cio-raw-token");
   });
 
   it("should inject registry into internal workspace dependencies without duplicating", () => {
@@ -65,8 +67,8 @@ describe("Gitea Cargo Registry Publisher", () => {
     expect(output.match(/registry = "gitea"/g)?.length).toBe(3);
   });
 
-  it("should build normalized Cargo registry environment variables", () => {
-    const env = buildCargoPublishEnv(
+  it("should build normalized Cargo registry environment variables for Gitea and crates.io", () => {
+    const giteaEnv = buildCargoPublishEnv(
       {
         host: "git.gt-web-dev.com",
         owner: "gt-dev",
@@ -75,10 +77,64 @@ describe("Gitea Cargo Registry Publisher", () => {
       },
       {},
     );
-    expect(env.CARGO_REGISTRIES_MY_GITEA_INDEX).toBe(
+    expect(giteaEnv.CARGO_REGISTRIES_MY_GITEA_INDEX).toBe(
       "sparse+https://git.gt-web-dev.com/api/packages/gt-dev/cargo/",
     );
-    expect(env.CARGO_REGISTRIES_MY_GITEA_TOKEN).toBe("Bearer secret-pat");
+    expect(giteaEnv.CARGO_REGISTRIES_MY_GITEA_TOKEN).toBe("Bearer secret-pat");
+
+    const cratesIoEnv = buildCargoPublishEnv(
+      {
+        host: "crates.io",
+        owner: "crates.io",
+        registry: "crates-io",
+        token: "oidc-temp-token",
+      },
+      {},
+    );
+    expect(cratesIoEnv.CARGO_REGISTRY_TOKEN).toBe("oidc-temp-token");
+    expect(cratesIoEnv.CARGO_REGISTRIES_CRATES_IO_INDEX).toBeUndefined();
+    expect(cratesIoEnv.CARGO_REGISTRIES_CRATES_IO_TOKEN).toBeUndefined();
+  });
+
+  it("should build distinct cargo publish commands for Gitea vs crates.io", () => {
+    expect(buildCargoPublishCommand("cddm-core", "gitea", false)).toEqual([
+      "cargo",
+      "publish",
+      "-p",
+      "cddm-core",
+      "--allow-dirty",
+      "--registry",
+      "gitea",
+    ]);
+    expect(buildCargoPublishCommand("cddm-core", "crates.io", true)).toEqual([
+      "cargo",
+      "publish",
+      "-p",
+      "cddm-core",
+      "--allow-dirty",
+      "--no-verify",
+    ]);
+  });
+
+  it("should reject --token CLI flags and honor RELEASE_BOT_TOKEN + GITHUB_SERVER_URL env", () => {
+    expect(() => parseArgs(["--token", "leaked"])).toThrow("prohibited");
+    expect(() => parseArgs(["--token=leaked"])).toThrow("prohibited");
+
+    const opts = parseArgs(["--registry", "gitea"], process.cwd(), {
+      GITHUB_SERVER_URL: "https://gitea.example.org",
+      GITHUB_REPOSITORY_OWNER: "custom-org",
+      RELEASE_BOT_TOKEN: "bot-secret-token",
+    });
+    expect(opts.host).toBe("gitea.example.org");
+    expect(opts.owner).toBe("custom-org");
+    expect(opts.token).toBe("bot-secret-token");
+
+    const cratesIoOpts = parseArgs(["--registry", "crates.io"], process.cwd(), {
+      CARGO_REGISTRY_TOKEN: "crates-oidc-token",
+      GITEA_TOKEN: "should-not-use",
+    });
+    expect(cratesIoOpts.registry).toBe("crates-io");
+    expect(cratesIoOpts.token).toBe("crates-oidc-token");
   });
 
   it("should parse CLI args and execute dry-run pipeline", async () => {

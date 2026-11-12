@@ -49,6 +49,25 @@ describe("release-notes-engine", () => {
     expect(install).toContain("npx cddm-mcp");
   });
 
+  it("should conditionally render only verified Cargo channels when cargoChannels is specified", () => {
+    const cratesOnly = buildInstallationSection("4.9.4", {
+      cargoChannels: { gitea: false, cratesIo: true },
+    });
+    expect(cratesOnly).toContain("cargo install cddm-cli cddm-mcp\n");
+    expect(cratesOnly).not.toContain("--registry gitea");
+
+    const noneLive = buildInstallationSection("4.9.4", {
+      cargoChannels: { gitea: false, cratesIo: false },
+    });
+    expect(noneLive).not.toContain("cargo install");
+
+    const bothLive = buildInstallationSection("4.9.4", {
+      cargoChannels: { gitea: true, cratesIo: true },
+    });
+    expect(bothLive).toContain("# Cargo (crates.io)\ncargo install cddm-cli cddm-mcp");
+    expect(bothLive).toContain("cargo install cddm-cli cddm-mcp --registry gitea");
+  });
+
   it("should generate comprehensive valid release notes", () => {
     const notes = generateReleaseNotes("4.0.1", {
       milestoneTitle: "Rust Nightly Toolchain & Dependency Modernization",

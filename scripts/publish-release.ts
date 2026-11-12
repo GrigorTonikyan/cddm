@@ -8,9 +8,12 @@
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
 import { dispatchDistribution } from "./dispatch-distribution";
+import { getVcsAuthHeader, verifyCargoChannels } from "./lib/cargo-registry";
 import { resolvePublisherConfig } from "./lib/publisher-config";
 import { generateReleaseNotes } from "./lib/release-notes-engine";
 import { getCurrentVersion } from "./version";
+
+export const getAuthHeader = getVcsAuthHeader;
 
 /**
  * Allowed binary & release artifact file extensions for Gitea release downloads.
@@ -220,13 +223,6 @@ export function getChangelogForVersion(version: string, rootDir = process.cwd())
   return content.slice(startIndex, nextSectionIndex).trim();
 }
 
-export function getAuthHeader(token: string): string {
-  if (token.startsWith("Basic ") || token.startsWith("Bearer ") || token.startsWith("token ")) {
-    return token;
-  }
-  return token.includes(".") ? `Bearer ${token}` : `token ${token}`;
-}
-
 export async function createOrGetGiteaRelease(
   options: ReleaseOptions,
 ): Promise<GiteaReleaseResponse | null> {
@@ -247,9 +243,10 @@ export async function createOrGetGiteaRelease(
     };
   }
 
+  const authHeader = getVcsAuthHeader(options.token);
   const checkRes = await fetch(`${apiUrl}/tags/${options.tag}`, {
     headers: {
-      Authorization: getAuthHeader(options.token),
+      Authorization: authHeader,
       Accept: "application/json",
     },
   });
@@ -258,19 +255,20 @@ export async function createOrGetGiteaRelease(
     const existing = (await checkRes.json()) as GiteaReleaseResponse;
     console.log(`\x1b[36mFound existing release ID ${existing.id} for tag ${options.tag}\x1b[0m`);
 
-    // Ensure release body meets the rich release notes standard and is updated
+    // Ensure release body meets the rich release notes standard and reflects live channels
     if (
       !existing.body ||
+      existing.body !== options.body ||
       existing.body.includes("See CHANGELOG.md") ||
       !existing.body.includes("Model Context Protocol")
     ) {
       console.log(
-        `--> Updating release #${existing.id} notes on Gitea with rich release notes and MCP highlights...`,
+        `--> Updating release #${existing.id} notes on Gitea with rich release notes and verified channels...`,
       );
       const updateRes = await fetch(`${apiUrl}/${existing.id}`, {
         method: "PATCH",
         headers: {
-          Authorization: getAuthHeader(options.token),
+          Authorization: authHeader,
           "Content-Type": "application/json",
           Accept: "application/json",
         },
@@ -289,7 +287,7 @@ export async function createOrGetGiteaRelease(
   const createRes = await fetch(apiUrl, {
     method: "POST",
     headers: {
-      Authorization: getAuthHeader(options.token),
+      Authorization: authHeader,
       "Content-Type": "application/json",
       Accept: "application/json",
     },
@@ -385,7 +383,29 @@ export async function runPublishPipeline(options: ReleaseOptions): Promise<void>
   console.log(`Release Tag:       ${options.tag}`);
   console.log(`Artifacts Dir:     ${options.distDir}`);
 
-  const release = await createOrGetGiteaRelease(options);
+  let effectiveOptions = options;
+  if (!options.dryRun && !options.deleteAssetId) {
+    const owner = options.repo.includes("/") ? options.repo.split("/")[0]! : "gt-dev";
+    const cleanVersion = options.tag.replace(/^v/, "");
+    const cargoChannels = await verifyCargoChannels({
+      host: options.host,
+      owner,
+      version: cleanVersion,
+      token: options.token,
+    });
+    console.log(
+      `Cargo Channels:    gitea=${cargoChannels.gitea ? "live" : "unavailable"}, crates.io=${cargoChannels.cratesIo ? "live" : "unavailable"}`,
+    );
+    effectiveOptions = {
+      ...options,
+      body: generateReleaseNotes(cleanVersion, {
+        milestoneTitle: options.title,
+        cargoChannels,
+      }),
+    };
+  }
+
+  const release = await createOrGetGiteaRelease(effectiveOptions);
   if (!release) {
     throw new Error("Could not initialize release on Gitea");
   }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { parseEnvFile, resolvePublisherConfig } from "./publisher-config";
+import { extractHostFromUrl, parseEnvFile, resolvePublisherConfig } from "./publisher-config";
 
 describe("publisher-config", () => {
   it("parses key-value pairs from .env files correctly", () => {
@@ -70,6 +70,25 @@ GITEA_REPO=custom-org/app
     expect(config.publisherId).toBe("fallback-pub");
     expect(config.homebrewTapRepo).toBe("fallback-pub/custom-tap");
     expect(config.scoopBucketRepo).toBe("fallback-pub/scoop-bucket");
+
+    rmSync(tempDir, { recursive: true, force: true });
+  });
+
+  it("resolves host and owner dynamically from GITHUB_SERVER_URL and GITHUB_REPOSITORY_OWNER", () => {
+    const tempDir = join(process.cwd(), "target", "test-env-gha");
+    mkdirSync(tempDir, { recursive: true });
+
+    expect(extractHostFromUrl("https://git.gt-web-dev.com")).toBe("git.gt-web-dev.com");
+    expect(extractHostFromUrl("")).toBeUndefined();
+
+    const config = resolvePublisherConfig(tempDir, {
+      GITHUB_SERVER_URL: "https://gitea.internal.example:8443",
+      GITHUB_REPOSITORY_OWNER: "platform-eng",
+      GITHUB_REPOSITORY: "platform-eng/cddm",
+    });
+    expect(config.vcsHost).toBe("gitea.internal.example:8443");
+    expect(config.publisherId).toBe("platform-eng");
+    expect(config.vcsRepo).toBe("platform-eng/cddm");
 
     rmSync(tempDir, { recursive: true, force: true });
   });
