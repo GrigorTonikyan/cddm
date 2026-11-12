@@ -1,5 +1,5 @@
 PackageIdentifier: gt-dev.cddm
-PackageVersion: 4.9.3
+PackageVersion: 4.10.0
 PackageName: CDDM
 Publisher: gt-dev
 License: MIT
@@ -8,7 +8,7 @@ PackageUrl: https://git.gt-web-dev.com/gt-dev/cddm
 Installers:
   - Architecture: x64
     InstallerType: zip
-    InstallerUrl: https://git.gt-web-dev.com/gt-dev/cddm/releases/download/v4.9.3/cddm-v4.9.3-x86_64-pc-windows-msvc.zip
+    InstallerUrl: https://git.gt-web-dev.com/gt-dev/cddm/releases/download/v4.10.0/cddm-v4.10.0-x86_64-pc-windows-msvc.zip
     InstallerSha256: 0000000000000000000000000000000000000000000000000000000000000000
     NestedInstallerType: portable
     NestedInstallerFiles:
@@ -18,7 +18,7 @@ Installers:
         PortableCommandAlias: cddm-mcp
   - Architecture: arm64
     InstallerType: zip
-    InstallerUrl: https://git.gt-web-dev.com/gt-dev/cddm/releases/download/v4.9.3/cddm-v4.9.3-aarch64-pc-windows-msvc.zip
+    InstallerUrl: https://git.gt-web-dev.com/gt-dev/cddm/releases/download/v4.10.0/cddm-v4.10.0-aarch64-pc-windows-msvc.zip
     InstallerSha256: 0000000000000000000000000000000000000000000000000000000000000000
     NestedInstallerType: portable
     NestedInstallerFiles:
