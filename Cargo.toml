@@ -17,6 +17,9 @@ anyhow = "^1"
 async-trait = "^0.1"
 axum = "^0.8"
 blake3 = "^1"
+cddm-core = { path = "crates/cddm-core", version = "4.9.2" }
+cddm-lsp = { path = "crates/cddm-lsp", version = "4.9.2" }
+cddm-mcp = { path = "crates/cddm-mcp", version = "4.9.2" }
 chrono = { version = "^0.4", features = ["serde"] }
 clap = { version = "^4", features = ["derive", "env"] }
 clap_complete = "^4"
@@ -47,7 +50,7 @@ reqwest = { version = "^0.12", default-features = false, features = [
   "stream",
   "rustls-tls",
 ] }
-rust-embed = { version = "^8", features = ["axum"] }
+rust-embed = { version = "^8", features = ["axum", "interpolate-folder-path"] }
 serde = { version = "^1", features = ["derive"] }
 serde_json = "^1"
 sha2 = "^0.11"
@@ -100,4 +103,7 @@ unsafe_code = "deny"
 debug = 0
 
 [profile.test]
+debug = 0
+
+[profile.release]
 debug = 0

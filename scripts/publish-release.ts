@@ -69,7 +69,7 @@ export function injectPackagingChecksums(
 
   const cleanVer = tag.replace(/^v/, "");
   const linuxX64Hash = checksums.get(`cddm-v${cleanVer}-x86_64-unknown-linux-gnu.tar.gz`);
-  const winX64Hash = checksums.get(`cddm-v${cleanVer}-x86_64-pc-windows-gnu.zip`);
+  const winX64Hash = checksums.get(`cddm-v${cleanVer}-x86_64-pc-windows-msvc.zip`);
   const updatedFiles: string[] = [];
 
   // 1. Homebrew formula
@@ -107,7 +107,7 @@ export function injectPackagingChecksums(
     let wingetContent = readFileSync(wingetSrc, "utf-8");
     if (winX64Hash) {
       wingetContent = wingetContent.replace(
-        /(cddm-v[\d.]+-x86_64-pc-windows-gnu\.zip\r?\n\s*InstallerSha256:\s*)[a-fA-F0-9]{64}/,
+        /(cddm-v[\d.]+-x86_64-pc-windows-(?:msvc|gnu)\.zip\r?\n\s*InstallerSha256:\s*)[a-fA-F0-9]{64}/,
         `$1${winX64Hash}`,
       );
     }

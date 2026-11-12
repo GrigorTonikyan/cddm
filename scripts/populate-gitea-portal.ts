@@ -437,7 +437,7 @@ CDDM **v1.9.0** is a major milestone release delivering **100% 4-Pillar Feature 
 | Asset | Platform | Description |
 | :--- | :--- | :--- |
 | \`cddm-main-x86_64-unknown-linux-gnu.tar.gz\` | Linux x86_64 | Native Linux standalone CLI, MCP server, and LSP binaries |
-| \`cddm-main-x86_64-pc-windows-gnu.zip\` | Windows x64 | Windows standalone executables (\`cddm.exe\`, \`cddm-mcp.exe\`, \`cddm-lsp.exe\`) |
+| \`cddm-main-x86_64-pc-windows-msvc.zip\` | Windows x64 | Windows standalone executables (\`cddm.exe\`, \`cddm-mcp.exe\`, \`cddm-lsp.exe\`) |
 | \`cddm-1.9.0.vsix\` | Cross-Platform | VS Code extension package with embedded WebUI studio |
 | \`SHA256SUMS.txt\` | All | Cryptographic SHA256 integrity verification file |
 `;

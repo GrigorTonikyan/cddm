@@ -105,14 +105,14 @@ export function buildInstallationSection(version: string): string {
 Download standalone binaries containing \`cddm\` (CLI), \`cddm-mcp\` (MCP Server), and \`cddm-lsp\` (Language Server):
 
 - **Linux (x86_64)**: [\`cddm-${tag}-x86_64-unknown-linux-gnu.tar.gz\`](${repoUrl}/releases/download/${tag}/cddm-${tag}-x86_64-unknown-linux-gnu.tar.gz)
-- **Windows (x86_64)**: [\`cddm-${tag}-x86_64-pc-windows-gnu.zip\`](${repoUrl}/releases/download/${tag}/cddm-${tag}-x86_64-pc-windows-gnu.zip)
+- **Windows (x86_64)**: [\`cddm-${tag}-x86_64-pc-windows-msvc.zip\`](${repoUrl}/releases/download/${tag}/cddm-${tag}-x86_64-pc-windows-msvc.zip)
 - **VS Code Extension**: [\`cddm-${cleanVersion}.vsix\`](${repoUrl}/releases/download/${tag}/cddm-${cleanVersion}.vsix)
 - **SHA-256 Checksums**: Verify all package downloads with \`SHA256SUMS.txt\`.
 
 #### Ecosystem Package Managers
 \`\`\`bash
-# Cargo (crates.io / workspace)
-cargo install cddm-cli cddm-mcp
+# Cargo (Gitea Private Cargo Registry / crates.io)
+cargo install cddm-cli cddm-mcp --registry gitea
 
 # NPM / NPX (global CLI & MCP server)
 npm install -g cddm

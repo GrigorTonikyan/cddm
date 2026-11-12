@@ -8,7 +8,7 @@ PackageUrl: https://git.gt-web-dev.com/gt-dev/cddm
 Installers:
   - Architecture: x64
     InstallerType: zip
-    InstallerUrl: https://git.gt-web-dev.com/gt-dev/cddm/releases/download/v4.9.2/cddm-v4.9.2-x86_64-pc-windows-gnu.zip
+    InstallerUrl: https://git.gt-web-dev.com/gt-dev/cddm/releases/download/v4.9.2/cddm-v4.9.2-x86_64-pc-windows-msvc.zip
     InstallerSha256: 0000000000000000000000000000000000000000000000000000000000000000
     NestedInstallerType: portable
     NestedInstallerFiles:
@@ -18,7 +18,7 @@ Installers:
         PortableCommandAlias: cddm-mcp
   - Architecture: arm64
     InstallerType: zip
-    InstallerUrl: https://git.gt-web-dev.com/gt-dev/cddm/releases/download/v4.9.2/cddm-v4.9.2-aarch64-pc-windows-gnu.zip
+    InstallerUrl: https://git.gt-web-dev.com/gt-dev/cddm/releases/download/v4.9.2/cddm-v4.9.2-aarch64-pc-windows-msvc.zip
     InstallerSha256: 0000000000000000000000000000000000000000000000000000000000000000
     NestedInstallerType: portable
     NestedInstallerFiles:

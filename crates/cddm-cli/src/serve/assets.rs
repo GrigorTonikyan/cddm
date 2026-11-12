@@ -9,7 +9,7 @@ use axum::{
 use rust_embed::RustEmbed;
 
 #[derive(RustEmbed)]
-#[folder = "../../webui/dist"]
+#[folder = "$OUT_DIR/webui-dist"]
 pub struct WebUIAssets;
 
 pub async fn static_asset_handler(uri: Uri) -> impl IntoResponse {

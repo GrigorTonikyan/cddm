@@ -119,10 +119,19 @@ scoop install cddm
 winget install gt-dev.cddm
 ```
 
-### Via Cargo (Recommended for Rust developers)
+### Via Cargo (Private Gitea Registry & Source)
+
+Configure the Gitea Cargo sparse index once in `~/.cargo/config.toml`:
+
+```toml
+[registries.gitea]
+index = "sparse+https://git.gt-web-dev.com/api/packages/gt-dev/cargo/"
+```
+
+Then install the CLI, MCP server, and LSP binaries directly:
 
 ```bash
-cargo install cddm
+cargo install cddm-cli cddm-mcp cddm-lsp --registry gitea
 ```
 
 ### Via npm (Cross-platform binary wrapper)

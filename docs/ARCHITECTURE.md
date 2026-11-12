@@ -180,10 +180,11 @@ Build Time:                          Runtime:
 
 CDDM supports dual distribution channels:
 
-1. **Cargo Crates (`crates.io`)**:
+1. **Cargo Crates (`gitea` Cargo Registry & `crates.io`)**:
    - `cddm-core`: Library crate published for Rust projects.
-   - `cddm-cli`: Binary crate installed via `cargo install cddm`.
-   - `cddm-mcp`: MCP stdio server binary.
+   - `cddm-cli`: Binary crate installed via `cargo install cddm-cli --registry gitea`.
+   - `cddm-mcp`: MCP stdio server binary (`cargo install cddm-mcp --registry gitea`).
+   - `cddm-lsp`: Language Server Protocol binary (`cargo install cddm-lsp --registry gitea`).
 
 2. **npm Registry (`npmjs.com`)**:
    - `cddm`: Universal npm wrapper package with platform binary shims (`bin/cddm.js`).

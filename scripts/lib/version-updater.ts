@@ -27,71 +27,23 @@ export function generateChangelogSection(
 ): string {
   let section = `## [${version}] - ${date}\n\n`;
 
-  const breakings = commits.filter((c) => c.breaking);
-  const features = commits.filter((c) => c.type === "feat");
-  const fixes = commits.filter((c) => c.type === "fix");
-  const perfs = commits.filter((c) => c.type === "perf");
-  const refactors = commits.filter((c) => c.type === "refactor");
-  const docs = commits.filter((c) => c.type === "docs");
-  const chores = commits.filter((c) => ["chore", "build", "ci", "style", "test"].includes(c.type));
+  const groups: Array<{ heading: string; items: ParsedCommit[] }> = [
+    { heading: "BREAKING CHANGES", items: commits.filter((c) => c.breaking) },
+    { heading: "Features", items: commits.filter((c) => c.type === "feat") },
+    { heading: "Bug Fixes", items: commits.filter((c) => c.type === "fix") },
+    { heading: "Performance Improvements", items: commits.filter((c) => c.type === "perf") },
+    { heading: "Refactoring", items: commits.filter((c) => c.type === "refactor") },
+    { heading: "Documentation", items: commits.filter((c) => c.type === "docs") },
+    {
+      heading: "Tooling & Maintenance",
+      items: commits.filter((c) => ["chore", "build", "ci", "style", "test"].includes(c.type)),
+    },
+  ];
 
-  if (breakings.length > 0) {
-    section += `### BREAKING CHANGES\n\n`;
-    for (const c of breakings) {
-      const scopeStr = c.scope ? `**${c.scope}**: ` : "";
-      section += `- ${scopeStr}${c.subject} (\`${c.hash}\`)\n`;
-    }
-    section += "\n";
-  }
-
-  if (features.length > 0) {
-    section += `### Features\n\n`;
-    for (const c of features) {
-      const scopeStr = c.scope ? `**${c.scope}**: ` : "";
-      section += `- ${scopeStr}${c.subject} (\`${c.hash}\`)\n`;
-    }
-    section += "\n";
-  }
-
-  if (fixes.length > 0) {
-    section += `### Bug Fixes\n\n`;
-    for (const c of fixes) {
-      const scopeStr = c.scope ? `**${c.scope}**: ` : "";
-      section += `- ${scopeStr}${c.subject} (\`${c.hash}\`)\n`;
-    }
-    section += "\n";
-  }
-
-  if (perfs.length > 0) {
-    section += `### Performance Improvements\n\n`;
-    for (const c of perfs) {
-      const scopeStr = c.scope ? `**${c.scope}**: ` : "";
-      section += `- ${scopeStr}${c.subject} (\`${c.hash}\`)\n`;
-    }
-    section += "\n";
-  }
-
-  if (refactors.length > 0) {
-    section += `### Refactoring\n\n`;
-    for (const c of refactors) {
-      const scopeStr = c.scope ? `**${c.scope}**: ` : "";
-      section += `- ${scopeStr}${c.subject} (\`${c.hash}\`)\n`;
-    }
-    section += "\n";
-  }
-
-  if (docs.length > 0) {
-    section += `### Documentation\n\n`;
-    for (const c of docs) {
-      const scopeStr = c.scope ? `**${c.scope}**: ` : "";
-      section += `- ${scopeStr}${c.subject} (\`${c.hash}\`)\n`;
-    }
-    section += "\n";
-  }
-
-  if (chores.length > 0) {
-    section += `### Tooling & Maintenance\n\n`;
-    for (const c of chores) {
+  for (const group of groups) {
+    if (group.items.length === 0) continue;
+    section += `### ${group.heading}\n\n`;
+    for (const c of group.items) {
       const scopeStr = c.scope ? `**${c.scope}**: ` : "";
       section += `- ${scopeStr}${c.subject} (\`${c.hash}\`)\n`;
     }
@@ -120,6 +72,22 @@ export function checkWorkspaceVersionSync(
 
   const mismatches: VersionMismatch[] = [];
   let checkedFiles = 1; // Cargo.toml
+
+  for (const crateName of ["cddm-core", "cddm-lsp", "cddm-mcp"]) {
+    const depRe = new RegExp(
+      `^${crateName}\\s*=\\s*\\{[^}]*version\\s*=\\s*"([^"]+)"[^}]*\\}`,
+      "m",
+    );
+    const depMatch = depRe.exec(cargoContent);
+    if (depMatch?.[1] && depMatch[1] !== canonicalVersion) {
+      mismatches.push({
+        file: "Cargo.toml",
+        field: `workspace.dependencies.${crateName}`,
+        expected: canonicalVersion,
+        actual: depMatch[1],
+      });
+    }
+  }
 
   const jsonFiles = [
     "package.json",
@@ -194,7 +162,7 @@ export function checkWorkspaceVersionSync(
         actual: scoopJson.version ?? "<missing>",
       });
     }
-    const expected64Url = `${repoBaseUrl}/releases/download/v${canonicalVersion}/cddm-v${canonicalVersion}-x86_64-pc-windows-gnu.zip`;
+    const expected64Url = `${repoBaseUrl}/releases/download/v${canonicalVersion}/cddm-v${canonicalVersion}-x86_64-pc-windows-msvc.zip`;
     const actual64Url = scoopJson.architecture?.["64bit"]?.url ?? "<missing>";
     if (actual64Url !== expected64Url) {
       mismatches.push({
@@ -228,7 +196,7 @@ export function checkWorkspaceVersionSync(
         actual: actualWinget,
       });
     }
-    const expectedWingetX64 = `${repoBaseUrl}/releases/download/v${canonicalVersion}/cddm-v${canonicalVersion}-x86_64-pc-windows-gnu.zip`;
+    const expectedWingetX64 = `${repoBaseUrl}/releases/download/v${canonicalVersion}/cddm-v${canonicalVersion}-x86_64-pc-windows-msvc.zip`;
     if (!wingetContent.includes(expectedWingetX64)) {
       mismatches.push({
         file: wingetRel,
@@ -306,10 +274,12 @@ export function updateWorkspaceVersions(
   const cargoPath = join(workspaceRoot, "Cargo.toml");
   if (existsSync(cargoPath)) {
     const cargoContent = readFileSync(cargoPath, "utf-8");
-    const updatedCargo = cargoContent.replace(
-      /(\[workspace\.package\][\s\S]*?version\s*=\s*)"[^"]+"/,
-      `$1"${newVersion}"`,
-    );
+    const updatedCargo = cargoContent
+      .replace(/(\[workspace\.package\][\s\S]*?version\s*=\s*)"[^"]+"/, `$1"${newVersion}"`)
+      .replace(
+        /^((?:cddm-(?:core|lsp|mcp))\s*=\s*\{[^}]*version\s*=\s*)"[^"]+"/gm,
+        `$1"${newVersion}"`,
+      );
     writeFileSync(cargoPath, updatedCargo, "utf-8");
     console.log(`\x1b[32m[OK] Updated Cargo.toml -> ${newVersion}\x1b[0m`);
   }
@@ -377,21 +347,21 @@ export function updateWorkspaceVersions(
     if (scoopJson.architecture) {
       if (scoopJson.architecture["64bit"]) {
         scoopJson.architecture["64bit"].url =
-          `${repoBaseUrl}/releases/download/v${newVersion}/cddm-v${newVersion}-x86_64-pc-windows-gnu.zip`;
+          `${repoBaseUrl}/releases/download/v${newVersion}/cddm-v${newVersion}-x86_64-pc-windows-msvc.zip`;
       }
       if (scoopJson.architecture["arm64"]) {
         scoopJson.architecture["arm64"].url =
-          `${repoBaseUrl}/releases/download/v${newVersion}/cddm-v${newVersion}-aarch64-pc-windows-gnu.zip`;
+          `${repoBaseUrl}/releases/download/v${newVersion}/cddm-v${newVersion}-aarch64-pc-windows-msvc.zip`;
       }
     }
     if (scoopJson.autoupdate?.architecture) {
       if (scoopJson.autoupdate.architecture["64bit"]) {
         scoopJson.autoupdate.architecture["64bit"].url =
-          `${repoBaseUrl}/releases/download/v$version/cddm-v$version-x86_64-pc-windows-gnu.zip`;
+          `${repoBaseUrl}/releases/download/v$version/cddm-v$version-x86_64-pc-windows-msvc.zip`;
       }
       if (scoopJson.autoupdate.architecture["arm64"]) {
         scoopJson.autoupdate.architecture["arm64"].url =
-          `${repoBaseUrl}/releases/download/v$version/cddm-v$version-aarch64-pc-windows-gnu.zip`;
+          `${repoBaseUrl}/releases/download/v$version/cddm-v$version-aarch64-pc-windows-msvc.zip`;
       }
     }
     writeFileSync(scoopPath, JSON.stringify(scoopJson, null, 2) + "\n", "utf-8");
@@ -412,11 +382,11 @@ export function updateWorkspaceVersions(
       .replace(/PackageVersion:\s*[\d.]+/, `PackageVersion: ${newVersion}`)
       .replace(
         /releases\/download\/v[\d.]+\/cddm-v[\d.]+-x86_64-pc-windows-(?:msvc|gnu)\.zip/g,
-        `releases/download/v${newVersion}/cddm-v${newVersion}-x86_64-pc-windows-gnu.zip`,
+        `releases/download/v${newVersion}/cddm-v${newVersion}-x86_64-pc-windows-msvc.zip`,
       )
       .replace(
         /releases\/download\/v[\d.]+\/cddm-v[\d.]+-aarch64-pc-windows-(?:msvc|gnu)\.zip/g,
-        `releases/download/v${newVersion}/cddm-v${newVersion}-aarch64-pc-windows-gnu.zip`,
+        `releases/download/v${newVersion}/cddm-v${newVersion}-aarch64-pc-windows-msvc.zip`,
       );
     writeFileSync(wingetPath, updatedWinget, "utf-8");
     console.log(`\x1b[32m[OK] Updated ${wingetPath} -> ${newVersion}\x1b[0m`);
