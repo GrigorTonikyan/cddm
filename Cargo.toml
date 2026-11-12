@@ -3,7 +3,7 @@ resolver = "2"
 members = ["crates/cddm-cli", "crates/cddm-core", "crates/cddm-lsp", "crates/cddm-mcp"]
 
 [workspace.package]
-version = "4.9.2"
+version = "4.9.3"
 edition = "2024"
 documentation = "https://docs.rs/cddm-core"
 readme = "README.md"
@@ -17,9 +17,9 @@ anyhow = "^1"
 async-trait = "^0.1"
 axum = "^0.8"
 blake3 = "^1"
-cddm-core = { path = "crates/cddm-core", version = "4.9.2" }
-cddm-lsp = { path = "crates/cddm-lsp", version = "4.9.2" }
-cddm-mcp = { path = "crates/cddm-mcp", version = "4.9.2" }
+cddm-core = { path = "crates/cddm-core", version = "4.9.3" }
+cddm-lsp = { path = "crates/cddm-lsp", version = "4.9.3" }
+cddm-mcp = { path = "crates/cddm-mcp", version = "4.9.3" }
 chrono = { version = "^0.4", features = ["serde"] }
 clap = { version = "^4", features = ["derive", "env"] }
 clap_complete = "^4"
