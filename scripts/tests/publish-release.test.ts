@@ -5,6 +5,7 @@ import { join } from "node:path";
 import {
   createOrGetGiteaRelease,
   deleteReleaseAsset,
+  getAuthHeader,
   getChangelogForVersion,
   injectPackagingChecksums,
   isReleaseAsset,
@@ -55,6 +56,46 @@ describe("Gitea Release Publisher Engine", () => {
     expect(release).toBeDefined();
     expect(release?.tag_name).toBe("v1.9.0");
     expect(release?.name).toBe("Release v1.9.0");
+    expect(getAuthHeader("abc123")).toBe("token abc123");
+    expect(getAuthHeader("jwt.token.val")).toBe("Bearer jwt.token.val");
+  });
+
+  it("should PATCH existing Gitea release body when verified channels update release notes", async () => {
+    const originalFetch = globalThis.fetch;
+    let patchedBody = "";
+    globalThis.fetch = (async (_input: string | URL | Request, init?: RequestInit) => {
+      if (!init?.method || init.method === "GET") {
+        return new Response(
+          JSON.stringify({
+            id: 77,
+            tag_name: "v4.9.4",
+            name: "Release v4.9.4",
+            body: "Old notes mentioning Model Context Protocol without crates.io",
+            draft: false,
+            prerelease: false,
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      if (init.method === "PATCH") {
+        patchedBody = String(init.body ?? "");
+        return new Response(JSON.stringify({ id: 77 }), { status: 200 });
+      }
+      return new Response("unexpected", { status: 500 });
+    }) as typeof fetch;
+
+    try {
+      const opts = {
+        ...parseArgs(["--tag", "v4.9.4"]),
+        token: "test-pat-12345678",
+        body: "Updated notes with Model Context Protocol and verified crates.io",
+      };
+      const updated = await createOrGetGiteaRelease(opts);
+      expect(updated?.body).toBe(opts.body);
+      expect(patchedBody).toContain("verified crates.io");
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
   });
 
   it("should simulate asset upload in dry-run mode", async () => {

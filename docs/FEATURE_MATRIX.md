@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-27 | Rust: 416 #[test] units | WebUI: 334 tests across 77 suites | Scripts & MCP: 225 tests across 59 suites | CI Workflows: PASS
+> Last verified: 2026-08-27 | Rust: 416 #[test] units | WebUI: 334 tests across 77 suites | Scripts & MCP: 234 tests across 60 suites | CI Workflows: PASS
 
 ---
 
@@ -442,16 +442,17 @@
 
 ---
 
-## 3. Repository Scripts & MCP Protocol — Bun Test Suites (225 tests across 59 suites)
+## 3. Repository Scripts & MCP Protocol — Bun Test Suites (234 tests across 60 suites)
 
 ### Repository Tooling & Automation Suites
 
 | Module                        | Test Suite File                                | Test Cases | Status |
 | :---------------------------- | :--------------------------------------------- | :--------- | :----- |
+| cargo-registry                | `scripts/lib/cargo-registry.test.ts`           | 4 tests    | PASS   |
 | clean-engine                  | `scripts/lib/clean-engine.test.ts`             | 14 tests   | PASS   |
 | interface-docs-generator      | `scripts/lib/interface-docs-generator.test.ts` | 6 tests    | PASS   |
-| publisher-config              | `scripts/lib/publisher-config.test.ts`         | 4 tests    | PASS   |
-| release-notes-engine          | `scripts/lib/release-notes-engine.test.ts`     | 7 tests    | PASS   |
+| publisher-config              | `scripts/lib/publisher-config.test.ts`         | 5 tests    | PASS   |
+| release-notes-engine          | `scripts/lib/release-notes-engine.test.ts`     | 8 tests    | PASS   |
 | step-runner                   | `scripts/lib/step-runner.test.ts`              | 4 tests    | PASS   |
 | test-matrix-generator         | `scripts/lib/test-matrix-generator.test.ts`    | 3 tests    | PASS   |
 | version-updater               | `scripts/lib/version-updater.test.ts`          | 4 tests    | PASS   |
@@ -467,8 +468,8 @@
 | Zero-Emoji Policy             | `scripts/tests/no-emojis.test.ts`              | 9 tests    | PASS   |
 | VSIX Packaging Pipeline       | `scripts/tests/package-vscode.test.ts`         | 5 tests    | PASS   |
 | populate-gitea-portal         | `scripts/tests/populate-gitea-portal.test.ts`  | 5 tests    | PASS   |
-| publish-cargo                 | `scripts/tests/publish-cargo.test.ts`          | 7 tests    | PASS   |
-| publish-release               | `scripts/tests/publish-release.test.ts`        | 8 tests    | PASS   |
+| publish-cargo                 | `scripts/tests/publish-cargo.test.ts`          | 9 tests    | PASS   |
+| publish-release               | `scripts/tests/publish-release.test.ts`        | 9 tests    | PASS   |
 | setup-deps                    | `scripts/tests/setup-deps.test.ts`             | 5 tests    | PASS   |
 | ui-ux-qa-verification         | `scripts/tests/ui-ux-qa-verification.test.ts`  | 4 tests    | PASS   |
 | Semantic Versioning & Commits | `scripts/tests/version.test.ts`                | 10 tests   | PASS   |

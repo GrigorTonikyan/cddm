@@ -75,6 +75,20 @@ export function detectGitRemoteOrigin(workspaceRoot: string = process.cwd()): {
 }
 
 /**
+ * Extract host (including optional port) from an HTTP(S) URL.
+ */
+export function extractHostFromUrl(url: string | undefined): string | undefined {
+  if (!url) return undefined;
+  const trimmed = url.trim();
+  if (!trimmed) return undefined;
+  try {
+    return new URL(trimmed).host || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
  * Resolves publisher and distribution configuration using strict precedence:
  * 1. Environment variables (VCS Actions vars/secrets passed via workflow env)
  * 2. .env file (as last-resort fallback for local execution)
@@ -87,13 +101,17 @@ export function resolvePublisherConfig(
   const envFilePath = join(workspaceRoot, ".env");
   const envFile = parseEnvFile(envFilePath);
   const gitRemote = detectGitRemoteOrigin(workspaceRoot);
+  const envServerHost = extractHostFromUrl(customEnv.GITHUB_SERVER_URL);
+  const fileServerHost = extractHostFromUrl(envFile.GITHUB_SERVER_URL);
 
   const vcsHost =
     customEnv.VCS_HOST ||
     customEnv.GITEA_HOST ||
+    (envServerHost && envServerHost !== "github.com" ? envServerHost : undefined) ||
     envFile.VCS_HOST ||
     envFile.GITEA_HOST ||
-    gitRemote.host ||
+    (fileServerHost && fileServerHost !== "github.com" ? fileServerHost : undefined) ||
+    (gitRemote.host && gitRemote.host !== "github.com" ? gitRemote.host : undefined) ||
     "git.gt-web-dev.com";
 
   const vcsRepo =
@@ -104,7 +122,10 @@ export function resolvePublisherConfig(
     "gt-dev/cddm";
 
   const defaultOwner =
-    gitRemote.owner || (vcsRepo.includes("/") ? vcsRepo.split("/")[0] : "gt-dev");
+    customEnv.GITHUB_REPOSITORY_OWNER ||
+    envFile.GITHUB_REPOSITORY_OWNER ||
+    gitRemote.owner ||
+    (vcsRepo.includes("/") ? vcsRepo.split("/")[0] : "gt-dev");
 
   const publisherId =
     customEnv.PACKAGE_PUBLISHER ||

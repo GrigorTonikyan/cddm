@@ -8,8 +8,8 @@
 [![Vite Plus](https://img.shields.io/badge/vite%2B-1.5.0-purple.svg)](https://viteplus.dev)
 [![TypeScript](https://img.shields.io/badge/typescript-7.0-blue.svg)](https://www.typescriptlang.org)
 [![React](https://img.shields.io/badge/react-19.3-61dafb.svg)](https://react.dev)
-[![npm version](https://img.shields.io/badge/npm-4.9.3-red.svg)](https://www.npmjs.com/package/cddm)
-[![crates.io](https://img.shields.io/badge/crates.io-4.9.3-brightgreen.svg)](https://crates.io/crates/cddm)
+[![npm version](https://img.shields.io/badge/npm-4.10.0-red.svg)](https://www.npmjs.com/package/cddm)
+[![crates.io](https://img.shields.io/badge/crates.io-4.10.0-brightgreen.svg)](https://crates.io/crates/cddm)
 
 > [!NOTE]
 > **Primary Upstream SSoT**: All development, issues, pull requests, and automated testing are managed on our self-hosted Gitea portal at [git.gt-web-dev.com/gt-dev/cddm](https://git.gt-web-dev.com/gt-dev/cddm). The GitHub repository is an automated read-only downstream replica mirror.
@@ -119,19 +119,25 @@ scoop install cddm
 winget install gt-dev.cddm
 ```
 
-### Via Cargo (Private Gitea Registry & Source)
+### Via Cargo (`crates.io` & Private Gitea Registry)
 
-Configure the Gitea Cargo sparse index once in `~/.cargo/config.toml`:
-
-```toml
-[registries.gitea]
-index = "sparse+https://git.gt-web-dev.com/api/packages/gt-dev/cargo/"
-```
-
-Then install the CLI, MCP server, and LSP binaries directly:
+Install directly from public `crates.io`:
 
 ```bash
-cargo install cddm-cli cddm-mcp cddm-lsp --registry gitea
+cargo install cddm-cli cddm-mcp cddm-lsp
+```
+
+Or install from the Private Gitea Cargo Registry (zero-config via `CARGO_REGISTRIES_GITEA_INDEX` or one-time `~/.cargo/config.toml`):
+
+```bash
+CARGO_REGISTRIES_GITEA_INDEX=sparse+https://git.gt-web-dev.com/api/packages/gt-dev/cargo/ \
+  cargo install cddm-cli cddm-mcp cddm-lsp --registry gitea
+```
+
+```toml
+# Optional persistent ~/.cargo/config.toml configuration:
+[registries.gitea]
+index = "sparse+https://git.gt-web-dev.com/api/packages/gt-dev/cargo/"
 ```
 
 ### Via npm (Cross-platform binary wrapper)
