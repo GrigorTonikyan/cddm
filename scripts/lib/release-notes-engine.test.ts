@@ -42,9 +42,9 @@ describe("release-notes-engine", () => {
   it("should build download and installation guides", () => {
     const install = buildInstallationSection("4.0.1");
     expect(install).toContain("cddm-v4.0.1-x86_64-unknown-linux-gnu.tar.gz");
-    expect(install).toContain("cddm-v4.0.1-x86_64-pc-windows-gnu.zip");
+    expect(install).toContain("cddm-v4.0.1-x86_64-pc-windows-msvc.zip");
     expect(install).toContain("cddm-4.0.1.vsix");
-    expect(install).toContain("cargo install cddm-cli cddm-mcp");
+    expect(install).toContain("cargo install cddm-cli cddm-mcp --registry gitea");
     expect(install).toContain("npm install -g cddm");
     expect(install).toContain("npx cddm-mcp");
   });

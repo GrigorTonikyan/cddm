@@ -19,7 +19,7 @@ path = "src/main.rs"
 
 [dependencies]
 async-trait.workspace = true
-cddm-core = { path = "../cddm-core" }
+cddm-core.workspace = true
 chrono.workspace = true
 serde.workspace = true
 serde_json.workspace = true

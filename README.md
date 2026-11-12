@@ -8,8 +8,8 @@
 [![Vite Plus](https://img.shields.io/badge/vite%2B-1.5.0-purple.svg)](https://viteplus.dev)
 [![TypeScript](https://img.shields.io/badge/typescript-7.0-blue.svg)](https://www.typescriptlang.org)
 [![React](https://img.shields.io/badge/react-19.3-61dafb.svg)](https://react.dev)
-[![npm version](https://img.shields.io/badge/npm-4.9.2-red.svg)](https://www.npmjs.com/package/cddm)
-[![crates.io](https://img.shields.io/badge/crates.io-4.9.2-brightgreen.svg)](https://crates.io/crates/cddm)
+[![npm version](https://img.shields.io/badge/npm-4.9.3-red.svg)](https://www.npmjs.com/package/cddm)
+[![crates.io](https://img.shields.io/badge/crates.io-4.9.3-brightgreen.svg)](https://crates.io/crates/cddm)
 
 > [!NOTE]
 > **Primary Upstream SSoT**: All development, issues, pull requests, and automated testing are managed on our self-hosted Gitea portal at [git.gt-web-dev.com/gt-dev/cddm](https://git.gt-web-dev.com/gt-dev/cddm). The GitHub repository is an automated read-only downstream replica mirror.
@@ -119,10 +119,19 @@ scoop install cddm
 winget install gt-dev.cddm
 ```
 
-### Via Cargo (Recommended for Rust developers)
+### Via Cargo (Private Gitea Registry & Source)
+
+Configure the Gitea Cargo sparse index once in `~/.cargo/config.toml`:
+
+```toml
+[registries.gitea]
+index = "sparse+https://git.gt-web-dev.com/api/packages/gt-dev/cargo/"
+```
+
+Then install the CLI, MCP server, and LSP binaries directly:
 
 ```bash
-cargo install cddm
+cargo install cddm-cli cddm-mcp cddm-lsp --registry gitea
 ```
 
 ### Via npm (Cross-platform binary wrapper)

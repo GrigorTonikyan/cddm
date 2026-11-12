@@ -25,7 +25,7 @@ jobs:
             artifact_prefix: cddm-linux-amd64
             archive_ext: ".tar.gz"
             exe_ext: ""
-          - target: x86_64-pc-windows-gnu
+          - target: x86_64-pc-windows-msvc
             artifact_prefix: cddm-windows-amd64
             archive_ext: ".zip"
             exe_ext: ".exe"
@@ -44,9 +44,9 @@ jobs:
       - name: Install System Dependencies
         run: |
           apt-get update || sudo apt-get update
-          apt-get install -y zip tar || sudo apt-get install -y zip tar
-          if [ "${{ matrix.target }}" = "x86_64-pc-windows-gnu" ]; then
-            apt-get install -y gcc-mingw-w64-x86-64 || sudo apt-get install -y gcc-mingw-w64-x86-64
+          apt-get install -y zip tar curl || sudo apt-get install -y zip tar curl
+          if [ "${{ matrix.target }}" = "x86_64-pc-windows-msvc" ]; then
+            apt-get install -y clang lld llvm nasm || sudo apt-get install -y clang lld llvm nasm
           fi
 
       - name: Build WebUI Distribution Assets
@@ -60,12 +60,36 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
-      - name: Build Standalone Binaries (CLI, MCP, LSP)
+      - name: Install cargo-xwin for Windows MSVC Cross-Compilation
+        if: matrix.target == 'x86_64-pc-windows-msvc'
+        shell: bash
         run: |
-          cargo build --release --target ${{ matrix.target }} \
-            -p cddm-cli --bin cddm \
-            -p cddm-mcp --bin cddm-mcp \
-            -p cddm-lsp --bin cddm-lsp
+          mkdir -p "${HOME}/.cargo/bin"
+          XWIN_TAG=$(curl -fsSL https://api.github.com/repos/rust-cross/cargo-xwin/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/' || true)
+          if [ -n "${XWIN_TAG}" ]; then
+            curl -fsSL "https://github.com/rust-cross/cargo-xwin/releases/download/${XWIN_TAG}/cargo-xwin-${XWIN_TAG}.x86_64-unknown-linux-musl.tar.gz" | tar -xz -C "${HOME}/.cargo/bin" || cargo install --locked cargo-xwin
+          else
+            cargo install --locked cargo-xwin
+          fi
+          export PATH="${HOME}/.cargo/bin:${PATH}"
+          cargo xwin --version
+
+      - name: Build Standalone Binaries (CLI, MCP, LSP)
+        shell: bash
+        run: |
+          export PATH="${HOME}/.cargo/bin:${PATH}"
+          if [ "${{ matrix.target }}" = "x86_64-pc-windows-msvc" ]; then
+            RUSTFLAGS="-C debuginfo=0 -C target-feature=+crt-static" \
+              cargo xwin build --release --target ${{ matrix.target }} \
+                -p cddm-cli --bin cddm \
+                -p cddm-mcp --bin cddm-mcp \
+                -p cddm-lsp --bin cddm-lsp
+          else
+            cargo build --release --target ${{ matrix.target }} \
+              -p cddm-cli --bin cddm \
+              -p cddm-mcp --bin cddm-mcp \
+              -p cddm-lsp --bin cddm-lsp
+          fi
 
       - name: Package Target Archive
         shell: bash
@@ -149,9 +173,35 @@ jobs:
             ${{ vars.GITEA_HOST || 'git.gt-web-dev.com' }}/${{ github.repository }}:latest
             ${{ vars.GITEA_HOST || 'git.gt-web-dev.com' }}/${{ github.repository }}:${{ github.ref_name }}
 
+  publish-cargo:
+    name: Publish Crates to Private Gitea Cargo Registry
+    runs-on: highperf
+    steps:
+      - name: Checkout Source Code
+        uses: builtin:checkout
+        with:
+          fetch-depth: 0
+
+      - name: Setup Enterprise Toolchains
+        uses: self:gt-dev/actions/setup-toolchains@v1
+        with:
+          bun: "true"
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@nightly
+
+      - name: Publish Workspace Crates (cddm-core, cddm-lsp, cddm-mcp, cddm-cli)
+        env:
+          GITEA_HOST: ${{ vars.GITEA_HOST || 'git.gt-web-dev.com' }}
+          CARGO_REGISTRY_OWNER: ${{ vars.PUBLISHER || github.repository_owner }}
+          CARGO_REGISTRY_TOKEN: ${{ secrets.REGISTRY_TOKEN || secrets.GITEA_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          bun install --frozen-lockfile || bun install
+          bun scripts/publish-cargo.ts --registry gitea
+
   gitea-publish:
     name: Publish Gitea Release & Ecosystem Packages
-    needs: [build-binaries, package-vscode, publish-container]
+    needs: [build-binaries, package-vscode, publish-container, publish-cargo]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Source Code

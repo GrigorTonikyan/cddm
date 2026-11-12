@@ -64,7 +64,7 @@ describe("Gitea Release Publisher Engine", () => {
   });
 
   it("should validate allowed and forbidden release download asset extensions", () => {
-    expect(isReleaseAsset("cddm-v4.9.0-x86_64-pc-windows-gnu.zip")).toBe(true);
+    expect(isReleaseAsset("cddm-v4.9.0-x86_64-pc-windows-msvc.zip")).toBe(true);
     expect(isReleaseAsset("cddm-v4.9.0-x86_64-unknown-linux-gnu.tar.gz")).toBe(true);
     expect(isReleaseAsset("cddm-4.9.0.vsix")).toBe(true);
     expect(isReleaseAsset("SHA256SUMS.txt")).toBe(true);
@@ -102,7 +102,7 @@ describe("Gitea Release Publisher Engine", () => {
     try {
       writeFileSync(
         join(distDir, "SHA256SUMS.txt"),
-        `${linuxHash}  cddm-v4.9.0-x86_64-unknown-linux-gnu.tar.gz\n${winHash}  cddm-v4.9.0-x86_64-pc-windows-gnu.zip\n`,
+        `${linuxHash}  cddm-v4.9.0-x86_64-unknown-linux-gnu.tar.gz\n${winHash}  cddm-v4.9.0-x86_64-pc-windows-msvc.zip\n`,
       );
       writeFileSync(
         join(tempDir, "packaging", "homebrew", "cddm.rb"),
@@ -114,7 +114,7 @@ describe("Gitea Release Publisher Engine", () => {
           version: "4.9.0",
           architecture: {
             "64bit": {
-              url: "https://git.gt-web-dev.com/gt-dev/cddm/releases/download/v4.9.0/cddm-v4.9.0-x86_64-pc-windows-gnu.zip",
+              url: "https://git.gt-web-dev.com/gt-dev/cddm/releases/download/v4.9.0/cddm-v4.9.0-x86_64-pc-windows-msvc.zip",
               hash: "0000000000000000000000000000000000000000000000000000000000000000",
             },
           },
@@ -122,12 +122,12 @@ describe("Gitea Release Publisher Engine", () => {
       );
       writeFileSync(
         join(tempDir, "packaging", "winget", "cddm.yaml"),
-        `PackageVersion: 4.9.0\nInstallers:\n  - Architecture: x64\n    InstallerUrl: https://git.gt-web-dev.com/gt-dev/cddm/releases/download/v4.9.0/cddm-v4.9.0-x86_64-pc-windows-gnu.zip\n    InstallerSha256: 0000000000000000000000000000000000000000000000000000000000000000\n`,
+        `PackageVersion: 4.9.0\nInstallers:\n  - Architecture: x64\n    InstallerUrl: https://git.gt-web-dev.com/gt-dev/cddm/releases/download/v4.9.0/cddm-v4.9.0-x86_64-pc-windows-msvc.zip\n    InstallerSha256: 0000000000000000000000000000000000000000000000000000000000000000\n`,
       );
 
       const sumsMap = parseSha256Sums(readFileSync(join(distDir, "SHA256SUMS.txt"), "utf-8"));
       expect(sumsMap.get("cddm-v4.9.0-x86_64-unknown-linux-gnu.tar.gz")).toBe(linuxHash);
-      expect(sumsMap.get("cddm-v4.9.0-x86_64-pc-windows-gnu.zip")).toBe(winHash);
+      expect(sumsMap.get("cddm-v4.9.0-x86_64-pc-windows-msvc.zip")).toBe(winHash);
 
       const injected = injectPackagingChecksums("v4.9.0", distDir, tempDir);
       expect(injected.length).toBe(3);

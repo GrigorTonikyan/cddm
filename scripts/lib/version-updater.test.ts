@@ -66,7 +66,7 @@ describe("version-updater utility", () => {
     try {
       writeFileSync(
         join(tempRoot, "Cargo.toml"),
-        `[workspace]\n[workspace.package]\nversion = "4.8.0"\nedition = "2024"\n`,
+        `[workspace]\n[workspace.package]\nversion = "4.8.0"\nedition = "2024"\n[workspace.dependencies]\ncddm-core = { path = "crates/cddm-core", version = "4.7.0" }\ncddm-lsp = { path = "crates/cddm-lsp", version = "4.7.0" }\ncddm-mcp = { path = "crates/cddm-mcp", version = "4.7.0" }\n`,
       );
       writeFileSync(
         join(tempRoot, "Cargo.lock"),
@@ -124,6 +124,11 @@ describe("version-updater utility", () => {
       expect(postCheck.synchronized).toBe(true);
       expect(postCheck.canonicalVersion).toBe("4.9.0");
       expect(postCheck.mismatches).toHaveLength(0);
+
+      const cargoText = readFileSync(join(tempRoot, "Cargo.toml"), "utf-8");
+      expect(cargoText).toContain('cddm-core = { path = "crates/cddm-core", version = "4.9.0" }');
+      expect(cargoText).toContain('cddm-lsp = { path = "crates/cddm-lsp", version = "4.9.0" }');
+      expect(cargoText).toContain('cddm-mcp = { path = "crates/cddm-mcp", version = "4.9.0" }');
 
       const lockText = readFileSync(join(tempRoot, "Cargo.lock"), "utf-8");
       expect(lockText).toContain('name = "cddm-core"\nversion = "4.9.0"');
