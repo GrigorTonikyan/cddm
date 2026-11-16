@@ -1,0 +1,43 @@
+name: Auto-Tag Release on Main
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: auto-tag-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  auto-tag-release:
+    name: Auto-Tag & Publish Release on Main
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: builtin:checkout
+        with:
+          fetch-depth: 0
+
+      - name: Setup Enterprise Toolchains
+        uses: self:gt-dev/actions/setup-toolchains@v1
+        with:
+          bun: "true"
+
+      - name: Install Workspace Dependencies
+        run: bun install --frozen-lockfile || bun install
+
+      - name: Check Workspace Version & Create Release Tag
+        env:
+          GITHUB_SERVER_URL: ${{ github.server_url }}
+          GITEA_HOST: ${{ vars.GITEA_HOST }}
+          GITEA_REPO: ${{ github.repository }}
+          GITEA_TOKEN: ${{ secrets.REGISTRY_TOKEN || secrets.GITEA_TOKEN || secrets.GITHUB_TOKEN }}
+          TARGET_SHA: ${{ github.sha }}
+        run: |
+          CURRENT_VER="$(bun scripts/version.ts --get-current)"
+          TAG_NAME="v${CURRENT_VER}"
+          echo "[INFO] Workspace version on main: ${CURRENT_VER} (Tag: ${TAG_NAME})"
+
+          echo "--> Publishing Gitea release and tag for ${TAG_NAME}..."
+          bun scripts/publish-release.ts --tag "${TAG_NAME}" --target "${TARGET_SHA}"

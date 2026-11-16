@@ -78,7 +78,7 @@ describe("Gitea Release Publisher Engine", () => {
         );
       }
       if (init.method === "PATCH") {
-        patchedBody = String(init.body ?? "");
+        patchedBody = typeof init.body === "string" ? init.body : "";
         return new Response(JSON.stringify({ id: 77 }), { status: 200 });
       }
       return new Response("unexpected", { status: 500 });
@@ -87,7 +87,7 @@ describe("Gitea Release Publisher Engine", () => {
     try {
       const opts = {
         ...parseArgs(["--tag", "v4.9.4"]),
-        token: "test-pat-12345678",
+        token: "mock", // gitleaks:allow — unit test fixture
         body: "Updated notes with Model Context Protocol and verified crates.io",
       };
       const updated = await createOrGetGiteaRelease(opts);

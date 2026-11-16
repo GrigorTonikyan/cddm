@@ -51,4 +51,4 @@ All working branches MUST strictly adhere to the canonical naming format derived
 1. **Never Merge via Local Fast-Forward Push**: Agents must not merge locally and push `main` directly to remotes.
 2. **Never Bypass CI Gates**: All commits and PRs must satisfy CI quality gates verified through `gitea_wait_for_ci_gate` or `gitea_get_commit_statuses`.
 3. **API Merge Endpoint**: All merges MUST be executed via Forge MCP (`gitea_merge_pr`) or `forge pr merge <id> --delete-branch`.
-4. **Traceability & Automated Tag Release**: This ensures Gitea automatically marks the PR as merged, attaches all CI workflow logs to the PR, auto-closes the linked issue, and triggers `auto-tag-release` in `.gitea/workflows/ci.yaml` to cut the release tag `vX.Y.Z` and publish distribution assets.
+4. **Traceability & Automated Tag Release**: This ensures Gitea automatically marks the PR as merged, attaches all CI workflow logs to the PR, auto-closes the linked issue, and triggers `auto-tag-release` in `.gitea/workflows/auto-tag-release.yaml` to cut the release tag `vX.Y.Z` and publish distribution assets.

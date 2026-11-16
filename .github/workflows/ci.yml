@@ -1,33 +1,73 @@
 name: GitHub Continuous Integration (Mirror)
 
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   CARGO_TERM_COLOR: always
-  CARGO_BUILD_JOBS: 1
   CARGO_INCREMENTAL: 0
   RUSTFLAGS: "-C debuginfo=0"
 
 jobs:
+  rust-build:
+    name: Build Release Binaries & Strict Dogfooding
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@6a52aad76a94a5fbc50d567bb5be24419801c1fb # nightly
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
+        continue-on-error: true
+        with:
+          shared-key: "gh-release-bin"
+
+      - name: Ensure Embedded WebUI Assets Placeholder
+        run: |
+          mkdir -p webui/dist
+          test -f webui/dist/index.html || echo '<!DOCTYPE html><html><head><title>CDDM</title></head><body><div id="root"></div></body></html>' > webui/dist/index.html
+
+      - name: Build CLI & MCP Release Binaries
+        run: cargo build --release --locked -p cddm-cli --bin cddm -p cddm-mcp --bin cddm-mcp -p cddm-lsp --bin cddm-lsp
+
+      - name: CDDM Dogfooding Quality Gate
+        run: ./target/release/cddm scan . --min-tokens 50 --fail-threshold 5.0
+
+      - name: Upload Prebuilt Binaries
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: cddm-gh-binaries
+          path: |
+            target/release/cddm
+            target/release/cddm-mcp
+            target/release/cddm-lsp
+
   rust-ci:
     name: Rust Quality Gate
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Install Rust Toolchain
-        uses: dtolnay/rust-toolchain@nightly
+        uses: dtolnay/rust-toolchain@6a52aad76a94a5fbc50d567bb5be24419801c1fb # nightly
         with:
           components: clippy, rustfmt
 
       - name: Rust Cache
-        uses: Swatinem/rust-cache@v2
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
         continue-on-error: true
+        with:
+          shared-key: "gh-rust-check"
 
       - name: Verify Rust Formatting
         run: cargo fmt --check
@@ -37,50 +77,40 @@ jobs:
           mkdir -p webui/dist
           test -f webui/dist/index.html || echo '<!DOCTYPE html><html><head><title>CDDM</title></head><body><div id="root"></div></body></html>' > webui/dist/index.html
 
-      - name: Cargo Typecheck
-        run: cargo check --workspace --all-targets
-
       - name: Clippy Linter (-D warnings)
-        run: cargo clippy --workspace --all-targets -- -D warnings
+        run: cargo clippy --workspace --all-targets --locked -- -D warnings
 
       - name: Run Unit & Integration Tests
-        run: cargo test --workspace
-
-      - name: Build CLI Binary
-        run: cargo build -p cddm-cli
-
-      - name: CDDM Dogfooding Quality Gate
-        run: ./target/debug/cddm scan . --min-tokens 50 --fail-threshold 5.0
+        run: cargo test --workspace --locked
 
   webui-ci:
     name: WebUI Frontend Quality Gate
-    needs: [rust-ci]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
           bun-version: latest
+
+      - name: Cache Bun Dependencies
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock', 'package.json', 'webui/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
 
       - name: Install Dependencies
         run: |
           bun install --frozen-lockfile || bun install
-          bun install --cwd webui
+          bun install --cwd webui --frozen-lockfile || bun install --cwd webui
 
-      - name: Typecheck TypeScript (tsc -b)
+      - name: Typecheck & Lint WebUI (vp check)
         working-directory: ./webui
-        run: bun run check
-
-      - name: Code Formatting Check (vp fmt --check)
-        working-directory: ./webui
-        run: bun run format:check
-
-      - name: WebUI Linter (vp lint)
-        working-directory: ./webui
-        run: bun run lint
+        run: bunx vp check
 
       - name: Run WebUI Vitest Suite (vitest run)
         working-directory: ./webui
@@ -92,32 +122,40 @@ jobs:
 
   workspace-governance-ci:
     name: Workspace Standards & MCP Protocol Gate
-    needs: [webui-ci]
+    needs: [rust-build]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
 
-      - name: Install Rust Toolchain
-        uses: dtolnay/rust-toolchain@stable
+      - name: Download Prebuilt Binaries
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: cddm-gh-binaries
+          path: target/release
 
-      - name: Rust Cache
-        uses: Swatinem/rust-cache@v2
-        continue-on-error: true
-
-      - name: Build MCP Server Binary
-        run: cargo build -p cddm-mcp
+      - name: Ensure Binaries Executable
+        run: chmod +x target/release/cddm target/release/cddm-mcp target/release/cddm-lsp
 
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
           bun-version: latest
+
+      - name: Cache Bun Dependencies
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock', 'package.json', 'webui/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
 
       - name: Install Dependencies
         run: |
           bun install --frozen-lockfile || bun install
-          bun install --cwd webui
-          bun install --cwd editors/vscode
+          bun scripts/setup-deps.ts
 
       - name: Validate Formatting, Lints & TypeScript (vp check)
         run: bunx vp check

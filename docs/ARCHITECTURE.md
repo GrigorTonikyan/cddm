@@ -192,10 +192,11 @@ CDDM supports dual distribution channels:
    - `@cddm/win32-x64`, `@cddm/linux-x64`, `@cddm/darwin-x64`, `@cddm/darwin-arm64`: Native pre-built release binaries.
 
 3. **Gitea Actions CI/CD Workflows (Authoritative SSoT)**:
-   - `.gitea/workflows/ci.yaml`: Authoritative matrix build testing (Ubuntu, Windows, macOS), `clippy`, `rustfmt`, and WebUI tests.
-   - `.gitea/workflows/release.yaml`: Cross-compiling standalone release binaries and publishing packages on Gitea tag pushes (`v*`).
+   - `.gitea/workflows/ci.yaml`: PR quality & merge gate (`pull_request: [main]`, `workflow_dispatch`) running parallel `security-scan` (`gitleaks-scan@v1`), `rust-build` (release binaries + strict `<= 5.0%` dogfooding), `rust-ci` (`fmt`, `clippy`, `cargo test`), `workspace-governance-ci`, and `webui-ci`, followed by parallel `mcp-ci` and pre-baked `playwright-runner:v1.65.0` `e2e-ci`.
+   - `.gitea/workflows/auto-tag-release.yaml`: Lightweight `main` CD trigger that computes the SemVer release tag and creates the initial Gitea release (`scripts/publish-release.ts`).
+   - `.gitea/workflows/release.yaml`: Tag-triggered (`v*`) cross-compilation (`build-webui` once + Linux/Windows `cargo-xwin` cached matrix), VSIX packaging, BuildKit-cached DinD container publishing (`self:gt-dev/actions/docker-build-push@v1`), Gitea Cargo Registry crate publishing, and ecosystem package manifest dispatch.
    - `.github/workflows/ci.yml`: Read-only downstream replica CI mirror.
-   - `.github/workflows/release.yml`: Read-only downstream replica release mirror.
+   - `.github/workflows/release.yml`: Read-only downstream replica release mirror (including OIDC `crates.io` Trusted Publishing).
 
 ---
 
@@ -343,5 +344,5 @@ graph LR
 
 1. **Primary SSoT (Gitea)**: Authoritative repository for issue tracking, milestones, PRs, reviews, and primary binary packaging.
 2. **Automated API-Driven Merges**: Pull requests are merged exclusively via the Gitea REST API, ensuring PRs are marked `merged: true`, closed in the UI, and linked issues are automatically resolved.
-3. **Automated Multi-Manifest Release Pipeline**: Workspace SemVer is calculated deterministically from Conventional Commits and synchronized across all 10 manifests during PR preparation (`bun scripts/version.ts` / `vp run version:bump`). Merging into `main` automatically triggers the Gitea Actions `auto-tag-release` job, cutting release tag `vX.Y.Z` and triggering multi-platform cross-compilation and packaging (`.gitea/workflows/release.yaml`).
+3. **Automated Multi-Manifest Release Pipeline**: Workspace SemVer is calculated deterministically from Conventional Commits and synchronized across all 10 manifests during PR preparation (`bun scripts/version.ts` / `vp run version:bump`). Merging into `main` automatically triggers the Gitea Actions `auto-tag-release` job in `.gitea/workflows/auto-tag-release.yaml`, cutting release tag `vX.Y.Z` and triggering multi-platform cross-compilation and packaging (`.gitea/workflows/release.yaml`).
 4. **Downstream Mirroring**: Commits, tags, and assets are synchronized downstream to GitHub.
