@@ -12,13 +12,13 @@
  * 7. Optional live remote Gitea release, package repos, Cargo & NPM registry verification (--remote)
  */
 
-import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { verifyCargoChannels } from "./lib/cargo-registry";
 import { parseSha256SumsValidated } from "./lib/distribution-manifests";
 import { GITEA_TOKEN } from "./lib/gitea-client";
-import { verifyNpmChannels } from "./lib/npm-registry";
+import { isNpmVersionPublished, verifyNpmChannels } from "./lib/npm-registry";
 import { type PublisherConfig, resolvePublisherConfig } from "./lib/publisher-config";
 import { getCurrentVersion } from "./version";
 
@@ -216,11 +216,29 @@ export async function runPowerShellInstallerExecution(options: {
   }
 }
 
+export function validateWingetManifestsCli(manifestDir: string): {
+  validated: boolean;
+  skipped: boolean;
+  output: string;
+} {
+  const wingetBin = Bun.which("winget");
+  if (!wingetBin) {
+    return { validated: false, skipped: true, output: "winget CLI not installed on this host." };
+  }
+  const proc = Bun.spawnSync([wingetBin, "validate", "--manifest", manifestDir], {
+    stdout: "pipe",
+    stderr: "pipe",
+  });
+  const output = `${proc.stdout.toString()}\n${proc.stderr.toString()}`.trim();
+  return { validated: proc.exitCode === 0, skipped: false, output };
+}
+
 export async function verifyRemoteDistributionChannels(options: {
   workspaceRoot?: string;
   version: string;
   token?: string;
   liveInstall?: boolean;
+  skipWingetCli?: boolean;
   fetchFn?: typeof fetch;
 }): Promise<ChannelVerificationResult> {
   const root = options.workspaceRoot ?? process.cwd();
@@ -246,13 +264,45 @@ export async function verifyRemoteDistributionChannels(options: {
     }
   }
 
-  // 2. Verify central package repositories (WinGet, Scoop, Homebrew)
+  // 2. Verify central package repositories (WinGet v1.9.0 3-file manifests, Scoop, Homebrew)
   const firstLetter = config.publisherId.charAt(0).toLowerCase();
+  const wgBase = `https://${config.vcsHost}/api/v1/repos/${config.wingetRepo}/contents/manifests/${firstLetter}/${config.publisherId}/cddm/${cleanVer}`;
+  const wgFiles = [
+    `${config.publisherId}.cddm.yaml`,
+    `${config.publisherId}.cddm.installer.yaml`,
+    `${config.publisherId}.cddm.locale.en-US.yaml`,
+  ];
+
+  const tempWgDir = mkdtempSync(join(tmpdir(), "cddm-winget-validate-"));
+  let fetchedAllWgContent = true;
+  try {
+    for (const fileName of wgFiles) {
+      const res = await fetchFn(`${wgBase}/${fileName}`, { headers });
+      if (!res.ok) {
+        violations.push(`WinGet manifest missing on remote (${res.status}): ${wgBase}/${fileName}`);
+        fetchedAllWgContent = false;
+      } else {
+        const json = (await res.json()) as { content?: string };
+        if (typeof json.content === "string" && json.content.trim().length > 0) {
+          const decoded = Buffer.from(json.content, "base64").toString("utf-8");
+          writeFileSync(join(tempWgDir, fileName), decoded, "utf-8");
+        } else {
+          fetchedAllWgContent = false;
+        }
+      }
+    }
+
+    if (fetchedAllWgContent && !options.skipWingetCli && process.platform === "win32") {
+      const wgRes = validateWingetManifestsCli(tempWgDir);
+      if (!wgRes.skipped && !wgRes.validated) {
+        violations.push(`winget validate failed for remote v${cleanVer}: ${wgRes.output}`);
+      }
+    }
+  } finally {
+    rmSync(tempWgDir, { recursive: true, force: true });
+  }
+
   const repoChecks = [
-    {
-      name: "WinGet installer manifest",
-      url: `https://${config.vcsHost}/api/v1/repos/${config.wingetRepo}/contents/manifests/${firstLetter}/${config.publisherId}/cddm/${cleanVer}/${config.publisherId}.cddm.installer.yaml`,
-    },
     {
       name: "Scoop bucket manifest",
       url: `https://${config.vcsHost}/api/v1/repos/${config.scoopBucketRepo}/contents/bucket/cddm.json`,
@@ -270,8 +320,8 @@ export async function verifyRemoteDistributionChannels(options: {
     }
   }
 
-  // 3. Verify Gitea Cargo & NPM Registries
-  const [cargo, npm] = await Promise.all([
+  // 3. Verify Gitea Cargo & NPM Registries (including @cddm/win32-x64 & @cddm/linux-x64)
+  const [cargo, npm, winNpm, linuxNpm] = await Promise.all([
     verifyCargoChannels({
       host: config.vcsHost,
       owner: config.publisherId,
@@ -286,30 +336,68 @@ export async function verifyRemoteDistributionChannels(options: {
       token: options.token,
       fetchFn,
     }),
+    isNpmVersionPublished({
+      registry: "gitea",
+      host: config.vcsHost,
+      owner: config.publisherId,
+      packageName: "@cddm/win32-x64",
+      version: cleanVer,
+      token: options.token,
+      fetchFn,
+    }),
+    isNpmVersionPublished({
+      registry: "gitea",
+      host: config.vcsHost,
+      owner: config.publisherId,
+      packageName: "@cddm/linux-x64",
+      version: cleanVer,
+      token: options.token,
+      fetchFn,
+    }),
   ]);
 
   if (!cargo.gitea) {
-    violations.push(`Gitea Cargo registry missing cddm-cli/cddm-mcp v${cleanVer}.`);
+    violations.push(`Gitea Cargo registry missing cddm-core/lsp/mcp/cli v${cleanVer}.`);
   }
-  if (!npm.gitea) {
-    violations.push(`Gitea NPM registry missing cddm v${cleanVer}.`);
+  if (!npm.gitea || !winNpm || !linuxNpm) {
+    violations.push(
+      `Gitea NPM registry missing cddm/@cddm/win32-x64/@cddm/linux-x64 v${cleanVer}.`,
+    );
   }
 
   // 4. Optional live Windows PowerShell installer execution
   if (options.liveInstall && process.platform === "win32") {
-    const execRes = await runPowerShellInstallerExecution({
-      workspaceRoot: root,
-      baseUrl: `https://${config.vcsHost}`,
-      repo: config.vcsRepo,
-      version: tag,
-    });
-    if (execRes.exitCode !== 0) {
-      violations.push(`Live install.ps1 execution failed: ${execRes.stderr || execRes.stdout}`);
-    } else if (
-      !execRes.installedBinaries.includes("cddm.exe") ||
-      !execRes.installedBinaries.includes("cddm-mcp.exe")
-    ) {
-      violations.push(`Live install.ps1 missing binaries: ${execRes.installedBinaries.join(", ")}`);
+    const installDir = mkdtempSync(join(tmpdir(), "cddm-win-live-exec-"));
+    try {
+      const execRes = await runPowerShellInstallerExecution({
+        workspaceRoot: root,
+        baseUrl: `https://${config.vcsHost}`,
+        repo: config.vcsRepo,
+        version: tag,
+        installDir,
+      });
+      if (execRes.exitCode !== 0) {
+        violations.push(`Live install.ps1 execution failed: ${execRes.stderr || execRes.stdout}`);
+      } else if (
+        !execRes.installedBinaries.includes("cddm.exe") ||
+        !execRes.installedBinaries.includes("cddm-mcp.exe")
+      ) {
+        violations.push(
+          `Live install.ps1 missing binaries: ${execRes.installedBinaries.join(", ")}`,
+        );
+      } else {
+        const verProc = Bun.spawnSync([join(installDir, "cddm.exe"), "--version"], {
+          stdout: "pipe",
+          stderr: "pipe",
+        });
+        if (verProc.exitCode !== 0 || !verProc.stdout.toString().includes(cleanVer)) {
+          violations.push(
+            `Installed cddm.exe --version mismatch: ${verProc.stdout.toString()} ${verProc.stderr.toString()}`,
+          );
+        }
+      }
+    } finally {
+      rmSync(installDir, { recursive: true, force: true });
     }
   }
 

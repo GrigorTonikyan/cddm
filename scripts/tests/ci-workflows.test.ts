@@ -48,6 +48,9 @@ describe("CI/CD & Container Governance Invariants", () => {
     expect(releaseYaml).toContain("HOMEBREW_TAP_DEPLOY_KEY");
     expect(releaseYaml).toContain("SCOOP_BUCKET_DEPLOY_KEY");
     expect(releaseYaml).toContain("WINGET_DEPLOY_KEY");
+    expect(releaseYaml).toContain(
+      "GITEA_TOKEN: ${{ secrets.RELEASE_BOT_TOKEN || secrets.REGISTRY_TOKEN || secrets.GITEA_TOKEN || secrets.GITHUB_TOKEN }}",
+    );
     expect(releaseYaml).not.toContain("cache-mode: registry");
     expect(releaseYaml).toContain("cache-mode: inline");
     expect(releaseYaml).toContain("build-webui:");

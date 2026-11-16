@@ -5,6 +5,7 @@ import { join, resolve } from "node:path";
 import { describe, expect, it } from "bun:test";
 import {
   runPowerShellInstallerExecution,
+  validateWingetManifestsCli,
   verifyLocalDistributionChannels,
   verifyRemoteDistributionChannels,
 } from "../verify-distribution-channels";
@@ -40,10 +41,17 @@ describe("Windows & Cross-Platform Distribution Channel Verifier", () => {
     const res = await verifyRemoteDistributionChannels({
       workspaceRoot: ROOT,
       version: "1.0.0",
+      skipWingetCli: true,
       fetchFn: mockFetch,
     });
     expect(res.passed).toBeTrue();
     expect(res.violations).toEqual([]);
+
+    const localWg = validateWingetManifestsCli(join(ROOT, "packaging", "winget"));
+    if (!localWg.skipped) {
+      expect(localWg.validated).toBeFalse();
+      expect(localWg.output).toContain("InstallerSha256");
+    }
   });
 
   it("executes packaging/install.ps1 end-to-end with SHA-256 verification and rejects tampered archives", async () => {

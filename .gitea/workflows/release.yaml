@@ -410,6 +410,6 @@ jobs:
           HOMEBREW_TAP_DEPLOY_KEY: ${{ secrets.HOMEBREW_TAP_DEPLOY_KEY }}
           SCOOP_BUCKET_DEPLOY_KEY: ${{ secrets.SCOOP_BUCKET_DEPLOY_KEY }}
           WINGET_DEPLOY_KEY: ${{ secrets.WINGET_DEPLOY_KEY }}
-          GITEA_TOKEN: ${{ secrets.RELEASE_BOT_TOKEN || secrets.GITEA_TOKEN || secrets.GITHUB_TOKEN }}
+          GITEA_TOKEN: ${{ secrets.RELEASE_BOT_TOKEN || secrets.REGISTRY_TOKEN || secrets.GITEA_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
           bun scripts/dispatch-distribution.ts --package cddm --tag "${{ steps.release_meta.outputs.tag_name }}" --dist-dir "dist-release"
