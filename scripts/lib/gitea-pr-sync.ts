@@ -1,5 +1,5 @@
 import { join, resolve } from "node:path";
-import { GITEA_REPO, GITEA_TOKEN, giteaFetch, sleep } from "./gitea-client";
+import { GITEA_BASE, GITEA_REPO, GITEA_TOKEN, giteaFetch, sleep } from "./gitea-client";
 
 export interface PRSpec {
   title: string;
@@ -91,7 +91,7 @@ export async function syncPullRequests(
       Bun.spawnSync(["git", "add", "docs/rfc/"], { cwd: process.cwd() });
       Bun.spawnSync(["git", "commit", "-m", pr.title], { cwd: process.cwd() });
 
-      const authPushUrl = `https://${GITEA_TOKEN}@git.gt-web-dev.com/${GITEA_REPO}.git`;
+      const pushUrl = `${GITEA_BASE}/${GITEA_REPO}.git`;
       const pushRes = Bun.spawnSync(
         [
           "git",
@@ -99,13 +99,19 @@ export async function syncPullRequests(
           "credential.helper=",
           "push",
           "-u",
-          authPushUrl,
+          pushUrl,
           `${pr.branch}:${pr.branch}`,
           "--force",
         ],
         {
           cwd: process.cwd(),
-          env: { ...process.env, GIT_TERMINAL_PROMPT: "0" },
+          env: {
+            ...process.env,
+            GIT_TERMINAL_PROMPT: "0",
+            GIT_CONFIG_COUNT: "1",
+            GIT_CONFIG_KEY_0: `http.${GITEA_BASE}/.extraHeader`,
+            GIT_CONFIG_VALUE_0: `Authorization: token ${GITEA_TOKEN}`,
+          },
         },
       );
       if (pushRes.exitCode !== 0) {

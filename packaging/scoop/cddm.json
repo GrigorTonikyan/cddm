@@ -6,22 +6,18 @@
   "architecture": {
     "64bit": {
       "url": "https://git.gt-web-dev.com/gt-dev/cddm/releases/download/v4.10.2/cddm-v4.10.2-x86_64-pc-windows-msvc.zip",
-      "hash": "0000000000000000000000000000000000000000000000000000000000000000"
-    },
-    "arm64": {
-      "url": "https://git.gt-web-dev.com/gt-dev/cddm/releases/download/v4.10.2/cddm-v4.10.2-aarch64-pc-windows-msvc.zip",
-      "hash": "0000000000000000000000000000000000000000000000000000000000000000"
+      "hash": "PENDING_RELEASE_SHA256"
     }
   },
-  "bin": ["cddm.exe", "cddm-mcp.exe"],
+  "bin": ["cddm.exe", "cddm-mcp.exe", "cddm-lsp.exe"],
   "checkver": "github",
   "autoupdate": {
     "architecture": {
       "64bit": {
-        "url": "https://git.gt-web-dev.com/gt-dev/cddm/releases/download/v$version/cddm-v$version-x86_64-pc-windows-msvc.zip"
-      },
-      "arm64": {
-        "url": "https://git.gt-web-dev.com/gt-dev/cddm/releases/download/v$version/cddm-v$version-aarch64-pc-windows-msvc.zip"
+        "url": "https://git.gt-web-dev.com/gt-dev/cddm/releases/download/v$version/cddm-v$version-x86_64-pc-windows-msvc.zip",
+        "hash": {
+          "url": "$baseurl/SHA256SUMS.txt"
+        }
       }
     }
   }

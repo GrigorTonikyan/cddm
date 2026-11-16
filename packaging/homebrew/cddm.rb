@@ -4,35 +4,19 @@ class Cddm < Formula
   version "4.10.2"
   license "MIT"
 
-  on_macos do
-    if Hardware::CPU.arm?
-      url "https://git.gt-web-dev.com/gt-dev/cddm/releases/download/v#{version}/cddm-v#{version}-aarch64-apple-darwin.tar.gz"
-      sha256 "0000000000000000000000000000000000000000000000000000000000000000"
-    else
-      url "https://git.gt-web-dev.com/gt-dev/cddm/releases/download/v#{version}/cddm-v#{version}-x86_64-apple-darwin.tar.gz"
-      sha256 "0000000000000000000000000000000000000000000000000000000000000000"
-    end
-  end
-
   on_linux do
-    if Hardware::CPU.arm?
-      url "https://git.gt-web-dev.com/gt-dev/cddm/releases/download/v#{version}/cddm-v#{version}-aarch64-unknown-linux-gnu.tar.gz"
-      sha256 "0000000000000000000000000000000000000000000000000000000000000000"
-    else
+    on_intel do
       url "https://git.gt-web-dev.com/gt-dev/cddm/releases/download/v#{version}/cddm-v#{version}-x86_64-unknown-linux-gnu.tar.gz"
-      sha256 "0000000000000000000000000000000000000000000000000000000000000000"
+      sha256 "PENDING_RELEASE_SHA256"
     end
   end
 
   def install
     bin.install "cddm"
     bin.install "cddm-mcp" if File.exist?("cddm-mcp")
+    bin.install "cddm-lsp" if File.exist?("cddm-lsp")
 
-    if File.exist?("packaging/completions/cddm.bash")
-      bash_completion.install "packaging/completions/cddm.bash" => "cddm"
-      zsh_completion.install "packaging/completions/_cddm" => "_cddm"
-      fish_completion.install "packaging/completions/cddm.fish"
-    end
+    generate_completions_from_executable(bin/"cddm", "completions")
   end
 
   test do

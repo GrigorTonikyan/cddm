@@ -340,7 +340,39 @@ jobs:
       - name: Install Workspace Dependencies
         run: bun install --frozen-lockfile || bun install
 
-      - name: Publish Release & Dispatch Package Manifests
+      - name: Generate Rich MCP Release Notes
+        id: release_meta
+        env:
+          GITHUB_SERVER_URL: ${{ github.server_url }}
+          GITEA_HOST: ${{ vars.GITEA_HOST }}
+          GITEA_REPO: ${{ github.repository }}
+          PACKAGE_PUBLISHER: ${{ vars.PUBLISHER || github.repository_owner }}
+          GITEA_TOKEN: ${{ secrets.RELEASE_BOT_TOKEN || secrets.REGISTRY_TOKEN || secrets.GITEA_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          if [[ "${GITHUB_REF_NAME:-}" == v* ]]; then
+            TAG_NAME="${GITHUB_REF_NAME}"
+          else
+            TAG_NAME="v$(bun scripts/version.ts --get-current)"
+          fi
+          echo "tag_name=${TAG_NAME}" >> "$GITHUB_OUTPUT"
+          bun scripts/publish-release.ts --tag "${TAG_NAME}" --write-notes ./release-notes.md
+
+      - name: Publish Binary-Whitelisted Gitea Release (SSoT)
+        uses: self:gt-dev/actions/publish-release@v1
+        with:
+          tag: ${{ steps.release_meta.outputs.tag_name }}
+          app: cddm
+          artifacts-dir: dist-release
+          body-file: ./release-notes.md
+          strict-whitelist: "true"
+          verify-urls: "true"
+          dispatch-homebrew: "false"
+          dispatch-scoop: "false"
+          dispatch-winget: "false"
+        env:
+          GITEA_TOKEN: ${{ secrets.RELEASE_BOT_TOKEN || secrets.REGISTRY_TOKEN || secrets.GITEA_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Dispatch Multi-Binary Package Manifests via Least-Privilege Deploy Keys
         env:
           GITHUB_SERVER_URL: ${{ github.server_url }}
           GITEA_HOST: ${{ vars.GITEA_HOST }}
@@ -350,11 +382,9 @@ jobs:
           HOMEBREW_TAP_REPO: ${{ vars.HOMEBREW_TAP_REPO }}
           SCOOP_BUCKET_REPO: ${{ vars.SCOOP_BUCKET_REPO }}
           WINGET_REPO: ${{ vars.WINGET_REPO }}
-          GITEA_TOKEN: ${{ secrets.REGISTRY_TOKEN || secrets.GITEA_TOKEN || secrets.GITHUB_TOKEN }}
+          HOMEBREW_TAP_DEPLOY_KEY: ${{ secrets.HOMEBREW_TAP_DEPLOY_KEY }}
+          SCOOP_BUCKET_DEPLOY_KEY: ${{ secrets.SCOOP_BUCKET_DEPLOY_KEY }}
+          WINGET_DEPLOY_KEY: ${{ secrets.WINGET_DEPLOY_KEY }}
+          GITEA_TOKEN: ${{ secrets.RELEASE_BOT_TOKEN || secrets.GITEA_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
-          if [[ "${GITHUB_REF_NAME:-}" == v* ]]; then
-            TAG_NAME="${GITHUB_REF_NAME}"
-          else
-            TAG_NAME="v$(bun scripts/version.ts --get-current)"
-          fi
-          bun scripts/publish-release.ts --tag "${TAG_NAME}" --dist-dir "dist-release" --dispatch-packages
+          bun scripts/dispatch-distribution.ts --package cddm --tag "${{ steps.release_meta.outputs.tag_name }}" --dist-dir "dist-release"

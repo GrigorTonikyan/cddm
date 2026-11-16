@@ -65,6 +65,10 @@ describe("version-updater utility", () => {
 
     try {
       writeFileSync(
+        join(tempRoot, ".env"),
+        "GITEA_HOST=vcs.example.com\nGITEA_REPO=test-pub/cddm\nPUBLISHER=test-pub\nPUBLISHER_NAME=Test Pub\n",
+      );
+      writeFileSync(
         join(tempRoot, "Cargo.toml"),
         `[workspace]\n[workspace.package]\nversion = "4.8.0"\nedition = "2024"\n[workspace.dependencies]\ncddm-core = { path = "crates/cddm-core", version = "4.7.0" }\ncddm-lsp = { path = "crates/cddm-lsp", version = "4.7.0" }\ncddm-mcp = { path = "crates/cddm-mcp", version = "4.7.0" }\n`,
       );
@@ -98,14 +102,22 @@ describe("version-updater utility", () => {
           version: "4.7.0",
           architecture: {
             "64bit": {
-              url: "https://git.gt-web-dev.com/gt-dev/cddm/releases/download/v1.9.0/cddm-v1.9.0-x86_64-pc-windows-msvc.zip",
+              url: "https://vcs.example.com/test-pub/cddm/releases/download/v1.9.0/cddm-v1.9.0-x86_64-pc-windows-msvc.zip",
             },
           },
         }),
       );
       writeFileSync(
-        join(tempRoot, "packaging", "winget", "cddm.yaml"),
-        `PackageVersion: 4.7.0\nInstallers:\n  - Architecture: x64\n    InstallerUrl: https://git.gt-web-dev.com/gt-dev/cddm/releases/download/v1.9.0/cddm-v1.9.0-x86_64-pc-windows-msvc.zip\n`,
+        join(tempRoot, "packaging", "winget", "test-pub.cddm.yaml"),
+        `PackageIdentifier: test-pub.cddm\nPackageVersion: 4.7.0\nDefaultLocale: en-US\nManifestType: version\nManifestVersion: 1.9.0\n`,
+      );
+      writeFileSync(
+        join(tempRoot, "packaging", "winget", "test-pub.cddm.installer.yaml"),
+        `PackageIdentifier: test-pub.cddm\nPackageVersion: 4.7.0\nInstallers:\n  - Architecture: x64\n    InstallerUrl: https://vcs.example.com/test-pub/cddm/releases/download/v1.9.0/cddm-v1.9.0-x86_64-pc-windows-msvc.zip\nManifestType: installer\nManifestVersion: 1.9.0\n`,
+      );
+      writeFileSync(
+        join(tempRoot, "packaging", "winget", "test-pub.cddm.locale.en-US.yaml"),
+        `PackageIdentifier: test-pub.cddm\nPackageVersion: 4.7.0\nPublisher: Old Pub\nManifestType: defaultLocale\nManifestVersion: 1.9.0\n`,
       );
       writeFileSync(
         join(tempRoot, "README.md"),

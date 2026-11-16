@@ -1,5 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { extractHostFromUrl, parseEnvFile, resolvePublisherConfig } from "./publisher-config";
 
@@ -93,16 +94,28 @@ GITEA_REPO=custom-org/app
     rmSync(tempDir, { recursive: true, force: true });
   });
 
-  it("resolves safe dynamic defaults when neither env nor .env is set", () => {
+  it("resolves dynamically from git remote origin when inside repo without env or .env", () => {
     const tempDir = join(process.cwd(), "target", "test-env-empty");
     mkdirSync(tempDir, { recursive: true });
 
     const config = resolvePublisherConfig(tempDir, {});
+    expect(config.vcsHost).toBeDefined();
+    expect(config.vcsRepo).toContain("/");
     expect(config.publisherId).toBeDefined();
     expect(config.homebrewTapRepo).toBeDefined();
     expect(config.scoopBucketRepo).toBeDefined();
     expect(config.wingetRepo).toBeDefined();
 
     rmSync(tempDir, { recursive: true, force: true });
+  });
+
+  it("throws explicitly instead of falling back to hardcoded defaults when unresolvable", () => {
+    const nonGitDir = join(tmpdir(), `cddm-no-git-config-${Date.now()}`);
+    mkdirSync(nonGitDir, { recursive: true });
+    try {
+      expect(() => resolvePublisherConfig(nonGitDir, {})).toThrow("Unable to resolve VCS host");
+    } finally {
+      rmSync(nonGitDir, { recursive: true, force: true });
+    }
   });
 });

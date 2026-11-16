@@ -7,7 +7,9 @@
 
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { resolvePublisherConfig } from "./lib/publisher-config";
 import { createZipArchive, ZipEntry } from "./lib/zip-builder";
+import { getCurrentVersion } from "./version";
 
 export interface PackageOptions {
   workspaceRoot?: string;
@@ -66,11 +68,19 @@ export interface VscodePackageManifest {
   engines?: { vscode?: string };
 }
 
-export function generateVsixManifest(pkg: VscodePackageManifest): string {
-  const name = typeof pkg.name === "string" ? pkg.name : "cddm";
-  const version = typeof pkg.version === "string" ? pkg.version : "1.7.0";
-  const publisher = typeof pkg.publisher === "string" ? pkg.publisher : "gt-dev";
-  const displayName = typeof pkg.displayName === "string" ? pkg.displayName : "CDDM";
+export function generateVsixManifest(
+  pkg: VscodePackageManifest,
+  workspaceRoot: string = resolve(import.meta.dir, ".."),
+): string {
+  const name = typeof pkg.name === "string" && pkg.name ? pkg.name : "cddm";
+  const version =
+    typeof pkg.version === "string" && pkg.version ? pkg.version : getCurrentVersion(workspaceRoot);
+  const publisher =
+    typeof pkg.publisher === "string" && pkg.publisher
+      ? pkg.publisher
+      : resolvePublisherConfig(workspaceRoot).publisherId;
+  const displayName =
+    typeof pkg.displayName === "string" && pkg.displayName ? pkg.displayName : name.toUpperCase();
   const description = typeof pkg.description === "string" ? pkg.description : "";
   const vscodeEngine =
     pkg.engines && typeof pkg.engines.vscode === "string" ? pkg.engines.vscode : "^1.96.0";
@@ -114,7 +124,8 @@ export async function packageVscodeExtension(options: PackageOptions = {}): Prom
   }
 
   const pkg = JSON.parse(readFileSync(pkgJsonPath, "utf-8"));
-  const version = pkg.version || "1.7.0";
+  const version =
+    typeof pkg.version === "string" && pkg.version ? pkg.version : getCurrentVersion(root);
 
   // Ensure dependencies in editors/vscode are installed
   if (!existsSync(join(vscodeDir, "node_modules"))) {
@@ -153,7 +164,7 @@ export async function packageVscodeExtension(options: PackageOptions = {}): Prom
 
   entries.push({
     name: "extension.vsixmanifest",
-    data: generateVsixManifest(pkg),
+    data: generateVsixManifest(pkg, root),
   });
 
   // 2. Package metadata and documentation
