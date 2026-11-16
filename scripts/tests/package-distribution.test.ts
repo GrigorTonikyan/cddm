@@ -1,7 +1,15 @@
 import { describe, it, expect } from "bun:test";
-import { existsSync, readFileSync } from "node:fs";
-import { resolve } from "node:path";
-import { completionFiles, requiredPackagingFiles } from "../package-distribution";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
+import { ZERO_SHA256 } from "../lib/distribution-manifests";
+import { resolvePublisherConfig } from "../lib/publisher-config";
+import {
+  completionFiles,
+  requiredPackagingFiles,
+  syncManifestsFromChecksums,
+  validatePackagingWorkspace,
+} from "../package-distribution";
 
 describe("Ecosystem Distribution & Packaging Validator", () => {
   const rootDir = resolve(import.meta.dir, "../..");
@@ -13,32 +21,95 @@ describe("Ecosystem Distribution & Packaging Validator", () => {
       const content = readFileSync(fullPath, "utf-8");
       expect(content.trim().length).toBeGreaterThan(0);
     }
+    expect(existsSync(resolve(rootDir, "packaging/winget/cddm.yaml"))).toBe(false);
+    expect(validatePackagingWorkspace(rootDir)).toEqual([]);
   });
 
-  it("should validate Homebrew formula syntax and completion directives", () => {
+  it("should validate Homebrew formula syntax, native completions, and zero placeholder targets", () => {
     const brewPath = resolve(rootDir, "packaging/homebrew/cddm.rb");
     const brewContent = readFileSync(brewPath, "utf-8");
     expect(brewContent).toContain("class Cddm < Formula");
     expect(brewContent).toContain('bin.install "cddm"');
-    expect(brewContent).toContain("bash_completion.install");
-    expect(brewContent).toContain("zsh_completion.install");
-    expect(brewContent).toContain("fish_completion.install");
+    expect(brewContent).toContain('bin.install "cddm-mcp"');
+    expect(brewContent).toContain('bin.install "cddm-lsp"');
+    expect(brewContent).toContain(
+      'generate_completions_from_executable(bin/"cddm", "completions")',
+    );
+    expect(brewContent).not.toContain('File.exist?("packaging/completions');
+    expect(brewContent).not.toContain("on_macos");
+    expect(brewContent).not.toContain(ZERO_SHA256);
   });
 
-  it("should validate Scoop manifest JSON schema", () => {
+  it("should validate Scoop manifest JSON schema without unbuilt arm64 stubs", () => {
     const scoopPath = resolve(rootDir, "packaging/scoop/cddm.json");
     const scoopJson = JSON.parse(readFileSync(scoopPath, "utf-8"));
-    expect(scoopJson.bin).toBeDefined();
-    expect(scoopJson.architecture).toBeDefined();
+    expect(scoopJson.bin).toEqual(["cddm.exe", "cddm-mcp.exe", "cddm-lsp.exe"]);
     expect(scoopJson.architecture["64bit"]).toBeDefined();
+    expect(scoopJson.architecture.arm64).toBeUndefined();
+    expect(scoopJson.autoupdate?.architecture?.["64bit"]?.hash?.url).toBe(
+      "$baseurl/SHA256SUMS.txt",
+    );
   });
 
-  it("should validate Winget manifest YAML structure", () => {
-    const wingetPath = resolve(rootDir, "packaging/winget/cddm.yaml");
-    const wingetContent = readFileSync(wingetPath, "utf-8");
-    expect(wingetContent).toContain("PackageIdentifier: gt-dev.cddm");
-    expect(wingetContent).toContain("Publisher: gt-dev");
-    expect(wingetContent).toContain("NestedInstallerType: portable");
+  it("should validate WinGet v1.9.0 multi-file YAML manifests with exact case parity", () => {
+    const pubConfig = resolvePublisherConfig(rootDir);
+    const pkgId = `${pubConfig.publisherId}.cddm`;
+    const ver = readFileSync(resolve(rootDir, `packaging/winget/${pkgId}.yaml`), "utf-8");
+    const inst = readFileSync(
+      resolve(rootDir, `packaging/winget/${pkgId}.installer.yaml`),
+      "utf-8",
+    );
+    const loc = readFileSync(
+      resolve(rootDir, `packaging/winget/${pkgId}.locale.en-US.yaml`),
+      "utf-8",
+    );
+
+    expect(ver).toContain(`PackageIdentifier: ${pkgId}`);
+    expect(ver).toContain("ManifestType: version");
+    expect(ver).toContain("ManifestVersion: 1.9.0");
+    expect(loc).toContain(`PackageIdentifier: ${pkgId}`);
+    expect(loc).toMatch(/^Publisher:\s+.+/m);
+    expect(loc).toContain("ManifestType: defaultLocale");
+    expect(inst).toContain(`PackageIdentifier: ${pkgId}`);
+    expect(inst).toContain("NestedInstallerType: portable");
+    expect(inst).toContain("RelativeFilePath: cddm.exe");
+    expect(inst).toContain("RelativeFilePath: cddm-mcp.exe");
+    expect(inst).toContain("RelativeFilePath: cddm-lsp.exe");
+    expect(inst).not.toContain("Architecture: arm64");
+    expect(inst).not.toContain(ZERO_SHA256);
+  });
+
+  it("should dynamically prune manifests strictly from SHA256SUMS.txt", () => {
+    const tempDir = join(tmpdir(), `cddm-pkg-dynamic-${Date.now()}`);
+    mkdirSync(tempDir, { recursive: true });
+    try {
+      writeFileSync(
+        join(tempDir, ".env"),
+        "GITEA_HOST=vcs.example.com\nGITEA_REPO=org/cddm\nPUBLISHER=org\nPUBLISHER_NAME=Org Dev\n",
+      );
+      writeFileSync(
+        join(tempDir, "Cargo.toml"),
+        '[workspace.package]\nversion = "4.10.2"\ndescription = "CDDM"\nlicense = "MIT"\n',
+      );
+      const linuxSha = "1".repeat(64);
+      const winSha = "2".repeat(64);
+      const sumsPath = join(tempDir, "SHA256SUMS.txt");
+      writeFileSync(
+        sumsPath,
+        `${linuxSha}  cddm-v4.10.2-x86_64-unknown-linux-gnu.tar.gz\n${winSha}  cddm-v4.10.2-x86_64-pc-windows-msvc.zip\n`,
+      );
+
+      const written = syncManifestsFromChecksums(tempDir, sumsPath, "4.10.2");
+      expect(written.length).toBe(5);
+      expect(readFileSync(join(tempDir, "packaging", "homebrew", "cddm.rb"), "utf-8")).toContain(
+        linuxSha,
+      );
+      expect(
+        readFileSync(join(tempDir, "packaging", "winget", "org.cddm.installer.yaml"), "utf-8"),
+      ).toContain(winSha.toUpperCase());
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
   });
 
   it("should validate install.sh and install.ps1 scripts", () => {

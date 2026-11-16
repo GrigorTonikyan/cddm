@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-27 | Rust: 416 #[test] units | WebUI: 334 tests across 77 suites | Scripts & MCP: 238 tests across 61 suites | CI Workflows: PASS
+> Last verified: 2026-08-27 | Rust: 416 #[test] units | WebUI: 334 tests across 77 suites | Scripts & MCP: 241 tests across 62 suites | CI Workflows: PASS
 
 ---
 
@@ -442,7 +442,7 @@
 
 ---
 
-## 3. Repository Scripts & MCP Protocol — Bun Test Suites (238 tests across 61 suites)
+## 3. Repository Scripts & MCP Protocol — Bun Test Suites (241 tests across 62 suites)
 
 ### Repository Tooling & Automation Suites
 
@@ -450,8 +450,9 @@
 | :---------------------------- | :--------------------------------------------- | :--------- | :----- |
 | cargo-registry                | `scripts/lib/cargo-registry.test.ts`           | 4 tests    | PASS   |
 | clean-engine                  | `scripts/lib/clean-engine.test.ts`             | 14 tests   | PASS   |
+| gitea-git-transport           | `scripts/lib/gitea-git-transport.test.ts`      | 2 tests    | PASS   |
 | interface-docs-generator      | `scripts/lib/interface-docs-generator.test.ts` | 6 tests    | PASS   |
-| publisher-config              | `scripts/lib/publisher-config.test.ts`         | 5 tests    | PASS   |
+| publisher-config              | `scripts/lib/publisher-config.test.ts`         | 6 tests    | PASS   |
 | release-notes-engine          | `scripts/lib/release-notes-engine.test.ts`     | 8 tests    | PASS   |
 | step-runner                   | `scripts/lib/step-runner.test.ts`              | 4 tests    | PASS   |
 | test-matrix-generator         | `scripts/lib/test-matrix-generator.test.ts`    | 3 tests    | PASS   |

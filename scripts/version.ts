@@ -457,7 +457,7 @@ Options:
       "editors/vscode/package.json",
       "packaging/homebrew/cddm.rb",
       "packaging/scoop/cddm.json",
-      "packaging/winget/cddm.yaml",
+      "packaging/winget/",
       "CHANGELOG.md",
       "README.md",
     ]);

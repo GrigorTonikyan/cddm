@@ -3,6 +3,7 @@ import { getApiHeaders, GITEA_BASE, GITEA_OWNER, GITEA_REPO } from "../lib/gitea
 import { SEED_ISSUES } from "../lib/gitea-issue-pr-data";
 import { SEED_PRS } from "../lib/gitea-pr-sync";
 import { WIKI_PAGES } from "../lib/gitea-wiki-data";
+import { resolvePublisherConfig } from "../lib/publisher-config";
 
 describe("Gitea Portal Population Suite", () => {
   it("should define standard API headers with token authentication", () => {
@@ -13,10 +14,11 @@ describe("Gitea Portal Population Suite", () => {
     expect(headers.Accept).toBe("application/json");
   });
 
-  it("should configure valid repository constants", () => {
-    expect(GITEA_BASE).toBe("https://git.gt-web-dev.com");
-    expect(GITEA_OWNER).toBe("gt-dev");
-    expect(GITEA_REPO).toBe("gt-dev/cddm");
+  it("should configure valid repository constants resolved from publisher config", () => {
+    const pubConfig = resolvePublisherConfig(process.cwd());
+    expect(GITEA_BASE).toBe(`https://${pubConfig.vcsHost}`);
+    expect(GITEA_OWNER).toBe(pubConfig.vcsRepo.split("/")[0]!);
+    expect(GITEA_REPO).toBe(pubConfig.vcsRepo);
   });
 
   it("should include complete seed issues covering all key pillars", () => {

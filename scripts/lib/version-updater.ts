@@ -174,18 +174,19 @@ export function checkWorkspaceVersionSync(
     }
   }
 
-  // Winget manifest
-  const wingetCandidates = [
-    join(workspaceRoot, "packaging", "winget", "cddm.yaml"),
-    join(workspaceRoot, "packaging", "winget", `${pubConfig.publisherId}.cddm.yaml`),
+  // Winget manifest (WinGet v1.9.0 multi-file or legacy singleton fallback)
+  const wingetFileNames = [
+    `${pubConfig.publisherId}.cddm.yaml`,
+    `${pubConfig.publisherId}.cddm.installer.yaml`,
+    `${pubConfig.publisherId}.cddm.locale.en-US.yaml`,
+    "cddm.yaml",
   ];
-  const wingetPath = wingetCandidates.find((p) => existsSync(p));
-  if (wingetPath) {
+  for (const wfName of wingetFileNames) {
+    const wfPath = join(workspaceRoot, "packaging", "winget", wfName);
+    if (!existsSync(wfPath)) continue;
     checkedFiles++;
-    const wingetRel = wingetPath.endsWith("cddm.yaml")
-      ? "packaging/winget/cddm.yaml"
-      : `packaging/winget/${pubConfig.publisherId}.cddm.yaml`;
-    const wingetContent = readFileSync(wingetPath, "utf-8");
+    const wingetRel = `packaging/winget/${wfName}`;
+    const wingetContent = readFileSync(wfPath, "utf-8");
     const verMatch = /PackageVersion:\s*([\d.]+)/.exec(wingetContent);
     const actualWinget = verMatch?.[1] ?? "<missing>";
     if (actualWinget !== canonicalVersion) {
@@ -196,14 +197,16 @@ export function checkWorkspaceVersionSync(
         actual: actualWinget,
       });
     }
-    const expectedWingetX64 = `${repoBaseUrl}/releases/download/v${canonicalVersion}/cddm-v${canonicalVersion}-x86_64-pc-windows-msvc.zip`;
-    if (!wingetContent.includes(expectedWingetX64)) {
-      mismatches.push({
-        file: wingetRel,
-        field: "InstallerUrl (x64)",
-        expected: expectedWingetX64,
-        actual: "<stale InstallerUrl>",
-      });
+    if (wfName.endsWith(".installer.yaml") || wfName === "cddm.yaml") {
+      const expectedWingetX64 = `${repoBaseUrl}/releases/download/v${canonicalVersion}/cddm-v${canonicalVersion}-x86_64-pc-windows-msvc.zip`;
+      if (!wingetContent.includes(expectedWingetX64)) {
+        mismatches.push({
+          file: wingetRel,
+          field: "InstallerUrl (x64)",
+          expected: expectedWingetX64,
+          actual: "<stale InstallerUrl>",
+        });
+      }
     }
   }
 
@@ -368,28 +371,40 @@ export function updateWorkspaceVersions(
     console.log(`\x1b[32m[OK] Updated packaging/scoop/cddm.json -> ${newVersion}\x1b[0m`);
   }
 
-  // 8. packaging/winget/cddm.yaml
-  const wingetCandidates = [
-    join(workspaceRoot, "packaging", "winget", "cddm.yaml"),
-    join(workspaceRoot, "packaging", "winget", `${pubConfig.publisherId}.cddm.yaml`),
+  // 8. packaging/winget/ (v1.9.0 multi-file manifests + optional legacy fallback)
+  const wingetDir = join(workspaceRoot, "packaging", "winget");
+  const wingetFiles = [
+    `${pubConfig.publisherId}.cddm.yaml`,
+    `${pubConfig.publisherId}.cddm.installer.yaml`,
+    `${pubConfig.publisherId}.cddm.locale.en-US.yaml`,
+    "cddm.yaml",
   ];
-  const wingetPath = wingetCandidates.find((p) => existsSync(p));
-  if (wingetPath) {
-    const wingetContent = readFileSync(wingetPath, "utf-8");
-    const updatedWinget = wingetContent
+  for (const wfName of wingetFiles) {
+    const wfPath = join(wingetDir, wfName);
+    if (!existsSync(wfPath)) continue;
+    const wingetContent = readFileSync(wfPath, "utf-8");
+    let updatedWinget = wingetContent
       .replace(/PackageIdentifier:\s*[^\r\n]+/, `PackageIdentifier: ${pubConfig.publisherId}.cddm`)
-      .replace(/Publisher:\s*[^\r\n]+/, `Publisher: ${pubConfig.publisherId}`)
       .replace(/PackageVersion:\s*[\d.]+/, `PackageVersion: ${newVersion}`)
       .replace(
-        /releases\/download\/v[\d.]+\/cddm-v[\d.]+-x86_64-pc-windows-(?:msvc|gnu)\.zip/g,
-        `releases/download/v${newVersion}/cddm-v${newVersion}-x86_64-pc-windows-msvc.zip`,
+        /https?:\/\/[^/]+\/[^/]+\/[^/]+\/releases\/download\/v[\d.]+\/cddm-v[\d.]+-x86_64-pc-windows-(?:msvc|gnu)\.zip/g,
+        `${repoBaseUrl}/releases/download/v${newVersion}/cddm-v${newVersion}-x86_64-pc-windows-msvc.zip`,
       )
       .replace(
-        /releases\/download\/v[\d.]+\/cddm-v[\d.]+-aarch64-pc-windows-(?:msvc|gnu)\.zip/g,
-        `releases/download/v${newVersion}/cddm-v${newVersion}-aarch64-pc-windows-msvc.zip`,
+        /https?:\/\/[^/]+\/[^/]+\/[^/]+\/releases\/download\/v[\d.]+\/cddm-v[\d.]+-aarch64-pc-windows-(?:msvc|gnu)\.zip/g,
+        `${repoBaseUrl}/releases/download/v${newVersion}/cddm-v${newVersion}-aarch64-pc-windows-msvc.zip`,
       );
-    writeFileSync(wingetPath, updatedWinget, "utf-8");
-    console.log(`\x1b[32m[OK] Updated ${wingetPath} -> ${newVersion}\x1b[0m`);
+    if (
+      (wfName.endsWith(".locale.en-US.yaml") || wfName === "cddm.yaml") &&
+      (process.env.PACKAGE_PUBLISHER_NAME || process.env.PUBLISHER_NAME)
+    ) {
+      updatedWinget = updatedWinget.replace(
+        /Publisher:\s*[^\r\n]+/,
+        `Publisher: ${pubConfig.publisherName}`,
+      );
+    }
+    writeFileSync(wfPath, updatedWinget, "utf-8");
+    console.log(`\x1b[32m[OK] Updated packaging/winget/${wfName} -> ${newVersion}\x1b[0m`);
   }
 
   // 9. README.md badges

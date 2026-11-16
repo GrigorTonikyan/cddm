@@ -5,12 +5,14 @@
  * VS Code extension VSIX packages, and SHA256 checksums.
  */
 
-import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
-import { basename, join, resolve } from "node:path";
+import { mkdirSync, existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { basename, dirname, join, resolve } from "node:path";
 import { dispatchDistribution } from "./dispatch-distribution";
 import { getVcsAuthHeader, verifyCargoChannels } from "./lib/cargo-registry";
+import { parseSha256SumsValidated } from "./lib/distribution-manifests";
 import { resolvePublisherConfig } from "./lib/publisher-config";
 import { generateReleaseNotes } from "./lib/release-notes-engine";
+import { syncManifestsFromChecksums } from "./package-distribution";
 import { getCurrentVersion } from "./version";
 
 export const getAuthHeader = getVcsAuthHeader;
@@ -42,21 +44,12 @@ export function maskSecret(secret?: string): string {
  * Parse SHA256SUMS.txt content into a map of filename -> sha256 hex digest.
  */
 export function parseSha256Sums(content: string): Map<string, string> {
-  const map = new Map<string, string>();
-  for (const line of content.split(/\r?\n/)) {
-    const trimmed = line.trim();
-    if (!trimmed) continue;
-    const match = /^([a-fA-F0-9]{64})\s+\*?(.+)$/.exec(trimmed);
-    if (match && match[1] && match[2]) {
-      map.set(basename(match[2].trim()), match[1].toLowerCase());
-    }
-  }
-  return map;
+  return parseSha256SumsValidated(content);
 }
 
 /**
- * Inject real SHA-256 checksums from SHA256SUMS.txt into packaging/ manifests
- * (Homebrew, Scoop, Winget) so repository manifests have valid hashes.
+ * Dynamically renders target-pruned packaging/ manifests from SHA256SUMS.txt
+ * (Homebrew, Scoop, and WinGet v1.9.0 multi-file manifests).
  * Manifests are kept strictly in packaging/ and NEVER placed into distDir.
  */
 export function injectPackagingChecksums(
@@ -67,58 +60,8 @@ export function injectPackagingChecksums(
   const sumsPath = join(distDir, "SHA256SUMS.txt");
   if (!existsSync(sumsPath)) return [];
 
-  const checksums = parseSha256Sums(readFileSync(sumsPath, "utf-8"));
-  if (checksums.size === 0) return [];
-
   const cleanVer = tag.replace(/^v/, "");
-  const linuxX64Hash = checksums.get(`cddm-v${cleanVer}-x86_64-unknown-linux-gnu.tar.gz`);
-  const winX64Hash = checksums.get(`cddm-v${cleanVer}-x86_64-pc-windows-msvc.zip`);
-  const updatedFiles: string[] = [];
-
-  // 1. Homebrew formula
-  const brewSrc = join(workspaceRoot, "packaging", "homebrew", "cddm.rb");
-  if (existsSync(brewSrc)) {
-    let brewContent = readFileSync(brewSrc, "utf-8");
-    if (linuxX64Hash) {
-      brewContent = brewContent.replace(
-        /(cddm-v#\{version\}-x86_64-unknown-linux-gnu\.tar\.gz"\r?\n\s*sha256\s+)"[a-fA-F0-9]{64}"/,
-        `$1"${linuxX64Hash}"`,
-      );
-    }
-    writeFileSync(brewSrc, brewContent, "utf-8");
-    updatedFiles.push(brewSrc);
-  }
-
-  // 2. Scoop manifest
-  const scoopSrc = join(workspaceRoot, "packaging", "scoop", "cddm.json");
-  if (existsSync(scoopSrc)) {
-    const scoopJson = JSON.parse(readFileSync(scoopSrc, "utf-8"));
-    if (winX64Hash && scoopJson.architecture?.["64bit"]) {
-      scoopJson.architecture["64bit"].hash = winX64Hash;
-    }
-    writeFileSync(scoopSrc, JSON.stringify(scoopJson, null, 2) + "\n", "utf-8");
-    updatedFiles.push(scoopSrc);
-  }
-
-  // 3. Winget manifest (neutral cddm.yaml or publisher-prefixed)
-  const wingetCandidates = [
-    join(workspaceRoot, "packaging", "winget", "cddm.yaml"),
-    join(workspaceRoot, "packaging", "winget", "gt-dev.cddm.yaml"),
-  ];
-  const wingetSrc = wingetCandidates.find((f) => existsSync(f));
-  if (wingetSrc) {
-    let wingetContent = readFileSync(wingetSrc, "utf-8");
-    if (winX64Hash) {
-      wingetContent = wingetContent.replace(
-        /(cddm-v[\d.]+-x86_64-pc-windows-(?:msvc|gnu)\.zip\r?\n\s*InstallerSha256:\s*)[a-fA-F0-9]{64}/,
-        `$1${winX64Hash}`,
-      );
-    }
-    writeFileSync(wingetSrc, wingetContent, "utf-8");
-    updatedFiles.push(wingetSrc);
-  }
-
-  return updatedFiles;
+  return syncManifestsFromChecksums(workspaceRoot, sumsPath, cleanVer);
 }
 
 export interface ReleaseOptions {
@@ -135,6 +78,7 @@ export interface ReleaseOptions {
   dryRun: boolean;
   deleteAssetId?: number;
   dispatchPackages?: boolean;
+  writeNotesPath?: string;
 }
 
 export interface GiteaReleaseResponse {
@@ -153,7 +97,8 @@ export function parseArgs(args: string[]): ReleaseOptions {
   let tag = `v${version}`;
   let host = process.env.GITEA_HOST || pubConfig.vcsHost;
   let repo = process.env.GITEA_REPO || pubConfig.vcsRepo;
-  let token = process.env.GITEA_TOKEN || process.env.GITHUB_TOKEN;
+  const token =
+    process.env.RELEASE_BOT_TOKEN || process.env.GITEA_TOKEN || process.env.GITHUB_TOKEN;
   let distDir = "dist-release";
   let dryRun = false;
   let draft = false;
@@ -162,9 +107,15 @@ export function parseArgs(args: string[]): ReleaseOptions {
   let target = "main";
   let deleteAssetId: number | undefined;
   let dispatchPackages = false;
+  let writeNotesPath: string | undefined;
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
+    if (arg === "--token" || arg?.startsWith("--token=")) {
+      throw new Error(
+        "Passing secrets via --token CLI flags is prohibited; provide RELEASE_BOT_TOKEN or GITEA_TOKEN via environment variables.",
+      );
+    }
     if (arg === "--dry-run") dryRun = true;
     else if (arg === "--draft") draft = true;
     else if (arg === "--prerelease") prerelease = true;
@@ -173,9 +124,9 @@ export function parseArgs(args: string[]): ReleaseOptions {
     else if (arg === "--target" && args[i + 1]) target = args[++i]!;
     else if (arg === "--host" && args[i + 1]) host = args[++i]!;
     else if (arg === "--repo" && args[i + 1]) repo = args[++i]!;
-    else if (arg === "--token" && args[i + 1]) token = args[++i]!;
     else if (arg === "--dist-dir" && args[i + 1]) distDir = args[++i]!;
     else if (arg === "--title" && args[i + 1]) title = args[++i]!;
+    else if (arg === "--write-notes" && args[i + 1]) writeNotesPath = args[++i]!;
     else if (arg === "--delete-asset" && args[i + 1])
       deleteAssetId = Number.parseInt(args[++i]!, 10);
   }
@@ -198,6 +149,7 @@ export function parseArgs(args: string[]): ReleaseOptions {
     dryRun,
     deleteAssetId,
     dispatchPackages,
+    writeNotesPath,
   };
 }
 
@@ -385,7 +337,9 @@ export async function runPublishPipeline(options: ReleaseOptions): Promise<void>
 
   let effectiveOptions = options;
   if (!options.dryRun && !options.deleteAssetId) {
-    const owner = options.repo.includes("/") ? options.repo.split("/")[0]! : "gt-dev";
+    const owner = options.repo.includes("/")
+      ? options.repo.split("/")[0]!
+      : resolvePublisherConfig().publisherId;
     const cleanVersion = options.tag.replace(/^v/, "");
     const cargoChannels = await verifyCargoChannels({
       host: options.host,
@@ -403,6 +357,14 @@ export async function runPublishPipeline(options: ReleaseOptions): Promise<void>
         cargoChannels,
       }),
     };
+  }
+
+  if (options.writeNotesPath) {
+    const resolvedNotesPath = resolve(process.cwd(), options.writeNotesPath);
+    mkdirSync(dirname(resolvedNotesPath), { recursive: true });
+    writeFileSync(resolvedNotesPath, effectiveOptions.body, "utf-8");
+    console.log(`\x1b[32m[OK] Wrote release notes -> ${resolvedNotesPath}\x1b[0m`);
+    return;
   }
 
   const release = await createOrGetGiteaRelease(effectiveOptions);

@@ -2,6 +2,7 @@ import { describe, expect, it } from "bun:test";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { resolvePublisherConfig } from "../lib/publisher-config";
 import {
   createOrGetGiteaRelease,
   deleteReleaseAsset,
@@ -16,13 +17,17 @@ import {
 } from "../publish-release";
 
 describe("Gitea Release Publisher Engine", () => {
-  it("should parse default and custom CLI arguments", () => {
+  it("should parse default and custom CLI arguments and reject --token flags", () => {
+    const expectedPub = resolvePublisherConfig(process.cwd());
     const defaultOpts = parseArgs([]);
-    expect(defaultOpts.host).toBe("git.gt-web-dev.com");
-    expect(defaultOpts.repo).toBe("gt-dev/cddm");
+    expect(defaultOpts.host).toBe(process.env.GITEA_HOST || expectedPub.vcsHost);
+    expect(defaultOpts.repo).toBe(process.env.GITEA_REPO || expectedPub.vcsRepo);
     expect(defaultOpts.tag).toMatch(/^v\d+\.\d+\.\d+/);
     expect(defaultOpts.dryRun).toBe(false);
     expect(defaultOpts.target).toBe("main");
+
+    expect(() => parseArgs(["--token", "leaked"])).toThrow("prohibited");
+    expect(() => parseArgs(["--token=leaked"])).toThrow("prohibited");
 
     const customOpts = parseArgs([
       "--host",
@@ -33,6 +38,8 @@ describe("Gitea Release Publisher Engine", () => {
       "v2.0.0",
       "--target",
       "feat/my-branch",
+      "--write-notes",
+      "release-notes.md",
       "--dry-run",
       "--draft",
     ]);
@@ -40,6 +47,7 @@ describe("Gitea Release Publisher Engine", () => {
     expect(customOpts.repo).toBe("myorg/myrepo");
     expect(customOpts.tag).toBe("v2.0.0");
     expect(customOpts.target).toBe("feat/my-branch");
+    expect(customOpts.writeNotesPath).toBe("release-notes.md");
     expect(customOpts.dryRun).toBe(true);
     expect(customOpts.draft).toBe(true);
   });
@@ -129,7 +137,7 @@ describe("Gitea Release Publisher Engine", () => {
     expect(success).toBe(true);
   });
 
-  it("should parse SHA256SUMS.txt and inject real checksums into packaging manifests", () => {
+  it("should parse SHA256SUMS.txt and inject real target-pruned checksums into packaging manifests", () => {
     const tempDir = join(tmpdir(), `cddm-publish-checksum-test-${Date.now()}`);
     const distDir = join(tempDir, "dist-release");
     mkdirSync(distDir, { recursive: true });
@@ -142,28 +150,16 @@ describe("Gitea Release Publisher Engine", () => {
 
     try {
       writeFileSync(
+        join(tempDir, ".env"),
+        "GITEA_HOST=vcs.example.com\nGITEA_REPO=test-org/cddm\nPUBLISHER=test-org\nPUBLISHER_NAME=Test Org\n",
+      );
+      writeFileSync(
+        join(tempDir, "Cargo.toml"),
+        '[workspace.package]\nversion = "4.9.0"\ndescription = "CDDM"\nlicense = "MIT"\n',
+      );
+      writeFileSync(
         join(distDir, "SHA256SUMS.txt"),
         `${linuxHash}  cddm-v4.9.0-x86_64-unknown-linux-gnu.tar.gz\n${winHash}  cddm-v4.9.0-x86_64-pc-windows-msvc.zip\n`,
-      );
-      writeFileSync(
-        join(tempDir, "packaging", "homebrew", "cddm.rb"),
-        `class Cddm < Formula\n  version "4.9.0"\n  url "https://git.gt-web-dev.com/gt-dev/cddm/releases/download/v#{version}/cddm-v#{version}-x86_64-unknown-linux-gnu.tar.gz"\n  sha256 "0000000000000000000000000000000000000000000000000000000000000000"\nend\n`,
-      );
-      writeFileSync(
-        join(tempDir, "packaging", "scoop", "cddm.json"),
-        JSON.stringify({
-          version: "4.9.0",
-          architecture: {
-            "64bit": {
-              url: "https://git.gt-web-dev.com/gt-dev/cddm/releases/download/v4.9.0/cddm-v4.9.0-x86_64-pc-windows-msvc.zip",
-              hash: "0000000000000000000000000000000000000000000000000000000000000000",
-            },
-          },
-        }),
-      );
-      writeFileSync(
-        join(tempDir, "packaging", "winget", "cddm.yaml"),
-        `PackageVersion: 4.9.0\nInstallers:\n  - Architecture: x64\n    InstallerUrl: https://git.gt-web-dev.com/gt-dev/cddm/releases/download/v4.9.0/cddm-v4.9.0-x86_64-pc-windows-msvc.zip\n    InstallerSha256: 0000000000000000000000000000000000000000000000000000000000000000\n`,
       );
 
       const sumsMap = parseSha256Sums(readFileSync(join(distDir, "SHA256SUMS.txt"), "utf-8"));
@@ -171,23 +167,27 @@ describe("Gitea Release Publisher Engine", () => {
       expect(sumsMap.get("cddm-v4.9.0-x86_64-pc-windows-msvc.zip")).toBe(winHash);
 
       const injected = injectPackagingChecksums("v4.9.0", distDir, tempDir);
-      expect(injected.length).toBe(3);
+      expect(injected.length).toBe(5);
 
-      // Manifests must be updated in packaging/ and NOT written to distDir
-      expect(readFileSync(join(tempDir, "packaging", "homebrew", "cddm.rb"), "utf-8")).toContain(
-        linuxHash,
+      const brewRb = readFileSync(join(tempDir, "packaging", "homebrew", "cddm.rb"), "utf-8");
+      expect(brewRb).toContain(linuxHash);
+      expect(brewRb).toContain('generate_completions_from_executable(bin/"cddm", "completions")');
+      expect(brewRb).not.toContain("on_macos");
+
+      const scoopJson = readFileSync(join(tempDir, "packaging", "scoop", "cddm.json"), "utf-8");
+      expect(scoopJson).toContain(winHash);
+
+      const wingetInst = readFileSync(
+        join(tempDir, "packaging", "winget", "test-org.cddm.installer.yaml"),
+        "utf-8",
       );
-      expect(readFileSync(join(tempDir, "packaging", "scoop", "cddm.json"), "utf-8")).toContain(
-        winHash,
-      );
-      expect(readFileSync(join(tempDir, "packaging", "winget", "cddm.yaml"), "utf-8")).toContain(
-        winHash,
-      );
+      expect(wingetInst).toContain(winHash.toUpperCase());
+      expect(wingetInst).toContain("RelativeFilePath: cddm-lsp.exe");
 
       expect(existsSync(join(distDir, "cddm.rb"))).toBe(false);
       expect(existsSync(join(distDir, "cddm.json"))).toBe(false);
       expect(existsSync(join(distDir, "cddm.yaml"))).toBe(false);
-      expect(existsSync(join(distDir, "gt-dev.cddm.yaml"))).toBe(false);
+      expect(existsSync(join(distDir, "test-org.cddm.yaml"))).toBe(false);
     } finally {
       rmSync(tempDir, { recursive: true, force: true });
     }

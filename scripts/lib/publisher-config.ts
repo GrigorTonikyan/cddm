@@ -111,21 +111,34 @@ export function resolvePublisherConfig(
     envFile.VCS_HOST ||
     envFile.GITEA_HOST ||
     (fileServerHost && fileServerHost !== "github.com" ? fileServerHost : undefined) ||
-    (gitRemote.host && gitRemote.host !== "github.com" ? gitRemote.host : undefined) ||
-    "git.gt-web-dev.com";
+    (gitRemote.host && gitRemote.host !== "github.com" ? gitRemote.host : undefined);
+
+  if (!vcsHost) {
+    throw new Error(
+      "Unable to resolve VCS host from environment variables (VCS_HOST/GITEA_HOST/GITHUB_SERVER_URL), .env, or git remote origin.",
+    );
+  }
 
   const vcsRepo =
-    customEnv.GITEA_REPO ||
-    customEnv.GITHUB_REPOSITORY ||
-    envFile.GITEA_REPO ||
-    gitRemote.fullRepo ||
-    "gt-dev/cddm";
+    customEnv.GITEA_REPO || customEnv.GITHUB_REPOSITORY || envFile.GITEA_REPO || gitRemote.fullRepo;
+
+  if (!vcsRepo || !vcsRepo.includes("/")) {
+    throw new Error(
+      "Unable to resolve VCS repository slug (owner/repo) from environment variables (GITEA_REPO/GITHUB_REPOSITORY), .env, or git remote origin.",
+    );
+  }
 
   const defaultOwner =
     customEnv.GITHUB_REPOSITORY_OWNER ||
     envFile.GITHUB_REPOSITORY_OWNER ||
     gitRemote.owner ||
-    (vcsRepo.includes("/") ? vcsRepo.split("/")[0] : "gt-dev");
+    vcsRepo.split("/")[0];
+
+  if (!defaultOwner) {
+    throw new Error(
+      "Unable to resolve default owner from environment variables, .env, or git remote origin.",
+    );
+  }
 
   const publisherId =
     customEnv.PACKAGE_PUBLISHER ||
@@ -134,8 +147,7 @@ export function resolvePublisherConfig(
     envFile.PACKAGE_PUBLISHER ||
     envFile.WINGET_PUBLISHER ||
     envFile.PUBLISHER ||
-    defaultOwner ||
-    "gt-dev";
+    defaultOwner;
 
   const publisherName =
     customEnv.PACKAGE_PUBLISHER_NAME ||

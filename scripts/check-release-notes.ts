@@ -11,7 +11,7 @@
  * Supports --fix to automatically backport rich release notes to existing Gitea releases.
  */
 
-import { giteaFetch } from "./lib/gitea-client";
+import { GITEA_REPO, giteaFetch } from "./lib/gitea-client";
 import { generateReleaseNotes, validateReleaseNotesContent } from "./lib/release-notes-engine";
 import { getCurrentVersion } from "./version";
 
@@ -26,7 +26,7 @@ export async function auditGiteaReleases(
   fix = false,
 ): Promise<{ checked: number; violations: ReleaseAuditResult[] }> {
   const res = await giteaFetch<Array<{ id: number; tag_name: string; name: string; body: string }>>(
-    "/repos/gt-dev/cddm/releases?page=1&limit=20",
+    `/repos/${GITEA_REPO}/releases?page=1&limit=20`,
   );
 
   if (!res.ok || !res.data) {
@@ -65,7 +65,7 @@ export async function auditGiteaReleases(
         const richBody = generateReleaseNotes(version, {
           milestoneTitle: rel.name.replace(/^CDDM\s+v\d+\.\d+\.\d+\s+-\s+/, ""),
         });
-        const patchRes = await giteaFetch(`/repos/gt-dev/cddm/releases/${rel.id}`, {
+        const patchRes = await giteaFetch(`/repos/${GITEA_REPO}/releases/${rel.id}`, {
           method: "PATCH",
           body: JSON.stringify({
             name: rel.name,

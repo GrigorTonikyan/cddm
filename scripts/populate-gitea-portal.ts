@@ -479,10 +479,10 @@ export async function syncPackages(): Promise<void> {
       name: pkg.name,
       version: pkg.version,
       description: pkg.desc,
-      repository: { type: "git", url: `https://git.gt-web-dev.com/${GITEA_REPO}.git` },
+      repository: { type: "git", url: `${GITEA_BASE}/${GITEA_REPO}.git` },
       license: "MIT OR Apache-2.0",
-      homepage: `https://git.gt-web-dev.com/${GITEA_REPO}#readme`,
-      bugs: { url: `https://git.gt-web-dev.com/${GITEA_REPO}/issues` },
+      homepage: `${GITEA_BASE}/${GITEA_REPO}#readme`,
+      bugs: { url: `${GITEA_BASE}/${GITEA_REPO}/issues` },
     };
 
     const content = Buffer.from(JSON.stringify(pkgJson, null, 2));

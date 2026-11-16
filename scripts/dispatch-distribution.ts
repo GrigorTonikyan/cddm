@@ -6,17 +6,47 @@
  * organization package repositories:
  * - Homebrew Tap: Formula/<package>.rb -> <owner>/homebrew-tap
  * - Scoop Bucket: bucket/<package>.json -> <owner>/scoop-bucket
- * - WinGet Manifest: manifests/<p>/<Publisher>/<Package>/<Version>/... -> <owner>/winget-pkgs
+ * - WinGet Manifest: manifests/<p>/<publisher>/<package>/<version>/... -> <owner>/winget-pkgs
  *
- * Uses VCS variable store (or .env as fallback) for publisher and repository resolution.
- * Authenticates securely via VCS token headers; never exposes tokens in command lines.
+ * Enforces pre-flight cryptographic integrity & reachability gates:
+ * - Parses SHA256SUMS.txt and rejects missing, malformed, or zeroed (0{64}) digests.
+ * - Verifies HTTP 200 OK reachability of every binary archive URL prior to commit/push.
+ * - Prefers per-repository SSH deploy keys (HOMEBREW_TAP_DEPLOY_KEY, SCOOP_BUCKET_DEPLOY_KEY,
+ *   WINGET_DEPLOY_KEY); falls back to Gitea Contents API with RELEASE_BOT_TOKEN/GITEA_TOKEN.
+ * - Rejects passing tokens via --token CLI flags.
  */
 
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
+import {
+  classifyTargetsFromChecksums,
+  collectTargetAssets,
+  findZeroSha256Violations,
+  parseSha256SumsValidated,
+  renderHomebrewFormula,
+  renderScoopManifest,
+  renderWingetManifests,
+  verifyDistributionUrls,
+  type DistributionManifestSpec,
+} from "./lib/distribution-manifests";
+import {
+  commitFilesWithDeployKey,
+  commitFileToRepo,
+  getExistingFileSha,
+  publishRepoPayload,
+  type RepoFilePayload,
+} from "./lib/gitea-git-transport";
 import { type PublisherConfig, resolvePublisherConfig } from "./lib/publisher-config";
 import { maskSecret } from "./publish-release";
 import { getCurrentVersion } from "./version";
+
+export { commitFilesWithDeployKey, commitFileToRepo, getExistingFileSha, type RepoFilePayload };
+
+export interface DeployKeySet {
+  homebrew?: string;
+  scoop?: string;
+  winget?: string;
+}
 
 export interface DispatchOptions {
   packageName: string;
@@ -25,7 +55,10 @@ export interface DispatchOptions {
   workspaceRoot: string;
   distDir: string;
   token?: string;
+  deployKeys?: DeployKeySet;
   dryRun: boolean;
+  verifyUrls?: boolean;
+  fetchFn?: typeof fetch;
   config?: PublisherConfig;
 }
 
@@ -36,87 +69,82 @@ export interface DispatchResult {
   errors: string[];
 }
 
-/**
- * Fetch existing file blob sha from Gitea contents API if it exists on the target branch.
- */
-export async function getExistingFileSha(
-  host: string,
-  repo: string,
-  filePath: string,
-  token?: string,
-  branch: string = "main",
-): Promise<string | null> {
-  const url = `https://${host}/api/v1/repos/${repo}/contents/${filePath}?ref=${branch}`;
-  try {
-    const headers: Record<string, string> = { Accept: "application/json" };
-    if (token) {
-      headers.Authorization = token.includes(".") ? `Bearer ${token}` : `token ${token}`;
-    }
-    const res = await fetch(url, { headers });
-    if (!res.ok) return null;
-    const data = (await res.json()) as { sha?: string };
-    return data.sha || null;
-  } catch {
-    return null;
-  }
+function readPackageMetadata(workspaceRoot: string): { description: string; license: string } {
+  const cargoPath = join(workspaceRoot, "Cargo.toml");
+  const content = existsSync(cargoPath) ? readFileSync(cargoPath, "utf-8") : "";
+  const descMatch = /description\s*=\s*"([^"]+)"/.exec(content);
+  const licenseMatch = /license\s*=\s*"([^"]+)"/.exec(content);
+  return {
+    description:
+      descMatch?.[1] ?? "Polyglot Code De-Duplication Meister & Autonomous Refactoring Engine",
+    license: licenseMatch?.[1] ?? "MIT",
+  };
 }
 
-/**
- * Commit a file to a Gitea repository using the contents API.
- */
-export async function commitFileToRepo(
-  host: string,
-  repo: string,
-  filePath: string,
-  content: string,
-  message: string,
-  token?: string,
-  branch: string = "main",
-): Promise<boolean> {
-  if (!token) {
-    console.log(`\x1b[33m[SKIP] No token provided for repository ${repo}\x1b[0m`);
-    return false;
-  }
+function resolveSumsPath(workspaceRoot: string, distDir: string): string | undefined {
+  const candidates = [
+    join(distDir, "SHA256SUMS.txt"),
+    join(workspaceRoot, distDir, "SHA256SUMS.txt"),
+  ];
+  return candidates.find((p) => existsSync(p));
+}
 
-  const existingSha = await getExistingFileSha(host, repo, filePath, token, branch);
-  const url = `https://${host}/api/v1/repos/${repo}/contents/${filePath}`;
-  const base64Content = Buffer.from(content, "utf-8").toString("base64");
+function collectFallbackPayloads(
+  options: DispatchOptions,
+  config: PublisherConfig,
+): {
+  brewFiles: RepoFilePayload[];
+  scoopFiles: RepoFilePayload[];
+  wingetFiles: RepoFilePayload[];
+} {
+  const brewFiles: RepoFilePayload[] = [];
+  const scoopFiles: RepoFilePayload[] = [];
+  const wingetFiles: RepoFilePayload[] = [];
 
-  const method = existingSha ? "PUT" : "POST";
-  const body: Record<string, unknown> = {
-    content: base64Content,
-    message,
-    branch,
-  };
-  if (existingSha) {
-    body.sha = existingSha;
-  }
-
-  try {
-    const authHeader = token.includes(".") ? `Bearer ${token}` : `token ${token}`;
-    const res = await fetch(url, {
-      method,
-      headers: {
-        Authorization: authHeader,
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify(body),
+  const brewFile = join(
+    options.workspaceRoot,
+    "packaging",
+    "homebrew",
+    `${options.packageName}.rb`,
+  );
+  if (existsSync(brewFile)) {
+    brewFiles.push({
+      path: `Formula/${options.packageName}.rb`,
+      content: readFileSync(brewFile, "utf-8"),
     });
-
-    if (!res.ok) {
-      const errText = await res.text();
-      console.error(
-        `\x1b[31m[FAIL] Could not commit ${filePath} to ${repo} (${res.status}): ${errText}\x1b[0m`,
-      );
-      return false;
-    }
-    console.log(`\x1b[32m[OK] Successfully synchronized ${filePath} to ${repo}\x1b[0m`);
-    return true;
-  } catch (err) {
-    console.error(`\x1b[31m[ERROR] Network error committing to ${repo}: ${String(err)}\x1b[0m`);
-    return false;
   }
+
+  const scoopFile = join(
+    options.workspaceRoot,
+    "packaging",
+    "scoop",
+    `${options.packageName}.json`,
+  );
+  if (existsSync(scoopFile)) {
+    scoopFiles.push({
+      path: `bucket/${options.packageName}.json`,
+      content: readFileSync(scoopFile, "utf-8"),
+    });
+  }
+
+  const pkgId = `${config.publisherId}.${options.packageName}`;
+  const firstLetter = config.publisherId.charAt(0).toLowerCase();
+  const targetDir = `manifests/${firstLetter}/${config.publisherId}/${options.packageName}/${options.version}`;
+  const wingetDir = join(options.workspaceRoot, "packaging", "winget");
+  for (const fname of [
+    `${pkgId}.yaml`,
+    `${pkgId}.installer.yaml`,
+    `${pkgId}.locale.en-US.yaml`,
+    `${options.packageName}.yaml`,
+  ]) {
+    const fpath = join(wingetDir, fname);
+    if (existsSync(fpath)) {
+      const destName = fname === `${options.packageName}.yaml` ? `${pkgId}.yaml` : fname;
+      wingetFiles.push({ path: `${targetDir}/${destName}`, content: readFileSync(fpath, "utf-8") });
+    }
+  }
+
+  return { brewFiles, scoopFiles, wingetFiles };
 }
 
 /**
@@ -124,6 +152,11 @@ export async function commitFileToRepo(
  */
 export async function dispatchDistribution(options: DispatchOptions): Promise<DispatchResult> {
   const config = options.config || resolvePublisherConfig(options.workspaceRoot);
+  const deployKeys: DeployKeySet = {
+    homebrew: options.deployKeys?.homebrew ?? process.env.HOMEBREW_TAP_DEPLOY_KEY,
+    scoop: options.deployKeys?.scoop ?? process.env.SCOOP_BUCKET_DEPLOY_KEY,
+    winget: options.deployKeys?.winget ?? process.env.WINGET_DEPLOY_KEY,
+  };
   const result: DispatchResult = {
     homebrew: false,
     scoop: false,
@@ -142,118 +175,147 @@ export async function dispatchDistribution(options: DispatchOptions): Promise<Di
     console.log(`Auth Token:   ${maskSecret(options.token)}`);
   }
 
-  // 1. Homebrew Tap Dispatch
-  const brewFile = join(
-    options.workspaceRoot,
-    "packaging",
-    "homebrew",
-    `${options.packageName}.rb`,
-  );
-  if (existsSync(brewFile)) {
-    const brewContent = readFileSync(brewFile, "utf-8");
-    const targetPath = `Formula/${options.packageName}.rb`;
-    const commitMsg = `release(${options.packageName}): bump to v${options.version}`;
-    if (options.dryRun) {
-      console.log(
-        `\x1b[33m[DRY-RUN] Would commit ${targetPath} to ${config.homebrewTapRepo}\x1b[0m`,
-      );
-      result.homebrew = true;
-    } else {
-      result.homebrew = await commitFileToRepo(
-        config.vcsHost,
-        config.homebrewTapRepo,
-        targetPath,
-        brewContent,
-        commitMsg,
-        options.token,
-      );
-    }
+  const sumsPath = resolveSumsPath(options.workspaceRoot, options.distDir);
+  if (!options.dryRun && !sumsPath) {
+    throw new Error(
+      `Pre-flight security gate failed: SHA256SUMS.txt not found in distDir "${options.distDir}".`,
+    );
   }
 
-  // 2. Scoop Bucket Dispatch
-  const scoopFile = join(
-    options.workspaceRoot,
-    "packaging",
-    "scoop",
-    `${options.packageName}.json`,
-  );
-  if (existsSync(scoopFile)) {
-    const scoopContent = readFileSync(scoopFile, "utf-8");
-    const targetPath = `bucket/${options.packageName}.json`;
-    const commitMsg = `release(${options.packageName}): bump to v${options.version}`;
-    if (options.dryRun) {
-      console.log(
-        `\x1b[33m[DRY-RUN] Would commit ${targetPath} to ${config.scoopBucketRepo}\x1b[0m`,
-      );
-      result.scoop = true;
-    } else {
-      result.scoop = await commitFileToRepo(
-        config.vcsHost,
-        config.scoopBucketRepo,
-        targetPath,
-        scoopContent,
-        commitMsg,
-        options.token,
-      );
+  let brewFiles: RepoFilePayload[] = [];
+  let scoopFiles: RepoFilePayload[] = [];
+  let wingetFiles: RepoFilePayload[] = [];
+
+  if (sumsPath) {
+    const checksums = parseSha256SumsValidated(readFileSync(sumsPath, "utf-8"));
+    const releaseBaseUrl = `https://${config.vcsHost}/${config.vcsRepo}/releases/download/${options.tag}`;
+    const targets = classifyTargetsFromChecksums(checksums, releaseBaseUrl);
+    const targetAssets = collectTargetAssets(targets);
+
+    const shouldVerifyUrls = options.verifyUrls ?? !options.dryRun;
+    if (shouldVerifyUrls) {
+      await verifyDistributionUrls(targetAssets, {
+        token: options.token,
+        fetchFn: options.fetchFn,
+      });
     }
+
+    const meta = readPackageMetadata(options.workspaceRoot);
+    const spec: DistributionManifestSpec = {
+      packageName: options.packageName,
+      version: options.version,
+      publisherId: config.publisherId,
+      publisherName: config.publisherName,
+      homepage: `https://${config.vcsHost}/${config.vcsRepo}`,
+      description: meta.description,
+      license: meta.license,
+      binaries:
+        options.packageName === "cddm" ? ["cddm", "cddm-mcp", "cddm-lsp"] : [options.packageName],
+      releaseBaseUrl,
+      targets,
+    };
+
+    if (targets.macosArm64 || targets.macosX64 || targets.linuxArm64 || targets.linuxX64) {
+      brewFiles = [
+        { path: `Formula/${options.packageName}.rb`, content: renderHomebrewFormula(spec) },
+      ];
+    }
+    if (targets.windowsX64 || targets.windowsArm64) {
+      scoopFiles = [
+        { path: `bucket/${options.packageName}.json`, content: renderScoopManifest(spec) },
+      ];
+      const wg = renderWingetManifests(spec);
+      wingetFiles = [
+        { path: `${wg.manifestDir}/${wg.versionFile}`, content: wg.versionContent },
+        { path: `${wg.manifestDir}/${wg.installerFile}`, content: wg.installerContent },
+        { path: `${wg.manifestDir}/${wg.localeFile}`, content: wg.localeContent },
+      ];
+    }
+  } else {
+    ({ brewFiles, scoopFiles, wingetFiles } = collectFallbackPayloads(options, config));
   }
 
-  // 3. WinGet Repository Dispatch
-  // WinGet hierarchical layout: manifests/<p>/<Publisher>/<Package>/<Version>/<Publisher>.<Package>.yaml
-  const wingetCandidates = [
-    join(options.workspaceRoot, "packaging", "winget", `${options.packageName}.yaml`),
-    join(
-      options.workspaceRoot,
-      "packaging",
-      "winget",
-      `${config.publisherId}.${options.packageName}.yaml`,
-    ),
-  ];
-  const wingetFile = wingetCandidates.find((f) => existsSync(f));
-  if (wingetFile) {
-    const wingetContent = readFileSync(wingetFile, "utf-8");
-    const firstLetter = config.publisherId.charAt(0).toLowerCase();
-    const pkgCap = options.packageName.toUpperCase();
-    const targetPath = `manifests/${firstLetter}/${config.publisherId}/${pkgCap}/${options.version}/${config.publisherId}.${pkgCap}.yaml`;
-    const commitMsg = `release(${options.packageName}): manifest for v${options.version}`;
-    if (options.dryRun) {
-      console.log(`\x1b[33m[DRY-RUN] Would commit ${targetPath} to ${config.wingetRepo}\x1b[0m`);
-      result.winget = true;
-    } else {
-      result.winget = await commitFileToRepo(
-        config.vcsHost,
-        config.wingetRepo,
-        targetPath,
-        wingetContent,
-        commitMsg,
-        options.token,
-      );
-    }
+  const zeroHashViolations = findZeroSha256Violations(
+    [...brewFiles, ...scoopFiles, ...wingetFiles].map((f) => ({
+      label: f.path,
+      content: f.content,
+    })),
+  );
+  if (zeroHashViolations.length > 0) {
+    throw new Error(`Pre-flight zero-hash check failed:\n${zeroHashViolations.join("\n")}`);
+  }
+
+  const commitMsg = `release(${options.packageName}): bump to v${options.version}`;
+
+  if (brewFiles.length > 0) {
+    result.homebrew = await publishRepoPayload(
+      config.vcsHost,
+      config.homebrewTapRepo,
+      brewFiles,
+      commitMsg,
+      {
+        dryRun: options.dryRun,
+        deployKey: deployKeys.homebrew,
+        token: options.token,
+        fetchFn: options.fetchFn,
+      },
+    );
+  }
+
+  if (scoopFiles.length > 0) {
+    result.scoop = await publishRepoPayload(
+      config.vcsHost,
+      config.scoopBucketRepo,
+      scoopFiles,
+      commitMsg,
+      {
+        dryRun: options.dryRun,
+        deployKey: deployKeys.scoop,
+        token: options.token,
+        fetchFn: options.fetchFn,
+      },
+    );
+  }
+
+  if (wingetFiles.length > 0) {
+    result.winget = await publishRepoPayload(
+      config.vcsHost,
+      config.wingetRepo,
+      wingetFiles,
+      commitMsg,
+      {
+        dryRun: options.dryRun,
+        deployKey: deployKeys.winget,
+        token: options.token,
+        fetchFn: options.fetchFn,
+      },
+    );
   }
 
   return result;
 }
 
 export function parseArgs(args: string[]): DispatchOptions {
-  let version = getCurrentVersion();
-  let packageName = "cddm";
-  let tag = `v${version}`;
   let workspaceRoot = process.cwd();
+  let packageName = "cddm";
+  let version = getCurrentVersion();
+  let tag = `v${version}`;
   let distDir = "dist-release";
-  let token =
-    process.env.DISTRIBUTION_TOKEN ||
-    process.env.GITEA_TOKEN ||
-    process.env.REGISTRY_TOKEN ||
-    process.env.GITHUB_TOKEN;
+  const token =
+    process.env.RELEASE_BOT_TOKEN || process.env.GITEA_TOKEN || process.env.GITHUB_TOKEN;
   let dryRun = false;
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
+    if (arg === "--token" || arg?.startsWith("--token=")) {
+      throw new Error(
+        "Passing secrets via --token CLI flags is prohibited; provide HOMEBREW_TAP_DEPLOY_KEY, SCOOP_BUCKET_DEPLOY_KEY, WINGET_DEPLOY_KEY, RELEASE_BOT_TOKEN, or GITEA_TOKEN via environment variables.",
+      );
+    }
     if (arg === "--dry-run") dryRun = true;
     else if (arg === "--package" && args[i + 1]) packageName = args[++i]!;
     else if (arg === "--version" && args[i + 1]) version = args[++i]!;
     else if (arg === "--tag" && args[i + 1]) tag = args[++i]!;
-    else if (arg === "--token" && args[i + 1]) token = args[++i]!;
     else if (arg === "--dist-dir" && args[i + 1]) distDir = args[++i]!;
     else if (arg === "--workspace" && args[i + 1]) workspaceRoot = resolve(args[++i]!);
   }
