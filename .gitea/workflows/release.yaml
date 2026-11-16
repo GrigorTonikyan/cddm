@@ -254,7 +254,7 @@ jobs:
           fi
           IMAGE_BASE="${REGISTRY_HOST}/${REPO_FULL}"
           echo "registry=${REGISTRY_HOST}" >> "${GITHUB_OUTPUT}"
-          echo "cache_ref=${IMAGE_BASE}:buildcache" >> "${GITHUB_OUTPUT}"
+          echo "cache_ref=${IMAGE_BASE}:latest" >> "${GITHUB_OUTPUT}"
           {
             echo "tags<<EOF_TAGS"
             echo "${IMAGE_BASE}:latest"
@@ -273,7 +273,7 @@ jobs:
           registry: ${{ steps.meta.outputs.registry }}
           username: ${{ vars.PUBLISHER || github.repository_owner }}
           password: ${{ secrets.REGISTRY_TOKEN }}
-          cache-mode: registry
+          cache-mode: inline
           cache-ref: ${{ steps.meta.outputs.cache_ref }}
 
   publish-cargo:
