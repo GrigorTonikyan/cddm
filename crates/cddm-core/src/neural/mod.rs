@@ -72,11 +72,11 @@ mod tests {
     fn test_subword_tokenizer() {
         let code = "fn calculateTotalPrice_v2(itemsCount: usize) -> f64";
         let subwords = SubwordTokenizer::tokenize(code);
-        assert!(subwords.contains(&"calculate".to_string()));
-        assert!(subwords.contains(&"total".to_string()));
-        assert!(subwords.contains(&"price".to_string()));
-        assert!(subwords.contains(&"items".to_string()));
-        assert!(subwords.contains(&"count".to_string()));
+        assert!(subwords.iter().any(|word| word == "calculate"));
+        assert!(subwords.iter().any(|word| word == "total"));
+        assert!(subwords.iter().any(|word| word == "price"));
+        assert!(subwords.iter().any(|word| word == "items"));
+        assert!(subwords.iter().any(|word| word == "count"));
     }
 
     #[test]

@@ -115,7 +115,8 @@ pub fn discover_candidate_files(
         if let Ok(entry) = result
             && entry.path().is_file()
             && let Some(grammar) = get_grammar_for_path(entry.path())
-            && (config.languages.is_empty() || config.languages.contains(&grammar.name.to_string()))
+            && (config.languages.is_empty()
+                || config.languages.iter().any(|lang| lang == grammar.name))
         {
             let path_str = entry.path().to_string_lossy().to_string();
             let mut ignored = false;
@@ -177,9 +178,9 @@ mod tests {
             .map(|p| p.file_name().unwrap().to_string_lossy().to_string())
             .collect();
 
-        assert!(filenames.contains(&"main.rs".to_string()));
-        assert!(!filenames.contains(&"ignored.rs".to_string()));
-        assert!(!filenames.contains(&"out.rs".to_string()));
+        assert!(filenames.iter().any(|name| name == "main.rs"));
+        assert!(!filenames.iter().any(|name| name == "ignored.rs"));
+        assert!(!filenames.iter().any(|name| name == "out.rs"));
 
         // 2. Override: include_ignored = true
         let include_config = ScanConfig {
@@ -195,9 +196,9 @@ mod tests {
             .map(|p| p.file_name().unwrap().to_string_lossy().to_string())
             .collect();
 
-        assert!(all_filenames.contains(&"main.rs".to_string()));
-        assert!(all_filenames.contains(&"ignored.rs".to_string()));
-        assert!(all_filenames.contains(&"out.rs".to_string()));
+        assert!(all_filenames.iter().any(|name| name == "main.rs"));
+        assert!(all_filenames.iter().any(|name| name == "ignored.rs"));
+        assert!(all_filenames.iter().any(|name| name == "out.rs"));
     }
 
     #[test]
@@ -228,8 +229,8 @@ mod tests {
             .map(|p| p.file_name().unwrap().to_string_lossy().to_string())
             .collect();
 
-        assert!(filenames.contains(&"root.rs".to_string()));
-        assert!(filenames.contains(&"kept.rs".to_string()));
-        assert!(!filenames.contains(&"nested_ignored.rs".to_string()));
+        assert!(filenames.iter().any(|name| name == "root.rs"));
+        assert!(filenames.iter().any(|name| name == "kept.rs"));
+        assert!(!filenames.iter().any(|name| name == "nested_ignored.rs"));
     }
 }

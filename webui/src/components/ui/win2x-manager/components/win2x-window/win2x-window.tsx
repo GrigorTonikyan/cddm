@@ -264,7 +264,8 @@ export const Win2xWindow: React.FC<Win2xWindowProps> = ({
     if (!isOpen || !winData || winData.isMinimized) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === WIN2X_KEYS.ESCAPE && manager.activeWindowId === id) {
+      const escapeValue = WIN2X_KEYS.ESCAPE; // gitleaks:allow
+      if (e.key === escapeValue && manager.activeWindowId === id) {
         onClose();
       }
     };
