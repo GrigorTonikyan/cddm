@@ -35,6 +35,8 @@ describe("CI/CD & Container Governance Invariants", () => {
     expect(releaseYaml).not.toContain("docker:dind");
     expect(releaseYaml).not.toContain("|| 'git.gt-web-dev.com'");
     expect(releaseYaml).toContain("self:gt-dev/actions/docker-build-push@v1");
+    expect(releaseYaml).not.toContain("cache-mode: registry");
+    expect(releaseYaml).toContain("cache-mode: inline");
     expect(releaseYaml).toContain("build-webui:");
     expect(releaseYaml).toContain("force-unsafe-io");
     expect(releaseYaml).toContain("~/.cache/cargo-xwin");
