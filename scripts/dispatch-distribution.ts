@@ -36,6 +36,7 @@ import {
   publishRepoPayload,
   type RepoFilePayload,
 } from "./lib/gitea-git-transport";
+import { GITEA_TOKEN } from "./lib/gitea-client";
 import { type PublisherConfig, resolvePublisherConfig } from "./lib/publisher-config";
 import { maskSecret } from "./publish-release";
 import { getCurrentVersion } from "./version";
@@ -176,7 +177,25 @@ export async function dispatchDistribution(options: DispatchOptions): Promise<Di
   }
 
   const sumsPath = resolveSumsPath(options.workspaceRoot, options.distDir);
-  if (!options.dryRun && !sumsPath) {
+  let sumsContent = sumsPath ? readFileSync(sumsPath, "utf-8") : undefined;
+
+  if (!sumsContent && !options.dryRun) {
+    const remoteSumsUrl = `https://${config.vcsHost}/${config.vcsRepo}/releases/download/${options.tag}/SHA256SUMS.txt`;
+    const fetchFn = options.fetchFn ?? fetch;
+    try {
+      const res = await fetchFn(remoteSumsUrl, {
+        headers: options.token ? { Authorization: `token ${options.token}` } : undefined,
+      });
+      if (res.ok) {
+        sumsContent = await res.text();
+        console.log(`\x1b[32m[OK] Fetched remote SHA256SUMS.txt from ${remoteSumsUrl}\x1b[0m`);
+      }
+    } catch {
+      // handled below
+    }
+  }
+
+  if (!options.dryRun && !sumsContent) {
     throw new Error(
       `Pre-flight security gate failed: SHA256SUMS.txt not found in distDir "${options.distDir}".`,
     );
@@ -186,8 +205,8 @@ export async function dispatchDistribution(options: DispatchOptions): Promise<Di
   let scoopFiles: RepoFilePayload[] = [];
   let wingetFiles: RepoFilePayload[] = [];
 
-  if (sumsPath) {
-    const checksums = parseSha256SumsValidated(readFileSync(sumsPath, "utf-8"));
+  if (sumsContent) {
+    const checksums = parseSha256SumsValidated(sumsContent);
     const releaseBaseUrl = `https://${config.vcsHost}/${config.vcsRepo}/releases/download/${options.tag}`;
     const targets = classifyTargetsFromChecksums(checksums, releaseBaseUrl);
     const targetAssets = collectTargetAssets(targets);
@@ -333,11 +352,17 @@ export function parseArgs(args: string[]): DispatchOptions {
 
 async function main() {
   const options = parseArgs(process.argv.slice(2));
+  if (!options.token && !options.dryRun && GITEA_TOKEN && GITEA_TOKEN !== "token-placeholder") {
+    options.token = GITEA_TOKEN;
+  }
   const res = await dispatchDistribution(options);
   console.log("\nDistribution Dispatch Summary:");
   console.log(`- Homebrew: ${res.homebrew ? "OK" : "Skipped/Failed"}`);
   console.log(`- Scoop:    ${res.scoop ? "OK" : "Skipped/Failed"}`);
   console.log(`- WinGet:   ${res.winget ? "OK" : "Skipped/Failed"}`);
+  if (!options.dryRun && (!res.homebrew || !res.scoop || !res.winget)) {
+    throw new Error("One or more package manager distribution channels failed to update.");
+  }
 }
 
 if (import.meta.main) {

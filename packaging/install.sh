@@ -5,6 +5,8 @@ set -euo pipefail
 # Usage: curl -fsSL https://git.gt-web-dev.com/gt-dev/cddm/raw/branch/main/packaging/install.sh | bash
 
 GITEA_HOST="${CDDM_GITEA_HOST:-git.gt-web-dev.com}"
+BASE_URL="${CDDM_BASE_URL:-https://${GITEA_HOST}}"
+BASE_URL="${BASE_URL%/}"
 REPO="${CDDM_REPO:-gt-dev/cddm}"
 INSTALL_DIR="${CDDM_INSTALL_DIR:-$HOME/.cddm/bin}"
 VERSION="${CDDM_VERSION:-latest}"
@@ -57,7 +59,7 @@ TMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/cddm-install.XXXXXX")"
 trap 'rm -rf "$TMP_DIR"' EXIT
 
 if [ "$VERSION" = "latest" ]; then
-  API_URL="https://${GITEA_HOST}/api/v1/repos/${REPO}/releases/latest"
+  API_URL="${BASE_URL}/api/v1/repos/${REPO}/releases/latest"
   META_FILE="${TMP_DIR}/release.json"
   if ! fetch_url "$API_URL" "$META_FILE"; then
     echo "Error: Failed to query latest release metadata from ${API_URL}. Refusing silent version downgrade." >&2
@@ -75,7 +77,7 @@ else
   esac
 fi
 
-BASE_DOWNLOAD_URL="https://${GITEA_HOST}/${REPO}/releases/download/${RELEASE_TAG}"
+BASE_DOWNLOAD_URL="${BASE_URL}/${REPO}/releases/download/${RELEASE_TAG}"
 SUMS_FILE="${TMP_DIR}/SHA256SUMS.txt"
 
 echo "--> Fetching SHA256SUMS.txt for ${RELEASE_TAG}..."

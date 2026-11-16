@@ -174,6 +174,20 @@ cddm heal --cluster 1 --provider gemini --model gemini-3.8-pro --verify --test-c
 cddm init gitea --write
 ```
 
+### Turnkey AI Coding Agent Setup (MCP Server)
+
+Add `cddm-mcp` (installed automatically on `PATH` by all package managers and installers) to `claude_desktop_config.json`, `.cursor/mcp.json`, or Google Antigravity `mcp_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "cddm": {
+      "command": "cddm-mcp"
+    }
+  }
+}
+```
+
 ---
 
 ## Interface Documentation

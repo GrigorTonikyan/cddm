@@ -7,20 +7,45 @@
 
 ## 1. Overview & Setup
 
-The CDDM MCP Server (`cddm-mcp`) exposes the entire clone analysis, AST refactoring, policy checking, and federation engine to AI assistants (Antigravity, Claude Desktop, Cursor) over JSON-RPC 2.0 stdio.
+The CDDM MCP Server (`cddm-mcp`) exposes the entire clone analysis, AST refactoring, policy checking, and federation engine to AI assistants (Google Antigravity, Claude Desktop, Cursor, Windsurf, Zed) over JSON-RPC 2.0 stdio.
 
-### Claude Desktop Configuration (`claude_desktop_config.json`)
+All official package manager and installer channels (`install.ps1`, `install.sh`, Scoop, WinGet, Homebrew, Cargo, and npm) automatically install both `cddm` and `cddm-mcp` (plus `cddm-lsp`) directly onto the system `PATH`, eliminating workspace path hardcoding.
+
+### Standard Turnkey Configuration (Claude Desktop, Cursor, Antigravity, Windsurf)
+
+Add the following to `claude_desktop_config.json`, `.cursor/mcp.json`, or Antigravity `mcp_config.json`:
 
 ```json
 {
   "mcpServers": {
     "cddm": {
-      "command": "cddm-mcp",
-      "args": []
+      "command": "cddm-mcp"
     }
   }
 }
 ```
+
+### Zero-Install `npx` Configuration
+
+```json
+{
+  "mcpServers": {
+    "cddm": {
+      "command": "npx",
+      "args": ["-y", "-p", "cddm", "cddm-mcp"]
+    }
+  }
+}
+```
+
+### Installing `cddm-mcp` onto `PATH`
+
+- **Windows (PowerShell)**: `irm https://git.gt-web-dev.com/gt-dev/cddm/raw/branch/main/packaging/install.ps1 | iex`
+- **Windows (Scoop)**: `scoop bucket add gt-dev https://git.gt-web-dev.com/gt-dev/scoop-bucket && scoop install gt-dev/cddm`
+- **Windows (WinGet)**: `winget install --id gt-dev.cddm` (or via manifest from `gt-dev/winget-pkgs`)
+- **macOS / Linux (Homebrew)**: `brew tap gt-dev/tap https://git.gt-web-dev.com/gt-dev/homebrew-tap && brew install gt-dev/tap/cddm`
+- **Cargo (Gitea Registry)**: `cargo --config 'registries.gitea.index="sparse+https://git.gt-web-dev.com/api/packages/gt-dev/cargo/"' install cddm-cli cddm-mcp --registry gitea`
+- **npm Global**: `npm install -g cddm --registry https://git.gt-web-dev.com/api/packages/gt-dev/npm/`
 
 ---
 
