@@ -35,7 +35,7 @@ describe("CI/CD & Container Governance Invariants", () => {
     expect(releaseYaml).not.toContain("docker:dind");
     expect(releaseYaml).not.toContain("|| 'git.gt-web-dev.com'");
     expect(releaseYaml).toContain("self:gt-dev/actions/docker-build-push@v1");
-    expect(releaseYaml).toContain("self:gt-dev/actions/publish-release@v1");
+    expect(releaseYaml).toContain("gt-dev/actions#47");
     expect(releaseYaml).toContain("publish-npm:");
     expect(releaseYaml).toContain("scripts/publish-npm.ts --registry gitea");
     expect(releaseYaml).toContain("HOMEBREW_TAP_DEPLOY_KEY");
