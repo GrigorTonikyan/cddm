@@ -16,7 +16,7 @@ graph TD
 
     subgraph Core ["cddm-core Library Engine"]
         IO["Zero-Copy File I/O (memmap2)"]
-        Grammar["Grammar Registry (30+ Languages)"]
+        Grammar["Grammar Registry (23 Languages)"]
         Tokenizer["Tokenization Engine (Normalizer)"]
         SIMD["SIMD Mersenne M61 Engine (AVX2/NEON)"]
         Winnow["Winnowing Engine (Mersenne M61)"]
@@ -345,5 +345,5 @@ graph LR
 
 1. **Primary SSoT (Gitea)**: Authoritative repository for issue tracking, milestones, PRs, reviews, and primary binary packaging.
 2. **Automated API-Driven Merges**: Pull requests are merged exclusively via the Gitea REST API, ensuring PRs are marked `merged: true`, closed in the UI, and linked issues are automatically resolved.
-3. **Automated Multi-Manifest Release Pipeline**: Workspace SemVer is calculated deterministically from Conventional Commits and synchronized across all 10 manifests during PR preparation (`bun scripts/version.ts` / `vp run version:bump`). Merging into `main` automatically triggers the Gitea Actions `auto-tag-release` job in `.gitea/workflows/auto-tag-release.yaml`, cutting release tag `vX.Y.Z` and triggering multi-platform cross-compilation and packaging (`.gitea/workflows/release.yaml`).
+3. **Automated Multi-Manifest Release Pipeline**: Workspace SemVer is calculated deterministically from Conventional Commits and synchronized across all 11 manifests during PR preparation (`bun scripts/version.ts` / `vp run version:bump`). Merging into `main` automatically triggers the Gitea Actions `auto-tag-release` job in `.gitea/workflows/auto-tag-release.yaml`, cutting release tag `vX.Y.Z` and triggering multi-platform cross-compilation and packaging (`.gitea/workflows/release.yaml`).
 4. **Downstream Mirroring**: Commits, tags, and assets are synchronized downstream to GitHub.

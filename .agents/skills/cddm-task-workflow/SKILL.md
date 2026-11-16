@@ -46,7 +46,7 @@ Update docs in `docs/` and root as needed.
 
 ## Step 6: Version Sync, Commit, Gitea Push, PR & Merge
 
-1. Bump and synchronize all 10 workspace manifests & `CHANGELOG.md`: `bun scripts/version.ts` (or `vp run version:bump`), and verify with `bun scripts/version.ts --check-pr`
+1. Bump and synchronize all 11 workspace manifests & `CHANGELOG.md`: `bun scripts/version.ts` (or `vp run version:bump`), and verify with `bun scripts/version.ts --check-pr`
 2. Commit with Conventional Commits referencing the primary Gitea issue (`Fixes #<gitea-id>`)
 3. Push to `origin` (Gitea) (never use `--no-verify`), using strictly ONE canonical branch (`feat/issue-<num>-<desc>`). Do NOT push manually to `github`—Gitea automatically replicates all branches and commits to GitHub via server-side push mirror (`sync_on_commit: true`).
 4. Open primary Pull Request via Forge MCP (`gitea_create_pr` or `forge pr create`), and include `Fixes #<id>` (the issue is mandatory; milestones are optional and never required).

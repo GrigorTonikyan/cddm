@@ -24,7 +24,7 @@ For every task, fix, refactor, or feature:
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 3. Implement Changes + Polyglot Tests + Verify (`vp run verify`)             │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 4. Bump Workspace SemVer & Sync 10 Manifests (`bun scripts/version.ts`)      │
+│ 4. Bump Workspace SemVer & Sync 11 Manifests (`bun scripts/version.ts`)      │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 5. Push Issue Branch to Gitea `origin` (auto-mirrored to `github`)           │
 ├─────────────────────────────────────────────────────────────────────────────┤

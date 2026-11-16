@@ -1,0 +1,26 @@
+# Smithery configuration file for CDDM MCP Server (https://smithery.ai)
+startCommand:
+  type: stdio
+  configSchema:
+    type: object
+    properties:
+      workspaceRoot:
+        type: string
+        description: Optional default workspace path when invoking scan or refactor tools
+        default: "."
+      minTokens:
+        type: integer
+        description: Minimum token threshold for clone detection (default 50)
+        default: 50
+  commandFunction: |-
+    (config) => ({
+      command: "npx",
+      args: ["-y", "-p", "cddm", "cddm-mcp"],
+      env: {
+        ...(config.workspaceRoot ? { CDDM_WORKSPACE: config.workspaceRoot } : {}),
+        ...(config.minTokens ? { CDDM_MIN_TOKENS: String(config.minTokens) } : {})
+      }
+    })
+  exampleConfig:
+    workspaceRoot: "."
+    minTokens: 50

@@ -7,7 +7,7 @@
 
 ## 1. Overview & Architecture
 
-CDDM embeds a high-performance, single-binary React 19 visual studio served natively via Axum and `rust-embed`. It features real-time SSE live updates, split Monaco diffs, hierarchical D3 treemaps, and 19 interactive analysis modals.
+CDDM embeds a high-performance, single-binary React 19 visual studio served natively via Axum and `rust-embed`. It features real-time SSE live updates, split Monaco diffs, hierarchical D3 treemaps, and 22 interactive analysis modals.
 
 ### Launching the Studio
 
@@ -21,7 +21,7 @@ cddm watch ./src --serve 3000 --open
 
 ---
 
-## 2. Interactive Modals & Visual Surfaces (19 Modals)
+## 2. Interactive Modals & Visual Surfaces (22 Modals)
 
 <!-- AUTOGEN:WEBUI_MODALS:START -->
 

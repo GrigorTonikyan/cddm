@@ -1,0 +1,37 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.GrigorTonikyan/cddm",
+  "title": "CDDM — Code De-Duplication Meister",
+  "description": "High-performance Rust polyglot code clone detection (Type 1-4), semantic AST refactoring, architectural boundary policies, and closed-loop AI code healing over MCP.",
+  "websiteUrl": "https://git.gt-web-dev.com/gt-dev/cddm",
+  "repository": {
+    "url": "https://github.com/GrigorTonikyan/cddm",
+    "source": "github"
+  },
+  "version": "4.11.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "cddm",
+      "version": "4.11.0",
+      "runtimeHint": "npx",
+      "packageArguments": [
+        {
+          "type": "positional",
+          "value": "cddm-mcp",
+          "isRequired": true
+        }
+      ],
+      "transport": {
+        "type": "stdio"
+      }
+    },
+    {
+      "registryType": "oci",
+      "identifier": "git.gt-web-dev.com/gt-dev/cddm:v4.11.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

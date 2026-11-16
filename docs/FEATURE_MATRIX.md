@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-27 | Rust: 416 #[test] units | WebUI: 334 tests across 77 suites | Scripts & MCP: 253 tests across 66 suites | CI Workflows: PASS
+> Last verified: 2026-08-27 | Rust: 416 #[test] units | WebUI: 334 tests across 77 suites | Scripts & MCP: 260 tests across 68 suites | CI Workflows: PASS
 
 ---
 
@@ -442,7 +442,7 @@
 
 ---
 
-## 3. Repository Scripts & MCP Protocol — Bun Test Suites (253 tests across 66 suites)
+## 3. Repository Scripts & MCP Protocol — Bun Test Suites (260 tests across 68 suites)
 
 ### Repository Tooling & Automation Suites
 
@@ -458,6 +458,7 @@
 | step-runner                   | `scripts/lib/step-runner.test.ts`              | 4 tests    | PASS   |
 | test-matrix-generator         | `scripts/lib/test-matrix-generator.test.ts`    | 3 tests    | PASS   |
 | version-updater               | `scripts/lib/version-updater.test.ts`          | 4 tests    | PASS   |
+| benchmark-ecosystem           | `scripts/tests/benchmark-ecosystem.test.ts`    | 4 tests    | PASS   |
 | bun-only                      | `scripts/tests/bun-only.test.ts`               | 2 tests    | PASS   |
 | check-release-notes           | `scripts/tests/check-release-notes.test.ts`    | 2 tests    | PASS   |
 | check-supply-chain            | `scripts/tests/check-supply-chain.test.ts`     | 2 tests    | PASS   |
@@ -476,6 +477,7 @@
 | publish-cargo                 | `scripts/tests/publish-cargo.test.ts`          | 9 tests    | PASS   |
 | publish-npm                   | `scripts/tests/publish-npm.test.ts`            | 2 tests    | PASS   |
 | publish-release               | `scripts/tests/publish-release.test.ts`        | 9 tests    | PASS   |
+| record-demos                  | `scripts/tests/record-demos.test.ts`           | 3 tests    | PASS   |
 | setup-deps                    | `scripts/tests/setup-deps.test.ts`             | 5 tests    | PASS   |
 | ui-ux-qa-verification         | `scripts/tests/ui-ux-qa-verification.test.ts`  | 4 tests    | PASS   |
 | Semantic Versioning & Commits | `scripts/tests/version.test.ts`                | 10 tests   | PASS   |

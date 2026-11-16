@@ -1,0 +1,9 @@
+{
+  "servers": {
+    "cddm": {
+      "type": "stdio",
+      "command": "cddm-mcp",
+      "args": []
+    }
+  }
+}
