@@ -142,6 +142,9 @@ jobs:
       - name: Validate File Length Limits (<= 500 lines)
         run: bun scripts/check-file-length.ts
 
+      - name: Validate Supply-Chain, Renovate & CODEOWNERS Policy
+        run: bun scripts/check-supply-chain.ts
+
       - name: Validate Zero-Emoji Policy
         run: bun scripts/check-no-emojis.ts
 

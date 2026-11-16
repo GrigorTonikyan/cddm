@@ -223,3 +223,98 @@ export async function publishRepoPayload(
   }
   return allOk;
 }
+
+/**
+ * Creates and pushes an SSH-signed annotated release tag when a signing key is configured.
+ */
+export function ensureSignedReleaseTag(
+  tag: string,
+  targetSha: string = "HEAD",
+  options: {
+    workspaceRoot?: string;
+    signingKey?: string;
+    token?: string;
+    host?: string;
+    repo?: string;
+    dryRun?: boolean;
+  } = {},
+): { signed: boolean; created: boolean } {
+  const signingKey =
+    options.signingKey ??
+    process.env.RELEASE_SIGNING_KEY ??
+    process.env.SSH_SIGNING_KEY ??
+    process.env.GIT_SIGNING_KEY;
+
+  if (!signingKey) {
+    return { signed: false, created: false };
+  }
+
+  if (options.dryRun) {
+    console.log(
+      `\x1b[33m[DRY-RUN] Would create and push SSH-signed tag ${tag} -> ${targetSha}\x1b[0m`,
+    );
+    return { signed: true, created: true };
+  }
+
+  const cwd = options.workspaceRoot ?? process.cwd();
+  const workDir = mkdtempSync(join(tmpdir(), "cddm-tag-sign-"));
+  const keyFile = join(workDir, "signing_key");
+  const normalizedKey = signingKey.endsWith("\n") ? signingKey : `${signingKey}\n`;
+  writeFileSync(keyFile, normalizedKey, { mode: 0o600, encoding: "utf-8" });
+
+  try {
+    const actor = process.env.GITHUB_ACTOR || "release-bot";
+    const host = options.host || "localhost";
+    const tagProc = Bun.spawnSync(
+      [
+        "git",
+        "-c",
+        "gpg.format=ssh",
+        "-c",
+        `user.signingkey=${keyFile}`,
+        "-c",
+        `user.name=${actor}`,
+        "-c",
+        `user.email=${actor}@noreply.${host}`,
+        "tag",
+        "-s",
+        "-f",
+        "-a",
+        tag,
+        targetSha,
+        "-m",
+        `Release ${tag}`,
+      ],
+      { cwd, stdout: "pipe", stderr: "pipe" },
+    );
+
+    if (tagProc.exitCode !== 0) {
+      console.warn(`\x1b[33m[WARN] Could not sign tag ${tag}: ${tagProc.stderr.toString()}\x1b[0m`);
+      return { signed: false, created: false };
+    }
+
+    if (options.token && options.host && options.repo) {
+      const serverUrl = `https://${options.host}`;
+      Bun.spawnSync(
+        ["git", "-c", "credential.helper=", "push", "origin", `refs/tags/${tag}`, "--force"],
+        {
+          cwd,
+          env: {
+            ...process.env,
+            GIT_TERMINAL_PROMPT: "0",
+            GIT_CONFIG_COUNT: "1",
+            GIT_CONFIG_KEY_0: `http.${serverUrl}/.extraHeader`,
+            GIT_CONFIG_VALUE_0: `Authorization: token ${options.token}`,
+          },
+          stdout: "pipe",
+          stderr: "pipe",
+        },
+      );
+    }
+
+    console.log(`\x1b[32m[OK] Created and pushed SSH-signed annotated tag ${tag}\x1b[0m`);
+    return { signed: true, created: true };
+  } finally {
+    rmSync(workDir, { recursive: true, force: true });
+  }
+}

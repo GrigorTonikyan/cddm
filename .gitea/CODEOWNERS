@@ -1,0 +1,18 @@
+# CDDM Authoritative Code Ownership & Release Path Protection
+# Changes to release pipelines, distribution manifests, and supply-chain policies require explicit owner review.
+
+* @gt-dev
+
+/.gitea/workflows/ @gt-dev
+/.github/workflows/ @gt-dev
+/packaging/ @gt-dev
+/npm/ @gt-dev
+/scripts/publish-release.ts @gt-dev
+/scripts/publish-cargo.ts @gt-dev
+/scripts/publish-npm.ts @gt-dev
+/scripts/dispatch-distribution.ts @gt-dev
+/scripts/package-distribution.ts @gt-dev
+/scripts/check-supply-chain.ts @gt-dev
+/Dockerfile @gt-dev
+/deny.toml @gt-dev
+/renovate.json @gt-dev

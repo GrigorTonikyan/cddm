@@ -1,0 +1,35 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "CDDM Automated Dependency & Digest Pinning Configuration (Gitea SSoT)",
+  "extends": ["config:recommended", "helpers:pinGitHubActionDigests", ":dependencyDashboard"],
+  "labels": ["dependencies", "security"],
+  "rangeStrategy": "bump",
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 4am on monday"]
+  },
+  "packageRules": [
+    {
+      "description": "Pin Dockerfile base image digests and keep sha256 references current",
+      "matchDatasources": ["docker"],
+      "pinDigests": true
+    },
+    {
+      "description": "Keep GitHub and Gitea Actions pinned to immutable commit SHAs",
+      "matchManagers": ["github-actions"],
+      "pinDigests": true
+    },
+    {
+      "description": "Group Rust Cargo patch and minor updates",
+      "matchManagers": ["cargo"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "rust-cargo-dependencies"
+    },
+    {
+      "description": "Group Bun and WebUI npm patch and minor updates",
+      "matchManagers": ["bun", "npm"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "typescript-webui-dependencies"
+    }
+  ]
+}

@@ -85,6 +85,10 @@ const STEPS: ScriptStep[] = [
     command: ["bun", "scripts/check-release-notes.ts"],
   },
   {
+    title: "Supply-chain security & governance policy check (bun scripts/check-supply-chain.ts)",
+    command: ["bun", "scripts/check-supply-chain.ts"],
+  },
+  {
     title: "CDDM Dogfooding Self-Scan (cddm scan .)",
     command: [
       "cargo",

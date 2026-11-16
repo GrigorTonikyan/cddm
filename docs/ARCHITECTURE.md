@@ -193,8 +193,9 @@ CDDM supports dual distribution channels:
 
 3. **Gitea Actions CI/CD Workflows (Authoritative SSoT)**:
    - `.gitea/workflows/ci.yaml`: PR quality & merge gate (`pull_request: [main]`, `workflow_dispatch`) running parallel `security-scan` (`gitleaks-scan@v1`), `rust-build` (release binaries + strict `<= 5.0%` dogfooding), `rust-ci` (`fmt`, `clippy`, `cargo test`), `workspace-governance-ci`, and `webui-ci`, followed by parallel `mcp-ci` and pre-baked `playwright-runner:v1.65.0` `e2e-ci`.
-   - `.gitea/workflows/auto-tag-release.yaml`: Lightweight `main` CD trigger that computes the SemVer release tag and creates the initial Gitea release (`scripts/publish-release.ts`).
+   - `.gitea/workflows/auto-tag-release.yaml`: Lightweight `main` CD trigger that computes the SemVer release tag, signs annotated tags via `RELEASE_SIGNING_KEY`, and creates the initial Gitea release (`scripts/publish-release.ts`).
    - `.gitea/workflows/release.yaml`: Tag-triggered (`v*`) cross-compilation (`build-webui` once + Linux/Windows `cargo-xwin` cached matrix), VSIX packaging, BuildKit-cached DinD container publishing (`self:gt-dev/actions/docker-build-push@v1`), Gitea Cargo & NPM Registry publishing, binary-whitelisted Gitea release upload (`scripts/publish-release.ts`), and SSH deploy-key package manifest dispatch (`scripts/dispatch-distribution.ts` using `HOMEBREW_TAP_DEPLOY_KEY`, `SCOOP_BUCKET_DEPLOY_KEY`, `WINGET_DEPLOY_KEY`).
+   - `.gitea/workflows/renovate.yaml`: Scheduled self-hosted Renovate dependency automation workflow enforcing `renovate.json`, `deny.toml` (`cargo-deny` supply-chain advisories, license allowlist, and registry source restrictions), and `.gitea/CODEOWNERS` review boundaries (`scripts/check-supply-chain.ts`).
    - `.github/workflows/ci.yml`: Read-only downstream replica CI mirror.
    - `.github/workflows/release.yml`: Read-only downstream replica release mirror (executing token-less OIDC Trusted Publishing to `crates.io` and `npmjs.com` with `--provenance`).
 

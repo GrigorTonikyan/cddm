@@ -33,6 +33,7 @@ jobs:
           GITEA_HOST: ${{ vars.GITEA_HOST }}
           GITEA_REPO: ${{ github.repository }}
           GITEA_TOKEN: ${{ secrets.RELEASE_BOT_TOKEN || secrets.REGISTRY_TOKEN || secrets.GITEA_TOKEN || secrets.GITHUB_TOKEN }}
+          RELEASE_SIGNING_KEY: ${{ secrets.RELEASE_SIGNING_KEY || secrets.SSH_SIGNING_KEY }}
           TARGET_SHA: ${{ github.sha }}
         run: |
           CURRENT_VER="$(bun scripts/version.ts --get-current)"
