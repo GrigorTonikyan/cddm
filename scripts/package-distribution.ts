@@ -265,6 +265,33 @@ export function validatePackagingWorkspace(workspaceRoot: string = rootDir): str
     errors.push(...findZeroSha256Violations([{ label, content }]));
   }
 
+  const shPath = resolve(workspaceRoot, "packaging/install.sh");
+  if (existsSync(shPath)) {
+    const shContent = readFileSync(shPath, "utf-8");
+    if (shContent.includes("v1.9.0")) {
+      errors.push("packaging/install.sh must not silently downgrade to v1.9.0 on API failure");
+    }
+    if (!shContent.includes("SHA256SUMS.txt")) {
+      errors.push("packaging/install.sh must verify SHA256SUMS.txt before extracting archives");
+    }
+  }
+
+  const ps1Path = resolve(workspaceRoot, "packaging/install.ps1");
+  if (existsSync(ps1Path)) {
+    const ps1Content = readFileSync(ps1Path, "utf-8");
+    if (ps1Content.includes("v1.9.0")) {
+      errors.push("packaging/install.ps1 must not silently downgrade to v1.9.0 on API failure");
+    }
+    if (!ps1Content.includes("SHA256SUMS.txt") || !ps1Content.includes("Get-FileHash")) {
+      errors.push(
+        "packaging/install.ps1 must verify SHA256SUMS.txt with Get-FileHash before extracting",
+      );
+    }
+    if (!ps1Content.includes("GetRandomFileName")) {
+      errors.push("packaging/install.ps1 must extract inside an isolated temporary directory");
+    }
+  }
+
   const checks: Array<[string, string, string]> = [
     [completionFiles.bash, "_cddm", "Bash completion script missing _cddm function signature"],
     [completionFiles.zsh, "#compdef cddm", "Zsh completion script missing #compdef header"],

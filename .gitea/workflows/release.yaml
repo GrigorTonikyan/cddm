@@ -309,9 +309,46 @@ jobs:
           bun install --frozen-lockfile || bun install
           bun scripts/publish-cargo.ts --registry gitea
 
+  publish-npm:
+    name: Publish NPM Packages to Private Gitea Registry
+    needs: [build-binaries]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: builtin:checkout
+        with:
+          fetch-depth: 1
+
+      - name: Setup Enterprise Toolchains
+        uses: self:gt-dev/actions/setup-toolchains@v1
+        with:
+          bun: "true"
+          node: "true"
+
+      - name: Download Binary Build Artifacts
+        uses: self:gt-dev/actions/download-artifact@v1
+        with:
+          path: ./downloaded-artifacts
+
+      - name: Collect Binary Archives
+        run: |
+          mkdir -p ./dist-release
+          find ./downloaded-artifacts -type f \( -name "*.tar.gz" -o -name "*.zip" \) -exec cp {} ./dist-release/ \;
+
+      - name: Publish Platform & Wrapper Packages to Gitea NPM Registry
+        env:
+          GITHUB_SERVER_URL: ${{ github.server_url }}
+          GITEA_HOST: ${{ vars.GITEA_HOST }}
+          GITEA_REPO: ${{ github.repository }}
+          NPM_REGISTRY_OWNER: ${{ vars.PUBLISHER || github.repository_owner }}
+          NPM_TOKEN: ${{ secrets.RELEASE_BOT_TOKEN || secrets.REGISTRY_TOKEN || secrets.GITEA_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          bun install --frozen-lockfile || bun install
+          bun scripts/publish-npm.ts --registry gitea --dist-dir dist-release
+
   gitea-publish:
     name: Publish Gitea Release & Ecosystem Packages
-    needs: [build-binaries, package-vscode, publish-container, publish-cargo]
+    needs: [build-binaries, package-vscode, publish-container, publish-cargo, publish-npm]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Source Code

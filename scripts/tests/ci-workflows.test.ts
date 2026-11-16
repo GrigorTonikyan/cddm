@@ -36,6 +36,8 @@ describe("CI/CD & Container Governance Invariants", () => {
     expect(releaseYaml).not.toContain("|| 'git.gt-web-dev.com'");
     expect(releaseYaml).toContain("self:gt-dev/actions/docker-build-push@v1");
     expect(releaseYaml).toContain("self:gt-dev/actions/publish-release@v1");
+    expect(releaseYaml).toContain("publish-npm:");
+    expect(releaseYaml).toContain("scripts/publish-npm.ts --registry gitea");
     expect(releaseYaml).toContain("HOMEBREW_TAP_DEPLOY_KEY");
     expect(releaseYaml).toContain("SCOOP_BUCKET_DEPLOY_KEY");
     expect(releaseYaml).toContain("WINGET_DEPLOY_KEY");
@@ -44,6 +46,10 @@ describe("CI/CD & Container Governance Invariants", () => {
     expect(releaseYaml).toContain("build-webui:");
     expect(releaseYaml).toContain("force-unsafe-io");
     expect(releaseYaml).toContain("~/.cache/cargo-xwin");
+
+    const ghReleaseYml = readRepoFile(".github/workflows/release.yml");
+    expect(ghReleaseYml).toContain("id-token: write");
+    expect(ghReleaseYml).toContain("scripts/publish-npm.ts --registry npmjs --provenance");
   });
 
   it("pins Dockerfile base images to sha256 digests and includes .dockerignore", () => {

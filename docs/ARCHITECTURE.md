@@ -187,16 +187,16 @@ CDDM supports dual distribution channels:
    - `cddm-lsp`: Language Server Protocol binary (`cargo install cddm-lsp` / `--registry gitea`).
    - Topological release publishing orchestrated by `scripts/publish-cargo.ts` (`cddm-core -> cddm-lsp -> cddm-mcp -> cddm-cli`) across `.gitea/workflows/release.yaml` (Gitea Cargo sparse registry) and `.github/workflows/release.yml` (`publish-crates-io` via `rust-lang/crates-io-auth-action@v1`).
 
-2. **npm Registry (`npmjs.com`)**:
-   - `cddm`: Universal npm wrapper package with platform binary shims (`bin/cddm.js`).
-   - `@cddm/win32-x64`, `@cddm/linux-x64`, `@cddm/darwin-x64`, `@cddm/darwin-arm64`: Native pre-built release binaries.
+2. **npm Registry (Gitea Private NPM Registry & `npmjs.com` via OIDC Trusted Publishing)**:
+   - `cddm`: Universal npm wrapper package exposing `bin/cddm.js`, `bin/cddm-mcp.js`, and `bin/cddm-lsp.js` via `lib/run-binary.js` (`npx -p cddm cddm-mcp`).
+   - `@cddm/linux-x64` and `@cddm/win32-x64`: Native prebuilt platform packages orchestrated by `scripts/publish-npm.ts` across `.gitea/workflows/release.yaml` (Gitea NPM registry) and `.github/workflows/release.yml` (`publish-npm` with `id-token: write` and `--provenance`).
 
 3. **Gitea Actions CI/CD Workflows (Authoritative SSoT)**:
    - `.gitea/workflows/ci.yaml`: PR quality & merge gate (`pull_request: [main]`, `workflow_dispatch`) running parallel `security-scan` (`gitleaks-scan@v1`), `rust-build` (release binaries + strict `<= 5.0%` dogfooding), `rust-ci` (`fmt`, `clippy`, `cargo test`), `workspace-governance-ci`, and `webui-ci`, followed by parallel `mcp-ci` and pre-baked `playwright-runner:v1.65.0` `e2e-ci`.
    - `.gitea/workflows/auto-tag-release.yaml`: Lightweight `main` CD trigger that computes the SemVer release tag and creates the initial Gitea release (`scripts/publish-release.ts`).
-   - `.gitea/workflows/release.yaml`: Tag-triggered (`v*`) cross-compilation (`build-webui` once + Linux/Windows `cargo-xwin` cached matrix), VSIX packaging, BuildKit-cached DinD container publishing (`self:gt-dev/actions/docker-build-push@v1`), Gitea Cargo Registry crate publishing, and ecosystem package manifest dispatch.
+   - `.gitea/workflows/release.yaml`: Tag-triggered (`v*`) cross-compilation (`build-webui` once + Linux/Windows `cargo-xwin` cached matrix), VSIX packaging, BuildKit-cached DinD container publishing (`self:gt-dev/actions/docker-build-push@v1`), Gitea Cargo & NPM Registry publishing, `self:gt-dev/actions/publish-release@v1`, and SSH deploy-key package manifest dispatch (`scripts/dispatch-distribution.ts` using `HOMEBREW_TAP_DEPLOY_KEY`, `SCOOP_BUCKET_DEPLOY_KEY`, `WINGET_DEPLOY_KEY`).
    - `.github/workflows/ci.yml`: Read-only downstream replica CI mirror.
-   - `.github/workflows/release.yml`: Read-only downstream replica release mirror (including OIDC `crates.io` Trusted Publishing).
+   - `.github/workflows/release.yml`: Read-only downstream replica release mirror (executing token-less OIDC Trusted Publishing to `crates.io` and `npmjs.com` with `--provenance`).
 
 ---
 

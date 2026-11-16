@@ -103,7 +103,7 @@ Elixir (.ex, .exs)   Dockerfile / Containerfile
 
 ```bash
 brew tap gt-dev/tap https://git.gt-web-dev.com/gt-dev/homebrew-tap
-brew install cddm
+brew install gt-dev/tap/cddm
 ```
 
 ### Via Scoop (Windows)
@@ -116,18 +116,12 @@ scoop install cddm
 ### Via Windows Package Manager (Winget)
 
 ```powershell
-winget install gt-dev.cddm
+winget install --manifest https://git.gt-web-dev.com/gt-dev/winget-pkgs/raw/branch/main/manifests/g/gt-dev/cddm/4.10.3/gt-dev.cddm.installer.yaml
 ```
 
 ### Via Cargo (`crates.io` & Private Gitea Registry)
 
-Install directly from public `crates.io`:
-
-```bash
-cargo install cddm-cli cddm-mcp cddm-lsp
-```
-
-Or install from the Private Gitea Cargo Registry (zero-config via `CARGO_REGISTRIES_GITEA_INDEX` or one-time `~/.cargo/config.toml`):
+Install from the Private Gitea Cargo Registry (zero-config via `CARGO_REGISTRIES_GITEA_INDEX` or one-time `~/.cargo/config.toml`):
 
 ```bash
 CARGO_REGISTRIES_GITEA_INDEX=sparse+https://git.gt-web-dev.com/api/packages/gt-dev/cargo/ \
@@ -143,7 +137,13 @@ index = "sparse+https://git.gt-web-dev.com/api/packages/gt-dev/cargo/"
 ### Via npm (Cross-platform binary wrapper)
 
 ```bash
+# Private Gitea NPM Registry
+npm install -g cddm --registry https://git.gt-web-dev.com/api/packages/gt-dev/npm/
+npx --registry https://git.gt-web-dev.com/api/packages/gt-dev/npm/ -p cddm cddm-mcp
+
+# Public npmjs (when published via OIDC Trusted Publishing)
 npm install -g cddm
+npx -p cddm cddm-mcp
 ```
 
 ### Via VS Code / Cursor Marketplace

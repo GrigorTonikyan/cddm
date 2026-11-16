@@ -11,7 +11,10 @@
  * Supports --fix to automatically backport rich release notes to existing Gitea releases.
  */
 
-import { GITEA_REPO, giteaFetch } from "./lib/gitea-client";
+import { verifyCargoChannels } from "./lib/cargo-registry";
+import { GITEA_OWNER, GITEA_REPO, GITEA_TOKEN, giteaFetch } from "./lib/gitea-client";
+import { verifyNpmChannels } from "./lib/npm-registry";
+import { resolvePublisherConfig } from "./lib/publisher-config";
 import { generateReleaseNotes, validateReleaseNotesContent } from "./lib/release-notes-engine";
 import { getCurrentVersion } from "./version";
 
@@ -37,33 +40,43 @@ export async function auditGiteaReleases(
 
   for (const rel of res.data) {
     const rawBody = rel.body || "";
-    const isStub =
-      rawBody.includes("See CHANGELOG.md") ||
-      rawBody.length < 50 ||
-      (!rawBody.includes("MCP") && !rawBody.includes("Model Context Protocol"));
-
-    // Legacy releases prior to v3.3.0 are grandfathered if needed, but v3.3.0+ must comply
     const verMatch = rel.tag_name.match(/^v?(\d+\.\d+\.\d+)/);
     if (!verMatch) continue;
+    const version = verMatch[1]!;
 
-    if (isStub) {
-      const version = verMatch[1]!;
+    const validation = validateReleaseNotesContent(rawBody);
+    if (!validation.valid) {
       const audit: ReleaseAuditResult = {
         tag: rel.tag_name,
         id: rel.id,
         valid: false,
-        errors: rawBody.includes("See CHANGELOG.md")
-          ? ["Contains placeholder stub 'See CHANGELOG.md'"]
-          : ["Missing rich changelog or MCP documentation"],
+        errors: validation.errors,
       };
       violations.push(audit);
 
       if (fix) {
         console.log(
-          `[FIXING] Updating Gitea release ${rel.tag_name} (#${rel.id}) with rich release notes...`,
+          `[FIXING] Updating Gitea release ${rel.tag_name} (#${rel.id}) with verified rich release notes...`,
         );
+        const pubConfig = resolvePublisherConfig(process.cwd());
+        const [cargoChannels, npmChannels] = await Promise.all([
+          verifyCargoChannels({
+            host: pubConfig.vcsHost,
+            owner: GITEA_OWNER,
+            version,
+            token: GITEA_TOKEN !== "token-placeholder" ? GITEA_TOKEN : undefined,
+          }),
+          verifyNpmChannels({
+            host: pubConfig.vcsHost,
+            owner: GITEA_OWNER,
+            version,
+            token: GITEA_TOKEN !== "token-placeholder" ? GITEA_TOKEN : undefined,
+          }),
+        ]);
         const richBody = generateReleaseNotes(version, {
           milestoneTitle: rel.name.replace(/^CDDM\s+v\d+\.\d+\.\d+\s+-\s+/, ""),
+          cargoChannels,
+          npmChannels,
         });
         const patchRes = await giteaFetch(`/repos/${GITEA_REPO}/releases/${rel.id}`, {
           method: "PATCH",

@@ -10,6 +10,7 @@ import { basename, dirname, join, resolve } from "node:path";
 import { dispatchDistribution } from "./dispatch-distribution";
 import { getVcsAuthHeader, verifyCargoChannels } from "./lib/cargo-registry";
 import { parseSha256SumsValidated } from "./lib/distribution-manifests";
+import { verifyNpmChannels } from "./lib/npm-registry";
 import { resolvePublisherConfig } from "./lib/publisher-config";
 import { generateReleaseNotes } from "./lib/release-notes-engine";
 import { syncManifestsFromChecksums } from "./package-distribution";
@@ -341,20 +342,32 @@ export async function runPublishPipeline(options: ReleaseOptions): Promise<void>
       ? options.repo.split("/")[0]!
       : resolvePublisherConfig().publisherId;
     const cleanVersion = options.tag.replace(/^v/, "");
-    const cargoChannels = await verifyCargoChannels({
-      host: options.host,
-      owner,
-      version: cleanVersion,
-      token: options.token,
-    });
+    const [cargoChannels, npmChannels] = await Promise.all([
+      verifyCargoChannels({
+        host: options.host,
+        owner,
+        version: cleanVersion,
+        token: options.token,
+      }),
+      verifyNpmChannels({
+        host: options.host,
+        owner,
+        version: cleanVersion,
+        token: options.token,
+      }),
+    ]);
     console.log(
       `Cargo Channels:    gitea=${cargoChannels.gitea ? "live" : "unavailable"}, crates.io=${cargoChannels.cratesIo ? "live" : "unavailable"}`,
+    );
+    console.log(
+      `NPM Channels:      gitea=${npmChannels.gitea ? "live" : "unavailable"}, npmjs=${npmChannels.npmjs ? "live" : "unavailable"}`,
     );
     effectiveOptions = {
       ...options,
       body: generateReleaseNotes(cleanVersion, {
         milestoneTitle: options.title,
         cargoChannels,
+        npmChannels,
       }),
     };
   }

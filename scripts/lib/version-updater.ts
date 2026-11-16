@@ -407,7 +407,7 @@ export function updateWorkspaceVersions(
     console.log(`\x1b[32m[OK] Updated packaging/winget/${wfName} -> ${newVersion}\x1b[0m`);
   }
 
-  // 9. README.md badges
+  // 9. README.md badges & Winget manifest link
   const readmePath = join(workspaceRoot, "README.md");
   if (existsSync(readmePath)) {
     const readmeContent = readFileSync(readmePath, "utf-8");
@@ -416,6 +416,10 @@ export function updateWorkspaceVersions(
       .replace(
         /badge\/crates\.io-[\d.]+-brightgreen\.svg/,
         `badge/crates.io-${newVersion}-brightgreen.svg`,
+      )
+      .replace(
+        /(\/manifests\/[a-z]\/[^/]+\/cddm\/)[\d.]+(\/[^/\s]+\.installer\.yaml)/g,
+        `$1${newVersion}$2`,
       );
     writeFileSync(readmePath, updatedReadme, "utf-8");
     console.log(`\x1b[32m[OK] Updated README.md -> ${newVersion}\x1b[0m`);

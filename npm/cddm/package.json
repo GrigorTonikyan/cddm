@@ -10,6 +10,7 @@
     "dry",
     "duplicate-code",
     "jscpd",
+    "lsp",
     "mcp",
     "refactoring",
     "rust",
@@ -29,12 +30,15 @@
   },
   "bin": {
     "cddm": "./bin/cddm.js",
+    "cddm-lsp": "./bin/cddm-lsp.js",
     "cddm-mcp": "./bin/cddm-mcp.js"
   },
+  "files": [
+    "bin",
+    "lib"
+  ],
   "main": "./bin/cddm.js",
   "optionalDependencies": {
-    "@cddm/darwin-arm64": "4.10.3",
-    "@cddm/darwin-x64": "4.10.3",
     "@cddm/linux-x64": "4.10.3",
     "@cddm/win32-x64": "4.10.3"
   }

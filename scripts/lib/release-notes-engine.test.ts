@@ -21,13 +21,16 @@ describe("release-notes-engine", () => {
     expect(section).toContain("### Release v99.99.99");
   });
 
-  it("should build standard MCP server highlights", () => {
+  it("should build standard MCP server highlights using npx -p cddm cddm-mcp", () => {
     const mcp = buildMcpServerSection();
     expect(mcp).toContain("Model Context Protocol (MCP) Server Highlights");
     expect(mcp).toContain("cddm-mcp");
     expect(mcp).toContain("33 Specialized AI Agent Tools");
     expect(mcp).toContain("claude_desktop_config.json");
-    expect(mcp).toContain("npx cddm-mcp");
+    expect(mcp).toContain("npx -p cddm cddm-mcp");
+
+    const mcpNoNpm = buildMcpServerSection({ gitea: false, npmjs: false });
+    expect(mcpNoNpm).not.toContain("NPM & NPX Ready");
   });
 
   it("should build 4-pillar interface coverage", () => {
@@ -39,33 +42,40 @@ describe("release-notes-engine", () => {
     expect(parity).toContain("TUI Studio");
   });
 
-  it("should build download and installation guides", () => {
+  it("should build download and installation guides with qualified Homebrew and WinGet manifest URL", () => {
     const install = buildInstallationSection("4.0.1");
     expect(install).toContain("cddm-v4.0.1-x86_64-unknown-linux-gnu.tar.gz");
     expect(install).toContain("cddm-v4.0.1-x86_64-pc-windows-msvc.zip");
     expect(install).toContain("cddm-4.0.1.vsix");
     expect(install).toContain("cargo install cddm-cli cddm-mcp --registry gitea");
-    expect(install).toContain("npm install -g cddm");
-    expect(install).toContain("npx cddm-mcp");
+    expect(install).toContain("brew install gt-dev/tap/cddm");
+    expect(install).toContain("winget install --manifest");
+    expect(install).toContain("-p cddm cddm-mcp");
   });
 
-  it("should conditionally render only verified Cargo channels when cargoChannels is specified", () => {
-    const cratesOnly = buildInstallationSection("4.9.4", {
+  it("should conditionally render only verified Cargo and NPM channels when specified", () => {
+    const cratesAndNpmjs = buildInstallationSection("4.9.4", {
       cargoChannels: { gitea: false, cratesIo: true },
+      npmChannels: { gitea: false, npmjs: true },
     });
-    expect(cratesOnly).toContain("cargo install cddm-cli cddm-mcp\n");
-    expect(cratesOnly).not.toContain("--registry gitea");
+    expect(cratesAndNpmjs).toContain("cargo install cddm-cli cddm-mcp\n");
+    expect(cratesAndNpmjs).not.toContain("--registry gitea");
+    expect(cratesAndNpmjs).toContain("npm install -g cddm\nnpx -p cddm cddm-mcp");
 
     const noneLive = buildInstallationSection("4.9.4", {
       cargoChannels: { gitea: false, cratesIo: false },
+      npmChannels: { gitea: false, npmjs: false },
     });
     expect(noneLive).not.toContain("cargo install");
+    expect(noneLive).not.toContain("npm install");
 
     const bothLive = buildInstallationSection("4.9.4", {
       cargoChannels: { gitea: true, cratesIo: true },
+      npmChannels: { gitea: true, npmjs: true },
     });
     expect(bothLive).toContain("# Cargo (crates.io)\ncargo install cddm-cli cddm-mcp");
     expect(bothLive).toContain("cargo install cddm-cli cddm-mcp --registry gitea");
+    expect(bothLive).toContain("# NPM / NPX (Gitea Private NPM Registry)");
   });
 
   it("should generate comprehensive valid release notes", () => {
@@ -84,13 +94,14 @@ describe("release-notes-engine", () => {
     expect(validation.errors).toHaveLength(0);
   });
 
-  it("should catch invalid release notes containing placeholder stubs or missing MCP", () => {
+  it("should catch invalid release notes containing placeholder stubs, missing MCP, or unverified bare npx/brew commands", () => {
     const badNotes =
-      "Automated semantic milestone release for v4.0.1.\n\nSee CHANGELOG.md for detailed component changes.";
+      "Automated semantic milestone release for v4.0.1.\n\nSee CHANGELOG.md for detailed component changes.\n\nnpx cddm-mcp\nbrew install cddm\n";
     const validation = validateReleaseNotesContent(badNotes);
 
     expect(validation.valid).toBe(false);
     expect(validation.errors.some((e) => e.includes("See CHANGELOG.md"))).toBe(true);
-    expect(validation.errors.some((e) => e.includes("MCP"))).toBe(true);
+    expect(validation.errors.some((e) => e.includes("npx -p cddm cddm-mcp"))).toBe(true);
+    expect(validation.errors.some((e) => e.includes("brew install"))).toBe(true);
   });
 });
