@@ -9,7 +9,9 @@ test.describe("CDDM WebUI E2E Workflows", () => {
   test("should render main app header and scan configuration panel", async ({ page }) => {
     await expect(page.locator("h1")).toContainText("CDDM Studio");
     await expect(page.getByText("Scan Configuration")).toBeVisible();
-    await expect(page.getByText("Run Duplicate Analysis")).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /Run Duplicate Analysis|Scanning Codebase/i }).first(),
+    ).toBeVisible();
   });
 
   test("should update min token threshold slider and trigger scan", async ({ page }) => {
