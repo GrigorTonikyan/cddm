@@ -102,4 +102,5 @@ Every quality check and test suite is strictly executed in `vp run verify` (or `
 17. `bun scripts/package-vscode.ts` (VS Code extension VSIX packaging)
 18. `bun scripts/version.ts --check` (SSoT workspace version synchronization check across all 10 manifests)
 19. `bun scripts/check-release-notes.ts` (Rich release notes & MCP standard gate)
-20. `cargo run -p cddm-cli --release -- scan . --min-tokens 50 --fail-threshold 5.0` (Strict CDDM dogfooding self-scan)
+20. `bun scripts/check-supply-chain.ts` (Supply-chain security, Renovate, cargo-deny & CODEOWNERS policy gate)
+21. `cargo run -p cddm-cli --release -- scan . --min-tokens 50 --fail-threshold 5.0` (Strict CDDM dogfooding self-scan)

@@ -5,17 +5,19 @@
  * VS Code extension VSIX packages, and SHA256 checksums.
  */
 
-import { mkdirSync, existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { dispatchDistribution } from "./dispatch-distribution";
 import { getVcsAuthHeader, verifyCargoChannels } from "./lib/cargo-registry";
 import { parseSha256SumsValidated } from "./lib/distribution-manifests";
+import { ensureSignedReleaseTag } from "./lib/gitea-git-transport";
 import { verifyNpmChannels } from "./lib/npm-registry";
 import { resolvePublisherConfig } from "./lib/publisher-config";
 import { generateReleaseNotes } from "./lib/release-notes-engine";
 import { syncManifestsFromChecksums } from "./package-distribution";
 import { getCurrentVersion } from "./version";
 
+export { ensureSignedReleaseTag };
 export const getAuthHeader = getVcsAuthHeader;
 
 /**
@@ -335,6 +337,15 @@ export async function runPublishPipeline(options: ReleaseOptions): Promise<void>
   console.log(`Target Repository: ${options.repo}`);
   console.log(`Release Tag:       ${options.tag}`);
   console.log(`Artifacts Dir:     ${options.distDir}`);
+
+  if (!options.writeNotesPath && !options.deleteAssetId) {
+    ensureSignedReleaseTag(options.tag, options.target || "HEAD", {
+      token: options.token,
+      host: options.host,
+      repo: options.repo,
+      dryRun: options.dryRun,
+    });
+  }
 
   let effectiveOptions = options;
   if (!options.dryRun && !options.deleteAssetId) {

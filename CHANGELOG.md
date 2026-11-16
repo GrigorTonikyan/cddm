@@ -5,6 +5,12 @@ All notable changes to **CDDM** (_Code De-Duplication Meister_) will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.10.5] - 2026-11-16
+
+### Tooling & Maintenance
+
+- **security**: add Renovate, cargo-deny policy, CODEOWNERS, and signed tags (`b8917b5`)
+
 ## [4.10.4] - 2026-11-16
 
 ### Bug Fixes

@@ -1,5 +1,10 @@
 import { describe, expect, it } from "bun:test";
-import { commitFileToRepo, getExistingFileSha, publishRepoPayload } from "./gitea-git-transport";
+import {
+  commitFileToRepo,
+  ensureSignedReleaseTag,
+  getExistingFileSha,
+  publishRepoPayload,
+} from "./gitea-git-transport";
 
 describe("gitea-git-transport", () => {
   it("fetches existing file blob sha and commits updates via Contents API", async () => {
@@ -51,5 +56,16 @@ describe("gitea-git-transport", () => {
       { dryRun: true },
     );
     expect(ok).toBe(true);
+  });
+
+  it("supports SSH-signed release tag creation in dry-run and skips when no key is set", () => {
+    const skipped = ensureSignedReleaseTag("v1.0.0", "HEAD", { signingKey: "" });
+    expect(skipped).toEqual({ signed: false, created: false });
+
+    const signed = ensureSignedReleaseTag("v1.0.0", "HEAD", {
+      signingKey: "-----BEGIN OPENSSH PRIVATE KEY-----\ntest\n-----END OPENSSH PRIVATE KEY-----", // gitleaks:allow — unit test fixture
+      dryRun: true,
+    });
+    expect(signed).toEqual({ signed: true, created: true });
   });
 });

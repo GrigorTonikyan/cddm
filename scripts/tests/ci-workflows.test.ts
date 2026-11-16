@@ -18,15 +18,22 @@ describe("CI/CD & Container Governance Invariants", () => {
     expect(ciYaml).toContain("playwright-runner:v");
     expect(ciYaml).toContain("rust-build:");
     expect(ciYaml).toContain("rust-ci:");
+    expect(ciYaml).toContain("scripts/check-supply-chain.ts");
   });
 
-  it("isolates main auto-tagging into auto-tag-release.yaml", () => {
+  it("isolates main auto-tagging into auto-tag-release.yaml and configures Renovate", () => {
     expect(existsSync(join(ROOT, ".gitea/workflows/auto-tag-release.yaml"))).toBeTrue();
     const autoTag = readRepoFile(".gitea/workflows/auto-tag-release.yaml");
     expect(autoTag).toContain("push:");
     expect(autoTag).toContain("branches: [main]");
     expect(autoTag).toContain("TARGET_SHA: ${{ github.sha }}");
+    expect(autoTag).toContain("RELEASE_SIGNING_KEY: ${{ secrets.RELEASE_SIGNING_KEY");
     expect(autoTag).toContain("scripts/publish-release.ts");
+
+    expect(existsSync(join(ROOT, ".gitea/workflows/renovate.yaml"))).toBeTrue();
+    const renovateYaml = readRepoFile(".gitea/workflows/renovate.yaml");
+    expect(renovateYaml).toContain("schedule:");
+    expect(renovateYaml).toContain("renovate");
   });
 
   it("hardens release.yaml without setup-buildx-action or hardcoded host fallbacks", () => {
