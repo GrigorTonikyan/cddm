@@ -309,9 +309,46 @@ jobs:
           bun install --frozen-lockfile || bun install
           bun scripts/publish-cargo.ts --registry gitea
 
+  publish-npm:
+    name: Publish NPM Packages to Private Gitea Registry
+    needs: [build-binaries]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: builtin:checkout
+        with:
+          fetch-depth: 1
+
+      - name: Setup Enterprise Toolchains
+        uses: self:gt-dev/actions/setup-toolchains@v1
+        with:
+          bun: "true"
+          node: "true"
+
+      - name: Download Binary Build Artifacts
+        uses: self:gt-dev/actions/download-artifact@v1
+        with:
+          path: ./downloaded-artifacts
+
+      - name: Collect Binary Archives
+        run: |
+          mkdir -p ./dist-release
+          find ./downloaded-artifacts -type f \( -name "*.tar.gz" -o -name "*.zip" \) -exec cp {} ./dist-release/ \;
+
+      - name: Publish Platform & Wrapper Packages to Gitea NPM Registry
+        env:
+          GITHUB_SERVER_URL: ${{ github.server_url }}
+          GITEA_HOST: ${{ vars.GITEA_HOST }}
+          GITEA_REPO: ${{ github.repository }}
+          NPM_REGISTRY_OWNER: ${{ vars.PUBLISHER || github.repository_owner }}
+          NPM_TOKEN: ${{ secrets.RELEASE_BOT_TOKEN || secrets.REGISTRY_TOKEN || secrets.GITEA_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          bun install --frozen-lockfile || bun install
+          bun scripts/publish-npm.ts --registry gitea --dist-dir dist-release
+
   gitea-publish:
     name: Publish Gitea Release & Ecosystem Packages
-    needs: [build-binaries, package-vscode, publish-container, publish-cargo]
+    needs: [build-binaries, package-vscode, publish-container, publish-cargo, publish-npm]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Source Code
@@ -340,7 +377,10 @@ jobs:
       - name: Install Workspace Dependencies
         run: bun install --frozen-lockfile || bun install
 
-      - name: Generate Rich MCP Release Notes
+      # Consumer isolation for gt-dev/actions#47 (unindented heredocs at lines 841-868 in
+      # publish-release/action.yaml cause act-runner YAML parse failure at line 845) and
+      # gt-dev/actions#42 (multi-binary companion executable entries).
+      - name: Publish Binary-Whitelisted Gitea Release
         id: release_meta
         env:
           GITHUB_SERVER_URL: ${{ github.server_url }}
@@ -355,22 +395,7 @@ jobs:
             TAG_NAME="v$(bun scripts/version.ts --get-current)"
           fi
           echo "tag_name=${TAG_NAME}" >> "$GITHUB_OUTPUT"
-          bun scripts/publish-release.ts --tag "${TAG_NAME}" --write-notes ./release-notes.md
-
-      - name: Publish Binary-Whitelisted Gitea Release (SSoT)
-        uses: self:gt-dev/actions/publish-release@v1
-        with:
-          tag: ${{ steps.release_meta.outputs.tag_name }}
-          app: cddm
-          artifacts-dir: dist-release
-          body-file: ./release-notes.md
-          strict-whitelist: "true"
-          verify-urls: "true"
-          dispatch-homebrew: "false"
-          dispatch-scoop: "false"
-          dispatch-winget: "false"
-        env:
-          GITEA_TOKEN: ${{ secrets.RELEASE_BOT_TOKEN || secrets.REGISTRY_TOKEN || secrets.GITEA_TOKEN || secrets.GITHUB_TOKEN }}
+          bun scripts/publish-release.ts --tag "${TAG_NAME}" --dist-dir "dist-release"
 
       - name: Dispatch Multi-Binary Package Manifests via Least-Privilege Deploy Keys
         env:

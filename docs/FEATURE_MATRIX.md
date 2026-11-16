@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-27 | Rust: 416 #[test] units | WebUI: 334 tests across 77 suites | Scripts & MCP: 241 tests across 62 suites | CI Workflows: PASS
+> Last verified: 2026-08-27 | Rust: 416 #[test] units | WebUI: 334 tests across 77 suites | Scripts & MCP: 249 tests across 65 suites | CI Workflows: PASS
 
 ---
 
@@ -442,7 +442,7 @@
 
 ---
 
-## 3. Repository Scripts & MCP Protocol — Bun Test Suites (241 tests across 62 suites)
+## 3. Repository Scripts & MCP Protocol — Bun Test Suites (249 tests across 65 suites)
 
 ### Repository Tooling & Automation Suites
 
@@ -452,6 +452,7 @@
 | clean-engine                  | `scripts/lib/clean-engine.test.ts`             | 14 tests   | PASS   |
 | gitea-git-transport           | `scripts/lib/gitea-git-transport.test.ts`      | 2 tests    | PASS   |
 | interface-docs-generator      | `scripts/lib/interface-docs-generator.test.ts` | 6 tests    | PASS   |
+| npm-registry                  | `scripts/lib/npm-registry.test.ts`             | 3 tests    | PASS   |
 | publisher-config              | `scripts/lib/publisher-config.test.ts`         | 6 tests    | PASS   |
 | release-notes-engine          | `scripts/lib/release-notes-engine.test.ts`     | 8 tests    | PASS   |
 | step-runner                   | `scripts/lib/step-runner.test.ts`              | 4 tests    | PASS   |
@@ -468,9 +469,11 @@
 | mcp-manual-audit              | `scripts/tests/mcp-manual-audit.test.ts`       | 0 tests    | PASS   |
 | monitor-ci                    | `scripts/tests/monitor-ci.test.ts`             | 2 tests    | PASS   |
 | Zero-Emoji Policy             | `scripts/tests/no-emojis.test.ts`              | 9 tests    | PASS   |
+| npm-wrapper                   | `scripts/tests/npm-wrapper.test.ts`            | 3 tests    | PASS   |
 | VSIX Packaging Pipeline       | `scripts/tests/package-vscode.test.ts`         | 5 tests    | PASS   |
 | populate-gitea-portal         | `scripts/tests/populate-gitea-portal.test.ts`  | 5 tests    | PASS   |
 | publish-cargo                 | `scripts/tests/publish-cargo.test.ts`          | 9 tests    | PASS   |
+| publish-npm                   | `scripts/tests/publish-npm.test.ts`            | 2 tests    | PASS   |
 | publish-release               | `scripts/tests/publish-release.test.ts`        | 9 tests    | PASS   |
 | setup-deps                    | `scripts/tests/setup-deps.test.ts`             | 5 tests    | PASS   |
 | ui-ux-qa-verification         | `scripts/tests/ui-ux-qa-verification.test.ts`  | 4 tests    | PASS   |

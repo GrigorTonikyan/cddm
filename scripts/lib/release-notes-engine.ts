@@ -3,13 +3,14 @@
  *
  * Generates and validates comprehensive, production-grade release notes
  * combining the version changelog, 4-pillar interface highlights (including MCP),
- * standalone binary download tables, and ecosystem package manager quickstarts.
- * Strictly forbids empty bodies or "See CHANGELOG.md" placeholder stubs.
+ * standalone binary download tables, and live-verified ecosystem package manager commands.
+ * Strictly forbids empty bodies, "See CHANGELOG.md" stubs, or unverified 404 channels.
  */
 
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { buildCargoRegistryIndexUrl, type CargoChannelAvailability } from "./cargo-registry";
+import { buildGiteaNpmRegistryUrl, type NpmChannelAvailability } from "./npm-registry";
 import { resolvePublisherConfig } from "./publisher-config";
 
 export interface ReleaseNotesOptions {
@@ -18,6 +19,8 @@ export interface ReleaseNotesOptions {
   includeMcpHighlight?: boolean;
   includeInstallGuides?: boolean;
   cargoChannels?: CargoChannelAvailability;
+  npmChannels?: NpmChannelAvailability;
+  wingetUpstream?: boolean;
 }
 
 export interface ReleaseNotesValidationResult {
@@ -56,7 +59,12 @@ export function extractChangelogSection(version: string, rootDir = process.cwd()
 /**
  * Builds the standardized Model Context Protocol (MCP) server highlight section.
  */
-export function buildMcpServerSection(): string {
+export function buildMcpServerSection(npmChannels?: NpmChannelAvailability): string {
+  const showNpx = !npmChannels || npmChannels.npmjs || npmChannels.gitea;
+  const npxLine = showNpx
+    ? "\n\n- **NPM & NPX Ready**: Run instantly without local installation via `npx -p cddm cddm-mcp`."
+    : "";
+
   return `### Model Context Protocol (MCP) Server Highlights
 
 CDDM exposes its entire code clone detection, AST refactoring, and federation engine to AI coding agents via its dedicated **Model Context Protocol (MCP)** server (\`cddm-mcp\`) over JSON-RPC 2.0 stdio.
@@ -73,9 +81,7 @@ CDDM exposes its entire code clone detection, AST refactoring, and federation en
     }
   }
 }
-\`\`\`
-
-- **NPM & NPX Ready**: Run instantly without local installation via \`npx cddm-mcp\`.`;
+\`\`\`${npxLine}`;
 }
 
 /**
@@ -114,18 +120,49 @@ function buildCargoInstallSnippet(
   return sections.length > 0 ? `${sections.join("\n\n")}\n\n` : "";
 }
 
+function buildNpmInstallSnippet(
+  pubConfig: ReturnType<typeof resolvePublisherConfig>,
+  npmChannels?: NpmChannelAvailability,
+): string {
+  const giteaRegistry = buildGiteaNpmRegistryUrl(pubConfig.vcsHost, pubConfig.publisherId);
+  const giteaBlock = `# NPM / NPX (Gitea Private NPM Registry)\nnpm install -g cddm --registry ${giteaRegistry}\nnpx --registry ${giteaRegistry} -p cddm cddm-mcp`;
+  const publicBlock = `# NPM / NPX (global CLI & MCP server)\nnpm install -g cddm\nnpx -p cddm cddm-mcp`;
+
+  if (!npmChannels) {
+    return `${giteaBlock}\n\n`;
+  }
+
+  const sections: string[] = [];
+  if (npmChannels.npmjs) {
+    sections.push(publicBlock);
+  }
+  if (npmChannels.gitea) {
+    sections.push(giteaBlock);
+  }
+  return sections.length > 0 ? `${sections.join("\n\n")}\n\n` : "";
+}
+
 /**
  * Builds the download and installation guides section.
  */
 export function buildInstallationSection(
   version: string,
-  options: Pick<ReleaseNotesOptions, "rootDir" | "cargoChannels"> = {},
+  options: Pick<
+    ReleaseNotesOptions,
+    "rootDir" | "cargoChannels" | "npmChannels" | "wingetUpstream"
+  > = {},
 ): string {
   const cleanVersion = version.replace(/^v/, "").trim();
   const tag = `v${cleanVersion}`;
   const pubConfig = resolvePublisherConfig(options.rootDir);
   const repoUrl = `https://${pubConfig.vcsHost}/${pubConfig.vcsRepo}`;
   const cargoSnippet = buildCargoInstallSnippet(pubConfig, options.cargoChannels);
+  const npmSnippet = buildNpmInstallSnippet(pubConfig, options.npmChannels);
+  const firstChar = pubConfig.publisherId.charAt(0).toLowerCase();
+  const wingetManifestUrl = `https://${pubConfig.vcsHost}/${pubConfig.wingetRepo}/raw/branch/main/manifests/${firstChar}/${pubConfig.publisherId}/cddm/${cleanVersion}/${pubConfig.publisherId}.cddm.installer.yaml`;
+  const wingetSnippet = options.wingetUpstream
+    ? `# WinGet (Windows Package Manager)\nwinget install ${pubConfig.publisherId}.cddm`
+    : `# WinGet (Windows Package Manager — Self-Hosted Manifest)\nwinget install --manifest ${wingetManifestUrl}`;
 
   return `### Installation & Distribution Ecosystem
 
@@ -139,20 +176,15 @@ Download standalone binaries containing \`cddm\` (CLI), \`cddm-mcp\` (MCP Server
 
 #### Ecosystem Package Managers
 \`\`\`bash
-${cargoSnippet}# NPM / NPX (global CLI & MCP server)
-npm install -g cddm
-npx cddm-mcp
-
-# Homebrew (macOS / Linux — Central Tap)
+${cargoSnippet}${npmSnippet}# Homebrew (macOS / Linux — Central Tap)
 brew tap ${pubConfig.publisherId}/tap https://${pubConfig.vcsHost}/${pubConfig.homebrewTapRepo}
-brew install cddm
+brew install ${pubConfig.publisherId}/tap/cddm
 
 # Scoop (Windows — Central Bucket)
 scoop bucket add ${pubConfig.publisherId} https://${pubConfig.vcsHost}/${pubConfig.scoopBucketRepo}
 scoop install cddm
 
-# WinGet (Windows Package Manager)
-winget install ${pubConfig.publisherId}.cddm
+${wingetSnippet}
 
 # Turnkey Install Scripts
 curl -fsSL ${repoUrl}/raw/branch/main/packaging/install.sh | bash
@@ -171,11 +203,19 @@ export function generateReleaseNotes(version: string, options: ReleaseNotesOptio
   const pubConfig = resolvePublisherConfig(rootDir);
 
   const changelog = extractChangelogSection(cleanVersion, rootDir);
-  const mcpSection = options.includeMcpHighlight !== false ? `\n\n${buildMcpServerSection()}` : "";
+  const mcpSection =
+    options.includeMcpHighlight !== false
+      ? `\n\n${buildMcpServerSection(options.npmChannels)}`
+      : "";
   const paritySection = `\n\n${buildInterfaceParitySection()}`;
   const installSection =
     options.includeInstallGuides !== false
-      ? `\n\n${buildInstallationSection(cleanVersion, { rootDir, cargoChannels: options.cargoChannels })}`
+      ? `\n\n${buildInstallationSection(cleanVersion, {
+          rootDir,
+          cargoChannels: options.cargoChannels,
+          npmChannels: options.npmChannels,
+          wingetUpstream: options.wingetUpstream,
+        })}`
       : "";
 
   return `## CDDM ${tag}${title}
@@ -211,6 +251,16 @@ export function validateReleaseNotesContent(notes: string): ReleaseNotesValidati
 
   if (!trimmed.includes("Installation") && !trimmed.includes("Standalone Prebuilt Binaries")) {
     errors.push("Release notes must include installation or binary download instructions.");
+  }
+
+  if (/(?<!-p cddm\s)npx\s+cddm-mcp\b/.test(trimmed)) {
+    errors.push("Release notes must use 'npx -p cddm cddm-mcp' instead of bare 'npx cddm-mcp'.");
+  }
+
+  if (/^brew\s+install\s+cddm\s*$/m.test(trimmed)) {
+    errors.push(
+      "Release notes must use fully-qualified 'brew install <publisher>/tap/cddm' instead of bare 'brew install cddm'.",
+    );
   }
 
   return {

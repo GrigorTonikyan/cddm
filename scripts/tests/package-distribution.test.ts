@@ -112,7 +112,7 @@ describe("Ecosystem Distribution & Packaging Validator", () => {
     }
   });
 
-  it("should validate install.sh and install.ps1 scripts", () => {
+  it("should validate install.sh and install.ps1 integrity verification and error handling", () => {
     const shPath = resolve(rootDir, "packaging/install.sh");
     const ps1Path = resolve(rootDir, "packaging/install.ps1");
     const shContent = readFileSync(shPath, "utf-8");
@@ -120,8 +120,19 @@ describe("Ecosystem Distribution & Packaging Validator", () => {
 
     expect(shContent).toContain("cddm");
     expect(shContent).toContain("curl");
+    expect(shContent).toContain("SHA256SUMS.txt");
+    expect(shContent).toContain("pc-windows-msvc");
+    expect(shContent).toContain("pc-windows-gnu");
+    expect(shContent).not.toContain('RELEASE_TAG="v1.9.0"');
+
     expect(ps1Content).toContain("cddm");
     expect(ps1Content).toContain("Invoke-WebRequest");
+    expect(ps1Content).toContain("SHA256SUMS.txt");
+    expect(ps1Content).toContain("Get-FileHash");
+    expect(ps1Content).toContain("GetRandomFileName");
+    expect(ps1Content).toContain("pc-windows-msvc.zip");
+    expect(ps1Content).toContain("pc-windows-gnu.zip");
+    expect(ps1Content).not.toContain('$ReleaseTag = "v1.9.0"');
   });
 
   it("should validate generated shell completions signatures across all 5 shells", () => {

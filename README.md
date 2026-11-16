@@ -8,8 +8,8 @@
 [![Vite Plus](https://img.shields.io/badge/vite%2B-1.5.0-purple.svg)](https://viteplus.dev)
 [![TypeScript](https://img.shields.io/badge/typescript-7.0-blue.svg)](https://www.typescriptlang.org)
 [![React](https://img.shields.io/badge/react-19.3-61dafb.svg)](https://react.dev)
-[![npm version](https://img.shields.io/badge/npm-4.10.3-red.svg)](https://www.npmjs.com/package/cddm)
-[![crates.io](https://img.shields.io/badge/crates.io-4.10.3-brightgreen.svg)](https://crates.io/crates/cddm)
+[![npm version](https://img.shields.io/badge/npm-4.10.4-red.svg)](https://www.npmjs.com/package/cddm)
+[![crates.io](https://img.shields.io/badge/crates.io-4.10.4-brightgreen.svg)](https://crates.io/crates/cddm)
 
 > [!NOTE]
 > **Primary Upstream SSoT**: All development, issues, pull requests, and automated testing are managed on our self-hosted Gitea portal at [git.gt-web-dev.com/gt-dev/cddm](https://git.gt-web-dev.com/gt-dev/cddm). The GitHub repository is an automated read-only downstream replica mirror.
@@ -103,7 +103,7 @@ Elixir (.ex, .exs)   Dockerfile / Containerfile
 
 ```bash
 brew tap gt-dev/tap https://git.gt-web-dev.com/gt-dev/homebrew-tap
-brew install cddm
+brew install gt-dev/tap/cddm
 ```
 
 ### Via Scoop (Windows)
@@ -116,18 +116,12 @@ scoop install cddm
 ### Via Windows Package Manager (Winget)
 
 ```powershell
-winget install gt-dev.cddm
+winget install --manifest https://git.gt-web-dev.com/gt-dev/winget-pkgs/raw/branch/main/manifests/g/gt-dev/cddm/4.10.4/gt-dev.cddm.installer.yaml
 ```
 
 ### Via Cargo (`crates.io` & Private Gitea Registry)
 
-Install directly from public `crates.io`:
-
-```bash
-cargo install cddm-cli cddm-mcp cddm-lsp
-```
-
-Or install from the Private Gitea Cargo Registry (zero-config via `CARGO_REGISTRIES_GITEA_INDEX` or one-time `~/.cargo/config.toml`):
+Install from the Private Gitea Cargo Registry (zero-config via `CARGO_REGISTRIES_GITEA_INDEX` or one-time `~/.cargo/config.toml`):
 
 ```bash
 CARGO_REGISTRIES_GITEA_INDEX=sparse+https://git.gt-web-dev.com/api/packages/gt-dev/cargo/ \
@@ -143,7 +137,13 @@ index = "sparse+https://git.gt-web-dev.com/api/packages/gt-dev/cargo/"
 ### Via npm (Cross-platform binary wrapper)
 
 ```bash
+# Private Gitea NPM Registry
+npm install -g cddm --registry https://git.gt-web-dev.com/api/packages/gt-dev/npm/
+npx --registry https://git.gt-web-dev.com/api/packages/gt-dev/npm/ -p cddm cddm-mcp
+
+# Public npmjs (when published via OIDC Trusted Publishing)
 npm install -g cddm
+npx -p cddm cddm-mcp
 ```
 
 ### Via VS Code / Cursor Marketplace
