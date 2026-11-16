@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="724" viewBox="0 0 960 724" role="img" aria-label="CDDM CLI -- Code De-Duplication Meister">
+  <defs>
+    <linearGradient id="termBg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b1120"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+  </defs>
+  <rect width="960" height="724" rx="12" fill="url(#termBg)" stroke="#1e293b" stroke-width="1.5"/>
+  <rect x="0.75" y="0.75" width="958.5" height="44" rx="11" fill="#1e293b"/>
+  <rect x="0.75" y="34" width="958.5" height="10" fill="#1e293b"/>
+  <circle cx="24" cy="22" r="6" fill="#ef4444"/>
+  <circle cx="44" cy="22" r="6" fill="#f59e0b"/>
+  <circle cx="64" cy="22" r="6" fill="#10b981"/>
+  <text x="480" y="27" text-anchor="middle" fill="#94a3b8" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="13" font-weight="600">CDDM CLI -- Code De-Duplication Meister</text>
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="13.5">
+    <text x="24" y="72" xml:space="preserve"><tspan fill="#22d3ee">$</tspan><tspan fill="#e2e8f0"> </tspan><tspan fill="#e2e8f0" font-weight="700">cddm --version</tspan></text>
+    <text x="24" y="92" xml:space="preserve"> </text>
+    <text x="24" y="112" xml:space="preserve"><tspan fill="#e2e8f0">cddm 4.11.0</tspan></text>
+    <text x="24" y="132" xml:space="preserve"> </text>
+    <text x="24" y="152" xml:space="preserve"><tspan fill="#22d3ee">$</tspan><tspan fill="#e2e8f0"> </tspan><tspan fill="#e2e8f0" font-weight="700">cddm scan . --summary --min-tokens 50</tspan></text>
+    <text x="24" y="172" xml:space="preserve"> </text>
+    <text x="24" y="192" xml:space="preserve"><tspan fill="#e2e8f0">=== CDDM — Code De-Duplication Meister Report (Summary Mode) ===</tspan></text>
+    <text x="24" y="212" xml:space="preserve"><tspan fill="#e2e8f0">Scan ID:               a6a98f8c-7b15-4cb9-ab10-f1e663a7abcf</tspan></text>
+    <text x="24" y="232" xml:space="preserve"><tspan fill="#e2e8f0">Total Files:           500</tspan></text>
+    <text x="24" y="252" xml:space="preserve"><tspan fill="#e2e8f0">Total Tokens:          390729</tspan></text>
+    <text x="24" y="272" xml:space="preserve"><tspan fill="#e2e8f0">Total Clone Pairs:     56</tspan></text>
+    <text x="24" y="292" xml:space="preserve"><tspan fill="#e2e8f0">Total Clone Clusters:  52</tspan></text>
+    <text x="24" y="312" xml:space="preserve"><tspan fill="#e2e8f0">Duplication Rate:      4.64%</tspan></text>
+    <text x="24" y="332" xml:space="preserve"><tspan fill="#e2e8f0">DRY Health Score:      92.7 / 100.0</tspan></text>
+    <text x="24" y="352" xml:space="preserve"><tspan fill="#e2e8f0">SIMD Engine:           AVX-512</tspan></text>
+    <text x="24" y="372" xml:space="preserve"><tspan fill="#e2e8f0">Scan Duration:         263 ms</tspan></text>
+    <text x="24" y="392" xml:space="preserve"> </text>
+    <text x="24" y="412" xml:space="preserve"><tspan fill="#e2e8f0">--- Top Clone Clusters (Showing Top 5) ---</tspan></text>
+    <text x="24" y="432" xml:space="preserve"><tspan fill="#e2e8f0">+---------+----------+-------------+--------+---------------------------------------------------------+</tspan></text>
+    <text x="24" y="452" xml:space="preserve"><tspan fill="#e2e8f0">| Cluster | Type     | Occurrences | Tokens | Locations                                               |</tspan></text>
+    <text x="24" y="472" xml:space="preserve"><tspan fill="#e2e8f0">+=====================================================================================================+</tspan></text>
+    <text x="24" y="492" xml:space="preserve"><tspan fill="#e2e8f0">| #1      | NearMiss | 2           | 781    | .\crates\cddm-core\src\neural\hnsw\index.rs:71-183, ... |</tspan></text>
+    <text x="24" y="512" xml:space="preserve"><tspan fill="#e2e8f0">|---------+----------+-------------+--------+---------------------------------------------------------|</tspan></text>
+    <text x="24" y="532" xml:space="preserve"><tspan fill="#e2e8f0">| #2      | NearMiss | 2           | 428    | .\crates\cddm-core\src\neural\hnsw\index.rs:190-260,... |</tspan></text>
+    <text x="24" y="552" xml:space="preserve"><tspan fill="#e2e8f0">|---------+----------+-------------+--------+---------------------------------------------------------|</tspan></text>
+    <text x="24" y="572" xml:space="preserve"><tspan fill="#e2e8f0">| #3      | Renamed  | 2           | 403    | .\crates\cddm-core\src\neural\hnsw\index.rs:286-340,... |</tspan></text>
+    <text x="24" y="592" xml:space="preserve"><tspan fill="#e2e8f0">|---------+----------+-------------+--------+---------------------------------------------------------|</tspan></text>
+    <text x="24" y="612" xml:space="preserve"><tspan fill="#e2e8f0">| #4      | NearMiss | 2           | 379    | .\crates\cddm-cli\src\tui\views\coverage.rs:87-191, ... |</tspan></text>
+    <text x="24" y="632" xml:space="preserve"><tspan fill="#e2e8f0">|---------+----------+-------------+--------+---------------------------------------------------------|</tspan></text>
+    <text x="24" y="652" xml:space="preserve"><tspan fill="#e2e8f0">| #5      | NearMiss | 2           | 309    | .\crates\cddm-core\src\neural\hnsw\sq8_index.rs:340-... |</tspan></text>
+    <text x="24" y="672" xml:space="preserve"><tspan fill="#e2e8f0">+---------+----------+-------------+--------+---------------------------------------------------------+</tspan></text>
+    <text x="24" y="692" xml:space="preserve"><tspan fill="#e2e8f0">... and 47 more clone clusters omitted in summary mode.</tspan></text>
+  </g>
+</svg>

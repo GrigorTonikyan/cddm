@@ -94,6 +94,7 @@ export function checkWorkspaceVersionSync(
     "webui/package.json",
     "npm/cddm/package.json",
     "editors/vscode/package.json",
+    "server.json",
   ];
 
   for (const relPath of jsonFiles) {
@@ -103,6 +104,7 @@ export function checkWorkspaceVersionSync(
     const pkg = JSON.parse(readFileSync(fullPath, "utf-8")) as {
       version?: string;
       optionalDependencies?: Record<string, string>;
+      packages?: Array<{ version?: string; registryType?: string; identifier?: string }>;
     };
     if (pkg.version !== canonicalVersion) {
       mismatches.push({
@@ -120,6 +122,30 @@ export function checkWorkspaceVersionSync(
             field: `optionalDependencies.${depName}`,
             expected: canonicalVersion,
             actual: depVer,
+          });
+        }
+      }
+    }
+    if (relPath === "server.json" && Array.isArray(pkg.packages)) {
+      for (const entry of pkg.packages) {
+        if (entry.version && entry.version !== canonicalVersion) {
+          mismatches.push({
+            file: relPath,
+            field: `packages.${entry.identifier ?? entry.registryType ?? "item"}.version`,
+            expected: canonicalVersion,
+            actual: entry.version,
+          });
+        }
+        if (
+          entry.registryType === "oci" &&
+          typeof entry.identifier === "string" &&
+          !entry.identifier.endsWith(`:v${canonicalVersion}`)
+        ) {
+          mismatches.push({
+            file: relPath,
+            field: "packages.oci.identifier",
+            expected: `:v${canonicalVersion}`,
+            actual: entry.identifier,
           });
         }
       }
@@ -287,47 +313,40 @@ export function updateWorkspaceVersions(
     console.log(`\x1b[32m[OK] Updated Cargo.toml -> ${newVersion}\x1b[0m`);
   }
 
-  // 2. Root package.json
-  const rootPkgPath = join(workspaceRoot, "package.json");
-  if (existsSync(rootPkgPath)) {
-    const pkg = JSON.parse(readFileSync(rootPkgPath, "utf-8"));
+  // 2-6. JSON package & MCP registry manifests
+  for (const relPath of [
+    "package.json",
+    "webui/package.json",
+    "npm/cddm/package.json",
+    "editors/vscode/package.json",
+    "server.json",
+  ]) {
+    const jsonPath = join(workspaceRoot, relPath);
+    if (!existsSync(jsonPath)) continue;
+    const pkg = JSON.parse(readFileSync(jsonPath, "utf-8")) as Record<string, unknown>;
     pkg.version = newVersion;
-    writeFileSync(rootPkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf-8");
-    console.log(`\x1b[32m[OK] Updated package.json -> ${newVersion}\x1b[0m`);
-  }
-
-  // 3. WebUI package.json
-  const webuiPkgPath = join(workspaceRoot, "webui", "package.json");
-  if (existsSync(webuiPkgPath)) {
-    const pkg = JSON.parse(readFileSync(webuiPkgPath, "utf-8"));
-    pkg.version = newVersion;
-    writeFileSync(webuiPkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf-8");
-    console.log(`\x1b[32m[OK] Updated webui/package.json -> ${newVersion}\x1b[0m`);
-  }
-
-  // 4. npm/cddm/package.json (including optionalDependencies)
-  const npmPkgPath = join(workspaceRoot, "npm", "cddm", "package.json");
-  if (existsSync(npmPkgPath)) {
-    const pkg = JSON.parse(readFileSync(npmPkgPath, "utf-8"));
-    pkg.version = newVersion;
-    if (pkg.optionalDependencies && typeof pkg.optionalDependencies === "object") {
-      for (const dep of Object.keys(pkg.optionalDependencies)) {
-        pkg.optionalDependencies[dep] = newVersion;
+    if (
+      relPath === "npm/cddm/package.json" &&
+      pkg.optionalDependencies &&
+      typeof pkg.optionalDependencies === "object"
+    ) {
+      const optDeps = pkg.optionalDependencies as Record<string, string>;
+      for (const dep of Object.keys(optDeps)) {
+        optDeps[dep] = newVersion;
       }
     }
-    writeFileSync(npmPkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf-8");
-    console.log(
-      `\x1b[32m[OK] Updated npm/cddm/package.json (+ optionalDependencies) -> ${newVersion}\x1b[0m`,
-    );
-  }
-
-  // 5. editors/vscode/package.json
-  const vscodePkgPath = join(workspaceRoot, "editors", "vscode", "package.json");
-  if (existsSync(vscodePkgPath)) {
-    const pkg = JSON.parse(readFileSync(vscodePkgPath, "utf-8"));
-    pkg.version = newVersion;
-    writeFileSync(vscodePkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf-8");
-    console.log(`\x1b[32m[OK] Updated editors/vscode/package.json -> ${newVersion}\x1b[0m`);
+    if (relPath === "server.json" && Array.isArray(pkg.packages)) {
+      for (const entry of pkg.packages as Array<Record<string, unknown>>) {
+        if (typeof entry.version === "string") {
+          entry.version = newVersion;
+        }
+        if (entry.registryType === "oci" && typeof entry.identifier === "string") {
+          entry.identifier = entry.identifier.replace(/:v[\d.]+$/, `:v${newVersion}`);
+        }
+      }
+    }
+    writeFileSync(jsonPath, JSON.stringify(pkg, null, 2) + "\n", "utf-8");
+    console.log(`\x1b[32m[OK] Updated ${relPath} -> ${newVersion}\x1b[0m`);
   }
 
   // 6. packaging/homebrew/cddm.rb

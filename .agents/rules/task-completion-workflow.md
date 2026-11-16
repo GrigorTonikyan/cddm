@@ -29,7 +29,7 @@ Then run `bun scripts/check-docs.ts` to validate full documentation integrity, l
 
 ## Step 6: Version Sync, Conventional Commit, Gitea Push, PR & Merge
 
-1. **Version Bump & Manifest Sync**: Run `bun scripts/version.ts` (or `vp run version:bump`) to idempotently bump the workspace SemVer from Conventional Commits since the latest tag and synchronize all 10 manifests + `CHANGELOG.md`. Verify with `bun scripts/version.ts --check-pr`.
+1. **Version Bump & Manifest Sync**: Run `bun scripts/version.ts` (or `vp run version:bump`) to idempotently bump the workspace SemVer from Conventional Commits since the latest tag and synchronize all 11 manifests + `CHANGELOG.md`. Verify with `bun scripts/version.ts --check-pr`.
 2. **Conventional Commit**: Commit using strict Conventional Commits referencing the primary Gitea issue (`Fixes #<gitea-id>`).
 3. **Gitea Push (Sole Push Target)**: Push to `origin` (Gitea: `https://git.gt-web-dev.com/gt-dev/cddm.git`) without bypassing Git hooks (`--no-verify` is forbidden), using strictly ONE canonical branch name (`feat/issue-<num>-<desc>`). Do NOT push manually to `github`—Gitea automatically replicates all branches, commits, and tags to GitHub via server-side push mirror (`sync_on_commit: true`).
 4. **Primary Pull Request**: Open the primary Pull Request via Forge MCP (`gitea_create_pr` or `forge pr create`) merging into `main`. Include `Fixes #<id>` in the description; the linked issue is mandatory. Milestones are optional and never required on issues or PRs.

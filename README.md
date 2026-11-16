@@ -5,11 +5,11 @@
 [![CI](https://git.gt-web-dev.com/gt-dev/cddm/actions/workflows/ci.yml/badge.svg)](https://git.gt-web-dev.com/gt-dev/cddm/actions/workflows/ci.yml)
 [![License: MIT / Apache 2.0](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)](LICENSE)
 [![Rust](https://img.shields.io/badge/rust-2024%20edition-orange.svg)](https://www.rust-lang.org)
-[![Vite Plus](https://img.shields.io/badge/vite%2B-1.5.0-purple.svg)](https://viteplus.dev)
+[![Vite Plus](https://img.shields.io/badge/vite%2B-1.6.0-purple.svg)](https://viteplus.dev)
 [![TypeScript](https://img.shields.io/badge/typescript-7.0-blue.svg)](https://www.typescriptlang.org)
 [![React](https://img.shields.io/badge/react-19.3-61dafb.svg)](https://react.dev)
-[![npm version](https://img.shields.io/badge/npm-4.11.0-red.svg)](https://www.npmjs.com/package/cddm)
-[![crates.io](https://img.shields.io/badge/crates.io-4.11.0-brightgreen.svg)](https://crates.io/crates/cddm)
+[![npm version](https://img.shields.io/badge/npm-4.12.0-red.svg)](https://www.npmjs.com/package/cddm)
+[![crates.io](https://img.shields.io/badge/crates.io-4.12.0-brightgreen.svg)](https://crates.io/crates/cddm)
 
 > [!NOTE]
 > **Primary Upstream SSoT**: All development, issues, pull requests, and automated testing are managed on our self-hosted Gitea portal at [git.gt-web-dev.com/gt-dev/cddm](https://git.gt-web-dev.com/gt-dev/cddm). The GitHub repository is an automated read-only downstream replica mirror.
@@ -19,6 +19,7 @@
 ## Table of Contents
 
 - [Overview](#overview)
+- [Visual Showcase](#visual-showcase)
 - [The 4 Interface Pillars](#the-4-interface-pillars)
 - [Key Features](#key-features)
 - [Supported Languages](#supported-languages)
@@ -39,6 +40,20 @@
 
 ---
 
+## Visual Showcase
+
+### CLI Scan Summary ([Asciinema v2 Cast](packaging/demos/cddm-cli-demo.cast))
+
+![CDDM CLI Terminal Showcase](docs/assets/cddm-cli-demo.svg)
+
+### Embedded React 19 WebUI Studio & Auto-Refactor Sandbox
+
+|              WebUI Dashboard & DRY Health Analytics               |                Interactive Auto-Refactor Sandbox & Unified Diff                |
+| :---------------------------------------------------------------: | :----------------------------------------------------------------------------: |
+| ![CDDM WebUI Studio Dashboard](docs/assets/cddm-webui-studio.png) | ![CDDM Interactive Auto-Refactor Sandbox](docs/assets/cddm-webui-refactor.png) |
+
+---
+
 ## The 4 Interface Pillars
 
 CDDM strictly enforces **100% Cross-Interface Feature Parity** across all four primary interaction surfaces:
@@ -49,7 +64,7 @@ CDDM strictly enforces **100% Cross-Interface Feature Parity** across all four p
 +----------------------------------------------------------------------------------------------------+
 |  1. CLI Engine        |  2. WebUI Studio       |  3. MCP Server         |  4. TUI Studio           |
 |  - 24 Subcommands     |  - React 19 Studio     |  - 33 Agent Tools      |  - 12 Ratatui Tabs       |
-|  - Scriptable stdout  |  - Monaco Split Diffs  |  - 17 MCP Resources    |  - Split Diff Viewer     |
+|  - Scriptable stdout  |  - Monaco Split Diffs  |  - 14 Resources +3 URI |  - Split Diff Viewer     |
 |  - Turnkey CI/CD      |  - SSE Live Stream     |  - 3 Agent Prompts     |  - Keyboard-Driven       |
 |  [docs/CLI.md]        |  [docs/WEBUI.md]       |  [docs/MCP.md]         |  [docs/TUI.md]           |
 +----------------------------------------------------------------------------------------------------+
@@ -116,7 +131,7 @@ scoop install cddm
 ### Via Windows Package Manager (Winget)
 
 ```powershell
-winget install --manifest https://git.gt-web-dev.com/gt-dev/winget-pkgs/raw/branch/main/manifests/g/gt-dev/cddm/4.11.0/gt-dev.cddm.installer.yaml
+winget install --manifest https://git.gt-web-dev.com/gt-dev/winget-pkgs/raw/branch/main/manifests/g/gt-dev/cddm/4.12.0/gt-dev.cddm.installer.yaml
 ```
 
 ### Via Cargo (`crates.io` & Private Gitea Registry)
@@ -176,7 +191,7 @@ cddm init gitea --write
 
 ### Turnkey AI Coding Agent Setup (MCP Server)
 
-Add `cddm-mcp` (installed automatically on `PATH` by all package managers and installers) to `claude_desktop_config.json`, `.cursor/mcp.json`, or Google Antigravity `mcp_config.json`:
+Add `cddm-mcp` (installed automatically on `PATH` by all package managers and installers) to `claude_desktop_config.json`, `.cursor/mcp.json`, `.vscode/mcp.json`, or Google Antigravity `mcp_config.json` (also published via [`server.json`](server.json) and [`smithery.yaml`](smithery.yaml)):
 
 ```json
 {
@@ -188,6 +203,8 @@ Add `cddm-mcp` (installed automatically on `PATH` by all package managers and in
 }
 ```
 
+Or zero-install via `npx`: `npx -y -p cddm cddm-mcp`.
+
 ---
 
 ## Interface Documentation
@@ -195,8 +212,8 @@ Add `cddm-mcp` (installed automatically on `PATH` by all package managers and in
 For comprehensive technical manuals on each interaction surface, explore our dedicated guides:
 
 - **[CLI Command Reference](docs/CLI.md)** — Exhaustive manual for all 24 CLI subcommands, flags, and recipes.
-- **[MCP Server Specification](docs/MCP.md)** — Stdio JSON-RPC 2.0 reference for all 33 AI agent tools, 17 resources, and prompts.
-- **[Embedded Studio WebUI](docs/WEBUI.md)** — React 19 Studio guide, 19 interactive modals, REST & SSE API catalog.
+- **[MCP Server Specification](docs/MCP.md)** — Stdio JSON-RPC 2.0 reference for all 33 AI agent tools, 14 resources (+ 3 dynamic URI templates), and prompts.
+- **[Embedded Studio WebUI](docs/WEBUI.md)** — React 19 Studio guide, 22 interactive modals, REST & SSE API catalog.
 - **[Terminal UI (TUI) Studio](docs/TUI.md)** — Keyboard shortcuts and 12-tab navigation guide.
 - **[Language Server & IDE Setup](docs/LSP_SETUP.md)** — Real-time in-editor setup for VS Code, Cursor, Neovim, Zed, Helix, Sublime.
 - **[4-Pillar Feature Parity Matrix](docs/FEATURE_PARITY.md)** — Authoritative governance matrix across all 33 core capabilities.
@@ -220,6 +237,8 @@ Where:
 
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — Pipeline phases, SIMD reduction, and crate breakdown.
 - [docs/API.md](docs/API.md) — Axum REST endpoints and JSON schema specifications.
+- [docs/BENCHMARKS.md](docs/BENCHMARKS.md) — Reproducible local benchmark methodology and cross-tool telemetry.
+- [docs/ECOSYSTEM_STRATEGY.md](docs/ECOSYSTEM_STRATEGY.md) — Distribution verification matrix, public registries, and MCP directory roadmap.
 - [docs/FEATURE_MATRIX.md](docs/FEATURE_MATRIX.md) — Detailed capability and test coverage matrix.
 - [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md) — Performance SLAs, throughput bounds, and constraints.
 - [docs/ROADMAP.md](docs/ROADMAP.md) — Enhancement proposals (EP-01 to EP-34) and release milestones.
@@ -229,13 +248,14 @@ Where:
 
 ## Performance Benchmarks
 
-Scanning benchmark on a codebase of **500,000 LOC** across 1,200 files:
+Measured locally via `bun scripts/benchmark-ecosystem.ts --with-jscpd --self-scan --write` on `gt-dev/cddm` (**691 files / 107,415 LOC**, `--min-tokens 50`) — see [docs/BENCHMARKS.md](docs/BENCHMARKS.md) for full hardware specs, controlled polyglot corpus runs, and exact CLI flags:
 
-| Tool      | Engine Language | Scan Time  | Memory Usage | Type 3 AST Clones     |
-| :-------- | :-------------- | :--------- | :----------- | :-------------------- |
-| **CDDM**  | **Rust 2024**   | **180 ms** | **45 MB**    | **Yes (Tree-sitter)** |
-| `jscpd`   | Node.js         | 4,200 ms   | 320 MB       | No                    |
-| `PMD-CPD` | Java            | 6,800 ms   | 510 MB       | No                    |
+| Tool              | Mode                             |  Median Time |        Throughput | Peak RSS | Clones / Capabilities                                         |
+| :---------------- | :------------------------------- | -----------: | ----------------: | -------: | :------------------------------------------------------------ |
+| **CDDM `4.11.0`** | Cold scan (Type-1/2/3)           | **232.7 ms** | **461,662 LOC/s** |  54.8 MB | **57 pairs** (Tree-sitter + SIMD M61 + test auto-suppression) |
+| **CDDM `4.11.0`** | Warm `redb` cache                | **249.7 ms** | **430,159 LOC/s** |  56.1 MB | **57 pairs** (Incremental SHA-256 verification)               |
+| `jscpd 5.4.3`     | Exact clones                     |     229.1 ms |     468,959 LOC/s |  21.5 MB | 518 pairs (Type-1 only, no AST/Type-3 or auto-suppression)    |
+| `jscpd 5.4.3`     | Renamed (`--ignore-identifiers`) |     251.3 ms |     427,437 LOC/s |  21.4 MB | 1,020 pairs (Type-1/2 only, no Tree-sitter AST rewrite)       |
 
 ---
 

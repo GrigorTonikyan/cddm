@@ -1,7 +1,7 @@
 {
   "name": "cddm",
   "displayName": "CDDM — Code De-Duplication Meister",
-  "version": "4.11.0",
+  "version": "4.12.0",
   "description": "Real-time polyglot code clone detection, DRY health scoring, embedded Studio WebUI, and automated deduplication refactoring for VS Code, Cursor, and Antigravity.",
   "categories": [
     "Linters",
@@ -34,7 +34,7 @@
   },
   "devDependencies": {
     "@types/node": "^26.6.6",
-    "@types/vscode": "^1.145.0",
+    "@types/vscode": "1.146.0",
     "typescript": "^7.0.2"
   },
   "contributes": {

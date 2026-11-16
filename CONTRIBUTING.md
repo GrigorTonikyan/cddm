@@ -39,7 +39,7 @@ For comprehensive manuals on specific interaction surfaces, consult:
 ### Prerequisites
 
 - **Rust**: 2024 edition (Rust Nightly 1.100.0+ configured via `rust-toolchain.toml`). Install via [rustup.rs](https://rustup.rs).
-- **Vite Plus**: `0.3.0` via [viteplus.dev](https://viteplus.dev) or **Bun**: `1.4+` via [bun.sh](https://bun.sh).
+- **Vite Plus**: `1.6.0` via [viteplus.dev](https://viteplus.dev) or **Bun**: `1.4+` via [bun.sh](https://bun.sh).
 
 ### Setting Up Development Workspace
 
@@ -84,7 +84,7 @@ For comprehensive manuals on specific interaction surfaces, consult:
 You can run the complete quality pipeline, auto-fix, clean, or workspace reset across both Rust backend, WebUI, and scripts with single cross-platform commands:
 
 ```bash
-# 1. Run all 20 checks, tests, typechecks, lints, builds, and dogfood self-scan (Read-Only)
+# 1. Run all 21 checks, tests, typechecks, lints, builds, and dogfood self-scan (Read-Only)
 vp run verify
 # or directly:
 bun scripts/verify.ts
@@ -164,7 +164,7 @@ CDDM enforces [Gitea (`git.gt-web-dev.com`)](https://git.gt-web-dev.com/gt-dev/c
    - `fix(webui): correct slider token threshold calculation (#19)`
    - `docs(mcp): update MCP tool setup guide (#19)`
 4. Commit messages are automatically validated via `@commitlint/cli` and `commitlint.config.ts`.
-5. Run `vp run verify` to confirm all 20 quality checks pass.
+5. Run `vp run verify` to confirm all 21 quality checks pass.
 
 ### 3. Pull Requests, Auto-Closing & API Merge
 
@@ -180,10 +180,10 @@ CDDM enforces [Gitea (`git.gt-web-dev.com`)](https://git.gt-web-dev.com/gt-dev/c
 
 ### 4. Automated Lockstep Semantic Versioning & Releases
 
-Every pull request introducing features, bug fixes, or optimizations bumps the workspace SemVer in lockstep across all 10 project manifests (`Cargo.toml`, `Cargo.lock`, `package.json`, `webui/package.json`, `npm/cddm/package.json`, `editors/vscode/package.json`, Homebrew, Scoop, Winget, and `README.md` badges) and updates `CHANGELOG.md`. When merged to `main`, Gitea Actions automatically tags `vX.Y.Z` and triggers multi-platform CI cross-compilation and release publishing:
+Every pull request introducing features, bug fixes, or optimizations bumps the workspace SemVer in lockstep across all 11 project manifests (`Cargo.toml`, `Cargo.lock`, `package.json`, `webui/package.json`, `npm/cddm/package.json`, `editors/vscode/package.json`, `server.json`, Homebrew, Scoop, Winget, and `README.md` badges) and updates `CHANGELOG.md`. When merged to `main`, Gitea Actions automatically tags `vX.Y.Z` and triggers multi-platform CI cross-compilation and release publishing:
 
 ```bash
-# Verify 100% SSoT version synchronization across all 10 manifests
+# Verify 100% SSoT version synchronization across all 11 manifests
 vp run version:check
 
 # Bump workspace version from Conventional Commits since latest tag and sync all manifests

@@ -38,6 +38,12 @@ Add the following to `claude_desktop_config.json`, `.cursor/mcp.json`, or Antigr
 }
 ```
 
+### Registry & Editor Auto-Discovery Manifests
+
+- **Official MCP Registry ([`server.json`](../server.json))**: Machine-readable MCP 2025-12-11 metadata synced in lockstep by `bun scripts/version.ts`.
+- **Smithery Registry ([`smithery.yaml`](../smithery.yaml))**: One-click stdio runtime descriptor for Smithery clients.
+- **VS Code Copilot MCP ([`.vscode/mcp.json`](../.vscode/mcp.json))**: Automatic workspace server discovery (`"type": "stdio"`, `"command": "cddm-mcp"`).
+
 ### Installing `cddm-mcp` onto `PATH`
 
 - **Windows (PowerShell)**: `irm https://git.gt-web-dev.com/gt-dev/cddm/raw/branch/main/packaging/install.ps1 | iex`

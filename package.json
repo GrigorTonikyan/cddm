@@ -1,6 +1,6 @@
 {
   "name": "cddm-workspace",
-  "version": "4.11.0",
+  "version": "4.12.0",
   "private": true,
   "description": "Root workspace scripts for CDDM (Code De-Duplication Meister)",
   "scripts": {
@@ -59,13 +59,13 @@
     "@playwright/test": "^1.65.0",
     "@types/bun": "^1.4.4",
     "@types/node": "^26.6.6",
-    "jsdom": "^31.0.0",
+    "jsdom": "31.0.1",
     "typescript": "^7.0.2",
-    "vite": "npm:@voidzero-dev/vite-plus-core@1.5.0",
-    "vite-plus": "1.5.0"
+    "vite": "npm:@voidzero-dev/vite-plus-core@1.6.0",
+    "vite-plus": "1.6.0"
   },
   "overrides": {
-    "vite": "npm:@voidzero-dev/vite-plus-core@1.5.0"
+    "vite": "npm:@voidzero-dev/vite-plus-core@1.6.0"
   },
   "devEngines": {
     "packageManager": {

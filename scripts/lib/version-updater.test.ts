@@ -54,7 +54,7 @@ describe("version-updater utility", () => {
     expect(changelog).toBe("## [1.0.0] - 2026-08-30\n\n");
   });
 
-  it("synchronizes and validates all 10 workspace manifests in lockstep", () => {
+  it("synchronizes and validates all 11 workspace manifests in lockstep", () => {
     const tempRoot = join(tmpdir(), `cddm-version-sync-test-${Date.now()}`);
     mkdirSync(join(tempRoot, "webui"), { recursive: true });
     mkdirSync(join(tempRoot, "npm", "cddm"), { recursive: true });
@@ -91,6 +91,16 @@ describe("version-updater utility", () => {
       writeFileSync(
         join(tempRoot, "editors", "vscode", "package.json"),
         JSON.stringify({ version: "4.7.0" }),
+      );
+      writeFileSync(
+        join(tempRoot, "server.json"),
+        JSON.stringify({
+          version: "4.7.0",
+          packages: [
+            { registryType: "npm", identifier: "cddm", version: "4.7.0" },
+            { registryType: "oci", identifier: "vcs.example.com/test-pub/cddm:v4.7.0" },
+          ],
+        }),
       );
       writeFileSync(
         join(tempRoot, "packaging", "homebrew", "cddm.rb"),
@@ -145,6 +155,14 @@ describe("version-updater utility", () => {
       const lockText = readFileSync(join(tempRoot, "Cargo.lock"), "utf-8");
       expect(lockText).toContain('name = "cddm-core"\nversion = "4.9.0"');
       expect(lockText).toContain('name = "cddm-cli"\nversion = "4.9.0"');
+
+      const serverJson = JSON.parse(readFileSync(join(tempRoot, "server.json"), "utf-8")) as {
+        version: string;
+        packages: Array<{ version?: string; identifier?: string }>;
+      };
+      expect(serverJson.version).toBe("4.9.0");
+      expect(serverJson.packages[0]?.version).toBe("4.9.0");
+      expect(serverJson.packages[1]?.identifier).toBe("vcs.example.com/test-pub/cddm:v4.9.0");
     } finally {
       rmSync(tempRoot, { recursive: true, force: true });
     }

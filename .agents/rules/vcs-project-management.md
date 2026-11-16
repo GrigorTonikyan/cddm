@@ -32,6 +32,6 @@ This rule governs the exclusive use of Gitea as the Single Source of Truth (SSoT
    - Milestones are optional roadmap groupings and do not gate or trigger releases.
 2. **PR-Level SemVer Bump & Automated Release on `main`**:
    - Workspace versions are calculated deterministically from Conventional Commits since the latest Git tag via `bun scripts/version.ts` (or `vp run version:bump`).
-   - Every PR introducing features, fixes, or optimizations MUST run `bun scripts/version.ts` before opening the PR to synchronize all 10 manifests (`Cargo.toml`, `Cargo.lock`, `package.json`, `webui/package.json`, `npm/cddm/package.json`, `editors/vscode/package.json`, Homebrew, Scoop, Winget, and `README.md`) and `CHANGELOG.md`.
+   - Every PR introducing features, fixes, or optimizations MUST run `bun scripts/version.ts` before opening the PR to synchronize all 11 manifests (`Cargo.toml`, `Cargo.lock`, `package.json`, `webui/package.json`, `npm/cddm/package.json`, `editors/vscode/package.json`, `server.json`, Homebrew, Scoop, Winget, and `README.md`) and `CHANGELOG.md`.
    - `bun scripts/version.ts --check` and `bun scripts/version.ts --check-pr` enforce 100% SSoT version synchronization and PR version bumps in local verification and CI.
    - Merging a bumped PR into `main` automatically triggers the `auto-tag-release` job in `.gitea/workflows/auto-tag-release.yaml`, which creates and pushes tag `vX.Y.Z` to Gitea `origin` and triggers `.gitea/workflows/release.yaml` to publish release binaries, VSIX packages, and SHA-256 checksummed distribution manifests.
