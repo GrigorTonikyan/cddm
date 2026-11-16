@@ -68,4 +68,33 @@ describe("gitea-git-transport", () => {
     });
     expect(signed).toEqual({ signed: true, created: true });
   });
+
+  it("falls back to HTTPS Contents API when SSH deploy port is unreachable in container network", async () => {
+    const requests: string[] = [];
+    const mockFetch = (async (input: string | URL | Request, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input.toString();
+      const method = init?.method ?? "GET";
+      requests.push(`${method} ${url}`);
+      if (method === "GET") {
+        return new Response(JSON.stringify({ sha: "abc123" }), { status: 200 });
+      }
+      return new Response(JSON.stringify({ content: { sha: "def456" } }), { status: 200 });
+    }) as unknown as typeof fetch;
+
+    const ok = await publishRepoPayload(
+      "127.0.0.1:1",
+      "org/scoop-bucket",
+      [{ path: "bucket/cddm.json", content: "{}" }],
+      "release: bump",
+      {
+        dryRun: false,
+        deployKey:
+          "-----BEGIN OPENSSH PRIVATE KEY-----\ninvalid\n-----END OPENSSH PRIVATE KEY-----", // gitleaks:allow — unit test fixture
+        token: "mock-tok", // gitleaks:allow — unit test fixture
+        fetchFn: mockFetch,
+      },
+    );
+    expect(ok).toBe(true);
+    expect(requests.some((r) => r.startsWith("PUT "))).toBe(true);
+  });
 });

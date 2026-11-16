@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-27 | Rust: 416 #[test] units | WebUI: 334 tests across 77 suites | Scripts & MCP: 252 tests across 66 suites | CI Workflows: PASS
+> Last verified: 2026-08-27 | Rust: 416 #[test] units | WebUI: 334 tests across 77 suites | Scripts & MCP: 253 tests across 66 suites | CI Workflows: PASS
 
 ---
 
@@ -442,7 +442,7 @@
 
 ---
 
-## 3. Repository Scripts & MCP Protocol — Bun Test Suites (252 tests across 66 suites)
+## 3. Repository Scripts & MCP Protocol — Bun Test Suites (253 tests across 66 suites)
 
 ### Repository Tooling & Automation Suites
 
@@ -450,7 +450,7 @@
 | :---------------------------- | :--------------------------------------------- | :--------- | :----- |
 | cargo-registry                | `scripts/lib/cargo-registry.test.ts`           | 4 tests    | PASS   |
 | clean-engine                  | `scripts/lib/clean-engine.test.ts`             | 14 tests   | PASS   |
-| gitea-git-transport           | `scripts/lib/gitea-git-transport.test.ts`      | 3 tests    | PASS   |
+| gitea-git-transport           | `scripts/lib/gitea-git-transport.test.ts`      | 4 tests    | PASS   |
 | interface-docs-generator      | `scripts/lib/interface-docs-generator.test.ts` | 6 tests    | PASS   |
 | npm-registry                  | `scripts/lib/npm-registry.test.ts`             | 3 tests    | PASS   |
 | publisher-config              | `scripts/lib/publisher-config.test.ts`         | 6 tests    | PASS   |

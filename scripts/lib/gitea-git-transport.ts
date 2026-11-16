@@ -204,7 +204,16 @@ export async function publishRepoPayload(
   }
 
   if (options.deployKey) {
-    return commitFilesWithDeployKey(host, repo, files, message, options.deployKey);
+    const deployedViaSsh = commitFilesWithDeployKey(host, repo, files, message, options.deployKey);
+    if (deployedViaSsh) {
+      return true;
+    }
+    if (!options.token) {
+      return false;
+    }
+    console.warn(
+      `\x1b[33m[WARN] SSH deploy transport unreachable for ${repo}; falling back to HTTPS Contents API...\x1b[0m`,
+    );
   }
 
   let allOk = true;

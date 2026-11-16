@@ -3,9 +3,11 @@
 
 $ErrorActionPreference = 'Stop'
 $GiteaHost = if ($env:CDDM_GITEA_HOST) { $env:CDDM_GITEA_HOST } else { "git.gt-web-dev.com" }
+$BaseUrl = if ($env:CDDM_BASE_URL) { $env:CDDM_BASE_URL.TrimEnd('/') } else { "https://$GiteaHost" }
 $Repo = if ($env:CDDM_REPO) { $env:CDDM_REPO } else { "gt-dev/cddm" }
 $InstallDir = if ($env:CDDM_INSTALL_DIR) { $env:CDDM_INSTALL_DIR } else { "$env:USERPROFILE\.cddm\bin" }
 $Version = if ($env:CDDM_VERSION) { $env:CDDM_VERSION } else { "latest" }
+$NoModifyPath = ($env:CDDM_NO_MODIFY_PATH -eq '1')
 
 Write-Host "--> Initializing CDDM Windows Installer (host: $GiteaHost)..." -ForegroundColor Cyan
 
@@ -17,10 +19,10 @@ $Arch = if ([IntPtr]::Size -eq 8) {
 
 $Headers = @{ "User-Agent" = "CDDM-Installer" }
 if ($Version -eq 'latest') {
-    $ApiUrl = "https://$GiteaHost/api/v1/repos/$Repo/releases/latest"
+    $ApiUrl = "$BaseUrl/api/v1/repos/$Repo/releases/latest"
 } else {
     $NormalizedTag = if ($Version.StartsWith("v")) { $Version } else { "v$Version" }
-    $ApiUrl = "https://$GiteaHost/api/v1/repos/$Repo/releases/tags/$NormalizedTag"
+    $ApiUrl = "$BaseUrl/api/v1/repos/$Repo/releases/tags/$NormalizedTag"
 }
 
 try {
@@ -60,7 +62,7 @@ if ($AvailableAssets.Count -gt 0) {
     $ZipName = $PreferredCandidates[0]
 }
 
-$BaseDownloadUrl = "https://$GiteaHost/$Repo/releases/download/$ReleaseTag"
+$BaseDownloadUrl = "$BaseUrl/$Repo/releases/download/$ReleaseTag"
 $DownloadUrl = "$BaseDownloadUrl/$ZipName"
 $ChecksumsUrl = "$BaseDownloadUrl/SHA256SUMS.txt"
 
@@ -109,22 +111,31 @@ try {
 
     Write-Host "--> Extracting binaries to $InstallDir..." -ForegroundColor Yellow
     Expand-Archive -Path $TempZip -DestinationPath $InstallDir -Force
+
+    foreach ($BinName in @("cddm.exe", "cddm-mcp.exe")) {
+        $BinPath = Join-Path $InstallDir $BinName
+        if (-not (Test-Path $BinPath)) {
+            throw "Extracted archive $ZipName did not contain expected binary: $BinName"
+        }
+    }
 } finally {
     if (Test-Path $TempDir) {
         Remove-Item -Path $TempDir -Recurse -Force -ErrorAction SilentlyContinue
     }
 }
 
-$UserPath = [Environment]::GetEnvironmentVariable("PATH", "User")
-if (-not $UserPath) {
-    $UserPath = ""
-}
-if ($UserPath -notmatch [regex]::Escape($InstallDir)) {
-    $NewUserPath = if ($UserPath) { "$InstallDir;$UserPath" } else { $InstallDir }
-    [Environment]::SetEnvironmentVariable("PATH", $NewUserPath, "User")
-    $env:PATH = "$InstallDir;$env:PATH"
-    Write-Host "--> Added $InstallDir to User PATH." -ForegroundColor Green
+$env:PATH = "$InstallDir;$env:PATH"
+if (-not $NoModifyPath) {
+    $UserPath = [Environment]::GetEnvironmentVariable("PATH", "User")
+    if (-not $UserPath) {
+        $UserPath = ""
+    }
+    if ($UserPath -notmatch [regex]::Escape($InstallDir)) {
+        $NewUserPath = if ($UserPath) { "$InstallDir;$UserPath" } else { $InstallDir }
+        [Environment]::SetEnvironmentVariable("PATH", $NewUserPath, "User")
+        Write-Host "--> Added $InstallDir to User PATH." -ForegroundColor Green
+    }
 }
 
 Write-Host "[SUCCESS] CDDM $ReleaseTag installed to $InstallDir" -ForegroundColor Green
-Write-Host "Run 'cddm --help' in a new terminal window to get started." -ForegroundColor Cyan
+Write-Host "Run 'cddm --help' or 'cddm-mcp --version' in a new terminal window to get started." -ForegroundColor Cyan
