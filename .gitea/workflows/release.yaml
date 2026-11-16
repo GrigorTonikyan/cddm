@@ -6,17 +6,52 @@ on:
       - "v*"
   workflow_dispatch:
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 env:
   CARGO_TERM_COLOR: always
   CARGO_BUILD_JOBS: 4
   CARGO_INCREMENTAL: 0
   RUSTFLAGS: "-C debuginfo=0"
   NODE_EXTRA_CA_CERTS: /etc/ssl/certs/ca-certificates.crt
+  DEBIAN_FRONTEND: noninteractive
+  NEEDRESTART_MODE: a
+  DOCKER_BUILD_SUMMARY: "false"
+  DOCKER_BUILD_RECORD_UPLOAD: "false"
 
 jobs:
+  build-webui:
+    name: Build Shared WebUI Bundle
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: builtin:checkout
+        with:
+          fetch-depth: 1
+
+      - name: Setup Enterprise Toolchains
+        uses: self:gt-dev/actions/setup-toolchains@v1
+        with:
+          bun: "true"
+
+      - name: Build WebUI Distribution Assets
+        working-directory: ./webui
+        run: |
+          bun install --frozen-lockfile || bun install
+          bun run build
+
+      - name: Upload Shared WebUI Dist
+        uses: self:gt-dev/actions/upload-artifact@v1
+        with:
+          name: webui-dist
+          path: webui/dist
+
   build-binaries:
     name: Build (${{ matrix.target }})
-    runs-on: highperf
+    needs: [build-webui]
+    runs-on: ubuntu-latest-12-cores
     strategy:
       fail-fast: false
       matrix:
@@ -34,58 +69,99 @@ jobs:
       - name: Checkout Source Code
         uses: builtin:checkout
         with:
-          fetch-depth: 0
+          fetch-depth: 1
 
-      - name: Setup Enterprise Toolchains
-        uses: self:gt-dev/actions/setup-toolchains@v1
+      - name: Download Shared WebUI Dist
+        uses: self:gt-dev/actions/download-artifact@v1
         with:
-          bun: "true"
+          name: webui-dist
+          path: webui/dist
 
-      - name: Install System Dependencies
-        run: |
-          apt-get update || sudo apt-get update
-          apt-get install -y zip tar curl || sudo apt-get install -y zip tar curl
-          if [ "${{ matrix.target }}" = "x86_64-pc-windows-msvc" ]; then
-            apt-get install -y clang lld llvm nasm || sudo apt-get install -y clang lld llvm nasm
-          fi
-
-      - name: Build WebUI Distribution Assets
-        working-directory: ./webui
-        run: |
-          bun install --frozen-lockfile || bun install
-          bun run build
-
-      - name: Install Rust Toolchain
-        uses: dtolnay/rust-toolchain@nightly
+      - name: Cache Windows Cross-Compile Tooling & CRT
+        if: matrix.target == 'x86_64-pc-windows-msvc'
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
-          targets: ${{ matrix.target }}
+          path: |
+            ~/.cargo/bin/cargo-xwin
+            ~/.cache/cargo-xwin
+            /var/cache/apt/archives
+          key: ${{ runner.os }}-xwin-v1-${{ hashFiles('Cargo.lock', 'rust-toolchain.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-xwin-v1-
 
-      - name: Install cargo-xwin for Windows MSVC Cross-Compilation
+      - name: Install Windows Cross-Compilation Dependencies
         if: matrix.target == 'x86_64-pc-windows-msvc'
         shell: bash
         run: |
-          mkdir -p "${HOME}/.cargo/bin"
-          XWIN_TAG=$(curl -fsSL https://api.github.com/repos/rust-cross/cargo-xwin/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/' || true)
-          if [ -n "${XWIN_TAG}" ]; then
-            curl -fsSL "https://github.com/rust-cross/cargo-xwin/releases/download/${XWIN_TAG}/cargo-xwin-${XWIN_TAG}.x86_64-unknown-linux-musl.tar.gz" | tar -xz -C "${HOME}/.cargo/bin" || cargo install --locked cargo-xwin
-          else
-            cargo install --locked cargo-xwin
+          set -euo pipefail
+          MISSING=""
+          for pkg_cmd in zip:zip clang:clang lld:lld llvm-lib:llvm nasm:nasm; do
+            cmd_name="${pkg_cmd%%:*}"
+            pkg_name="${pkg_cmd#*:}"
+            if ! command -v "$cmd_name" >/dev/null 2>&1; then
+              MISSING="${MISSING} ${pkg_name}"
+            fi
+          done
+
+          if [ -z "${MISSING# }" ]; then
+            echo "--> [FAST-PATH] All Windows cross-compilation tools already present; skipping apt-get."
+            exit 0
           fi
+
+          SUDO=""
+          if [ "$(id -u)" -ne 0 ] && command -v sudo >/dev/null 2>&1; then
+            SUDO="sudo"
+          fi
+          ${SUDO} sh -c 'echo "force-unsafe-io" > /etc/dpkg/dpkg.cfg.d/force-unsafe-io' || true
+          ${SUDO} apt-get update -qq
+          ${SUDO} apt-get install -y --no-install-recommends ${MISSING}
+          ${SUDO} apt-get clean
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@6a52aad76a94a5fbc50d567bb5be24419801c1fb # nightly
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Rust Compilation Cache
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
+        continue-on-error: true
+        with:
+          shared-key: "release-${{ matrix.target }}"
+
+      - name: Ensure cargo-xwin for Windows MSVC Cross-Compilation
+        if: matrix.target == 'x86_64-pc-windows-msvc'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "${HOME}/.cargo/bin"
           export PATH="${HOME}/.cargo/bin:${PATH}"
+          if ! command -v cargo-xwin >/dev/null 2>&1; then
+            XWIN_TAG=$(curl -fsSL https://api.github.com/repos/rust-cross/cargo-xwin/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/' || true)
+            if [ -n "${XWIN_TAG}" ]; then
+              curl -fsSL "https://github.com/rust-cross/cargo-xwin/releases/download/${XWIN_TAG}/cargo-xwin-${XWIN_TAG}.x86_64-unknown-linux-musl.tar.gz" | tar -xz -C "${HOME}/.cargo/bin" || cargo install --locked cargo-xwin
+            else
+              cargo install --locked cargo-xwin
+            fi
+          else
+            echo "--> [FAST-PATH] Restored cached cargo-xwin binary."
+          fi
           cargo xwin --version
 
       - name: Build Standalone Binaries (CLI, MCP, LSP)
         shell: bash
+        env:
+          TARGET: ${{ matrix.target }}
         run: |
+          set -euo pipefail
           export PATH="${HOME}/.cargo/bin:${PATH}"
-          if [ "${{ matrix.target }}" = "x86_64-pc-windows-msvc" ]; then
+          if [ "${TARGET}" = "x86_64-pc-windows-msvc" ]; then
             RUSTFLAGS="-C debuginfo=0 -C target-feature=+crt-static" \
-              cargo xwin build --release --target ${{ matrix.target }} \
+              cargo xwin build --release --locked --target "${TARGET}" \
                 -p cddm-cli --bin cddm \
                 -p cddm-mcp --bin cddm-mcp \
                 -p cddm-lsp --bin cddm-lsp
           else
-            cargo build --release --target ${{ matrix.target }} \
+            cargo build --release --locked --target "${TARGET}" \
               -p cddm-cli --bin cddm \
               -p cddm-mcp --bin cddm-mcp \
               -p cddm-lsp --bin cddm-lsp
@@ -93,20 +169,25 @@ jobs:
 
       - name: Package Target Archive
         shell: bash
+        env:
+          TARGET: ${{ matrix.target }}
+          EXE_EXT: ${{ matrix.exe_ext }}
+          ARCHIVE_EXT: ${{ matrix.archive_ext }}
         run: |
+          set -euo pipefail
           mkdir -p dist-package
-          cp target/${{ matrix.target }}/release/cddm${{ matrix.exe_ext }} dist-package/
-          cp target/${{ matrix.target }}/release/cddm-mcp${{ matrix.exe_ext }} dist-package/
-          cp target/${{ matrix.target }}/release/cddm-lsp${{ matrix.exe_ext }} dist-package/
+          cp "target/${TARGET}/release/cddm${EXE_EXT}" dist-package/
+          cp "target/${TARGET}/release/cddm-mcp${EXE_EXT}" dist-package/
+          cp "target/${TARGET}/release/cddm-lsp${EXE_EXT}" dist-package/
           if [[ "${GITHUB_REF_NAME:-}" == v* ]]; then
             TAG_NAME="${GITHUB_REF_NAME}"
           else
-            TAG_NAME="v$(bun scripts/version.ts --get-current)"
+            TAG_NAME="v$(awk -F'"' '/^version[[:space:]]*=/{print $2; exit}' Cargo.toml)"
           fi
-          if [ "${{ matrix.archive_ext }}" = ".zip" ]; then
-            cd dist-package && zip -r "../cddm-${TAG_NAME}-${{ matrix.target }}.zip" ./* && cd ..
+          if [ "${ARCHIVE_EXT}" = ".zip" ]; then
+            (cd dist-package && zip -r "../cddm-${TAG_NAME}-${TARGET}.zip" ./*)
           else
-            cd dist-package && tar -czvf "../cddm-${TAG_NAME}-${{ matrix.target }}.tar.gz" ./* && cd ..
+            (cd dist-package && tar -czvf "../cddm-${TAG_NAME}-${TARGET}.tar.gz" ./*)
           fi
 
       - name: Upload Target Artifacts
@@ -122,7 +203,7 @@ jobs:
       - name: Checkout Source Code
         uses: builtin:checkout
         with:
-          fetch-depth: 0
+          fetch-depth: 1
 
       - name: Setup Enterprise Toolchains
         uses: self:gt-dev/actions/setup-toolchains@v1
@@ -146,41 +227,63 @@ jobs:
 
   publish-container:
     name: Publish Container to Private VCS Registry
-    runs-on: highperf
+    runs-on: ubuntu-latest-12-cores
     steps:
       - name: Checkout Source Code
         uses: builtin:checkout
         with:
-          fetch-depth: 0
+          fetch-depth: 1
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - name: Resolve Container Registry & Image Tags
+        id: meta
+        shell: bash
+        env:
+          GITEA_HOST_VAR: ${{ vars.GITEA_HOST }}
+          REPO_FULL: ${{ github.repository }}
+          REF_NAME: ${{ github.ref_name }}
+          COMMIT_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          HOST_SOURCE="${GITEA_HOST_VAR:-${GITHUB_SERVER_URL:-}}"
+          REGISTRY_HOST="${HOST_SOURCE#https://}"
+          REGISTRY_HOST="${REGISTRY_HOST#http://}"
+          REGISTRY_HOST="${REGISTRY_HOST%%/*}"
+          if [ -z "${REGISTRY_HOST}" ]; then
+            echo "::error::Failed to resolve container registry hostname from vars.GITEA_HOST or GITHUB_SERVER_URL."
+            exit 1
+          fi
+          IMAGE_BASE="${REGISTRY_HOST}/${REPO_FULL}"
+          echo "registry=${REGISTRY_HOST}" >> "${GITHUB_OUTPUT}"
+          echo "cache_ref=${IMAGE_BASE}:buildcache" >> "${GITHUB_OUTPUT}"
+          {
+            echo "tags<<EOF_TAGS"
+            echo "${IMAGE_BASE}:latest"
+            echo "${IMAGE_BASE}:${REF_NAME}"
+            echo "${IMAGE_BASE}:sha-${COMMIT_SHA}"
+            echo "EOF_TAGS"
+          } >> "${GITHUB_OUTPUT}"
 
-      - name: Log in to Private Gitea Container Registry
-        uses: self:gt-dev/actions/docker-login@v1
-        with:
-          registry: ${{ vars.GITEA_HOST || 'git.gt-web-dev.com' }}
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.REGISTRY_TOKEN }}
-
-      - name: Build and Push Release Container
-        uses: docker/build-push-action@v5
+      - name: Build and Push Release Container (Native DinD BuildKit)
+        uses: self:gt-dev/actions/docker-build-push@v1
         with:
           context: .
           file: ./Dockerfile
-          push: true
-          tags: |
-            ${{ vars.GITEA_HOST || 'git.gt-web-dev.com' }}/${{ github.repository }}:latest
-            ${{ vars.GITEA_HOST || 'git.gt-web-dev.com' }}/${{ github.repository }}:${{ github.ref_name }}
+          push: "true"
+          tags: ${{ steps.meta.outputs.tags }}
+          registry: ${{ steps.meta.outputs.registry }}
+          username: ${{ vars.PUBLISHER || github.repository_owner }}
+          password: ${{ secrets.REGISTRY_TOKEN }}
+          cache-mode: registry
+          cache-ref: ${{ steps.meta.outputs.cache_ref }}
 
   publish-cargo:
     name: Publish Crates to Private Gitea Cargo Registry
-    runs-on: highperf
+    runs-on: ubuntu-latest-12-cores
     steps:
       - name: Checkout Source Code
         uses: builtin:checkout
         with:
-          fetch-depth: 0
+          fetch-depth: 1
 
       - name: Setup Enterprise Toolchains
         uses: self:gt-dev/actions/setup-toolchains@v1
@@ -188,7 +291,13 @@ jobs:
           bun: "true"
 
       - name: Install Rust Toolchain
-        uses: dtolnay/rust-toolchain@nightly
+        uses: dtolnay/rust-toolchain@6a52aad76a94a5fbc50d567bb5be24419801c1fb # nightly
+
+      - name: Rust Compilation Cache
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
+        continue-on-error: true
+        with:
+          shared-key: "release-cargo"
 
       - name: Publish Workspace Crates (cddm-core, cddm-lsp, cddm-mcp, cddm-cli)
         env:
@@ -222,15 +331,19 @@ jobs:
 
       - name: Collect Assets & Generate SHA256 Checksums
         run: |
-          mkdir -p dist-release
+          mkdir -p ./dist-release
           find ./downloaded-artifacts -type f \( -name "*.tar.gz" -o -name "*.zip" -o -name "*.vsix" \) -exec cp {} ./dist-release/ \;
           cd ./dist-release
           sha256sum * > SHA256SUMS.txt
           cat SHA256SUMS.txt
 
+      - name: Install Workspace Dependencies
+        run: bun install --frozen-lockfile || bun install
+
       - name: Publish Release & Dispatch Package Manifests
         env:
-          GITEA_HOST: ${{ vars.GITEA_HOST || 'git.gt-web-dev.com' }}
+          GITHUB_SERVER_URL: ${{ github.server_url }}
+          GITEA_HOST: ${{ vars.GITEA_HOST }}
           GITEA_REPO: ${{ github.repository }}
           PACKAGE_PUBLISHER: ${{ vars.PUBLISHER || github.repository_owner }}
           PACKAGE_PUBLISHER_NAME: ${{ vars.PUBLISHER_NAME }}

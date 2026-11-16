@@ -18,9 +18,9 @@ trigger: always_on
 6. **Package Manager Audit Standard**:
    - Use **`vp outdated`** or **`bun outdated`** to check for package updates. Never execute `bun pm outdated`.
 7. **Modular Docker Containerization & Private VCS Registry Standard**:
-   - Image versions in Dockerfiles must NOT be pinned to brittle specific hashes or patch digests; least-specific versions, preferably **`latest`** tags (e.g. `rust:latest`, `oven/bun:latest`, `debian:latest`), must be used.
+   - External base images in `Dockerfile`s MUST pin immutable `@sha256:` manifest digests (`FROM image:tag@sha256:...`), begin with `# syntax=docker/dockerfile:1`, configure `--mount=type=cache` for package/compiler layers, maintain a complete sibling `.dockerignore`, and build on native DinD via `self:gt-dev/actions/docker-build-push@v1` (never `docker/setup-buildx-action` or `services: docker:dind`).
    - Container image builds and publication MUST be gated strictly to authoritative release tag workflows (`.gitea/workflows/release.yaml`) rather than PR CI pipelines, eliminating redundant compilation runs and runner contention.
-   - Built container images MUST be published directly into the private VCS Container Registry (`git.gt-web-dev.com/<owner>/<repo>:latest` and `:vX.Y.Z`) and consumed from that same registry.
+   - Built container images MUST be published directly into the private VCS Container Registry (`<registry-host>/<owner>/<repo>:latest` and `:vX.Y.Z`) and consumed from that same registry cleanly without hardcoded hostnames.
 8. **VCS-Driven Development (Gitea SSoT)**:
    - Gitea is the authoritative Single Source of Truth for issues, milestones, branches, PRs, and releases.
    - Every change must be preceded by an issue on Gitea.

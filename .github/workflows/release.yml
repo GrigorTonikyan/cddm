@@ -6,12 +6,49 @@ on:
       - "v*"
   workflow_dispatch:
 
+concurrency:
+  group: gh-release-${{ github.ref }}
+  cancel-in-progress: false
+
 permissions:
   contents: write
 
 jobs:
+  build-webui:
+    name: Build Shared WebUI Bundle
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: latest
+
+      - name: Cache Bun Dependencies
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock', 'package.json', 'webui/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: Build WebUI Distribution Assets
+        working-directory: ./webui
+        run: |
+          bun install --frozen-lockfile || bun install
+          bun run build
+
+      - name: Upload Shared WebUI Dist
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: webui-dist
+          path: webui/dist
+
   build-binaries:
     name: Build (${{ matrix.target }})
+    needs: [build-webui]
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -40,44 +77,52 @@ jobs:
 
     steps:
       - name: Checkout Source Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - name: Download Shared WebUI Dist
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
-          bun-version: latest
-
-      - name: Build WebUI Distribution Assets
-        working-directory: ./webui
-        run: |
-          bun install --frozen-lockfile || bun install
-          bun run build
+          name: webui-dist
+          path: webui/dist
 
       - name: Install Rust Toolchain
-        uses: dtolnay/rust-toolchain@nightly
+        uses: dtolnay/rust-toolchain@6a52aad76a94a5fbc50d567bb5be24419801c1fb # nightly
         with:
           targets: ${{ matrix.target }}
 
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
+        continue-on-error: true
+        with:
+          shared-key: "gh-release-${{ matrix.target }}"
+
       - name: Build Standalone Binaries (CLI, MCP, LSP)
+        shell: bash
+        env:
+          TARGET: ${{ matrix.target }}
         run: |
-          cargo build --release --target ${{ matrix.target }} --bin cddm --bin cddm-mcp --bin cddm-lsp
+          cargo build --release --locked --target "${TARGET}" --bin cddm --bin cddm-mcp --bin cddm-lsp
 
       - name: Package Target Archive
         shell: bash
+        env:
+          TARGET: ${{ matrix.target }}
+          EXE_EXT: ${{ matrix.exe_ext }}
+          ARCHIVE_EXT: ${{ matrix.archive_ext }}
         run: |
           mkdir -p dist-package
-          cp target/${{ matrix.target }}/release/cddm${{ matrix.exe_ext }} dist-package/
-          cp target/${{ matrix.target }}/release/cddm-mcp${{ matrix.exe_ext }} dist-package/
-          cp target/${{ matrix.target }}/release/cddm-lsp${{ matrix.exe_ext }} dist-package/
-          TAG_NAME="${GITHUB_REF_NAME:-v$(bun scripts/version.ts --get-current)}"
-          if [ "${{ matrix.archive_ext }}" = ".zip" ]; then
-            cd dist-package && zip -r "../cddm-${TAG_NAME}-${{ matrix.target }}.zip" ./* && cd ..
+          cp "target/${TARGET}/release/cddm${EXE_EXT}" dist-package/
+          cp "target/${TARGET}/release/cddm-mcp${EXE_EXT}" dist-package/
+          cp "target/${TARGET}/release/cddm-lsp${EXE_EXT}" dist-package/
+          TAG_NAME="${GITHUB_REF_NAME:-v$(awk -F'"' '/^version[[:space:]]*=/{print $2; exit}' Cargo.toml)}"
+          if [ "${ARCHIVE_EXT}" = ".zip" ]; then
+            cd dist-package && zip -r "../cddm-${TAG_NAME}-${TARGET}.zip" ./* && cd ..
           else
-            cd dist-package && tar -czvf "../cddm-${TAG_NAME}-${{ matrix.target }}.tar.gz" ./* && cd ..
+            cd dist-package && tar -czvf "../cddm-${TAG_NAME}-${TARGET}.tar.gz" ./* && cd ..
           fi
 
       - name: Upload Target Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: ${{ matrix.artifact_prefix }}-archive
           path: cddm-*.*
@@ -87,12 +132,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Source Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
           bun-version: latest
+
+      - name: Cache Bun Dependencies
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-vscode-${{ hashFiles('bun.lock', 'editors/vscode/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
 
       - name: Install Extension Dependencies
         working-directory: ./editors/vscode
@@ -104,7 +157,7 @@ jobs:
           bun scripts/package-vscode.ts
 
       - name: Upload VSIX Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: vscode-vsix
           path: packaging/vscode/*.vsix
@@ -117,19 +170,25 @@ jobs:
       id-token: write
     steps:
       - name: Checkout Source Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
           bun-version: latest
 
       - name: Install Rust Toolchain
-        uses: dtolnay/rust-toolchain@nightly
+        uses: dtolnay/rust-toolchain@6a52aad76a94a5fbc50d567bb5be24419801c1fb # nightly
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
+        continue-on-error: true
+        with:
+          shared-key: "gh-crates-io"
 
       - name: Authenticate with crates.io (OIDC Trusted Publishing)
         id: crates-auth
-        uses: rust-lang/crates-io-auth-action@v1
+        uses: rust-lang/crates-io-auth-action@3268eb413133e2960fa4ae0e963ca76380c54cd9 # v1
 
       - name: Publish Workspace Crates to crates.io
         env:
@@ -144,15 +203,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Source Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
           bun-version: latest
 
       - name: Download All Build Artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           path: ./downloaded-artifacts
 
@@ -165,7 +224,7 @@ jobs:
           cat SHA256SUMS.txt
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         if: env.GITHUB_TOKEN != ''
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -174,10 +233,10 @@ jobs:
           generate_release_notes: true
 
       - name: Publish Release to Gitea Server
-        if: env.GITEA_TOKEN != ''
+        if: env.GITEA_TOKEN != '' && env.GITEA_HOST != ''
         env:
-          GITEA_HOST: "git.gt-web-dev.com"
-          GITEA_REPO: "gt-dev/cddm"
+          GITEA_HOST: ${{ vars.GITEA_HOST }}
+          GITEA_REPO: ${{ vars.GITEA_REPO || github.repository }}
           GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}
         run: |
           TAG_NAME="${GITHUB_REF_NAME:-v$(bun scripts/version.ts --get-current)}"
