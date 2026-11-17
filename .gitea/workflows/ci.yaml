@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: builtin:checkout
+        uses: self:gt-dev/actions/checkout@v1
         with:
           fetch-depth: 1
 
@@ -38,7 +38,7 @@ jobs:
     runs-on: ubuntu-latest-12-cores
     steps:
       - name: Checkout Code
-        uses: builtin:checkout
+        uses: self:gt-dev/actions/checkout@v1
         with:
           fetch-depth: 1
 
@@ -82,7 +82,7 @@ jobs:
     runs-on: ubuntu-latest-12-cores
     steps:
       - name: Checkout Code
-        uses: builtin:checkout
+        uses: self:gt-dev/actions/checkout@v1
         with:
           fetch-depth: 1
 
@@ -116,7 +116,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: builtin:checkout
+        uses: self:gt-dev/actions/checkout@v1
         with:
           fetch-depth: 0
 
@@ -166,7 +166,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: builtin:checkout
+        uses: self:gt-dev/actions/checkout@v1
         with:
           fetch-depth: 1
 
@@ -194,7 +194,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: builtin:checkout
+        uses: self:gt-dev/actions/checkout@v1
         with:
           fetch-depth: 1
 
@@ -226,7 +226,7 @@ jobs:
       image: git.gt-web-dev.com/gt-dev/playwright-runner:v1.65.0
     steps:
       - name: Checkout Code
-        uses: builtin:checkout
+        uses: self:gt-dev/actions/checkout@v1
         with:
           fetch-depth: 1
 
