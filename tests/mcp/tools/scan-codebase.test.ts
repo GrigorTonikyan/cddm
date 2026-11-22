@@ -1,4 +1,7 @@
 import { describe, expect, it } from "bun:test";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { executeTool } from "../helpers";
 
 describe("MCP Tool: scan_codebase", () => {
@@ -85,5 +88,36 @@ describe("MCP Tool: scan_codebase", () => {
     expect(res).toBeDefined();
     expect(typeof res.total_files).toBe("number");
     expect(res.total_files).toBeGreaterThan(0);
+  }, 30000);
+
+  it("should include tests and spec files when ignore_tests and ignore_mocks are false", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "cddm-mcp-tests-"));
+    try {
+      mkdirSync(join(dir, "src"), { recursive: true });
+      mkdirSync(join(dir, "tests"), { recursive: true });
+      mkdirSync(join(dir, "mocks"), { recursive: true });
+
+      writeFileSync(join(dir, "src", "main.ts"), "export const mainValue = 1;\n");
+      writeFileSync(join(dir, "src", "app.test.ts"), "export const testValue = 2;\n");
+      writeFileSync(join(dir, "src", "app.spec.ts"), "export const specValue = 3;\n");
+      writeFileSync(join(dir, "tests", "suite.ts"), "export const suiteValue = 4;\n");
+      writeFileSync(join(dir, "mocks", "data.ts"), "export const mockValue = 5;\n");
+
+      const defaultRes = await executeTool("scan_codebase", {
+        directory: dir,
+        min_tokens: 50,
+      });
+      expect(defaultRes.total_files).toBe(1);
+
+      const includeTestsRes = await executeTool("scan_codebase", {
+        directory: dir,
+        min_tokens: 50,
+        ignore_tests: false,
+        ignore_mocks: false,
+      });
+      expect(includeTestsRes.total_files).toBe(5);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   }, 30000);
 });

@@ -57,6 +57,8 @@ export const CLI_COMMANDS_CATALOG: CliCommandMetadata[] = [
       "--fail-threshold",
       "--languages",
       "--ignore",
+      "--no-ignore-tests",
+      "--no-ignore-mocks",
       "--git-blame",
       "--cross-language",
       "--rules",
@@ -89,7 +91,15 @@ export const CLI_COMMANDS_CATALOG: CliCommandMetadata[] = [
 
     summary: "Differential clone scan comparing working tree against Git base revisions",
     usage: "cddm diff [OPTIONS] <BASE_REF> [TARGET_REF]",
-    keyFlags: ["--matrix", "--cross-language", "--fail-threshold", "--git-blame", "--rules"],
+    keyFlags: [
+      "--matrix",
+      "--cross-language",
+      "--fail-threshold",
+      "--no-ignore-tests",
+      "--no-ignore-mocks",
+      "--git-blame",
+      "--rules",
+    ],
   },
   {
     name: "semantic",

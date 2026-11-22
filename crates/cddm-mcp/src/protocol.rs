@@ -114,6 +114,9 @@ pub mod mcp_tools {
     pub const PARAM_IGNORE_TESTS: &str = "ignore_tests";
     pub const PARAM_IGNORE_MOCKS: &str = "ignore_mocks";
     pub const PARAM_IGNORE_GENERATED: &str = "ignore_generated";
+    pub const PARAM_IGNORE_PATTERNS: &str = "ignore_patterns";
+    pub const PARAM_LANGUAGES: &str = "languages";
+    pub const PARAM_INCLUDE_IGNORED: &str = "include_ignored";
     pub const PARAM_PATCH: &str = "patch";
     pub const PARAM_BRANCH_NAME: &str = "branch_name";
     pub const PARAM_CREATE_BRANCH: &str = "create_branch";

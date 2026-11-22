@@ -1,6 +1,8 @@
 #![forbid(unsafe_code)]
 
-use super::helpers::{make_json_payload_response, run_scan_from_mcp_args};
+use super::helpers::{
+    build_scan_config_from_mcp_args, make_json_payload_response, run_scan_from_mcp_args,
+};
 use crate::protocol::{
     JsonRpcResponse, make_error_response, make_text_response, mcp_tools, rpc_errors,
 };
@@ -40,22 +42,11 @@ pub async fn handle_diff_scan(
         .and_then(|b| b.as_str());
 
     if let Some(base) = base_ref {
-        let (dir, min_tokens) = crate::tools::helpers::parse_dir_and_tokens(args);
         let target = args
             .and_then(|a| a.get(mcp_tools::PARAM_TARGET_REF))
             .and_then(|t| t.as_str());
 
-        let include_ignored = args
-            .and_then(|a| a.get("include_ignored"))
-            .and_then(|b| b.as_bool())
-            .unwrap_or(false);
-
-        let config = ScanConfig {
-            directory: dir.to_string(),
-            min_tokens,
-            include_ignored,
-            ..Default::default()
-        };
+        let config = build_scan_config_from_mcp_args(args, false, false);
 
         let (tx, _rx) = mpsc::channel(100);
         let cancel_flag = Arc::new(AtomicBool::new(false));

@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-27 | Rust: 416 #[test] units | WebUI: 334 tests across 77 suites | Scripts & MCP: 260 tests across 68 suites | CI Workflows: PASS
+> Last verified: 2026-08-27 | Rust: 417 #[test] units | WebUI: 334 tests across 77 suites | Scripts & MCP: 261 tests across 68 suites | CI Workflows: PASS
 
 ---
 
@@ -442,7 +442,7 @@
 
 ---
 
-## 3. Repository Scripts & MCP Protocol — Bun Test Suites (260 tests across 68 suites)
+## 3. Repository Scripts & MCP Protocol — Bun Test Suites (261 tests across 68 suites)
 
 ### Repository Tooling & Automation Suites
 
@@ -511,7 +511,7 @@
 | Tool: cddm_heal_refactor            | `tests/mcp/tools/heal-refactor.test.ts`            | 3 tests    | PASS   |
 | Tool: cddm_import_cache_pack        | `tests/mcp/tools/import-cache-pack.test.ts`        | 2 tests    | PASS   |
 | Tool: cddm_prune_dead_clones        | `tests/mcp/tools/prune-dead-clones.test.ts`        | 2 tests    | PASS   |
-| Tool: cddm_scan_codebase            | `tests/mcp/tools/scan-codebase.test.ts`            | 6 tests    | PASS   |
+| Tool: cddm_scan_codebase            | `tests/mcp/tools/scan-codebase.test.ts`            | 7 tests    | PASS   |
 | Tool: cddm_scan_cross_language      | `tests/mcp/tools/scan-cross-language.test.ts`      | 2 tests    | PASS   |
 | Tool: cddm_scan_hub                 | `tests/mcp/tools/scan-hub.test.ts`                 | 3 tests    | PASS   |
 | Tool: cddm_scan_monorepo            | `tests/mcp/tools/scan-monorepo.test.ts`            | 4 tests    | PASS   |

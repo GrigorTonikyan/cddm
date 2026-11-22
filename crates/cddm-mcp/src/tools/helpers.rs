@@ -93,31 +93,65 @@ pub fn get_string_param(args: Option<&serde_json::Value>, key: &str) -> Option<S
         .map(String::from)
 }
 
-pub async fn run_scan_from_mcp_args(
+pub fn get_string_array_param(args: Option<&serde_json::Value>, key: &str) -> Option<Vec<String>> {
+    args.and_then(|a| a.get(key))
+        .and_then(|v| v.as_array())
+        .map(|arr| {
+            arr.iter()
+                .filter_map(|item| item.as_str().map(String::from))
+                .collect()
+        })
+}
+
+pub fn build_scan_config_from_mcp_args(
     args: Option<&serde_json::Value>,
     enable_git_blame: bool,
-) -> Result<ScanResult, String> {
+    default_semantic: bool,
+) -> ScanConfig {
     let (dir, min_tokens) = parse_dir_and_tokens(args);
-    let cross_language = get_bool_param(args, "cross_language", true);
+    let defaults = ScanConfig::default();
+    let cross_language = get_bool_param(args, "cross_language", default_semantic);
     let detect_type3 = get_bool_param(args, "detect_type3", true);
-    let detect_type4 = get_bool_param(args, "detect_type4", true);
+    let detect_type4 = get_bool_param(args, "detect_type4", default_semantic);
     let threads = args
         .and_then(|a| a.get("threads"))
         .and_then(|v| v.as_u64())
         .map(|v| v as usize);
-    let include_ignored = get_bool_param(args, "include_ignored", false);
+    let include_ignored = get_bool_param(args, mcp_tools::PARAM_INCLUDE_IGNORED, false);
+    let ignore_tests = get_bool_param(args, mcp_tools::PARAM_IGNORE_TESTS, defaults.ignore_tests);
+    let ignore_mocks = get_bool_param(args, mcp_tools::PARAM_IGNORE_MOCKS, defaults.ignore_mocks);
+    let ignore_generated = get_bool_param(
+        args,
+        mcp_tools::PARAM_IGNORE_GENERATED,
+        defaults.ignore_generated,
+    );
+    let languages = get_string_array_param(args, mcp_tools::PARAM_LANGUAGES).unwrap_or_default();
+    let ignore_patterns = get_string_array_param(args, mcp_tools::PARAM_IGNORE_PATTERNS)
+        .unwrap_or_else(|| defaults.ignore_patterns.clone());
 
-    let config = ScanConfig {
+    ScanConfig {
         directory: dir.to_string(),
         min_tokens,
+        languages,
+        ignore_patterns,
         enable_git_blame,
         cross_language,
         detect_type3,
         detect_type4,
         threads,
         include_ignored,
-        ..Default::default()
-    };
+        ignore_tests,
+        ignore_mocks,
+        ignore_generated,
+        ..defaults
+    }
+}
+
+pub async fn run_scan_from_mcp_args(
+    args: Option<&serde_json::Value>,
+    enable_git_blame: bool,
+) -> Result<ScanResult, String> {
+    let config = build_scan_config_from_mcp_args(args, enable_git_blame, true);
 
     let (tx, _rx) = mpsc::channel(100);
     let cancel_flag = Arc::new(AtomicBool::new(false));

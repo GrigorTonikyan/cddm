@@ -169,13 +169,21 @@ pub struct DiffArgs {
     #[arg(long)]
     pub cddmignore: Option<PathBuf>,
 
-    /// Automatically filter test files and test directories
-    #[arg(long, default_value_t = false)]
+    /// Automatically filter test files and test directories (default: true)
+    #[arg(long, default_value_t = true, action = clap::ArgAction::Set)]
     pub ignore_tests: bool,
 
-    /// Automatically filter mock and fixture files
+    /// Include test files and test directories in diff scan
     #[arg(long, default_value_t = false)]
+    pub no_ignore_tests: bool,
+
+    /// Automatically filter mock and fixture files (default: true)
+    #[arg(long, default_value_t = true, action = clap::ArgAction::Set)]
     pub ignore_mocks: bool,
+
+    /// Include mock and fixture files in diff scan
+    #[arg(long, default_value_t = false)]
+    pub no_ignore_mocks: bool,
 
     /// Automatically filter auto-generated files with generator headers
     #[arg(long, default_value_t = true)]

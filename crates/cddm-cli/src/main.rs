@@ -57,13 +57,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 }
 
+fn resolve_negated_flag(enable: bool, disable: bool) -> bool {
+    enable && !disable
+}
+
 async fn run_app(cli: Cli) -> Result<(), Box<dyn std::error::Error>> {
     match cli.command {
         Commands::Scan(args) => {
-            let enable_cross_lang = args.cross_language && !args.no_cross_language;
-            let enable_type4 = args.detect_type4 && !args.no_type4;
-            let effective_ignore_tests = args.ignore_tests && !args.no_ignore_tests;
-            let effective_ignore_mocks = args.ignore_mocks && !args.no_ignore_mocks;
+            let enable_cross_lang =
+                resolve_negated_flag(args.cross_language, args.no_cross_language);
+            let enable_type4 = resolve_negated_flag(args.detect_type4, args.no_type4);
+            let effective_ignore_tests =
+                resolve_negated_flag(args.ignore_tests, args.no_ignore_tests);
+            let effective_ignore_mocks =
+                resolve_negated_flag(args.ignore_mocks, args.no_ignore_mocks);
             run_scan_command(
                 args.directory,
                 args.min_tokens,
@@ -101,6 +108,10 @@ async fn run_app(cli: Cli) -> Result<(), Box<dyn std::error::Error>> {
         }
 
         Commands::Diff(args) => {
+            let effective_ignore_tests =
+                resolve_negated_flag(args.ignore_tests, args.no_ignore_tests);
+            let effective_ignore_mocks =
+                resolve_negated_flag(args.ignore_mocks, args.no_ignore_mocks);
             run_diff_command(
                 args.base_ref,
                 args.target_ref,
@@ -114,8 +125,8 @@ async fn run_app(cli: Cli) -> Result<(), Box<dyn std::error::Error>> {
                 args.cache_dir,
                 args.no_cache,
                 args.cddmignore,
-                args.ignore_tests,
-                args.ignore_mocks,
+                effective_ignore_tests,
+                effective_ignore_mocks,
                 args.ignore_generated,
                 args.rules,
                 args.enforce_policies,
