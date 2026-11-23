@@ -2,6 +2,7 @@
 
 use cddm_core::ScanResult;
 use comfy_table::{Cell, Color, Table};
+use std::fmt::Write as _;
 
 pub fn scan_metrics_summary(result: &ScanResult) -> [(&'static str, String); 9] {
     [
@@ -26,15 +27,29 @@ pub fn scan_metrics_summary(result: &ScanResult) -> [(&'static str, String); 9] 
     ]
 }
 
-pub fn print_console_report(result: &ScanResult) {
-    println!("\n=== CDDM — Code De-Duplication Meister Report ===");
-    for (k, v) in scan_metrics_summary(result) {
-        println!("{:<22} {}", format!("{}:", k), v);
+fn format_cluster_locations(cluster: &cddm_core::CloneCluster, truncate: bool) -> String {
+    let locs_str = cluster
+        .occurrences
+        .iter()
+        .map(|loc| format!("{}:{}-{}", loc.file, loc.start_line, loc.end_line))
+        .collect::<Vec<_>>()
+        .join(", ");
+    if truncate && locs_str.len() > 55 {
+        format!("{}...", &locs_str[..52])
+    } else {
+        locs_str
     }
-    println!();
+}
+
+pub fn format_console_report(result: &ScanResult) -> String {
+    let mut out = String::from("\n=== CDDM — Code De-Duplication Meister Report ===\n");
+    for (k, v) in scan_metrics_summary(result) {
+        let _ = writeln!(out, "{:<22} {}", format!("{k}:"), v);
+    }
+    out.push('\n');
 
     if !result.clone_clusters.is_empty() {
-        println!("--- Clone Clusters (N-way Equivalence Classes) ---");
+        out.push_str("--- Clone Clusters (N-way Equivalence Classes) ---\n");
         let mut cluster_table = Table::new();
         cluster_table.set_header(vec![
             Cell::new("Cluster"),
@@ -46,39 +61,28 @@ pub fn print_console_report(result: &ScanResult) {
         ]);
 
         for cluster in result.clone_clusters.iter().take(20) {
-            let locs_str = cluster
-                .occurrences
-                .iter()
-                .map(|loc| format!("{}:{}-{}", loc.file, loc.start_line, loc.end_line))
-                .collect::<Vec<_>>()
-                .join(", ");
-            let locs_truncated = if locs_str.len() > 55 {
-                format!("{}...", &locs_str[..52])
-            } else {
-                locs_str
-            };
-
             cluster_table.add_row(vec![
                 Cell::new(format!("#{}", cluster.id)),
                 Cell::new(format!("{:?}", cluster.clone_type)),
                 Cell::new(cluster.occurrences.len()),
                 Cell::new(cluster.token_count),
                 Cell::new(format!("{:.1}%", cluster.similarity * 100.0)).fg(Color::Yellow),
-                Cell::new(locs_truncated),
+                Cell::new(format_cluster_locations(cluster, true)),
             ]);
         }
-        println!("{}", cluster_table);
+        let _ = writeln!(out, "{cluster_table}");
         if result.clone_clusters.len() > 20 {
-            println!(
+            let _ = writeln!(
+                out,
                 "... and {} more clone clusters.",
                 result.clone_clusters.len() - 20
             );
         }
-        println!();
+        out.push('\n');
     }
 
     if !result.clone_pairs.is_empty() {
-        println!("--- Pairwise Clones ---");
+        out.push_str("--- Pairwise Clones ---\n");
         let mut table = Table::new();
         table.set_header(vec![
             Cell::new("File A"),
@@ -100,33 +104,41 @@ pub fn print_console_report(result: &ScanResult) {
             ]);
         }
 
-        println!("{}", table);
+        let _ = writeln!(out, "{table}");
         if result.clone_pairs.len() > 25 {
-            println!(
+            let _ = writeln!(
+                out,
                 "... and {} more clone pairs.",
                 result.clone_pairs.len() - 25
             );
         }
     } else {
-        println!("Zero code duplication detected!");
+        out.push_str("Zero code duplication detected!\n");
     }
 
     if !result.policy_violations.is_empty() {
-        super::policy::print_policy_violations_console(&result.policy_violations);
+        out.push_str(&super::policy::format_policy_violations_console(
+            &result.policy_violations,
+        ));
     }
+    out
 }
 
-pub fn print_markdown_report(result: &ScanResult) {
-    println!("# CDDM Duplicate Code Scan Report\n");
+pub fn print_console_report(result: &ScanResult) {
+    print!("{}", format_console_report(result));
+}
+
+pub fn format_markdown_report(result: &ScanResult) -> String {
+    let mut out = String::from("# CDDM Duplicate Code Scan Report\n\n");
     for (k, v) in scan_metrics_summary(result) {
-        println!("- **{}**: `{}`", k, v);
+        let _ = writeln!(out, "- **{k}**: `{v}`");
     }
-    println!();
+    out.push('\n');
 
     if !result.clone_clusters.is_empty() {
-        println!("### N-way Clone Clusters\n");
-        println!("| Cluster | Type | Occurrences | Tokens | Similarity | Locations |");
-        println!("| :--- | :--- | :--- | :--- | :--- | :--- |");
+        out.push_str("### N-way Clone Clusters\n\n");
+        out.push_str("| Cluster | Type | Occurrences | Tokens | Similarity | Locations |\n");
+        out.push_str("| :--- | :--- | :--- | :--- | :--- | :--- |\n");
         for cluster in &result.clone_clusters {
             let locs_str = cluster
                 .occurrences
@@ -134,7 +146,8 @@ pub fn print_markdown_report(result: &ScanResult) {
                 .map(|loc| format!("`{}`:{}-{}", loc.file, loc.start_line, loc.end_line))
                 .collect::<Vec<_>>()
                 .join("<br>");
-            println!(
+            let _ = writeln!(
+                out,
                 "| `#{}` | `{:?}` | {} | {} | {:.1}% | {} |",
                 cluster.id,
                 cluster.clone_type,
@@ -144,15 +157,16 @@ pub fn print_markdown_report(result: &ScanResult) {
                 locs_str
             );
         }
-        println!();
+        out.push('\n');
     }
 
     if !result.clone_pairs.is_empty() {
-        println!("### Pairwise Clones\n");
-        println!("| File A | Lines A | File B | Lines B | Tokens | Similarity |");
-        println!("| :--- | :--- | :--- | :--- | :--- | :--- |");
+        out.push_str("### Pairwise Clones\n\n");
+        out.push_str("| File A | Lines A | File B | Lines B | Tokens | Similarity |\n");
+        out.push_str("| :--- | :--- | :--- | :--- | :--- | :--- |\n");
         for pair in &result.clone_pairs {
-            println!(
+            let _ = writeln!(
+                out,
                 "| `{}` | {}-{} | `{}` | {}-{} | {} | {:.1}% |",
                 pair.file_a,
                 pair.start_line_a,
@@ -165,29 +179,38 @@ pub fn print_markdown_report(result: &ScanResult) {
             );
         }
     } else {
-        println!("Zero code duplication detected!");
+        out.push_str("Zero code duplication detected!\n");
     }
 
     if !result.policy_violations.is_empty() {
-        super::policy::print_policy_violations_markdown(&result.policy_violations);
+        out.push_str(&super::policy::format_policy_violations_markdown(
+            &result.policy_violations,
+        ));
     }
+    out
+}
+
+pub fn format_sarif_report(result: &ScanResult) -> Result<String, Box<dyn std::error::Error>> {
+    let sarif_json = cddm_core::generate_sarif_json(result);
+    Ok(format!("{}\n", serde_json::to_string_pretty(&sarif_json)?))
 }
 
 pub fn print_sarif_report(result: &ScanResult) -> Result<(), Box<dyn std::error::Error>> {
-    let sarif_json = cddm_core::generate_sarif_json(result);
-    println!("{}", serde_json::to_string_pretty(&sarif_json)?);
+    let rendered = format_sarif_report(result)?;
+    print!("{rendered}");
     Ok(())
 }
 
-pub fn print_compact_console_report(result: &ScanResult) {
-    println!("\n=== CDDM — Code De-Duplication Meister Report (Summary Mode) ===");
+pub fn format_compact_console_report(result: &ScanResult) -> String {
+    let mut out =
+        String::from("\n=== CDDM — Code De-Duplication Meister Report (Summary Mode) ===\n");
     for (k, v) in scan_metrics_summary(result) {
-        println!("{:<22} {}", format!("{}:", k), v);
+        let _ = writeln!(out, "{:<22} {}", format!("{k}:"), v);
     }
-    println!();
+    out.push('\n');
 
     if !result.clone_clusters.is_empty() {
-        println!("--- Top Clone Clusters (Showing Top 5) ---");
+        out.push_str("--- Top Clone Clusters (Showing Top 5) ---\n");
         let mut cluster_table = Table::new();
         cluster_table.set_header(vec![
             Cell::new("Cluster"),
@@ -198,33 +221,23 @@ pub fn print_compact_console_report(result: &ScanResult) {
         ]);
 
         for cluster in result.clone_clusters.iter().take(5) {
-            let locs_str = cluster
-                .occurrences
-                .iter()
-                .map(|loc| format!("{}:{}-{}", loc.file, loc.start_line, loc.end_line))
-                .collect::<Vec<_>>()
-                .join(", ");
-            let locs_truncated = if locs_str.len() > 55 {
-                format!("{}...", &locs_str[..52])
-            } else {
-                locs_str
-            };
-
             cluster_table.add_row(vec![
                 Cell::new(format!("#{}", cluster.id)),
                 Cell::new(format!("{:?}", cluster.clone_type)),
                 Cell::new(cluster.occurrences.len()),
                 Cell::new(cluster.token_count),
-                Cell::new(locs_truncated),
+                Cell::new(format_cluster_locations(cluster, true)),
             ]);
         }
-        println!("{}", cluster_table);
+        let _ = writeln!(out, "{cluster_table}");
         if result.clone_clusters.len() > 5 {
-            println!(
+            let _ = writeln!(
+                out,
                 "... and {} more clone clusters omitted in summary mode.",
                 result.clone_clusters.len() - 5
             );
         }
-        println!();
+        out.push('\n');
     }
+    out
 }

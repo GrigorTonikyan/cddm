@@ -34,29 +34,13 @@ fn render_hook_status(frame: &mut Frame, area: Rect) {
     frame.render_widget(Paragraph::new(lines).block(block), area);
 }
 
-const CI_WORKFLOW_YAML: &str = r#"# .github/workflows/cddm.yml — Turnkey Quality Gate
-name: CDDM Code Duplication Analysis
-on: [push, pull_request]
-jobs:
-  cddm-scan:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: gt-dev/cddm-action@v2
-        with:
-          fail-threshold: 5.0
-          format: sarif
-          output: cddm-results.sarif
-      - uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: cddm-results.sarif"#;
-
 fn render_ci_preview(frame: &mut Frame, area: Rect) {
     let block = create_titled_block(
-        " Generated CI/CD Workflow Specification (.github/workflows/cddm.yml) ",
+        " Generated CI/CD Workflow Specification (.gitea/workflows/cddm.yaml) ",
         false,
     );
-    let p = Paragraph::new(CI_WORKFLOW_YAML)
+    let workflow_yaml = cddm_core::generate_gitea_workflow(5.0, 50);
+    let p = Paragraph::new(workflow_yaml)
         .block(block)
         .wrap(Wrap { trim: false });
     frame.render_widget(p, area);
@@ -81,7 +65,7 @@ fn render_workflow_actions(frame: &mut Frame, area: Rect) {
         ),
         Span::raw("  "),
         Span::styled(
-            " [w] Write .github/workflows/cddm.yml ",
+            " [w] Write .gitea/workflows/cddm.yaml ",
             Style::default()
                 .fg(Color::Black)
                 .bg(Color::Cyan)

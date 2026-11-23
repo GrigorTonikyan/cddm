@@ -60,7 +60,8 @@ describe("HookManagerModal Component", () => {
     const workflowsTab = screen.getByText("Turnkey CI/CD Workflows");
     fireEvent.click(workflowsTab);
 
-    expect(screen.getByText(/cddm scan \. --min-tokens 50/)).toBeDefined();
+    expect(screen.getByText(/self:gt-dev\/actions\/setup-cddm@v1/)).toBeDefined();
+    expect(screen.getByText(/--enforce-policies/)).toBeDefined();
     expect(screen.getByText("Copy Snippet")).toBeDefined();
 
     const githubBtn = screen.getByText("GitHub Actions (.github/workflows/cddm.yml)");

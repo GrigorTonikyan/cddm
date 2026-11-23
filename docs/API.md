@@ -687,41 +687,43 @@ Subscribes to live Server-Sent Events (SSE) stream for real-time background file
 
 Executes terminal clone detection with configurable reporters.
 
-| Flag                 | Short | Type                             | Default   | Description                                    |
-| :------------------- | :---- | :------------------------------- | :-------- | :--------------------------------------------- |
-| `--min-tokens`       | `-m`  | `usize`                          | `50`      | Minimum token clone threshold                  |
-| `--format`           | `-f`  | `console\|json\|markdown\|sarif` | `console` | Output reporter format                         |
-| `--fail-threshold`   |       | `f64`                            | None      | Exit code 1 if duplication % exceeds threshold |
-| `--languages`        | `-l`  | `String[]`                       | `[]`      | Filter scan by language names                  |
-| `--ignore`           | `-i`  | `String[]`                       | `[]`      | Additional ignore glob patterns                |
-| `--cddmignore`       |       | `PathBuf`                        | None      | Custom path to `.cddmignore` file              |
-| `--ignore-tests`     |       | `bool`                           | `false`   | Suppress test directories and files            |
-| `--ignore-mocks`     |       | `bool`                           | `false`   | Suppress mock and fixture files                |
-| `--ignore-generated` |       | `bool`                           | `true`    | Suppress `@generated` and `DO NOT EDIT` files  |
-| `--git-blame`        |       | `bool`                           | `false`   | Enable `gix` git author annotations            |
-| `--cache-dir`        |       | `PathBuf`                        | None      | Custom path for persistent redb cache database |
-| `--no-cache`         |       | `bool`                           | `false`   | Bypass persistent disk cache                   |
-| `--clear-cache`      |       | `bool`                           | `false`   | Clear existing cache database before scanning  |
+| Flag                 | Short | Type                             | Default   | Description                                      |
+| :------------------- | :---- | :------------------------------- | :-------- | :----------------------------------------------- |
+| `--min-tokens`       | `-m`  | `usize`                          | `50`      | Minimum token clone threshold                    |
+| `--format`           | `-f`  | `console\|json\|markdown\|sarif` | `console` | Output reporter format                           |
+| `--output`           | `-o`  | `PathBuf`                        | None      | Write formatted report to file instead of stdout |
+| `--fail-threshold`   |       | `f64`                            | None      | Exit code 1 if duplication % exceeds threshold   |
+| `--languages`        | `-l`  | `String[]`                       | `[]`      | Filter scan by language names                    |
+| `--ignore`           | `-i`  | `String[]`                       | `[]`      | Additional ignore glob patterns                  |
+| `--cddmignore`       |       | `PathBuf`                        | None      | Custom path to `.cddmignore` file                |
+| `--ignore-tests`     |       | `bool`                           | `false`   | Suppress test directories and files              |
+| `--ignore-mocks`     |       | `bool`                           | `false`   | Suppress mock and fixture files                  |
+| `--ignore-generated` |       | `bool`                           | `true`    | Suppress `@generated` and `DO NOT EDIT` files    |
+| `--git-blame`        |       | `bool`                           | `false`   | Enable `gix` git author annotations              |
+| `--cache-dir`        |       | `PathBuf`                        | None      | Custom path for persistent redb cache database   |
+| `--no-cache`         |       | `bool`                           | `false`   | Bypass persistent disk cache                     |
+| `--clear-cache`      |       | `bool`                           | `false`   | Clear existing cache database before scanning    |
 
 ### Command: `cddm diff <BASE_REF> [TARGET_REF]`
 
 Executes differential duplication scanning comparing current changes against a Git base revision.
 
-| Flag                 | Short | Type                             | Default   | Description                                    |
-| :------------------- | :---- | :------------------------------- | :-------- | :--------------------------------------------- |
-| `--directory`        | `-d`  | `PathBuf`                        | `"."`     | Target Git repository directory path           |
-| `--min-tokens`       | `-m`  | `usize`                          | `50`      | Minimum token clone threshold                  |
-| `--format`           | `-f`  | `console\|json\|markdown\|sarif` | `console` | Output report format                           |
-| `--fail-threshold`   |       | `f64`                            | None      | Exit code 1 if new clones exceed threshold     |
-| `--languages`        | `-l`  | `String[]`                       | `[]`      | Filter scan by language names                  |
-| `--ignore`           | `-i`  | `String[]`                       | `[]`      | Additional ignore glob patterns                |
-| `--cddmignore`       |       | `PathBuf`                        | None      | Custom path to `.cddmignore` file              |
-| `--ignore-tests`     |       | `bool`                           | `false`   | Suppress test directories and files            |
-| `--ignore-mocks`     |       | `bool`                           | `false`   | Suppress mock and fixture files                |
-| `--ignore-generated` |       | `bool`                           | `true`    | Suppress `@generated` and `DO NOT EDIT` files  |
-| `--git-blame`        |       | `bool`                           | `false`   | Enable `gix` git author annotations            |
-| `--cache-dir`        |       | `PathBuf`                        | None      | Custom path for persistent redb cache database |
-| `--no-cache`         |       | `bool`                           | `false`   | Bypass persistent disk cache                   |
+| Flag                 | Short | Type                             | Default   | Description                                      |
+| :------------------- | :---- | :------------------------------- | :-------- | :----------------------------------------------- |
+| `--directory`        | `-d`  | `PathBuf`                        | `"."`     | Target Git repository directory path             |
+| `--min-tokens`       | `-m`  | `usize`                          | `50`      | Minimum token clone threshold                    |
+| `--format`           | `-f`  | `console\|json\|markdown\|sarif` | `console` | Output report format                             |
+| `--output`           | `-o`  | `PathBuf`                        | None      | Write formatted report to file instead of stdout |
+| `--fail-threshold`   |       | `f64`                            | None      | Exit code 1 if new clones exceed threshold       |
+| `--languages`        | `-l`  | `String[]`                       | `[]`      | Filter scan by language names                    |
+| `--ignore`           | `-i`  | `String[]`                       | `[]`      | Additional ignore glob patterns                  |
+| `--cddmignore`       |       | `PathBuf`                        | None      | Custom path to `.cddmignore` file                |
+| `--ignore-tests`     |       | `bool`                           | `false`   | Suppress test directories and files              |
+| `--ignore-mocks`     |       | `bool`                           | `false`   | Suppress mock and fixture files                  |
+| `--ignore-generated` |       | `bool`                           | `true`    | Suppress `@generated` and `DO NOT EDIT` files    |
+| `--git-blame`        |       | `bool`                           | `false`   | Enable `gix` git author annotations              |
+| `--cache-dir`        |       | `PathBuf`                        | None      | Custom path for persistent redb cache database   |
+| `--no-cache`         |       | `bool`                           | `false`   | Bypass persistent disk cache                     |
 
 ### Command: `cddm ignore <SUBCOMMAND>`
 

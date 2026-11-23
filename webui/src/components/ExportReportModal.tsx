@@ -129,21 +129,22 @@ ${results.clone_pairs
     return `name: CDDM Duplication Quality Gate
 
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   cddm-scan:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
       - name: Install Rust Toolchain
         uses: dtolnay/rust-toolchain@stable
       - name: Run CDDM Duplication Scan & SARIF Export
         run: |
-          cargo run -p cddm-cli -- scan . --min-tokens 50 --fail-threshold 5.0 --sarif cddm-results.sarif
+          cargo run -p cddm-cli -- scan . --min-tokens 50 --fail-threshold 5.0 --format sarif --output cddm-results.sarif
       - name: Upload SARIF to GitHub Code Scanning
         uses: github/codeql-action/upload-sarif@v3
         if: always()

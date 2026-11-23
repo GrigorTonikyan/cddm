@@ -20,44 +20,64 @@ export interface HookManagerModalProps {
 }
 
 export const GITEA_CI_SNIPPET = `name: CDDM Duplication Quality Gate
+
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: \${{ github.workflow }}-\${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   duplication-gate:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: self:gt-dev/actions/checkout@v1
+        with:
+          fetch-depth: 1
 
-      - name: Install CDDM CLI
-        run: cargo install cddm-cli --locked
+      - name: Setup CDDM
+        uses: self:gt-dev/actions/setup-cddm@v1
+
+      - name: Check CDDM Architectural Policies
+        run: cddm rules check . --enforce-policies
 
       - name: Run CDDM Duplication Scan
-        run: cddm scan . --min-tokens 50 --fail-threshold 5.0 --enable-cache
+        run: |
+          cddm scan . \\
+            --min-tokens 50 \\
+            --fail-threshold 5.0 \\
+            --no-ignore-tests \\
+            --detect-type4 true \\
+            --enforce-policies \\
+            --format sarif > cddm-results.sarif
 `;
 
 export const GITHUB_CI_SNIPPET = `name: CDDM Duplication Quality Gate
+
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   duplication-scan:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
       - name: Run CDDM Scan
         run: |
           cargo install cddm-cli --locked
-          cddm scan . --min-tokens 50 --fail-threshold 5.0
+          cddm rules check . --enforce-policies
+          cddm scan . --min-tokens 50 --fail-threshold 5.0 --no-ignore-tests --detect-type4 true --enforce-policies
 `;
 
 export const PRE_COMMIT_HOOK_SCRIPT = `#!/usr/bin/env sh
@@ -66,7 +86,7 @@ export const PRE_COMMIT_HOOK_SCRIPT = `#!/usr/bin/env sh
 
 if command -v cddm >/dev/null 2>&1; then
     echo "Running CDDM pre-commit duplication check..."
-    cddm scan . --min-tokens 50 --fail-threshold 5.0 --enable-cache || {
+    cddm scan . --min-tokens 50 --fail-threshold 5.0 || {
         echo "CDDM Quality Gate failed: Duplication exceeds threshold!"
         exit 1
     }

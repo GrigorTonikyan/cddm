@@ -84,8 +84,10 @@ fn test_print_sarif_report_succeeds() {
 #[test]
 fn test_print_console_and_markdown_reports() {
     let result = make_test_result();
-    print_console_report(&result);
-    print_markdown_report(&result);
+    let console = format_console_report(&result);
+    let md = format_markdown_report(&result);
+    assert!(console.contains("CDDM — Code De-Duplication Meister Report"));
+    assert!(md.contains("# CDDM Duplicate Code Scan Report"));
 }
 
 #[test]
@@ -116,8 +118,10 @@ fn test_print_diff_reports() {
         duration_ms: 25,
     };
 
-    print_diff_console_report(&diff_result);
-    print_diff_markdown_report(&diff_result);
+    let console = format_diff_console_report(&diff_result);
+    let md = format_diff_markdown_report(&diff_result);
+    assert!(console.contains("Differential Report"));
+    assert!(md.contains("# CDDM Differential Scan Report"));
 }
 
 #[test]
@@ -346,4 +350,72 @@ fn test_cli_subcommands_parsing() {
         }
         _ => panic!("expected Diff command"),
     }
+
+    let cli_scan_output = Cli::try_parse_from([
+        "cddm",
+        "scan",
+        ".",
+        "--format",
+        "sarif",
+        "--output",
+        "cddm-results.sarif",
+    ])
+    .expect("parse scan --output");
+    match cli_scan_output.command {
+        Commands::Scan(args) => {
+            assert_eq!(args.format, OutputFormat::Sarif);
+            assert_eq!(args.output, Some(PathBuf::from("cddm-results.sarif")));
+        }
+        _ => panic!("expected Scan command"),
+    }
+
+    let cli_diff_output = Cli::try_parse_from([
+        "cddm",
+        "diff",
+        "main",
+        "--format",
+        "sarif",
+        "--output",
+        "results.sarif",
+    ])
+    .expect("parse diff --output");
+    match cli_diff_output.command {
+        Commands::Diff(args) => {
+            assert_eq!(args.format, OutputFormat::Sarif);
+            assert_eq!(args.output, Some(PathBuf::from("results.sarif")));
+        }
+        _ => panic!("expected Diff command"),
+    }
+
+    let cli_init_gitea = Cli::try_parse_from([
+        "cddm",
+        "init",
+        "gitea",
+        "--fail-threshold",
+        "5.0",
+        "--write",
+    ])
+    .expect("parse init gitea");
+    match cli_init_gitea.command {
+        Commands::Init(args) => {
+            assert_eq!(args.platform, PlatformChoice::Gitea);
+            assert!((args.fail_threshold - 5.0).abs() < f64::EPSILON);
+            assert!(args.write);
+        }
+        _ => panic!("expected Init command"),
+    }
+}
+
+#[test]
+fn test_emit_report_output_writes_file_and_creates_parents() {
+    let temp = tempfile::tempdir().expect("tempdir");
+    let nested_path = temp.path().join("reports").join("scan.sarif");
+    emit_report_output(
+        "{\"version\":\"2.1.0\"}\n",
+        Some(&nested_path),
+        "Scan report",
+    )
+    .expect("emit report to nested path");
+    let written = std::fs::read_to_string(&nested_path).expect("read written report");
+    assert_eq!(written, "{\"version\":\"2.1.0\"}\n");
 }

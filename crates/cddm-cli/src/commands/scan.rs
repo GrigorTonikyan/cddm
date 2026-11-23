@@ -1,6 +1,9 @@
 #![forbid(unsafe_code)]
 
-use crate::formatters::{print_console_report, print_markdown_report, print_sarif_report};
+use crate::formatters::{
+    emit_report_output, format_compact_console_report, format_console_report,
+    format_markdown_report, format_sarif_report, format_structured_json_output,
+};
 use crate::types::OutputFormat;
 use cddm_core::{PolicySeverity, ScanConfig, run_scan};
 use std::fs;
@@ -13,6 +16,7 @@ pub async fn run_scan_command(
     directory: PathBuf,
     min_tokens: usize,
     format: OutputFormat,
+    output: Option<PathBuf>,
     summary: bool,
     fail_threshold: Option<f64>,
     languages: Vec<String>,
@@ -77,33 +81,34 @@ pub async fn run_scan_command(
 
     let result = run_scan(config, tx, cancel_flag).await?;
 
-    match format {
+    let rendered = match format {
         OutputFormat::Console => {
             if summary {
-                crate::formatters::print_compact_console_report(&result);
+                format_compact_console_report(&result)
             } else {
-                print_console_report(&result);
+                format_console_report(&result)
             }
         }
         OutputFormat::Json => {
             if summary {
                 let compact = cddm_core::CompactScanResult::from_scan_result(&result, 5);
-                println!("{}", serde_json::to_string_pretty(&compact)?);
+                format_structured_json_output(&compact, false)?
             } else {
-                println!("{}", serde_json::to_string_pretty(&result)?);
+                format_structured_json_output(&result, false)?
             }
         }
-        OutputFormat::Markdown => print_markdown_report(&result),
-        OutputFormat::Sarif => print_sarif_report(&result)?,
+        OutputFormat::Markdown => format_markdown_report(&result),
+        OutputFormat::Sarif => format_sarif_report(&result)?,
         OutputFormat::Ndjson => {
             if summary {
                 let compact = cddm_core::CompactScanResult::from_scan_result(&result, 5);
-                println!("{}", serde_json::to_string(&compact)?);
+                format_structured_json_output(&compact, true)?
             } else {
-                println!("{}", serde_json::to_string(&result)?);
+                format_structured_json_output(&result, true)?
             }
         }
-    }
+    };
+    emit_report_output(&rendered, output.as_deref(), "Scan report")?;
 
     if let Some(threshold) = fail_threshold
         && result.duplication_percentage > threshold

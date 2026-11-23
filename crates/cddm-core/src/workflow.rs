@@ -8,10 +8,13 @@ pub fn generate_gitea_workflow(fail_threshold: f64, min_tokens: usize) -> String
         r#"name: CDDM Code Duplication & DRY Health
 
 on:
-  push:
-    branches: [main, master]
   pull_request:
-    branches: [main, master]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{{{ github.workflow }}}}-${{{{ github.ref }}}}
+  cancel-in-progress: true
 
 jobs:
   cddm-scan:
@@ -20,30 +23,41 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: self:gt-dev/actions/checkout@v1
         with:
-          fetch-depth: 0
+          fetch-depth: 1
 
-      - name: Install Rust Toolchain
-        uses: dtolnay/rust-toolchain@stable
+      - name: Setup CDDM
+        uses: self:gt-dev/actions/setup-cddm@v1
 
-      - name: Install CDDM Engine
-        run: cargo install cddm
+      - name: Check CDDM Architectural Policies
+        run: cddm rules check . --enforce-policies
 
       - name: Execute CDDM Duplicate Code Scan
         run: |
           cddm scan . \
             --min-tokens {min_tokens} \
             --fail-threshold {fail_threshold:.1} \
-            --format sarif \
-            --output cddm-results.sarif
+            --no-ignore-tests \
+            --detect-type4 true \
+            --enforce-policies \
+            --format sarif > cddm-results.sarif
 
       - name: Generate PR Markdown Summary Report
-        if: gitea.event_name == 'pull_request'
+        if: github.event_name == 'pull_request'
         run: |
           cddm scan . \
             --min-tokens {min_tokens} \
+            --no-ignore-tests \
+            --detect-type4 true \
             --format markdown > cddm-summary.md
+
+      - name: Upload SARIF Scan Report
+        if: always()
+        uses: self:gt-dev/actions/upload-artifact@v1
+        with:
+          name: cddm-sarif-report
+          path: cddm-results.sarif
 "#
     )
 }
@@ -54,10 +68,9 @@ pub fn generate_github_workflow(fail_threshold: f64, min_tokens: usize) -> Strin
         r#"name: CDDM Code Duplication & DRY Health
 
 on:
-  push:
-    branches: [main, master]
   pull_request:
     branches: [main, master]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -73,21 +86,26 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1
 
       - name: Install Rust Toolchain
         uses: dtolnay/rust-toolchain@stable
 
       - name: Install CDDM Engine
-        run: cargo install cddm
+        run: cargo install cddm-cli --locked
+
+      - name: Check CDDM Architectural Policies
+        run: cddm rules check . --enforce-policies
 
       - name: Execute CDDM Duplicate Code Scan
         run: |
           cddm scan . \
             --min-tokens {min_tokens} \
             --fail-threshold {fail_threshold:.1} \
-            --format sarif \
-            --output cddm-results.sarif
+            --no-ignore-tests \
+            --detect-type4 true \
+            --enforce-policies \
+            --format sarif > cddm-results.sarif
 
       - name: Upload SARIF to GitHub Code Scanning
         uses: github/codeql-action/upload-sarif@v3
@@ -101,6 +119,8 @@ jobs:
         run: |
           cddm scan . \
             --min-tokens {min_tokens} \
+            --no-ignore-tests \
+            --detect-type4 true \
             --format markdown > cddm-summary.md
 "#
     )
@@ -113,9 +133,10 @@ pub fn generate_gitlab_ci(fail_threshold: f64, min_tokens: usize) -> String {
   stage: test
   image: rust:latest
   before_script:
-    - cargo install cddm
+    - cargo install cddm-cli --locked
   script:
-    - cddm scan . --min-tokens {min_tokens} --fail-threshold {fail_threshold:.1} --format console
+    - cddm rules check . --enforce-policies
+    - cddm scan . --min-tokens {min_tokens} --fail-threshold {fail_threshold:.1} --no-ignore-tests --detect-type4 true --enforce-policies --format console
   artifacts:
     when: always
     paths:
@@ -139,17 +160,18 @@ pool:
 
 steps:
   - checkout: self
-    fetchDepth: 0
+    fetchDepth: 1
 
   - script: |
       curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
       source "$HOME/.cargo/env"
-      cargo install cddm
+      cargo install cddm-cli --locked
     displayName: 'Install CDDM Engine'
 
   - script: |
       source "$HOME/.cargo/env"
-      cddm scan . --min-tokens {min_tokens} --fail-threshold {fail_threshold:.1} --format console
+      cddm rules check . --enforce-policies
+      cddm scan . --min-tokens {min_tokens} --fail-threshold {fail_threshold:.1} --no-ignore-tests --detect-type4 true --enforce-policies --format console
     displayName: 'Execute CDDM Duplicate Code Scan'
 "#
     )
@@ -272,12 +294,48 @@ mod tests {
     use tempfile::tempdir;
 
     #[test]
+    fn test_generate_gitea_workflow() {
+        let wf = generate_gitea_workflow(5.0, 50);
+        assert!(wf.contains("name: CDDM Code Duplication & DRY Health"));
+        assert!(wf.contains("pull_request:\n    branches: [main]"));
+        assert!(wf.contains("workflow_dispatch:"));
+        assert!(!wf.contains("push:\n    branches:"));
+        assert!(wf.contains("uses: self:gt-dev/actions/checkout@v1"));
+        assert!(wf.contains("fetch-depth: 1"));
+        assert!(wf.contains("uses: self:gt-dev/actions/setup-cddm@v1"));
+        assert!(!wf.contains("actions/checkout@v4"));
+        assert!(!wf.contains("dtolnay/rust-toolchain"));
+        assert!(!wf.contains("cargo install"));
+        assert!(wf.contains("cddm rules check . --enforce-policies"));
+        assert!(wf.contains("--min-tokens 50"));
+        assert!(wf.contains("--fail-threshold 5.0"));
+        assert!(wf.contains("--no-ignore-tests"));
+        assert!(wf.contains("--detect-type4 true"));
+        assert!(wf.contains("--enforce-policies"));
+        assert!(wf.contains("--format sarif > cddm-results.sarif"));
+        assert!(!wf.contains("--output cddm-results.sarif"));
+        assert!(wf.contains("if: github.event_name == 'pull_request'"));
+        assert!(!wf.contains("gitea.event_name"));
+        assert!(wf.contains("uses: self:gt-dev/actions/upload-artifact@v1"));
+    }
+
+    #[test]
     fn test_generate_github_workflow() {
         let wf = generate_github_workflow(15.0, 50);
         assert!(wf.contains("name: CDDM Code Duplication & DRY Health"));
+        assert!(wf.contains("pull_request:\n    branches: [main, master]"));
+        assert!(wf.contains("workflow_dispatch:"));
+        assert!(wf.contains("fetch-depth: 1"));
+        assert!(wf.contains("cargo install cddm-cli --locked"));
+        assert!(wf.contains("cddm rules check . --enforce-policies"));
         assert!(wf.contains("--min-tokens 50"));
         assert!(wf.contains("--fail-threshold 15.0"));
+        assert!(wf.contains("--no-ignore-tests"));
+        assert!(wf.contains("--detect-type4 true"));
+        assert!(wf.contains("--enforce-policies"));
+        assert!(wf.contains("--format sarif > cddm-results.sarif"));
         assert!(wf.contains("github/codeql-action/upload-sarif@v3"));
+        assert!(wf.contains("if: github.event_name == 'pull_request'"));
     }
 
     #[test]

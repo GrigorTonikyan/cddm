@@ -19,6 +19,10 @@ pub struct ScanArgs {
     #[arg(short, long, value_enum, default_value_t = OutputFormat::Console)]
     pub format: OutputFormat,
 
+    /// Write formatted scan report to file path instead of stdout
+    #[arg(short, long)]
+    pub output: Option<PathBuf>,
+
     /// Output compact summary report to conserve terminal/token output
     #[arg(long, default_value_t = false)]
     pub summary: bool,
@@ -136,6 +140,10 @@ pub struct DiffArgs {
     /// Output report format (console, json, markdown, sarif)
     #[arg(short, long, value_enum, default_value_t = OutputFormat::Console)]
     pub format: OutputFormat,
+
+    /// Write formatted scan report to file path instead of stdout
+    #[arg(short, long)]
+    pub output: Option<PathBuf>,
 
     /// Exit with non-zero status code if duplication percentage exceeds threshold (0-100)
     #[arg(long)]

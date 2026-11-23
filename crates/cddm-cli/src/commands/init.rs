@@ -22,7 +22,7 @@ pub fn run_init_command(
     };
 
     let default_out_path = match platform {
-        PlatformChoice::Gitea => PathBuf::from(".gitea/workflows/cddm.yml"),
+        PlatformChoice::Gitea => PathBuf::from(".gitea/workflows/cddm.yaml"),
         PlatformChoice::Github => PathBuf::from(".github/workflows/cddm.yml"),
         PlatformChoice::Gitlab => PathBuf::from(".gitlab-ci.yml"),
         PlatformChoice::Azure => PathBuf::from("azure-pipelines.yml"),
@@ -62,4 +62,24 @@ pub fn run_init_command(
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tempfile::tempdir;
+
+    #[test]
+    fn test_run_init_command_writes_gitea_yaml_workflow() {
+        let temp = tempdir().expect("tempdir");
+        let out_path = temp.path().join(".gitea/workflows/cddm.yaml");
+        run_init_command(PlatformChoice::Gitea, 5.0, 50, Some(out_path.clone()), true)
+            .expect("init gitea");
+
+        let written = fs::read_to_string(&out_path).expect("read gitea workflow");
+        assert!(written.contains("uses: self:gt-dev/actions/checkout@v1"));
+        assert!(written.contains("uses: self:gt-dev/actions/setup-cddm@v1"));
+        assert!(written.contains("if: github.event_name == 'pull_request'"));
+        assert!(!written.contains("gitea.event_name"));
+    }
 }

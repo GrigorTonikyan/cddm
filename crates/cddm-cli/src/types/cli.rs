@@ -97,7 +97,7 @@ pub enum Commands {
         action: RulesAction,
     },
 
-    /// Generate turnkey CI/CD workflow configurations (GitHub Actions, GitLab CI, Azure Pipelines)
+    /// Generate turnkey CI/CD workflow configurations (Gitea Actions, GitHub Actions, GitLab CI, Azure Pipelines)
     Init(InitArgs),
 
     /// Generate formatted Markdown summary comment for Pull Requests / Merge Requests
