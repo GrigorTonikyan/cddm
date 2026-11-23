@@ -29,13 +29,13 @@ export const MCP_TOOLS_CATALOG: McpToolDef[] = [
     name: "scan_codebase",
     category: "Core Scan",
     summary: "Runs full polyglot duplicate code clone detection & DRY scoring",
-    keyParams: "directory, min_tokens, languages, ignore_patterns",
+    keyParams: "directory, min_tokens, languages, ignore_patterns, ignore_tests, ignore_mocks",
   },
   {
     name: "cddm_diff_scan",
     category: "Differential",
     summary: "Differential clone scan comparing working tree against Git revisions",
-    keyParams: "base_ref, target_ref, directory, min_tokens",
+    keyParams: "base_ref, target_ref, directory, min_tokens, ignore_tests, ignore_mocks",
   },
   {
     name: "cddm_get_clone_pair",

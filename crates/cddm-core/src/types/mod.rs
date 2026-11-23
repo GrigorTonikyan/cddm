@@ -46,6 +46,9 @@ mod tests {
         assert_eq!(config.min_tokens, DEFAULT_MIN_TOKENS);
         assert!(config.languages.is_empty());
         assert_eq!(config.ignore_patterns.len(), DEFAULT_IGNORE_PATTERNS.len());
+        assert!(!DEFAULT_IGNORE_PATTERNS.contains(&"tests"));
+        assert!(!DEFAULT_IGNORE_PATTERNS.contains(&".test."));
+        assert!(!DEFAULT_IGNORE_PATTERNS.contains(&".spec."));
         assert!(config.detect_type2);
         assert!(config.detect_type3);
         assert!(!config.detect_type4);

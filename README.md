@@ -8,8 +8,8 @@
 [![Vite Plus](https://img.shields.io/badge/vite%2B-1.6.0-purple.svg)](https://viteplus.dev)
 [![TypeScript](https://img.shields.io/badge/typescript-7.0-blue.svg)](https://www.typescriptlang.org)
 [![React](https://img.shields.io/badge/react-19.3-61dafb.svg)](https://react.dev)
-[![npm version](https://img.shields.io/badge/npm-4.12.0-red.svg)](https://www.npmjs.com/package/cddm)
-[![crates.io](https://img.shields.io/badge/crates.io-4.12.0-brightgreen.svg)](https://crates.io/crates/cddm)
+[![npm version](https://img.shields.io/badge/npm-4.12.1-red.svg)](https://www.npmjs.com/package/cddm)
+[![crates.io](https://img.shields.io/badge/crates.io-4.12.1-brightgreen.svg)](https://crates.io/crates/cddm)
 
 > [!NOTE]
 > **Primary Upstream SSoT**: All development, issues, pull requests, and automated testing are managed on our self-hosted Gitea portal at [git.gt-web-dev.com/gt-dev/cddm](https://git.gt-web-dev.com/gt-dev/cddm). The GitHub repository is an automated read-only downstream replica mirror.
@@ -131,7 +131,7 @@ scoop install cddm
 ### Via Windows Package Manager (Winget)
 
 ```powershell
-winget install --manifest https://git.gt-web-dev.com/gt-dev/winget-pkgs/raw/branch/main/manifests/g/gt-dev/cddm/4.12.0/gt-dev.cddm.installer.yaml
+winget install --manifest https://git.gt-web-dev.com/gt-dev/winget-pkgs/raw/branch/main/manifests/g/gt-dev/cddm/4.12.1/gt-dev.cddm.installer.yaml
 ```
 
 ### Via Cargo (`crates.io` & Private Gitea Registry)

@@ -11,6 +11,8 @@ pub const DEFAULT_MIN_TOKENS: usize = 50;
 pub const DEFAULT_DIRECTORY: &str = ".";
 
 /// Default glob patterns excluded from scanning.
+/// Test and mock file/directory exclusions are controlled by `ScanConfig::ignore_tests`
+/// and `ScanConfig::ignore_mocks` rather than hardcoded here.
 pub const DEFAULT_IGNORE_PATTERNS: &[&str] = &[
     "node_modules",
     "target",
@@ -22,9 +24,6 @@ pub const DEFAULT_IGNORE_PATTERNS: &[&str] = &[
     "npm",
     "editors",
     "test-results",
-    "tests",
-    ".test.",
-    ".spec.",
 ];
 
 /// Default failure threshold for CI quality gate.

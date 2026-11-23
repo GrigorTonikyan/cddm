@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vite-plus/test";
+import { DEFAULT_SCAN_CONFIG } from "../constants/cddm-constants";
 import { useCDDMStore } from "./cddm-store";
 
 describe("useCDDMStore Zustand Store", () => {
@@ -21,6 +22,9 @@ describe("useCDDMStore Zustand Store", () => {
     expect(config.min_tokens).toBe(50);
     expect(config.detect_type2).toBe(true);
     expect(config.scan_self).toBe(true);
+    expect(DEFAULT_SCAN_CONFIG.ignore_patterns).not.toContain("tests");
+    expect(DEFAULT_SCAN_CONFIG.ignore_patterns).not.toContain(".test.");
+    expect(DEFAULT_SCAN_CONFIG.ignore_patterns).not.toContain(".spec.");
   });
 
   it("should update scan config cleanly", () => {

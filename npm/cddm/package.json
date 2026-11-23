@@ -1,6 +1,6 @@
 {
   "name": "cddm",
-  "version": "4.12.0",
+  "version": "4.12.1",
   "description": "CDDM — Code De-Duplication Meister: High-Performance Polyglot Code Clone & Modularity Analyzer",
   "keywords": [
     "ast",
@@ -39,7 +39,7 @@
   ],
   "main": "./bin/cddm.js",
   "optionalDependencies": {
-    "@cddm/linux-x64": "4.12.0",
-    "@cddm/win32-x64": "4.12.0"
+    "@cddm/linux-x64": "4.12.1",
+    "@cddm/win32-x64": "4.12.1"
   }
 }

@@ -314,4 +314,36 @@ fn test_cli_subcommands_parsing() {
         Commands::Completions(args) => assert_eq!(args.shell, clap_complete::Shell::Bash),
         _ => panic!("expected Completions command"),
     }
+
+    let cli_scan_no_ignore_tests = Cli::try_parse_from([
+        "cddm",
+        "scan",
+        "tests",
+        "--no-ignore-tests",
+        "--no-ignore-mocks",
+    ])
+    .expect("parse scan no-ignore-tests");
+    match cli_scan_no_ignore_tests.command {
+        Commands::Scan(args) => {
+            assert!(args.no_ignore_tests);
+            assert!(args.no_ignore_mocks);
+        }
+        _ => panic!("expected Scan command"),
+    }
+
+    let cli_diff_no_ignore_tests = Cli::try_parse_from([
+        "cddm",
+        "diff",
+        "main",
+        "--no-ignore-tests",
+        "--no-ignore-mocks",
+    ])
+    .expect("parse diff no-ignore-tests");
+    match cli_diff_no_ignore_tests.command {
+        Commands::Diff(args) => {
+            assert!(args.no_ignore_tests);
+            assert!(args.no_ignore_mocks);
+        }
+        _ => panic!("expected Diff command"),
+    }
 }

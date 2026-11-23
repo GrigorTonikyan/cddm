@@ -233,4 +233,76 @@ mod tests {
         assert!(filenames.iter().any(|name| name == "kept.rs"));
         assert!(!filenames.iter().any(|name| name == "nested_ignored.rs"));
     }
+
+    #[test]
+    fn test_no_ignore_tests_includes_test_directories_and_files() {
+        let dir = tempdir().unwrap();
+        let root = dir.path();
+
+        fs::create_dir_all(root.join("src")).unwrap();
+        fs::create_dir_all(root.join("tests")).unwrap();
+        fs::create_dir_all(root.join("mocks")).unwrap();
+        fs::create_dir_all(root.join("node_modules/pkg")).unwrap();
+
+        fs::write(root.join("src/main.rs"), "fn main() {}").unwrap();
+        fs::write(root.join("src/app.test.ts"), "export const t = 1;").unwrap();
+        fs::write(root.join("src/app.spec.ts"), "export const s = 1;").unwrap();
+        fs::write(root.join("tests/integration.rs"), "fn it_works() {}").unwrap();
+        fs::write(root.join("mocks/fixture.ts"), "export const m = 1;").unwrap();
+        fs::write(root.join("node_modules/pkg/index.js"), "const x = 1;").unwrap();
+
+        let cancel_flag = Arc::new(AtomicBool::new(false));
+
+        // 1. Default ScanConfig excludes tests, mocks, and node_modules
+        let default_cfg = ScanConfig {
+            directory: root.to_string_lossy().to_string(),
+            ..Default::default()
+        };
+        let default_sup = init_suppression_engine(&default_cfg);
+        let default_files =
+            discover_candidate_files(&default_cfg, &default_sup, &cancel_flag).unwrap();
+        let default_names: Vec<String> = default_files
+            .iter()
+            .map(|p| p.file_name().unwrap().to_string_lossy().to_string())
+            .collect();
+        assert_eq!(default_names, vec!["main.rs"]);
+
+        // 2. Disabling ignore_tests & ignore_mocks includes tests/, *.test.*, *.spec.*, mocks/
+        //    while DEFAULT_IGNORE_PATTERNS still excludes node_modules/
+        let include_tests_cfg = ScanConfig {
+            directory: root.to_string_lossy().to_string(),
+            ignore_tests: false,
+            ignore_mocks: false,
+            ..Default::default()
+        };
+        let include_sup = init_suppression_engine(&include_tests_cfg);
+        let all_files =
+            discover_candidate_files(&include_tests_cfg, &include_sup, &cancel_flag).unwrap();
+        let all_names: Vec<String> = all_files
+            .iter()
+            .map(|p| p.file_name().unwrap().to_string_lossy().to_string())
+            .collect();
+        assert!(all_names.iter().any(|n| n == "main.rs"));
+        assert!(all_names.iter().any(|n| n == "app.test.ts"));
+        assert!(all_names.iter().any(|n| n == "app.spec.ts"));
+        assert!(all_names.iter().any(|n| n == "integration.rs"));
+        assert!(all_names.iter().any(|n| n == "fixture.ts"));
+        assert!(!all_names.iter().any(|n| n == "index.js"));
+
+        // 3. Targeting tests/ directly with ignore_tests = false discovers files inside tests/
+        let tests_dir_cfg = ScanConfig {
+            directory: root.join("tests").to_string_lossy().to_string(),
+            ignore_tests: false,
+            ignore_mocks: false,
+            ..Default::default()
+        };
+        let tests_dir_sup = init_suppression_engine(&tests_dir_cfg);
+        let tests_dir_files =
+            discover_candidate_files(&tests_dir_cfg, &tests_dir_sup, &cancel_flag).unwrap();
+        assert_eq!(tests_dir_files.len(), 1);
+        assert_eq!(
+            tests_dir_files[0].file_name().unwrap().to_string_lossy(),
+            "integration.rs"
+        );
+    }
 }
