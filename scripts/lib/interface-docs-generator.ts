@@ -54,6 +54,7 @@ export const CLI_COMMANDS_CATALOG: CliCommandMetadata[] = [
     keyFlags: [
       "--min-tokens",
       "--format",
+      "--output",
       "--fail-threshold",
       "--languages",
       "--ignore",
@@ -93,6 +94,7 @@ export const CLI_COMMANDS_CATALOG: CliCommandMetadata[] = [
     usage: "cddm diff [OPTIONS] <BASE_REF> [TARGET_REF]",
     keyFlags: [
       "--matrix",
+      "--output",
       "--cross-language",
       "--fail-threshold",
       "--no-ignore-tests",

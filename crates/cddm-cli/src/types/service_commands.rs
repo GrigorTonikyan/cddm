@@ -107,7 +107,7 @@ pub struct TrendArgs {
 /// CLI Arguments for `cddm init`
 #[derive(Args, Debug, Clone)]
 pub struct InitArgs {
-    /// Target CI/CD platform: github, gitlab, or azure
+    /// Target CI/CD platform: gitea, github, gitlab, or azure
     #[arg(value_enum, default_value_t = PlatformChoice::Github)]
     pub platform: PlatformChoice,
 

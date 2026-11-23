@@ -1,8 +1,8 @@
 #![forbid(unsafe_code)]
 
 use crate::formatters::{
-    print_branch_matrix_console_report, print_diff_console_report, print_diff_markdown_report,
-    print_structured_json_output,
+    emit_report_output, format_branch_matrix_console_report, format_diff_console_report,
+    format_diff_markdown_report, format_structured_json_output,
 };
 use crate::types::OutputFormat;
 use cddm_core::{calculate_branch_matrix, run_diff_scan};
@@ -17,6 +17,7 @@ pub async fn run_diff_command(
     directory: PathBuf,
     min_tokens: usize,
     format: OutputFormat,
+    output: Option<PathBuf>,
     fail_threshold: Option<f64>,
     languages: Vec<String>,
     ignore: Vec<String>,
@@ -38,15 +39,16 @@ pub async fn run_diff_command(
         branches.extend(matrix);
         let matrix_report = calculate_branch_matrix(&directory, &branches, Some(min_tokens))?;
 
-        match format {
+        let rendered = match format {
             OutputFormat::Console | OutputFormat::Markdown => {
-                print_branch_matrix_console_report(&matrix_report);
+                format_branch_matrix_console_report(&matrix_report)
             }
             OutputFormat::Json | OutputFormat::Sarif => {
-                print_structured_json_output(&matrix_report, false)?;
+                format_structured_json_output(&matrix_report, false)?
             }
-            OutputFormat::Ndjson => print_structured_json_output(&matrix_report, true)?,
-        }
+            OutputFormat::Ndjson => format_structured_json_output(&matrix_report, true)?,
+        };
+        emit_report_output(&rendered, output.as_deref(), "Branch matrix report")?;
         return Ok(());
     }
 
@@ -83,16 +85,17 @@ pub async fn run_diff_command(
     let diff_result =
         run_diff_scan(&base_ref, target_ref.as_deref(), config, tx, cancel_flag).await?;
 
-    match format {
-        OutputFormat::Console => print_diff_console_report(&diff_result),
-        OutputFormat::Json => print_structured_json_output(&diff_result, false)?,
-        OutputFormat::Markdown => print_diff_markdown_report(&diff_result),
+    let rendered = match format {
+        OutputFormat::Console => format_diff_console_report(&diff_result),
+        OutputFormat::Json => format_structured_json_output(&diff_result, false)?,
+        OutputFormat::Markdown => format_diff_markdown_report(&diff_result),
         OutputFormat::Sarif => {
             eprintln!("Warning: SARIF format for diff scanning falls back to JSON");
-            print_structured_json_output(&diff_result, false)?;
+            format_structured_json_output(&diff_result, false)?
         }
-        OutputFormat::Ndjson => print_structured_json_output(&diff_result, true)?,
-    }
+        OutputFormat::Ndjson => format_structured_json_output(&diff_result, true)?,
+    };
+    emit_report_output(&rendered, output.as_deref(), "Differential scan report")?;
 
     if let Some(threshold) = fail_threshold {
         if (diff_result.summary.new_clones as f64) > threshold {

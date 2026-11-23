@@ -2,17 +2,21 @@
 
 use cddm_core::{CloneStatus, DiffScanResult};
 use comfy_table::{Cell, Color, Table};
+use std::fmt::Write as _;
 
-pub fn print_diff_console_report(diff_result: &DiffScanResult) {
+pub fn format_diff_console_report(diff_result: &DiffScanResult) -> String {
+    let mut out =
+        String::from("\n=== CDDM — Code De-Duplication Meister Differential Report ===\n");
     let sum = &diff_result.summary;
-    println!("\n=== CDDM — Code De-Duplication Meister Differential Report ===");
-    println!("{:<22} {}", "Base Reference:", sum.base_ref);
-    println!("{:<22} {}", "Target Reference:", sum.target_ref);
-    println!(
+    let _ = writeln!(out, "{:<22} {}", "Base Reference:", sum.base_ref);
+    let _ = writeln!(out, "{:<22} {}", "Target Reference:", sum.target_ref);
+    let _ = writeln!(
+        out,
         "{:<22} {:.1} / 100.0",
         "Baseline DRY Score:", sum.base_dry_score
     );
-    println!(
+    let _ = writeln!(
+        out,
         "{:<22} {:.1} / 100.0",
         "Target DRY Score:", sum.target_dry_score
     );
@@ -21,13 +25,13 @@ pub fn print_diff_console_report(diff_result: &DiffScanResult) {
     } else {
         format!("{:.2}% (Regressed)", sum.net_dry_delta)
     };
-    println!("{:<22} {}", "Net DRY Delta:", delta_str);
-    println!("{:<22} {}", "Changed Files:", sum.total_changed_files);
-    println!("{:<22} {}", "New Clones:", sum.new_clones);
-    println!("{:<22} {}", "Legacy Clones:", sum.legacy_clones);
-    println!("{:<22} {}", "Resolved Clones:", sum.resolved_clones);
-    println!("{:<22} {} ms", "Duration:", diff_result.duration_ms);
-    println!();
+    let _ = writeln!(out, "{:<22} {}", "Net DRY Delta:", delta_str);
+    let _ = writeln!(out, "{:<22} {}", "Changed Files:", sum.total_changed_files);
+    let _ = writeln!(out, "{:<22} {}", "New Clones:", sum.new_clones);
+    let _ = writeln!(out, "{:<22} {}", "Legacy Clones:", sum.legacy_clones);
+    let _ = writeln!(out, "{:<22} {}", "Resolved Clones:", sum.resolved_clones);
+    let _ = writeln!(out, "{:<22} {} ms", "Duration:", diff_result.duration_ms);
+    out.push('\n');
 
     if !diff_result.diff_clones.is_empty() {
         let mut table = Table::new();
@@ -60,30 +64,32 @@ pub fn print_diff_console_report(diff_result: &DiffScanResult) {
             ]);
         }
 
-        println!("{}", table);
+        let _ = writeln!(out, "{table}");
     } else {
-        println!("No clone pairs present in compared changeset.");
+        out.push_str("No clone pairs present in compared changeset.\n");
     }
+    out
 }
 
-pub fn print_diff_markdown_report(diff_result: &DiffScanResult) {
+pub fn format_diff_markdown_report(diff_result: &DiffScanResult) -> String {
+    let mut out = String::from("# CDDM Differential Scan Report\n\n");
     let sum = &diff_result.summary;
-    println!("# CDDM Differential Scan Report\n");
-    println!("- **Base Reference**: `{}`", sum.base_ref);
-    println!("- **Target Reference**: `{}`", sum.target_ref);
-    println!("- **Baseline DRY Score**: `{:.1}`", sum.base_dry_score);
-    println!("- **Target DRY Score**: `{:.1}`", sum.target_dry_score);
-    println!("- **Net DRY Delta**: `{:.2}%`", sum.net_dry_delta);
-    println!("- **New Clones**: `{}`", sum.new_clones);
-    println!("- **Legacy Clones**: `{}`", sum.legacy_clones);
-    println!();
+    let _ = writeln!(out, "- **Base Reference**: `{}`", sum.base_ref);
+    let _ = writeln!(out, "- **Target Reference**: `{}`", sum.target_ref);
+    let _ = writeln!(out, "- **Baseline DRY Score**: `{:.1}`", sum.base_dry_score);
+    let _ = writeln!(out, "- **Target DRY Score**: `{:.1}`", sum.target_dry_score);
+    let _ = writeln!(out, "- **Net DRY Delta**: `{:.2}%`", sum.net_dry_delta);
+    let _ = writeln!(out, "- **New Clones**: `{}`", sum.new_clones);
+    let _ = writeln!(out, "- **Legacy Clones**: `{}`", sum.legacy_clones);
+    out.push('\n');
 
     if !diff_result.diff_clones.is_empty() {
-        println!("| Status | File A | Lines A | File B | Lines B | Tokens |");
-        println!("| :--- | :--- | :--- | :--- | :--- | :--- |");
+        out.push_str("| Status | File A | Lines A | File B | Lines B | Tokens |\n");
+        out.push_str("| :--- | :--- | :--- | :--- | :--- | :--- |\n");
         for item in &diff_result.diff_clones {
             let pair = &item.clone_pair;
-            println!(
+            let _ = writeln!(
+                out,
                 "| `{}` | `{}` | {}-{} | `{}` | {}-{} | {} |",
                 item.status,
                 pair.file_a,
@@ -96,23 +102,25 @@ pub fn print_diff_markdown_report(diff_result: &DiffScanResult) {
             );
         }
     }
+    out
 }
 
-pub fn print_branch_matrix_console_report(matrix: &cddm_core::BranchMatrixReport) {
-    println!("\n=== CDDM — Multi-Branch & Worktree Clone Drift Matrix ===");
-    println!(
+pub fn format_branch_matrix_console_report(matrix: &cddm_core::BranchMatrixReport) -> String {
+    let mut out = String::from("\n=== CDDM — Multi-Branch & Worktree Clone Drift Matrix ===\n");
+    let _ = writeln!(
+        out,
         "{:<22} {}",
         "Branches Evaluated:",
         matrix.branches.join(", ")
     );
     if let Some(cleanest) = &matrix.cleanest_branch {
-        println!("{:<22} {}", "Cleanest Branch:", cleanest);
+        let _ = writeln!(out, "{:<22} {}", "Cleanest Branch:", cleanest);
     }
     if let Some(drift) = &matrix.highest_drift_branch {
-        println!("{:<22} {}", "Highest Drift:", drift);
+        let _ = writeln!(out, "{:<22} {}", "Highest Drift:", drift);
     }
-    println!("{:<22} {}", "Summary:", matrix.summary);
-    println!();
+    let _ = writeln!(out, "{:<22} {}", "Summary:", matrix.summary);
+    out.push('\n');
 
     let mut table = Table::new();
     table.set_header(vec![
@@ -143,5 +151,6 @@ pub fn print_branch_matrix_console_report(matrix: &cddm_core::BranchMatrixReport
             Cell::new(format!("{:.1}%", item.divergence_index)).fg(Color::Yellow),
         ]);
     }
-    println!("{}", table);
+    let _ = writeln!(out, "{table}");
+    out
 }

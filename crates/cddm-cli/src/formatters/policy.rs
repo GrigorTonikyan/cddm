@@ -2,9 +2,10 @@
 
 use cddm_core::{PolicySeverity, PolicyViolation};
 use comfy_table::{Cell, Color, Table};
+use std::fmt::Write as _;
 
-pub fn print_policy_violations_console(violations: &[PolicyViolation]) {
-    println!("\n--- Architectural Policy Violations ---");
+pub fn format_policy_violations_console(violations: &[PolicyViolation]) -> String {
+    let mut out = String::from("\n--- Architectural Policy Violations ---\n");
     let mut policy_table = Table::new();
     policy_table.set_header(vec![
         Cell::new("Rule"),
@@ -44,13 +45,18 @@ pub fn print_policy_violations_console(violations: &[PolicyViolation]) {
             Cell::new(message_text),
         ]);
     }
-    println!("{}", policy_table);
+    let _ = writeln!(out, "{policy_table}");
+    out
 }
 
-pub fn print_policy_violations_markdown(violations: &[PolicyViolation]) {
-    println!("\n### Architectural Policy Violations\n");
-    println!("| Rule | Type | Severity | Location A | Location B | Message |");
-    println!("| :--- | :--- | :--- | :--- | :--- | :--- |");
+pub fn print_policy_violations_console(violations: &[PolicyViolation]) {
+    print!("{}", format_policy_violations_console(violations));
+}
+
+pub fn format_policy_violations_markdown(violations: &[PolicyViolation]) -> String {
+    let mut out = String::from("\n### Architectural Policy Violations\n\n");
+    out.push_str("| Rule | Type | Severity | Location A | Location B | Message |\n");
+    out.push_str("| :--- | :--- | :--- | :--- | :--- | :--- |\n");
     for v in violations {
         let loc_a = format!("{}:{}-{}", v.file_a, v.start_line_a, v.end_line_a);
         let loc_b =
@@ -67,9 +73,15 @@ pub fn print_policy_violations_markdown(violations: &[PolicyViolation]) {
             (None, Some(rem)) => format!("{} (Remediation: {})", v.message, rem),
             (None, None) => v.message.clone(),
         };
-        println!(
+        let _ = writeln!(
+            out,
             "| `{}` | `{}` | `{:?}` | `{}` | `{}` | {} |",
             v.rule_name, v.rule_type, v.severity, loc_a, loc_b, message_text
         );
     }
+    out
+}
+
+pub fn print_policy_violations_markdown(violations: &[PolicyViolation]) {
+    print!("{}", format_policy_violations_markdown(violations));
 }
