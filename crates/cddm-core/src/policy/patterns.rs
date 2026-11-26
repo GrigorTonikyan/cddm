@@ -204,6 +204,7 @@ pub fn evaluate_prohibited_patterns(
                                 token_count: snippet.split_whitespace().count().max(1),
                                 snippet: Some(snippet),
                                 remediation: pattern.rule.remediation.clone(),
+                                ..Default::default()
                             });
                         }
                     }
@@ -233,6 +234,7 @@ pub fn evaluate_prohibited_patterns(
                             token_count: snippet.split_whitespace().count().max(1),
                             snippet: Some(snippet),
                             remediation: pattern.rule.remediation.clone(),
+                            ..Default::default()
                         });
                     }
                 }

@@ -51,6 +51,17 @@ describe("PolicyRulesModal Component", () => {
         description: "Rule files token budget",
         pattern: ".agents/rules/*.md",
         max_file_tokens: 2500,
+        max_file_lines: 500,
+        severity: "Error",
+      },
+    ],
+    line_budgets: [
+      {
+        name: "modularity-max-lines",
+        description: "Max 500 lines per file",
+        pattern: "**/*.ts",
+        max_file_lines: 500,
+        ignore_tests: false,
         severity: "Error",
       },
     ],
@@ -109,7 +120,7 @@ describe("PolicyRulesModal Component", () => {
 
     expectDefinedTexts([
       "Architectural Boundary & Anti-Duplication Policy Studio",
-      "Active Policies (6)",
+      "Active Policies (7)",
       "Violations Inspector (1)",
       ".cddmrules.toml Editor",
       "domain-isolation",
@@ -123,6 +134,8 @@ describe("PolicyRulesModal Component", () => {
       "ENFORCED (Active)",
       "agent-rules-budget",
       ".agents/rules/*.md",
+      "modularity-max-lines",
+      "Tests Enforced",
     ]);
   });
 

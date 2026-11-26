@@ -4,7 +4,10 @@ use super::helpers::{get_bool_arg, get_str_arg, get_usize_arg};
 use crate::protocol::{
     JsonRpcResponse, make_error_response, make_text_response, mcp_tools, rpc_errors,
 };
-use cddm_core::{DEFAULT_RULES_FILE, PolicyEngine, ScanConfig, SuppressionEngine, run_scan};
+use cddm_core::{
+    DEFAULT_RULES_FILE, PolicyEngine, PolicyEvaluationOptions, ScanConfig, SuppressionEngine,
+    find_workspace_root, run_scan,
+};
 use serde_json::json;
 use std::path::Path;
 use std::sync::{Arc, atomic::AtomicBool};
@@ -89,12 +92,63 @@ pub async fn handle_check_policies(
         .and_then(|r| r.as_str())
         .map(|s| s.to_string());
 
+    let dir_path = Path::new(dir);
+    let engine = if let Some(ref p) = rules_path {
+        PolicyEngine::from_file(Path::new(p)).unwrap_or_else(|_| PolicyEngine::empty())
+    } else {
+        let root_path = dir_path.join(DEFAULT_RULES_FILE);
+        if root_path.exists() {
+            PolicyEngine::from_file(&root_path).unwrap_or_else(|_| PolicyEngine::empty())
+        } else {
+            let ws_path = find_workspace_root(dir_path).join(DEFAULT_RULES_FILE);
+            if ws_path.exists() {
+                PolicyEngine::from_file(&ws_path).unwrap_or_else(|_| PolicyEngine::empty())
+            } else {
+                PolicyEngine::empty()
+            }
+        }
+    };
+
+    let explicit_ignore_tests = args
+        .and_then(|a| a.get(mcp_tools::PARAM_IGNORE_TESTS))
+        .and_then(|v| v.as_bool());
+    let explicit_ignore_mocks = args
+        .and_then(|a| a.get(mcp_tools::PARAM_IGNORE_MOCKS))
+        .and_then(|v| v.as_bool());
+    let explicit_include_ignored = args
+        .and_then(|a| a.get(mcp_tools::PARAM_INCLUDE_IGNORED))
+        .and_then(|v| v.as_bool());
+    let ignore_generated = get_bool_arg(args, mcp_tools::PARAM_IGNORE_GENERATED, true);
+
+    let effective_ignore_tests = explicit_ignore_tests
+        .or(engine.config().ignore_tests)
+        .unwrap_or(true);
+    let effective_ignore_mocks = explicit_ignore_mocks
+        .or(engine.config().ignore_mocks)
+        .unwrap_or(true);
+    let effective_include_ignored = explicit_include_ignored
+        .or(engine.config().include_ignored)
+        .unwrap_or(false);
+
     let config = ScanConfig {
         directory: dir.to_string(),
         min_tokens,
         rules_path: rules_path.clone(),
         enforce_policies: true,
+        ignore_tests: effective_ignore_tests,
+        ignore_mocks: effective_ignore_mocks,
+        ignore_generated,
+        include_ignored: effective_include_ignored,
         ..Default::default()
+    };
+
+    let eval_opts = PolicyEvaluationOptions {
+        ignore_tests: effective_ignore_tests,
+        ignore_mocks: effective_ignore_mocks,
+        include_ignored: effective_include_ignored,
+        force_ignore_tests: explicit_ignore_tests,
+        force_ignore_mocks: explicit_ignore_mocks,
+        force_include_ignored: explicit_include_ignored,
     };
 
     let (tx, _rx) = mpsc::channel(100);
@@ -102,17 +156,7 @@ pub async fn handle_check_policies(
 
     match run_scan(config, tx, cancel_flag).await {
         Ok(res) => {
-            let engine = if let Some(ref p) = rules_path {
-                PolicyEngine::from_file(Path::new(p)).unwrap_or_else(|_| PolicyEngine::empty())
-            } else {
-                let root_path = Path::new(DEFAULT_RULES_FILE);
-                if root_path.exists() {
-                    PolicyEngine::from_file(root_path).unwrap_or_else(|_| PolicyEngine::empty())
-                } else {
-                    PolicyEngine::empty()
-                }
-            };
-            let eval = engine.evaluate(&res);
+            let eval = engine.evaluate_with_options(&res, &eval_opts);
             if crate::tools::helpers::is_summary_requested(args) {
                 let compact = cddm_core::CompactPolicyResult::from_evaluation(&eval, 5);
                 crate::tools::helpers::make_json_payload_response(id, &compact)

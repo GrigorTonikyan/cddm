@@ -376,3 +376,38 @@ async fn test_interactive_tui_full_hands_on_workflow() {
     );
     assert!(app.should_quit);
 }
+
+#[test]
+fn test_render_policy_tab_surfaces_line_budget_and_test_enforcement() {
+    let backend = TestBackend::new(140, 40);
+    let mut terminal = Terminal::new(backend).expect("Backend init");
+
+    let cfg = ScanConfig {
+        ignore_tests: false,
+        ignore_mocks: false,
+        ..Default::default()
+    };
+    let mut app = TuiApp::new(PathBuf::from("."), cfg, None, false);
+    app.active_tab = TuiTab::Policy;
+
+    let mut result = make_sample_scan_result(Vec::new(), 0.0, 100.0);
+    result.policy_violations.push(cddm_core::PolicyViolation {
+        rule_name: "max-file-lines".to_string(),
+        rule_type: "line_budget".to_string(),
+        severity: cddm_core::PolicySeverity::Error,
+        message: "Line budget 'max-file-lines' violated: 550 lines > 500".to_string(),
+        file_a: "tests/big_suite.rs".to_string(),
+        start_line_a: 1,
+        end_line_a: 550,
+        line_count: Some(550),
+        max_lines: Some(500),
+        ..Default::default()
+    });
+    app.set_scan_result(result);
+
+    draw_test_frame(&mut terminal, &app);
+    let rendered = buffer_to_string(&terminal);
+    assert!(rendered.contains("max-file-lines"));
+    assert!(rendered.contains("550/500 lines"));
+    assert!(rendered.contains("Tests: ENFORCED"));
+}

@@ -85,6 +85,30 @@ pub enum RulesAction {
         /// Output compact summary report to conserve terminal/token output
         #[arg(long, default_value_t = false)]
         summary: bool,
+
+        /// Include files and directories ignored by .gitignore
+        #[arg(long, default_value_t = false, alias = "no-ignore")]
+        include_ignored: bool,
+
+        /// Automatically filter test files and test directories (overrides .cddmrules.toml when set)
+        #[arg(long, num_args = 0..=1, default_missing_value = "true")]
+        ignore_tests: Option<bool>,
+
+        /// Include test files and test directories in policy check
+        #[arg(long, default_value_t = false)]
+        no_ignore_tests: bool,
+
+        /// Automatically filter mock and fixture files (overrides .cddmrules.toml when set)
+        #[arg(long, num_args = 0..=1, default_missing_value = "true")]
+        ignore_mocks: Option<bool>,
+
+        /// Include mock and fixture files in policy check
+        #[arg(long, default_value_t = false)]
+        no_ignore_mocks: bool,
+
+        /// Automatically filter auto-generated files with generator headers
+        #[arg(long, default_value_t = true)]
+        ignore_generated: bool,
     },
 }
 

@@ -84,10 +84,16 @@ impl CompactScanResult {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct CompactPolicyViolation {
     pub rule_name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rule_type: Option<String>,
     pub severity: PolicySeverity,
     pub file_a: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub file_b: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub line_count: Option<usize>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max_lines: Option<usize>,
     pub message: String,
 }
 
@@ -111,9 +117,12 @@ impl CompactPolicyResult {
             .take(top_n)
             .map(|v| CompactPolicyViolation {
                 rule_name: v.rule_name.clone(),
+                rule_type: (!v.rule_type.is_empty()).then(|| v.rule_type.clone()),
                 severity: v.severity,
                 file_a: v.file_a.clone(),
                 file_b: v.file_b.clone(),
+                line_count: v.line_count,
+                max_lines: v.max_lines,
                 message: v.message.clone(),
             })
             .collect();
@@ -199,6 +208,7 @@ mod tests {
                 token_count: 50,
                 snippet: None,
                 remediation: None,
+                ..Default::default()
             }],
         };
 

@@ -1,16 +1,7 @@
 import React from "react";
 import type { PolicyConfig, PolicySeverity } from "../../types/cddm-types";
-import {
-  Ban,
-  BookOpen,
-  FileX,
-  Layers,
-  RefreshCw,
-  Scale,
-  ShieldCheck,
-  Sliders,
-  Smile,
-} from "lucide-react";
+import { PolicyBudgetSection } from "./PolicyBudgetSection";
+import { Ban, BookOpen, FileX, Layers, RefreshCw, ShieldCheck, Sliders, Smile } from "lucide-react";
 
 export interface PolicyActiveRulesTabProps {
   policyConfig: PolicyConfig | null;
@@ -209,48 +200,10 @@ export const PolicyActiveRulesTab: React.FC<PolicyActiveRulesTabProps> = ({
         </div>
       </div>
 
-      <div>
-        <h3 className="text-sm font-semibold text-slate-200 flex items-center gap-2 mb-3">
-          <Scale className="w-4 h-4 text-sky-400" />
-          Token Budgets
-        </h3>
-        {!policyConfig?.token_budgets || policyConfig.token_budgets.length === 0 ? (
-          <div className="p-4 rounded-lg bg-slate-900/60 border border-slate-800/80 text-xs text-slate-400">
-            No token budget rules configured.
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-3">
-            {policyConfig.token_budgets.map((tb, idx) => (
-              <div
-                key={idx}
-                className="p-3.5 rounded-lg bg-slate-900/70 border border-slate-800 hover:border-slate-700 transition-colors"
-              >
-                {renderPolicyRuleHeader(tb.name, tb.severity, tb.description)}
-                <div className="flex flex-wrap items-center gap-3 text-xs font-mono">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-slate-400">Pattern:</span>
-                    <span className="px-2 py-0.5 bg-slate-800/80 text-sky-300 rounded border border-slate-700/60">
-                      {tb.pattern}
-                    </span>
-                  </div>
-                  {tb.max_file_tokens !== undefined && (
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-slate-400">Max File Tokens:</span>
-                      <span className="text-amber-300 font-bold">{tb.max_file_tokens}</span>
-                    </div>
-                  )}
-                  {tb.max_total_tokens !== undefined && (
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-slate-400">Max Total Tokens:</span>
-                      <span className="text-amber-300 font-bold">{tb.max_total_tokens}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      <PolicyBudgetSection
+        policyConfig={policyConfig}
+        renderPolicyRuleHeader={renderPolicyRuleHeader}
+      />
 
       <div>
         <h3 className="text-sm font-semibold text-slate-200 flex items-center gap-2 mb-3">

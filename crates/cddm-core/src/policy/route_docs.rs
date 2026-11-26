@@ -74,6 +74,7 @@ pub fn evaluate_route_docs_policies(
                     "Create documentation file '{}' to document routes",
                     primary_doc
                 )),
+                ..Default::default()
             });
             continue;
         }
@@ -109,6 +110,7 @@ pub fn evaluate_route_docs_policies(
                             route_str, primary_doc
                         ))
                     }),
+                    ..Default::default()
                 });
             }
         }

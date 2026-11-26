@@ -107,8 +107,8 @@ export const MCP_TOOLS_CATALOG: McpToolDef[] = [
     name: "cddm_check_policies",
     category: "Policies",
     summary:
-      "Evaluates boundary policies, prohibited patterns, token budgets, and zero-emoji sensors",
-    keyParams: "directory, rules_file, enforce",
+      "Evaluates boundary policies, prohibited patterns, token/line budgets (max_file_lines), and zero-emoji sensors",
+    keyParams: "directory, rules, ignore_tests, ignore_mocks, include_ignored",
   },
   {
     name: "cddm_heal_refactor",

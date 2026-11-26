@@ -4,6 +4,7 @@ import { parsePath } from "../utils/path-utils";
 import { CloneClusterCard } from "./CloneClusterCard";
 import { ClonePairCard } from "./ClonePairCard";
 import { FilterToolbar } from "./scan-results/FilterToolbar";
+import { PolicyViolationsBanner } from "./scan-results/PolicyViolationsBanner";
 import { SummaryBanner } from "./scan-results/SummaryBanner";
 import { VisualAnalyticsSection } from "./scan-results/VisualAnalyticsSection";
 import { DeadCodeStudioView } from "./scan-results/DeadCodeStudioView";
@@ -208,6 +209,9 @@ export const ScanResults: React.FC<ScanResultsProps> = ({ className = "" }) => {
 
       {/* Top Metrics Cards Banner */}
       <SummaryBanner results={results} onOpenHealthAudit={() => setIsHealthAuditOpen(true)} />
+
+      {/* Architectural Policy & File Line Budget Violations */}
+      <PolicyViolationsBanner violations={results.policy_violations} />
 
       {/* Visual Analytics Toolbar & Views */}
       <VisualAnalyticsSection

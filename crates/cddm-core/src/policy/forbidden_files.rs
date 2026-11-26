@@ -121,6 +121,7 @@ pub fn evaluate_forbidden_files(
                     remediation: rule.rule.remediation.clone().or_else(|| {
                         Some("Remove the forbidden file or update policy configuration".to_string())
                     }),
+                    ..Default::default()
                 });
             }
         }

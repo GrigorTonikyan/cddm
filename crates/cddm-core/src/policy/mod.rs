@@ -10,7 +10,10 @@ pub mod patterns;
 pub mod route_docs;
 pub mod sync;
 
-pub use budgets::{CompiledTokenBudget, count_file_tokens, evaluate_token_budgets};
+pub use budgets::{
+    CompiledTokenBudget, count_content_lines, count_file_tokens, evaluate_token_budgets,
+    evaluate_token_budgets_with_options,
+};
 pub use compiled::{
     CompiledBoundary, CompiledLimit, CompiledProhibitedPattern, CompiledZeroDuplication,
     path_matches_glob,
@@ -378,5 +381,58 @@ severity = "warning"
         assert_eq!(eval.warning_count, 1);
         assert_eq!(eval.violations[0].rule_type, "route_docs");
         assert!(eval.violations[0].message.contains("/analytics"));
+    }
+
+    #[test]
+    fn test_policy_engine_line_budgets_and_config_test_inclusion() {
+        let temp_dir = tempfile::tempdir().expect("Failed to create tempdir");
+        let root = temp_dir.path();
+
+        std::fs::create_dir_all(root.join("src")).expect("create src");
+        std::fs::create_dir_all(root.join("tests")).expect("create tests");
+
+        let ten_lines = (1..=10)
+            .map(|i| format!("let v_{i} = {i};"))
+            .collect::<Vec<_>>()
+            .join("\n");
+        std::fs::write(root.join("src").join("app.rs"), &ten_lines).expect("write src");
+        std::fs::write(root.join("tests").join("suite.rs"), &ten_lines).expect("write tests");
+
+        let toml_content = r#"
+ignore_tests = false
+ignore_mocks = false
+
+[[line_budgets]]
+name = "max-5-lines"
+description = "Source and test files must be <= 5 lines"
+pattern = "**/*.rs"
+max_file_lines = 5
+severity = "error"
+"#;
+        let engine = toml_content
+            .parse::<PolicyEngine>()
+            .expect("parse line_budgets TOML");
+
+        let scan_result = ScanResult {
+            scan_id: "test-line-budgets".to_string(),
+            total_files: 2,
+            target_directory: Some(root.to_string_lossy().to_string()),
+            ..Default::default()
+        };
+
+        // Even with ScanConfig default (ignore_tests = true), config-level ignore_tests = false applies
+        let opts = crate::types::PolicyEvaluationOptions {
+            ignore_tests: true,
+            ignore_mocks: true,
+            ..Default::default()
+        };
+        let eval = engine.evaluate_with_options(&scan_result, &opts);
+        assert!(!eval.passed);
+        assert_eq!(eval.error_count, 2);
+        assert!(eval.violations.iter().all(|v| v.rule_type == "line_budget"));
+        assert!(eval.violations.iter().all(|v| v.line_count == Some(10)));
+        assert!(eval.violations.iter().all(|v| v.max_lines == Some(5)));
+        assert!(eval.violations.iter().any(|v| v.file_a == "src/app.rs"));
+        assert!(eval.violations.iter().any(|v| v.file_a == "tests/suite.rs"));
     }
 }

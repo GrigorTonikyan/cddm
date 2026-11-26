@@ -206,6 +206,7 @@ pub fn evaluate_sync_rules(root_dir: &Path, rules: &[SyncRule]) -> Vec<PolicyVio
                                     target_rel, source_val, rule.source_file
                                 ))
                             }),
+                            ..Default::default()
                         });
                     }
                 }

@@ -128,6 +128,7 @@ pub fn build_scan_config_from_mcp_args(
     let languages = get_string_array_param(args, mcp_tools::PARAM_LANGUAGES).unwrap_or_default();
     let ignore_patterns = get_string_array_param(args, mcp_tools::PARAM_IGNORE_PATTERNS)
         .unwrap_or_else(|| defaults.ignore_patterns.clone());
+    let rules_path = get_string_param(args, mcp_tools::PARAM_RULES);
 
     ScanConfig {
         directory: dir.to_string(),
@@ -143,6 +144,7 @@ pub fn build_scan_config_from_mcp_args(
         ignore_tests,
         ignore_mocks,
         ignore_generated,
+        rules_path,
         ..defaults
     }
 }

@@ -104,6 +104,22 @@ const STEPS: ScriptStep[] = [
       "5.0",
     ],
   },
+  {
+    title: "CDDM Policy & Max File Lines Dogfooding Gate (cddm rules check .)",
+    command: [
+      "cargo",
+      "run",
+      "-p",
+      "cddm-cli",
+      "--",
+      "rules",
+      "check",
+      ".",
+      "--no-ignore-tests",
+      "--no-ignore-mocks",
+      "--enforce-policies",
+    ],
+  },
 ];
 
 async function main() {

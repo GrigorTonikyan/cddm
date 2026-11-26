@@ -143,7 +143,14 @@ pub async fn policy_rules_get_handler() -> Json<PolicyConfig> {
 pub async fn policy_rules_post_handler(
     Json(config): Json<PolicyConfig>,
 ) -> Result<Json<serde_json::Value>, (StatusCode, String)> {
-    let engine = PolicyEngine::new(config).map_err(|e| (StatusCode::BAD_REQUEST, e))?;
+    let engine = if let Some(ref raw) = config.raw_toml
+        && !raw.trim().is_empty()
+    {
+        raw.parse::<PolicyEngine>()
+            .map_err(|e| (StatusCode::BAD_REQUEST, e))?
+    } else {
+        PolicyEngine::new(config).map_err(|e| (StatusCode::BAD_REQUEST, e))?
+    };
     let raw_toml = engine
         .to_toml_string()
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))?;
@@ -192,12 +199,15 @@ pub async fn policy_evaluate_handler(
         }
     };
 
+    let current_scan_cfg = state.current_config.read().await.clone();
+    let eval_opts = cddm_core::PolicyEvaluationOptions::from_scan_config(&current_scan_cfg);
+
     let latest_lock = state.latest_result.read().await;
     let scan_result = if let Some(latest) = latest_lock.as_ref() {
         latest.clone()
     } else {
         drop(latest_lock);
-        let mut scan_config = state.current_config.read().await.clone();
+        let mut scan_config = current_scan_cfg;
         if let Some(dir) = directory {
             scan_config.directory = dir;
         }
@@ -211,5 +221,5 @@ pub async fn policy_evaluate_handler(
         }
     };
 
-    Ok(Json(engine.evaluate(&scan_result)))
+    Ok(Json(engine.evaluate_with_options(&scan_result, &eval_opts)))
 }

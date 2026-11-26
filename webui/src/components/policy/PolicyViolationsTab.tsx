@@ -57,7 +57,16 @@ export const PolicyViolationsTab: React.FC<PolicyViolationsTabProps> = ({
                     {v.rule_type}
                   </span>
                 </div>
-                <span className="text-xs text-slate-400">{v.token_count} matching tokens</span>
+                <div className="flex items-center gap-2 text-xs text-slate-400">
+                  {v.line_count !== undefined && v.max_lines !== undefined && (
+                    <span className="px-2 py-0.5 rounded bg-rose-950/60 text-rose-300 border border-rose-800/50">
+                      {v.line_count} / {v.max_lines} lines
+                    </span>
+                  )}
+                  {(v.token_count > 0 || v.line_count === undefined) && (
+                    <span>{v.token_count} matching tokens</span>
+                  )}
+                </div>
               </div>
 
               <p className="text-xs text-slate-300 font-sans">{v.message}</p>
