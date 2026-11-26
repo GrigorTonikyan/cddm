@@ -5,6 +5,20 @@ All notable changes to **CDDM** (_Code De-Duplication Meister_) will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.13.0] - 2026-11-26
+
+### Features
+
+- **policy**: add native max_file_lines budgets and test-inclusion flags (Fixes #328) (`3500918`)
+
+### Bug Fixes
+
+- **workflow**: align init gitea template and add --output to scan/diff (Fixes #329) (`22719c0`)
+
+### Tooling & Maintenance
+
+- **release**: bump version to v4.12.2 (`a947409`)
+
 ## [4.12.2] - 2026-11-23
 
 ### Bug Fixes
