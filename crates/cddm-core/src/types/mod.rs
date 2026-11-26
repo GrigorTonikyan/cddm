@@ -16,9 +16,9 @@ pub use compact::{
 };
 pub use diff::{CloneStatus, DiffClonePair, DiffScanResult, DiffSummary};
 pub use policy::{
-    BoundaryRule, ForbiddenFileRule, LimitRule, PolicyConfig, PolicyEvaluationResult,
-    PolicySeverity, PolicyViolation, ProhibitedPatternRule, RouteDocsPolicy, SyncRule,
-    TokenBudgetRule, ZeroDuplicationRule,
+    BoundaryRule, ForbiddenFileRule, LimitRule, LineBudgetRule, PolicyConfig,
+    PolicyEvaluationOptions, PolicyEvaluationResult, PolicySeverity, PolicyViolation,
+    ProhibitedPatternRule, RouteDocsPolicy, SyncRule, TokenBudgetRule, ZeroDuplicationRule,
 };
 pub use refactor::{
     ApplyRefactorBranchRequest, ApplyRefactorBranchResult, AstRewriteResult, AstRewrittenFile,
@@ -405,10 +405,14 @@ mod tests {
             prohibited_patterns: Vec::new(),
             zero_emojis: Some(false),
             token_budgets: Vec::new(),
+            line_budgets: Vec::new(),
             forbidden_files: Vec::new(),
             sync_rules: Vec::new(),
             route_docs_sync: None,
             route_docs: Vec::new(),
+            ignore_tests: None,
+            ignore_mocks: None,
+            include_ignored: None,
             raw_toml: Some("[[boundaries]]\nname = \"domain-isolation\"\n".to_string()),
         };
         assert_serde_roundtrip(&config);
@@ -426,6 +430,8 @@ mod tests {
             end_line_b: Some(45),
             cluster_id: Some(1),
             token_count: 75,
+            line_count: None,
+            max_lines: None,
             snippet: None,
             remediation: None,
         };

@@ -46,13 +46,23 @@ severity = "error"
 remediation = "Use structured logger or remove debug console statements"
 
 zero_emojis = true
+ignore_tests = false
+ignore_mocks = false
 
 [[token_budgets]]
 name = "agent-rules-budget"
-description = "Agent rule files must not exceed token budgets to prevent LLM context bloat"
+description = "Agent rule files must not exceed token or line budgets to prevent LLM context bloat"
 pattern = ".agents/rules/*.md"
 max_file_tokens = 2500
 max_total_tokens = 20000
+max_file_lines = 500
+severity = "error"
+
+[[line_budgets]]
+name = "modularity-max-file-lines"
+description = "All source and test files must stay at or below 500 lines"
+patterns = ["**/*.rs", "**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.css"]
+max_file_lines = 500
 severity = "error"
 `;
 
@@ -105,6 +115,14 @@ export const PolicyRulesModal: React.FC<PolicyRulesModalProps> = ({ isOpen, onCl
         prohibited_patterns: policyConfig?.prohibited_patterns || [],
         zero_emojis: policyConfig?.zero_emojis,
         token_budgets: policyConfig?.token_budgets || [],
+        line_budgets: policyConfig?.line_budgets || [],
+        forbidden_files: policyConfig?.forbidden_files || [],
+        sync_rules: policyConfig?.sync_rules || [],
+        route_docs_sync: policyConfig?.route_docs_sync,
+        route_docs: policyConfig?.route_docs || [],
+        ignore_tests: policyConfig?.ignore_tests,
+        ignore_mocks: policyConfig?.ignore_mocks,
+        include_ignored: policyConfig?.include_ignored,
         raw_toml: rawContent,
       };
       await savePolicyRules?.(updatedConfig);
@@ -130,20 +148,21 @@ export const PolicyRulesModal: React.FC<PolicyRulesModalProps> = ({ isOpen, onCl
   };
 
   const renderSeverityBadge = (sev: PolicySeverity) => {
-    switch (sev) {
-      case "Error":
+    switch (sev.toLowerCase()) {
+      case "error":
         return (
           <span className="px-2 py-0.5 text-xs font-mono font-semibold rounded bg-rose-950/70 text-rose-300 border border-rose-800/60">
             [ERROR]
           </span>
         );
-      case "Warning":
+      case "warning":
         return (
           <span className="px-2 py-0.5 text-xs font-mono font-semibold rounded bg-amber-950/70 text-amber-300 border border-amber-800/60">
             [WARN]
           </span>
         );
-      case "Info":
+      case "info":
+      default:
         return (
           <span className="px-2 py-0.5 text-xs font-mono font-semibold rounded bg-sky-950/70 text-sky-300 border border-sky-800/60">
             [INFO]
@@ -232,6 +251,7 @@ export const PolicyRulesModal: React.FC<PolicyRulesModalProps> = ({ isOpen, onCl
                 (policyConfig?.limits?.length || 0) +
                 (policyConfig?.prohibited_patterns?.length || 0) +
                 (policyConfig?.token_budgets?.length || 0) +
+                (policyConfig?.line_budgets?.length || 0) +
                 (policyConfig?.zero_emojis ? 1 : 0)}
               )
             </button>

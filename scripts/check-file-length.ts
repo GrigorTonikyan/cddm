@@ -27,12 +27,9 @@ export interface FileLengthSummary {
 
 /**
  * Baseline ratcheted ceilings for legacy files exceeding 500 lines.
- * (Currently 100% of codebase files are strictly <= 500 LOC).
+ * Zero exemptions: 100% of codebase files strictly adhere to <= 500 LOC.
  */
-export const GRANDFATHERED_LINE_CAPS: Record<string, number> = {
-  "scripts/lib/gitea-issue-pr-data.ts": 520,
-  "scripts/populate-gitea-portal.ts": 600,
-};
+export const GRANDFATHERED_LINE_CAPS: Record<string, number> = {};
 
 export const DEFAULT_IGNORED_DIRS = new Set([
   ".git",

@@ -284,6 +284,35 @@ fn test_cli_subcommands_parsing() {
         _ => panic!("expected Rules command"),
     }
 
+    let cli_rules_check_no_ignore_tests = Cli::try_parse_from([
+        "cddm",
+        "rules",
+        "check",
+        "--enforce-policies",
+        "--no-ignore-tests",
+        "--no-ignore-mocks",
+        "--include-ignored",
+    ])
+    .expect("parse rules check no-ignore-tests");
+    match cli_rules_check_no_ignore_tests.command {
+        Commands::Rules { action } => match action {
+            RulesAction::Check {
+                enforce_policies,
+                no_ignore_tests,
+                no_ignore_mocks,
+                include_ignored,
+                ..
+            } => {
+                assert!(enforce_policies);
+                assert!(no_ignore_tests);
+                assert!(no_ignore_mocks);
+                assert!(include_ignored);
+            }
+            _ => panic!("expected RulesAction::Check"),
+        },
+        _ => panic!("expected Rules command"),
+    }
+
     let cli_scan_no_ignore =
         Cli::try_parse_from(["cddm", "scan", "--no-ignore"]).expect("parse scan no-ignore");
     match cli_scan_no_ignore.command {

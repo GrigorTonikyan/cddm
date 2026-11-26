@@ -172,9 +172,17 @@ export const CLI_COMMANDS_CATALOG: CliCommandMetadata[] = [
   {
     name: "rules",
     summary:
-      "Manage architectural boundary policies, prohibited patterns, token budgets, and zero-emoji rules (.cddmrules.toml)",
+      "Manage architectural boundary policies, prohibited patterns, token/line budgets (max_file_lines), and zero-emoji rules (.cddmrules.toml)",
     usage: "cddm rules <init|check> [OPTIONS]",
-    keyFlags: ["--rules", "--enforce-policies", "--format", "--force"],
+    keyFlags: [
+      "--rules",
+      "--enforce-policies",
+      "--no-ignore-tests",
+      "--no-ignore-mocks",
+      "--include-ignored",
+      "--format",
+      "--force",
+    ],
   },
   {
     name: "init",

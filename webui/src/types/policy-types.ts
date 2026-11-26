@@ -39,7 +39,7 @@ export interface SuppressionConfig {
 /**
  * Architectural policy violation severity.
  */
-export type PolicySeverity = "Error" | "Warning" | "Info";
+export type PolicySeverity = "Error" | "Warning" | "Info" | "error" | "warning" | "info";
 
 /**
  * Architectural boundary rule.
@@ -89,15 +89,39 @@ export interface ProhibitedPatternRule {
 }
 
 /**
- * Token budget rule constraining file or total tokens across a glob pattern.
+ * Token and line budget rule constraining file tokens, total tokens, or file lines across glob patterns.
  */
 export interface TokenBudgetRule {
   name: string;
   description?: string;
   pattern: string;
+  patterns?: string[];
+  exclude?: string[];
   max_file_tokens?: number;
   max_total_tokens?: number;
+  max_file_lines?: number;
+  ignore_tests?: boolean;
+  ignore_mocks?: boolean;
+  include_ignored?: boolean;
   severity: PolicySeverity;
+  remediation?: string;
+}
+
+/**
+ * Line budget rule constraining maximum line count per file across glob patterns.
+ */
+export interface LineBudgetRule {
+  name: string;
+  description?: string;
+  pattern: string;
+  patterns?: string[];
+  exclude?: string[];
+  max_file_lines: number;
+  ignore_tests?: boolean;
+  ignore_mocks?: boolean;
+  include_ignored?: boolean;
+  severity: PolicySeverity;
+  remediation?: string;
 }
 
 /**
@@ -153,10 +177,14 @@ export interface PolicyConfig {
   prohibited_patterns?: ProhibitedPatternRule[];
   zero_emojis?: boolean;
   token_budgets?: TokenBudgetRule[];
+  line_budgets?: LineBudgetRule[];
   forbidden_files?: ForbiddenFileRule[];
   sync_rules?: SyncRule[];
   route_docs_sync?: RouteDocsPolicy;
   route_docs?: RouteDocsPolicy[];
+  ignore_tests?: boolean;
+  ignore_mocks?: boolean;
+  include_ignored?: boolean;
   raw_toml?: string;
 }
 
@@ -176,6 +204,8 @@ export interface PolicyViolation {
   end_line_b?: number;
   cluster_id?: number;
   token_count: number;
+  line_count?: number;
+  max_lines?: number;
   snippet?: string;
   remediation?: string;
 }

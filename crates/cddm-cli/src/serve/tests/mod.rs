@@ -344,6 +344,9 @@ async fn test_refactor_ast_handler() {
 
 #[tokio::test]
 async fn test_policy_rules_get_and_post_handlers() {
+    let rules_path = std::path::Path::new(cddm_core::DEFAULT_RULES_FILE);
+    let previous_rules = std::fs::read_to_string(rules_path).ok();
+
     let (state, _) = build_app();
     let axum::Json(cfg) = policy_rules_get_handler().await;
     assert!(cfg.boundaries.is_empty() || !cfg.boundaries.is_empty());
@@ -361,10 +364,14 @@ async fn test_policy_rules_get_and_post_handlers() {
         prohibited_patterns: vec![],
         zero_emojis: None,
         token_budgets: vec![],
+        line_budgets: vec![],
         forbidden_files: vec![],
         sync_rules: vec![],
         route_docs_sync: None,
         route_docs: vec![],
+        ignore_tests: None,
+        ignore_mocks: None,
+        include_ignored: None,
         raw_toml: None,
     };
 
@@ -387,6 +394,12 @@ async fn test_policy_rules_get_and_post_handlers() {
     let axum::Json(eval_body) = eval_res.unwrap();
     assert!(!eval_body.violations.is_empty());
     assert_eq!(eval_body.violations[0].rule_name, "test-boundary");
+
+    if let Some(prev) = previous_rules {
+        let _ = std::fs::write(rules_path, prev);
+    } else {
+        let _ = std::fs::remove_file(rules_path);
+    }
 }
 
 #[tokio::test]

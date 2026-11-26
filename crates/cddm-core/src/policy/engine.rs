@@ -1,6 +1,6 @@
 #![forbid(unsafe_code)]
 
-use super::budgets::{CompiledTokenBudget, evaluate_token_budgets};
+use super::budgets::{CompiledTokenBudget, evaluate_token_budgets_with_options};
 use super::compiled::{CompiledBoundary, CompiledLimit, CompiledZeroDuplication};
 use super::emoji::evaluate_zero_emoji;
 use super::eval::evaluate_scan_policies;
@@ -9,7 +9,8 @@ use super::patterns::{CompiledProhibitedPattern, evaluate_prohibited_patterns};
 use super::route_docs::evaluate_route_docs_policies;
 use super::sync::evaluate_sync_rules;
 use crate::types::{
-    PolicyConfig, PolicyEvaluationResult, PolicySeverity, RouteDocsPolicy, ScanResult, SyncRule,
+    PolicyConfig, PolicyEvaluationOptions, PolicyEvaluationResult, PolicySeverity, RouteDocsPolicy,
+    ScanResult, SyncRule, TokenBudgetRule,
 };
 use ignore::gitignore::GitignoreBuilder;
 use std::path::Path;
@@ -107,6 +108,10 @@ impl PolicyEngine {
             let tb = CompiledTokenBudget::compile(rule)?;
             compiled_token_budgets.push(tb);
         }
+        for rule in &config.line_budgets {
+            let tb = CompiledTokenBudget::compile(&TokenBudgetRule::from(rule))?;
+            compiled_token_budgets.push(tb);
+        }
 
         let mut compiled_forbidden_files = Vec::new();
         for rule in &config.forbidden_files {
@@ -175,8 +180,17 @@ impl PolicyEngine {
             .map_err(|e| format!("Failed to parse .cddmrules.toml: {e}"))
     }
 
-    /// Evaluates all active policy rules against a scan result.
+    /// Evaluates all active policy rules against a scan result using default evaluation options.
     pub fn evaluate(&self, scan_result: &ScanResult) -> PolicyEvaluationResult {
+        self.evaluate_with_options(scan_result, &PolicyEvaluationOptions::default())
+    }
+
+    /// Evaluates all active policy rules against a scan result with explicit test/mock/ignore options.
+    pub fn evaluate_with_options(
+        &self,
+        scan_result: &ScanResult,
+        options: &PolicyEvaluationOptions,
+    ) -> PolicyEvaluationResult {
         let mut eval = evaluate_scan_policies(
             scan_result,
             &self.compiled_boundaries,
@@ -201,10 +215,16 @@ impl PolicyEngine {
                 eval.violations.extend(emoji_violations);
             }
 
-            // 6. Token budget rules
+            // 6. Token & line budget rules
             if !self.compiled_token_budgets.is_empty() {
-                let budget_violations =
-                    evaluate_token_budgets(target_path, &self.compiled_token_budgets);
+                let budget_violations = evaluate_token_budgets_with_options(
+                    target_path,
+                    &self.compiled_token_budgets,
+                    self.config.ignore_tests,
+                    self.config.ignore_mocks,
+                    self.config.include_ignored,
+                    options,
+                );
                 eval.violations.extend(budget_violations);
             }
 
@@ -312,14 +332,30 @@ impl PolicyEngine {
 # Enforce zero-emoji policy across all repository files
 # zero_emojis = true
 
+# Policy-level test/mock file inclusion toggles (override defaults during `cddm rules check`)
+# ignore_tests = false
+# ignore_mocks = false
+
 # [[token_budgets]]
-# Constrains maximum token counts per file or total tokens across a glob pattern.
+# Constrains maximum token counts or line counts per file and total tokens across a glob pattern.
 # [[token_budgets]]
 # name = "agent-rules-budget"
-# description = "Agent rule files must not exceed token budgets to prevent LLM context bloat"
+# description = "Agent rule files must not exceed token or line budgets to prevent LLM context bloat"
 # pattern = ".agents/rules/*.md"
 # max_file_tokens = 2500
 # max_total_tokens = 20000
+# max_file_lines = 500
+# severity = "error"
+
+# [[line_budgets]]
+# Enforces strict per-file line count ceilings across source and test files.
+# [[line_budgets]]
+# name = "modularity-max-file-lines"
+# description = "All source and test files must stay at or below 500 lines"
+# patterns = ["**/*.rs", "**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.css"]
+# max_file_lines = 500
+# ignore_tests = false
+# ignore_mocks = false
 # severity = "error"
 
 # [[forbidden_files]]

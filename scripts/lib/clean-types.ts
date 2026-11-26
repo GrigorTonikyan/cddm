@@ -146,6 +146,7 @@ export const PROTECTED_EXACT_FILES = new Set([
   ".gitattributes",
   ".gitignore",
   ".cddmignore",
+  ".cddmrules.toml",
   ".markdownlint.json",
   ".markdownlintignore",
   ".env.example",

@@ -414,7 +414,10 @@ pub async fn run_scan(
         target_directory: Some(config.directory.clone()),
     };
 
-    let policy_eval = policy_engine.evaluate(&scan_result);
+    let policy_eval = policy_engine.evaluate_with_options(
+        &scan_result,
+        &crate::types::PolicyEvaluationOptions::from_scan_config(&config),
+    );
     scan_result.policy_violations = policy_eval.violations;
 
     // Conclude scan progress

@@ -301,8 +301,8 @@ CDDM provides in-process architectural policy enforcement and governance across 
 5. **Built-in Zero-Emoji Codebase Sensor (`zero_emojis = true`)**:
    - Scans code, documentation, and configuration files for pictographic and emoji glyphs with exact line/column tracking.
 
-6. **Token Budget Constraints (`[[token_budgets]]`)**:
-   - Enforces per-file (`max_file_tokens`) and combined total (`max_total_tokens`) token budgets across glob paths (e.g. `.agents/rules/*.md`) to prevent LLM context bloat.
+6. **Token & File Line Budget Constraints (`[[token_budgets]]` & `[[line_budgets]]`)**:
+   - Enforces per-file (`max_file_tokens`), combined total (`max_total_tokens`), and strict per-file line count (`max_file_lines`) ceilings across glob paths (e.g. `.agents/rules/*.md`, `**/*.rs`, `**/*.ts`) with configurable `ignore_tests` / `ignore_mocks` toggles.
 
 7. **Forbidden Files & Conflicting Tooling (`[[forbidden_files]]`)**:
    - Bans deprecated configuration files, conflicting tooling (e.g., `.eslintrc*`, `.prettierrc*`), and foreign lockfiles (`yarn.lock`, `package-lock.json`, `pnpm-lock.yaml`) with glob matching and actionable remediation advice.

@@ -31,6 +31,7 @@ pub mod sarif_rules {
     pub const RULE_ID_PROHIBITED_PATTERN: &str = "CDDM_PROHIBITED_PATTERN";
     pub const RULE_ID_ZERO_EMOJIS: &str = "CDDM_ZERO_EMOJIS";
     pub const RULE_ID_TOKEN_BUDGET: &str = "CDDM_TOKEN_BUDGET";
+    pub const RULE_ID_LINE_BUDGET: &str = "CDDM_LINE_BUDGET";
 }
 
 pub mod sarif_tags {

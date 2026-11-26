@@ -141,6 +141,38 @@ pub fn build_rule_catalog() -> Vec<SarifRule> {
             "Document the discovered route in the project documentation.",
             "### Recommendation\nAdd route descriptions to README.md or project documentation.",
         ),
+        make_sarif_rule(
+            sarif_rules::RULE_ID_PROHIBITED_PATTERN,
+            "ProhibitedPatternDetected",
+            "Prohibited regex or AST pattern detected",
+            "CDDM detected code matching a prohibited pattern rule configured in .cddmrules.toml.",
+            "Remove or refactor the prohibited code pattern.",
+            "### Recommendation\nFollow the rule remediation guidance in .cddmrules.toml.",
+        ),
+        make_sarif_rule(
+            sarif_rules::RULE_ID_ZERO_EMOJIS,
+            "ZeroEmojiViolation",
+            "Disallowed emoji or pictographic glyph detected",
+            "CDDM detected an emoji or pictographic character when zero_emojis = true is enforced.",
+            "Remove emoji characters from source and documentation files.",
+            "### Recommendation\nReplace emoji glyphs with plain ASCII text.",
+        ),
+        make_sarif_rule(
+            sarif_rules::RULE_ID_TOKEN_BUDGET,
+            "TokenBudgetExceeded",
+            "File or total token budget exceeded",
+            "CDDM detected a file or file group exceeding configured max_file_tokens or max_total_tokens limits.",
+            "Split or trim content to remain within configured token budgets.",
+            "### Recommendation\nDecompose oversized files or trim redundant text.",
+        ),
+        make_sarif_rule(
+            sarif_rules::RULE_ID_LINE_BUDGET,
+            "LineBudgetExceeded",
+            "File line count exceeds max_file_lines ceiling",
+            "CDDM detected a file whose line count exceeds the max_file_lines ceiling configured in .cddmrules.toml.",
+            "Decompose the oversized file into focused submodules within the allowed line limit.",
+            "### Recommendation\nRefactor the file into smaller cohesive modules adhering to max_file_lines.",
+        ),
     ]
 }
 
@@ -169,6 +201,10 @@ fn map_policy_violation_to_rule(violation: &PolicyViolation) -> (&'static str, u
         "forbidden_file" => (sarif_rules::RULE_ID_FORBIDDEN_FILE, 7, level),
         "sync_drift" => (sarif_rules::RULE_ID_SYNC_DRIFT, 8, level),
         "route_docs" => (sarif_rules::RULE_ID_ROUTE_DOCS, 9, level),
+        "prohibited_pattern" => (sarif_rules::RULE_ID_PROHIBITED_PATTERN, 10, level),
+        "zero_emojis" => (sarif_rules::RULE_ID_ZERO_EMOJIS, 11, level),
+        "token_budget" => (sarif_rules::RULE_ID_TOKEN_BUDGET, 12, level),
+        "line_budget" => (sarif_rules::RULE_ID_LINE_BUDGET, 13, level),
         _ => (sarif_rules::RULE_ID_EXACT, 0, level),
     }
 }

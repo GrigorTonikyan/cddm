@@ -161,6 +161,7 @@ pub fn evaluate_zero_emoji(root_dir: &Path) -> Vec<PolicyViolation> {
                         remediation: Some(
                             "Remove emoji or pictographic glyph from codebase".to_string(),
                         ),
+                        ..Default::default()
                     });
                     break; // Report at most one violation per line to avoid noise
                 }

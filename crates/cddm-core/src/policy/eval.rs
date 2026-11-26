@@ -56,6 +56,7 @@ pub fn evaluate_scan_policies(
                             token_count: pair.token_count,
                             snippet: None,
                             remediation: None,
+                            ..Default::default()
                         });
                     }
                 }
@@ -101,6 +102,7 @@ pub fn evaluate_scan_policies(
                     token_count: pair.token_count,
                     snippet: None,
                     remediation: None,
+                    ..Default::default()
                 });
             }
         }
@@ -133,6 +135,7 @@ pub fn evaluate_scan_policies(
                     token_count: pair.token_count,
                     snippet: None,
                     remediation: None,
+                    ..Default::default()
                 });
             }
         }
@@ -183,6 +186,7 @@ pub fn evaluate_scan_policies(
                             token_count: cluster.token_count,
                             snippet: None,
                             remediation: None,
+                            ..Default::default()
                         });
                     }
                 }

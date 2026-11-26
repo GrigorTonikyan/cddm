@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-27 | Rust: 420 #[test] units | WebUI: 334 tests across 77 suites | Scripts & MCP: 261 tests across 68 suites | CI Workflows: PASS
+> Last verified: 2026-08-27 | Rust: 423 #[test] units | WebUI: 336 tests across 78 suites | Scripts & MCP: 263 tests across 68 suites | CI Workflows: PASS
 
 ---
 
@@ -358,7 +358,7 @@
 
 ---
 
-## 2. WebUI Frontend — React 19 + TypeScript + Vitest (334 unit tests across 77 suites)
+## 2. WebUI Frontend — React 19 + TypeScript + Vitest (336 unit tests across 78 suites)
 
 | Module                      | Test Suite File                                                                       | Test Cases | Status |
 | :-------------------------- | :------------------------------------------------------------------------------------ | :--------- | :----- |
@@ -396,6 +396,7 @@
 | Editor Toolbar              | `webui/src/components/editor/EditorToolbar.test.tsx`                                  | 4 tests    | PASS   |
 | Extract Module Tab          | `webui/src/components/sandbox/ExtractModuleTab.test.tsx`                              | 3 tests    | PASS   |
 | Dead Code Studio View       | `webui/src/components/scan-results/DeadCodeStudioView.test.tsx`                       | 4 tests    | PASS   |
+| Policy Violations Banner    | `webui/src/components/scan-results/PolicyViolationsBanner.test.tsx`                   | 2 tests    | PASS   |
 | Summary Banner              | `webui/src/components/scan-results/SummaryBanner.test.tsx`                            | 3 tests    | PASS   |
 | Cross Language Explorer Tab | `webui/src/components/semantic/CrossLanguageExplorerTab.test.tsx`                     | 3 tests    | PASS   |
 | Semantic Pairs Table        | `webui/src/components/semantic/SemanticPairsTable.test.tsx`                           | 2 tests    | PASS   |
@@ -442,7 +443,7 @@
 
 ---
 
-## 3. Repository Scripts & MCP Protocol — Bun Test Suites (261 tests across 68 suites)
+## 3. Repository Scripts & MCP Protocol — Bun Test Suites (263 tests across 68 suites)
 
 ### Repository Tooling & Automation Suites
 
@@ -490,7 +491,7 @@
 | MCP Dynamic Discovery               | `tests/mcp/discovery.test.ts`                      | 6 tests    | PASS   |
 | Tool: cddm_apply_cluster_refactor   | `tests/mcp/tools/apply-cluster-refactor.test.ts`   | 3 tests    | PASS   |
 | Tool: cddm_ast_refactor             | `tests/mcp/tools/ast-refactor.test.ts`             | 2 tests    | PASS   |
-| Tool: cddm_check_policies           | `tests/mcp/tools/check-policies.test.ts`           | 4 tests    | PASS   |
+| Tool: cddm_check_policies           | `tests/mcp/tools/check-policies.test.ts`           | 5 tests    | PASS   |
 | Tool: cddm_check_suppression        | `tests/mcp/tools/check-suppression.test.ts`        | 2 tests    | PASS   |
 | Tool: cddm_compare_semantic_graphs  | `tests/mcp/tools/compare-semantic-graphs.test.ts`  | 2 tests    | PASS   |
 | Tool: cddm_correlate_coverage       | `tests/mcp/tools/correlate-coverage.test.ts`       | 3 tests    | PASS   |
@@ -511,7 +512,7 @@
 | Tool: cddm_heal_refactor            | `tests/mcp/tools/heal-refactor.test.ts`            | 3 tests    | PASS   |
 | Tool: cddm_import_cache_pack        | `tests/mcp/tools/import-cache-pack.test.ts`        | 2 tests    | PASS   |
 | Tool: cddm_prune_dead_clones        | `tests/mcp/tools/prune-dead-clones.test.ts`        | 2 tests    | PASS   |
-| Tool: cddm_scan_codebase            | `tests/mcp/tools/scan-codebase.test.ts`            | 7 tests    | PASS   |
+| Tool: cddm_scan_codebase            | `tests/mcp/tools/scan-codebase.test.ts`            | 8 tests    | PASS   |
 | Tool: cddm_scan_cross_language      | `tests/mcp/tools/scan-cross-language.test.ts`      | 2 tests    | PASS   |
 | Tool: cddm_scan_hub                 | `tests/mcp/tools/scan-hub.test.ts`                 | 3 tests    | PASS   |
 | Tool: cddm_scan_monorepo            | `tests/mcp/tools/scan-monorepo.test.ts`            | 4 tests    | PASS   |

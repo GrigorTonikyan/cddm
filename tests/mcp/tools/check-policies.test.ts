@@ -96,4 +96,54 @@ severity = "info"
     expect(typeof res.passed).toBe("boolean");
     expect(Array.isArray(res.violations)).toBe(true);
   });
+
+  it("should enforce max_file_lines and honor ignore_tests=false in cddm_check_policies", async () => {
+    const { mkdirSync, mkdtempSync, rmSync, writeFileSync } = await import("node:fs");
+    const { tmpdir } = await import("node:os");
+    const { join } = await import("node:path");
+
+    const dir = mkdtempSync(join(tmpdir(), "cddm-mcp-line-budget-"));
+    try {
+      mkdirSync(join(dir, "src"), { recursive: true });
+      mkdirSync(join(dir, "tests"), { recursive: true });
+
+      const bigLines = Array.from({ length: 12 }, (_, i) => `export const v${i} = ${i};`).join(
+        "\n",
+      );
+      writeFileSync(join(dir, "src", "big.ts"), `${bigLines}\n`);
+      writeFileSync(join(dir, "tests", "big.test.ts"), `${bigLines}\n`);
+
+      const rulesPath = join(dir, ".cddmrules.toml");
+      writeFileSync(
+        rulesPath,
+        `[[token_budgets]]\nname = "max-5-lines"\npattern = "**/*.ts"\nmax_file_lines = 5\nseverity = "error"\n`,
+      );
+
+      const defaultRes = await executeTool("cddm_check_policies", {
+        directory: dir,
+        rules: rulesPath,
+      });
+      expect(defaultRes.passed).toBe(false);
+      expect(defaultRes.error_count).toBe(1);
+      expect(defaultRes.violations[0].rule_type).toBe("line_budget");
+      expect(defaultRes.violations[0].line_count).toBe(12);
+      expect(defaultRes.violations[0].max_lines).toBe(5);
+
+      const includeTestsRes = await executeTool("cddm_check_policies", {
+        directory: dir,
+        rules: rulesPath,
+        ignore_tests: false,
+        ignore_mocks: false,
+      });
+      expect(includeTestsRes.passed).toBe(false);
+      expect(includeTestsRes.error_count).toBe(2);
+      expect(
+        includeTestsRes.violations.some((v: { file_a: string }) =>
+          v.file_a.includes("big.test.ts"),
+        ),
+      ).toBe(true);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
 });

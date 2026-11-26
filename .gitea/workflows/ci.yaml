@@ -68,6 +68,9 @@ jobs:
       - name: CDDM Strict Dogfooding Quality Gate (<= 5.0% Fail Threshold)
         run: ./target/release/cddm scan . --min-tokens 50 --fail-threshold 5.0
 
+      - name: CDDM Policy & Max File Lines Gate (<= 500 Lines Across Source & Tests)
+        run: ./target/release/cddm rules check . --no-ignore-tests --no-ignore-mocks --enforce-policies
+
       - name: Upload Prebuilt Release Binaries
         uses: self:gt-dev/actions/upload-artifact@v1
         with:

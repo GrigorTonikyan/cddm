@@ -26,6 +26,7 @@ pub fn get_tool_definitions() -> Vec<serde_json::Value> {
                     mcp_tools::PARAM_IGNORE_MOCKS: { "type": "boolean", "description": "Exclude mock and fixture files (default: true)" },
                     mcp_tools::PARAM_IGNORE_GENERATED: { "type": "boolean", "description": "Exclude auto-generated files with generator headers (default: true)" },
                     mcp_tools::PARAM_INCLUDE_IGNORED: { "type": "boolean", "description": "Include files and directories ignored by .gitignore (default: false)" },
+                    mcp_tools::PARAM_RULES: { "type": "string", "description": "Optional custom path to .cddmrules.toml policy rules file" },
                     "summary_only": { "type": "boolean", "description": "When true, returns aggregate metrics and top 5 clusters to conserve agent context tokens" },
                     "detail_level": { "type": "string", "enum": ["summary", "compact", "full"], "description": "Response detail level: 'summary' or 'compact' preserves AI context tokens" }
                 }),
@@ -198,6 +199,10 @@ pub fn get_tool_definitions() -> Vec<serde_json::Value> {
                     mcp_tools::PARAM_DIRECTORY: { "type": "string", "description": "Target workspace directory path (default: .)" },
                     mcp_tools::PARAM_RULES: { "type": "string", "description": "Custom path to .cddmrules.toml policy rules file" },
                     mcp_tools::PARAM_MIN_TOKENS: { "type": "number", "description": format!("Minimum token threshold (default: {})", DEFAULT_MIN_TOKENS) },
+                    mcp_tools::PARAM_IGNORE_TESTS: { "type": "boolean", "description": "Exclude test files and test directories (default: inherits .cddmrules.toml or true)" },
+                    mcp_tools::PARAM_IGNORE_MOCKS: { "type": "boolean", "description": "Exclude mock and fixture files (default: inherits .cddmrules.toml or true)" },
+                    mcp_tools::PARAM_IGNORE_GENERATED: { "type": "boolean", "description": "Exclude auto-generated files with generator headers (default: true)" },
+                    mcp_tools::PARAM_INCLUDE_IGNORED: { "type": "boolean", "description": "Include files and directories ignored by .gitignore (default: false)" },
                     "summary_only": { "type": "boolean", "description": "When true, returns aggregate policy results and top violations to conserve agent context tokens" },
                     "detail_level": { "type": "string", "enum": ["summary", "compact", "full"], "description": "Response detail level: 'summary' or 'compact' preserves AI context tokens" }
                 }),

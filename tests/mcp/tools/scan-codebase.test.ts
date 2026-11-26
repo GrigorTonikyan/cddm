@@ -120,4 +120,33 @@ describe("MCP Tool: scan_codebase", () => {
       rmSync(dir, { recursive: true, force: true });
     }
   }, 30000);
+
+  it("should enforce max_file_lines rules in scan_codebase when ignore_tests=false", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "cddm-mcp-scan-lines-"));
+    try {
+      mkdirSync(join(dir, "tests"), { recursive: true });
+      const bigFile = Array.from({ length: 10 }, (_, i) => `export const x${i} = ${i};`).join("\n");
+      writeFileSync(join(dir, "tests", "oversized.test.ts"), `${bigFile}\n`);
+      const rulesPath = join(dir, ".cddmrules.toml");
+      writeFileSync(
+        rulesPath,
+        `[[line_budgets]]\nname = "max-5-lines"\npattern = "**/*.ts"\nmax_file_lines = 5\nseverity = "error"\n`,
+      );
+
+      const res = await executeTool("scan_codebase", {
+        directory: dir,
+        min_tokens: 50,
+        rules: rulesPath,
+        ignore_tests: false,
+        ignore_mocks: false,
+      });
+      expect(Array.isArray(res.policy_violations)).toBe(true);
+      expect(res.policy_violations.length).toBe(1);
+      expect(res.policy_violations[0].rule_type).toBe("line_budget");
+      expect(res.policy_violations[0].line_count).toBe(10);
+      expect(res.policy_violations[0].max_lines).toBe(5);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }, 30000);
 });

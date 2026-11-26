@@ -1,0 +1,15 @@
+# CDDM Architectural Rules & Modularity Policy Configuration
+# Enforces <= 500 line ceiling across all source and test files with zero exemptions.
+
+ignore_tests = false
+ignore_mocks = false
+
+[[line_budgets]]
+name = "modularity-max-file-lines"
+description = "All source and test files (.rs, .ts, .tsx, .js, .jsx, .css) must remain <= 500 lines"
+patterns = ["**/*.rs", "**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.css"]
+max_file_lines = 500
+ignore_tests = false
+ignore_mocks = false
+severity = "error"
+remediation = "Decompose oversized files into focused modular submodules or components (<= 500 lines)."

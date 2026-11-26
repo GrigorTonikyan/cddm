@@ -62,7 +62,7 @@ mod tests {
 
         let run = &report.runs[0];
         assert_eq!(run.tool.driver.name, TOOL_NAME);
-        assert_eq!(run.tool.driver.rules.len(), 10);
+        assert_eq!(run.tool.driver.rules.len(), 14);
         assert_eq!(run.results.len(), 1);
 
         let result = &run.results[0];
@@ -213,6 +213,7 @@ mod tests {
                 token_count: 50,
                 snippet: None,
                 remediation: None,
+                ..Default::default()
             },
             PolicyViolation {
                 rule_name: "strict-core".to_string(),
@@ -229,13 +230,36 @@ mod tests {
                 token_count: 25,
                 snippet: None,
                 remediation: None,
+                ..Default::default()
+            },
+            PolicyViolation {
+                rule_name: "max-500-lines".to_string(),
+                rule_type: "line_budget".to_string(),
+                severity: PolicySeverity::Error,
+                file_a: "big.rs".to_string(),
+                start_line_a: 1,
+                end_line_a: 550,
+                file_b: None,
+                start_line_b: None,
+                end_line_b: None,
+                message: "Line budget exceeded: 550 lines > 500".to_string(),
+                cluster_id: None,
+                token_count: 0,
+                line_count: Some(550),
+                max_lines: Some(500),
+                snippet: Some("550 / 500 lines".to_string()),
+                remediation: None,
             },
         ];
 
         let report = generate_sarif_report(&scan_result);
         assert_rule_ids(
             &report,
-            &[sarif_rules::RULE_ID_BOUNDARY, sarif_rules::RULE_ID_ZERO_DUP],
+            &[
+                sarif_rules::RULE_ID_BOUNDARY,
+                sarif_rules::RULE_ID_ZERO_DUP,
+                sarif_rules::RULE_ID_LINE_BUDGET,
+            ],
         );
         let results = &report.runs[0].results;
         assert_eq!(results[0].level, sarif_severity::ERROR);

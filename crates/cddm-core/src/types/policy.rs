@@ -15,10 +15,11 @@ fn default_pattern_type() -> String {
 }
 
 /// Severity level for an architectural policy rule violation.
-#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, Default, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum PolicySeverity {
     /// Error-level violation causing quality gate failure
+    #[default]
     Error,
     /// Warning-level violation flagged for review
     Warning,
@@ -116,24 +117,104 @@ pub struct ProhibitedPatternRule {
     pub remediation: Option<String>,
 }
 
-/// A rule constraining token count per file or across a set of files matching a glob.
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+/// A rule constraining token count or line count per file, or total tokens across matching files.
+#[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq, Eq)]
 pub struct TokenBudgetRule {
     /// Unique identifier / name of the token budget rule
     pub name: String,
     /// Optional human-readable description
+    #[serde(default)]
     pub description: Option<String>,
     /// Glob pattern representing the target files (e.g. ".agents/rules/*.md")
+    #[serde(default)]
     pub pattern: String,
+    /// Additional glob patterns representing target files
+    #[serde(default)]
+    pub patterns: Vec<String>,
+    /// Glob patterns for files to exclude from this rule
+    #[serde(default)]
+    pub exclude: Vec<String>,
     /// Maximum allowed tokens per individual file
     #[serde(default)]
     pub max_file_tokens: Option<usize>,
     /// Maximum allowed combined tokens across all matching files
     #[serde(default)]
     pub max_total_tokens: Option<usize>,
+    /// Maximum allowed lines per individual file
+    #[serde(default, alias = "max_lines")]
+    pub max_file_lines: Option<usize>,
+    /// Optional per-rule override for excluding test files
+    #[serde(default)]
+    pub ignore_tests: Option<bool>,
+    /// Optional per-rule override for excluding mock/fixture files
+    #[serde(default)]
+    pub ignore_mocks: Option<bool>,
+    /// Optional per-rule override for including .gitignore-ignored files
+    #[serde(default)]
+    pub include_ignored: Option<bool>,
     /// Violation severity
     #[serde(default = "default_error_severity")]
     pub severity: PolicySeverity,
+    /// Optional actionable remediation advice
+    #[serde(default)]
+    pub remediation: Option<String>,
+}
+
+/// A rule constraining maximum line count per individual file across matching paths.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct LineBudgetRule {
+    /// Unique identifier / name of the line budget rule
+    pub name: String,
+    /// Optional human-readable description
+    #[serde(default)]
+    pub description: Option<String>,
+    /// Glob pattern representing target files (e.g. "**/*.rs")
+    #[serde(default)]
+    pub pattern: String,
+    /// Additional glob patterns representing target files
+    #[serde(default)]
+    pub patterns: Vec<String>,
+    /// Glob patterns for files to exclude from this rule
+    #[serde(default)]
+    pub exclude: Vec<String>,
+    /// Maximum allowed lines per individual file
+    #[serde(alias = "max_lines")]
+    pub max_file_lines: usize,
+    /// Optional per-rule override for excluding test files
+    #[serde(default)]
+    pub ignore_tests: Option<bool>,
+    /// Optional per-rule override for excluding mock/fixture files
+    #[serde(default)]
+    pub ignore_mocks: Option<bool>,
+    /// Optional per-rule override for including .gitignore-ignored files
+    #[serde(default)]
+    pub include_ignored: Option<bool>,
+    /// Violation severity
+    #[serde(default = "default_error_severity")]
+    pub severity: PolicySeverity,
+    /// Optional actionable remediation advice
+    #[serde(default)]
+    pub remediation: Option<String>,
+}
+
+impl From<&LineBudgetRule> for TokenBudgetRule {
+    fn from(rule: &LineBudgetRule) -> Self {
+        Self {
+            name: rule.name.clone(),
+            description: rule.description.clone(),
+            pattern: rule.pattern.clone(),
+            patterns: rule.patterns.clone(),
+            exclude: rule.exclude.clone(),
+            max_file_tokens: None,
+            max_total_tokens: None,
+            max_file_lines: Some(rule.max_file_lines),
+            ignore_tests: rule.ignore_tests,
+            ignore_mocks: rule.ignore_mocks,
+            include_ignored: rule.include_ignored,
+            severity: rule.severity,
+            remediation: rule.remediation.clone(),
+        }
+    }
 }
 
 /// A rule forbidding specific files, conflicting tooling, or legacy lockfiles.
@@ -238,9 +319,12 @@ pub struct PolicyConfig {
     /// Built-in zero-emoji sensor flag
     #[serde(default)]
     pub zero_emojis: Option<bool>,
-    /// Token budget rules constraining file and total token limits
+    /// Token budget rules constraining file, total token, and file line limits
     #[serde(default)]
     pub token_budgets: Vec<TokenBudgetRule>,
+    /// Line budget rules constraining maximum lines per individual file
+    #[serde(default)]
+    pub line_budgets: Vec<LineBudgetRule>,
     /// Forbidden files and artifacts rules
     #[serde(default)]
     pub forbidden_files: Vec<ForbiddenFileRule>,
@@ -253,8 +337,48 @@ pub struct PolicyConfig {
     /// Multiple route documentation completeness policies
     #[serde(default)]
     pub route_docs: Vec<RouteDocsPolicy>,
+    /// Policy-level override for excluding test files during evaluation
+    #[serde(default)]
+    pub ignore_tests: Option<bool>,
+    /// Policy-level override for excluding mock/fixture files during evaluation
+    #[serde(default)]
+    pub ignore_mocks: Option<bool>,
+    /// Policy-level override for including .gitignore-ignored files during evaluation
+    #[serde(default)]
+    pub include_ignored: Option<bool>,
     /// Raw `.cddmrules.toml` content if loaded from disk/string
     pub raw_toml: Option<String>,
+}
+
+/// Runtime evaluation options controlling test/mock/ignored file inclusion during policy checks.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct PolicyEvaluationOptions {
+    /// Whether test files should be excluded when not overridden by policy rules
+    pub ignore_tests: bool,
+    /// Whether mock/fixture files should be excluded when not overridden by policy rules
+    pub ignore_mocks: bool,
+    /// Whether .gitignore-ignored files should be included
+    pub include_ignored: bool,
+    /// Explicit CLI/MCP override for test file exclusion (`Some(false)` forces inclusion)
+    pub force_ignore_tests: Option<bool>,
+    /// Explicit CLI/MCP override for mock file exclusion (`Some(false)` forces inclusion)
+    pub force_ignore_mocks: Option<bool>,
+    /// Explicit CLI/MCP override for .gitignore-ignored file inclusion (`Some(true)` forces inclusion)
+    pub force_include_ignored: Option<bool>,
+}
+
+impl PolicyEvaluationOptions {
+    /// Constructs policy evaluation options from a `ScanConfig`.
+    pub fn from_scan_config(config: &super::scan::ScanConfig) -> Self {
+        Self {
+            ignore_tests: config.ignore_tests,
+            ignore_mocks: config.ignore_mocks,
+            include_ignored: config.include_ignored,
+            force_ignore_tests: (!config.ignore_tests).then_some(false),
+            force_ignore_mocks: (!config.ignore_mocks).then_some(false),
+            force_include_ignored: config.include_ignored.then_some(true),
+        }
+    }
 }
 
 /// An evaluated architectural policy violation.
@@ -262,7 +386,7 @@ pub struct PolicyConfig {
 pub struct PolicyViolation {
     /// Name of the violated rule
     pub rule_name: String,
-    /// Category of rule ("boundary", "zero_duplication", "limit", "prohibited_pattern", "zero_emojis", "token_budget")
+    /// Category of rule ("boundary", "zero_duplication", "limit", "prohibited_pattern", "zero_emojis", "token_budget", "line_budget")
     pub rule_type: String,
     /// Severity level
     pub severity: PolicySeverity,
@@ -284,6 +408,12 @@ pub struct PolicyViolation {
     pub cluster_id: Option<usize>,
     /// Number of matching tokens in the violating fragment
     pub token_count: usize,
+    /// Actual file line count when applicable (line_budget / token_budget violations)
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub line_count: Option<usize>,
+    /// Maximum allowed file line count when applicable (line_budget violations)
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max_lines: Option<usize>,
     /// Code/text snippet where violation occurred
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub snippet: Option<String>,
@@ -307,6 +437,8 @@ impl Default for PolicyViolation {
             end_line_b: None,
             cluster_id: None,
             token_count: 0,
+            line_count: None,
+            max_lines: None,
             snippet: None,
             remediation: None,
         }
