@@ -5,6 +5,12 @@ All notable changes to **CDDM** (_Code De-Duplication Meister_) will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.13.1] - 2026-11-26
+
+### Bug Fixes
+
+- **policy**: traverse hidden dot-directories in prohibited pattern and zero-emoji checks (`b6548fc`)
+
 ## [4.13.0] - 2026-11-26
 
 ### Features
