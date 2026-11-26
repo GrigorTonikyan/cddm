@@ -1,9 +1,9 @@
 #![forbid(unsafe_code)]
 
 use super::compiled::path_matches_glob;
+use super::walk::policy_walker;
 use crate::ast::parser::{get_tree_sitter_language, parse_ast_tree};
 use crate::types::{PolicyViolation, ProhibitedPatternRule};
-use ignore::WalkBuilder;
 use ignore::gitignore::{Gitignore, GitignoreBuilder};
 use regex::Regex;
 use std::collections::HashSet;
@@ -82,24 +82,6 @@ impl CompiledProhibitedPattern {
     }
 }
 
-fn is_system_ignored_dir(name: &str) -> bool {
-    matches!(
-        name,
-        ".git"
-            | "node_modules"
-            | "target"
-            | "dist"
-            | "out"
-            | "coverage"
-            | ".vscode"
-            | ".cddm"
-            | "packaging"
-            | ".cache"
-            | ".vite"
-            | ".vite-hooks"
-    )
-}
-
 /// Evaluates all compiled prohibited pattern rules against files under `root_dir`.
 pub fn evaluate_prohibited_patterns(
     root_dir: &Path,
@@ -110,10 +92,7 @@ pub fn evaluate_prohibited_patterns(
     }
 
     let mut violations = Vec::new();
-    let walker = WalkBuilder::new(root_dir)
-        .hidden(true)
-        .git_ignore(true)
-        .build();
+    let walker = policy_walker(root_dir, true, &[]);
 
     let mut visited_paths = HashSet::new();
 
@@ -125,16 +104,6 @@ pub fn evaluate_prohibited_patterns(
 
         let path = entry.path();
         if !path.is_file() {
-            continue;
-        }
-
-        let is_in_ignored = path.components().any(|c| {
-            c.as_os_str()
-                .to_str()
-                .map(is_system_ignored_dir)
-                .unwrap_or(false)
-        });
-        if is_in_ignored {
             continue;
         }
 
@@ -265,6 +234,51 @@ mod tests {
         let compiled = CompiledProhibitedPattern::compile(&rule).expect("compile failed");
         assert!(compiled.matches_path(Path::new("src/index.ts")));
         assert!(!compiled.matches_path(Path::new("src/index.test.ts")));
+    }
+
+    #[test]
+    fn test_hidden_directories_are_evaluated() {
+        let temp_dir = tempfile::tempdir().expect("Failed to create tempdir");
+        let root = temp_dir.path();
+        let line = "NODE_TLS_REJECT_UNAUTHORIZED=0\n";
+        for rel in [
+            ".gitea/workflows/ci.yaml",
+            ".agents/rules/sample.md",
+            ".env.example",
+            "node_modules/x/.gitea/workflows/ci.yaml",
+            ".git/config.yaml",
+        ] {
+            let p = root.join(rel);
+            std::fs::create_dir_all(p.parent().expect("parent")).expect("mkdir");
+            std::fs::write(&p, line).expect("write");
+        }
+
+        let rule = ProhibitedPatternRule {
+            name: "no-tls-bypass".to_string(),
+            description: None,
+            pattern: "NODE_TLS_REJECT_UNAUTHORIZED=0".to_string(),
+            pattern_type: "regex".to_string(),
+            include: vec![
+                ".gitea/workflows/*.yaml".to_string(),
+                ".agents/**/*.md".to_string(),
+                ".env.example".to_string(),
+            ],
+            exclude: vec![],
+            severity: PolicySeverity::Error,
+            remediation: None,
+        };
+        let compiled = CompiledProhibitedPattern::compile(&rule).expect("compile failed");
+        let violations = evaluate_prohibited_patterns(root, &[compiled]);
+        let mut files: Vec<String> = violations.iter().map(|v| v.file_a.clone()).collect();
+        files.sort();
+        assert_eq!(
+            files,
+            vec![
+                ".agents/rules/sample.md",
+                ".env.example",
+                ".gitea/workflows/ci.yaml"
+            ]
+        );
     }
 
     #[test]

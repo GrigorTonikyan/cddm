@@ -9,6 +9,7 @@ pub mod forbidden_files;
 pub mod patterns;
 pub mod route_docs;
 pub mod sync;
+pub mod walk;
 
 pub use budgets::{
     CompiledTokenBudget, count_content_lines, count_file_tokens, evaluate_token_budgets,
