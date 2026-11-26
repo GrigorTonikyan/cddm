@@ -1,7 +1,7 @@
 #![forbid(unsafe_code)]
 
+use super::walk::policy_walker;
 use crate::types::{PolicySeverity, PolicyViolation};
-use ignore::WalkBuilder;
 use std::collections::HashSet;
 use std::path::Path;
 
@@ -64,34 +64,13 @@ fn is_ignored_extension(ext: &str) -> bool {
     )
 }
 
-fn is_ignored_directory(name: &str) -> bool {
-    matches!(
-        name,
-        ".git"
-            | "node_modules"
-            | "target"
-            | "dist"
-            | "out"
-            | "coverage"
-            | ".vscode"
-            | ".cddm"
-            | "packaging"
-            | ".cache"
-            | ".vite"
-            | ".vite-hooks"
-            | "test-results"
-            | "playwright-report"
-            | "blob-report"
-    )
-}
+/// Additional report directories skipped by the zero-emoji policy.
+const EMOJI_EXTRA_IGNORED_DIRS: &[&str] = &["test-results", "playwright-report", "blob-report"];
 
 /// Evaluates zero-emoji policy across all repository files under `root_dir`.
 pub fn evaluate_zero_emoji(root_dir: &Path) -> Vec<PolicyViolation> {
     let mut violations = Vec::new();
-    let walker = WalkBuilder::new(root_dir)
-        .hidden(true)
-        .git_ignore(true)
-        .build();
+    let walker = policy_walker(root_dir, true, EMOJI_EXTRA_IGNORED_DIRS);
 
     let mut visited_paths = HashSet::new();
 
@@ -103,17 +82,6 @@ pub fn evaluate_zero_emoji(root_dir: &Path) -> Vec<PolicyViolation> {
 
         let path = entry.path();
         if !path.is_file() {
-            continue;
-        }
-
-        // Check if inside any ignored directory component
-        let is_in_ignored_dir = path.components().any(|c| {
-            c.as_os_str()
-                .to_str()
-                .map(is_ignored_directory)
-                .unwrap_or(false)
-        });
-        if is_in_ignored_dir {
             continue;
         }
 
@@ -175,6 +143,35 @@ pub fn evaluate_zero_emoji(root_dir: &Path) -> Vec<PolicyViolation> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_hidden_directories_are_evaluated() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let root = dir.path();
+        let content = "hello \u{1F600}\n";
+        for rel in [
+            ".agents/rules/sample.md",
+            ".gitea/workflows/ci.yaml",
+            "node_modules/pkg/a.md",
+            "playwright-report/index.html",
+        ] {
+            let p = root.join(rel);
+            std::fs::create_dir_all(p.parent().expect("parent")).expect("mkdir");
+            std::fs::write(&p, content).expect("write");
+        }
+        let violations = evaluate_zero_emoji(root);
+        assert_eq!(violations.len(), 2);
+        assert!(
+            violations
+                .iter()
+                .any(|v| v.file_a.contains(".agents/rules/sample.md"))
+        );
+        assert!(
+            violations
+                .iter()
+                .any(|v| v.file_a.contains(".gitea/workflows/ci.yaml"))
+        );
+    }
 
     #[test]
     fn test_is_emoji_char() {

@@ -1,8 +1,8 @@
 #![forbid(unsafe_code)]
 
 use super::compiled::path_matches_glob;
+use super::walk::policy_walker;
 use crate::types::{ForbiddenFileRule, PolicyViolation};
-use ignore::WalkBuilder;
 use ignore::gitignore::{Gitignore, GitignoreBuilder};
 use std::path::Path;
 
@@ -46,24 +46,6 @@ impl CompiledForbiddenFile {
     }
 }
 
-fn is_system_ignored_dir(name: &str) -> bool {
-    matches!(
-        name,
-        ".git"
-            | "node_modules"
-            | "target"
-            | "dist"
-            | "out"
-            | "coverage"
-            | ".vscode"
-            | ".cddm"
-            | "packaging"
-            | ".cache"
-            | ".vite"
-            | ".vite-hooks"
-    )
-}
-
 /// Evaluates forbidden files across all entries under `root_dir`.
 pub fn evaluate_forbidden_files(
     root_dir: &Path,
@@ -75,18 +57,7 @@ pub fn evaluate_forbidden_files(
 
     let mut violations = Vec::new();
 
-    let walker = WalkBuilder::new(root_dir)
-        .hidden(false)
-        .git_ignore(false)
-        .filter_entry(|entry| {
-            if entry.file_type().is_some_and(|ft| ft.is_dir())
-                && let Some(name) = entry.file_name().to_str()
-            {
-                return !is_system_ignored_dir(name);
-            }
-            true
-        })
-        .build();
+    let walker = policy_walker(root_dir, false, &[]);
 
     for entry_res in walker {
         let entry = match entry_res {
