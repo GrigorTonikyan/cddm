@@ -6,11 +6,13 @@ use super::emoji::evaluate_zero_emoji;
 use super::eval::evaluate_scan_policies;
 use super::forbidden_files::{CompiledForbiddenFile, evaluate_forbidden_files};
 use super::patterns::{CompiledProhibitedPattern, evaluate_prohibited_patterns};
+use super::quality_gates::{evaluate_quality_gates, validate_percentage};
 use super::route_docs::evaluate_route_docs_policies;
 use super::sync::evaluate_sync_rules;
+use crate::cache::find_workspace_root;
 use crate::types::{
-    PolicyConfig, PolicyEvaluationOptions, PolicyEvaluationResult, PolicySeverity, RouteDocsPolicy,
-    ScanResult, SyncRule, TokenBudgetRule,
+    DEFAULT_RULES_FILE, PolicyConfig, PolicyEvaluationOptions, PolicyEvaluationResult,
+    RouteDocsPolicy, ScanResult, SyncRule, TokenBudgetRule,
 };
 use ignore::gitignore::GitignoreBuilder;
 use std::path::Path;
@@ -126,6 +128,15 @@ impl PolicyEngine {
             route_docs_policies.push(rds.clone());
         }
 
+        if let Some(ref scan) = config.scan {
+            if let Some(max_dup) = scan.max_duplication_pct {
+                validate_percentage("scan.max_duplication_pct", max_dup)?;
+            }
+            if let Some(min_dry) = scan.min_dry_score {
+                validate_percentage("scan.min_dry_score", min_dry)?;
+            }
+        }
+
         if config.raw_toml.is_none() {
             config.raw_toml = toml::to_string_pretty(&config).ok();
         }
@@ -174,6 +185,22 @@ impl PolicyEngine {
         content.parse::<Self>()
     }
 
+    /// Discovers `.cddmrules.toml` from an explicit path, `directory`, or workspace root.
+    pub fn discover(directory: &Path, explicit: Option<&Path>) -> Self {
+        if let Some(p) = explicit {
+            return Self::from_file(p).unwrap_or_else(|_| Self::empty());
+        }
+        let dir_rules = directory.join(DEFAULT_RULES_FILE);
+        if dir_rules.exists() {
+            return Self::from_file(&dir_rules).unwrap_or_else(|_| Self::empty());
+        }
+        let ws_rules = find_workspace_root(directory).join(DEFAULT_RULES_FILE);
+        if ws_rules.exists() {
+            return Self::from_file(&ws_rules).unwrap_or_else(|_| Self::empty());
+        }
+        Self::empty()
+    }
+
     /// Parses raw TOML text into a `PolicyConfig` record.
     pub fn parse_rules_content(content: &str) -> Result<PolicyConfig, String> {
         toml::from_str::<PolicyConfig>(content)
@@ -198,6 +225,11 @@ impl PolicyEngine {
             &self.compiled_limits,
         );
 
+        if let Some(thresholds) = self.config.quality_gates() {
+            eval.violations
+                .extend(evaluate_quality_gates(scan_result, &thresholds));
+        }
+
         let target_dir_str = scan_result.target_directory.as_deref().unwrap_or(".");
         let target_path = Path::new(target_dir_str);
 
@@ -220,8 +252,8 @@ impl PolicyEngine {
                 let budget_violations = evaluate_token_budgets_with_options(
                     target_path,
                     &self.compiled_token_budgets,
-                    self.config.ignore_tests,
-                    self.config.ignore_mocks,
+                    self.config.effective_ignore_tests(),
+                    self.config.effective_ignore_mocks(),
                     self.config.include_ignored,
                     options,
                 );
@@ -247,27 +279,9 @@ impl PolicyEngine {
                     evaluate_route_docs_policies(target_path, &self.route_docs_policies);
                 eval.violations.extend(route_violations);
             }
-
-            // Recalculate aggregation metrics
-            eval.total_violations = eval.violations.len();
-            eval.error_count = eval
-                .violations
-                .iter()
-                .filter(|v| v.severity == PolicySeverity::Error)
-                .count();
-            eval.warning_count = eval
-                .violations
-                .iter()
-                .filter(|v| v.severity == PolicySeverity::Warning)
-                .count();
-            eval.info_count = eval
-                .violations
-                .iter()
-                .filter(|v| v.severity == PolicySeverity::Info)
-                .count();
-            eval.passed = eval.error_count == 0;
         }
 
+        eval.recount();
         eval
     }
 
@@ -378,6 +392,19 @@ impl PolicyEngine {
 # target_regex = 'APP_VERSION\s*=\s*"([^"]+)"'
 # severity = "error"
 # remediation = "Update target constant to match package.json version"
+
+# [scan]
+# Enforces repository-wide duplication, DRY score thresholds, and Type-4 toggle during `cddm rules check`.
+# [scan]
+# max_duplication_pct = 5.0
+# min_dry_score = 90.0
+# detect_type4 = true
+
+# [dead_code]
+# Enforces dead-code finding limits during `cddm dead-code` and `cddm rules check`.
+# [dead_code]
+# fail_on_findings = true
+# max_items = 0
 
 # [route_docs_sync]
 # Ensures all discovered framework routes (Next.js, Astro, etc.) are documented in Markdown.

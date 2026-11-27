@@ -1,7 +1,7 @@
 # CDDM — Exhaustive Feature Matrix & Test Verification Record
 
 > Every feature variant maps to a real test with actual file paths and empirically verified results.
-> Last verified: 2026-08-27 | Rust: 426 #[test] units | WebUI: 336 tests across 78 suites | Scripts & MCP: 263 tests across 68 suites | CI Workflows: PASS
+> Last verified: 2026-08-27 | Rust: 438 #[test] units | WebUI: 340 tests across 79 suites | Scripts & MCP: 266 tests across 68 suites | CI Workflows: PASS
 
 ---
 
@@ -358,7 +358,7 @@
 
 ---
 
-## 2. WebUI Frontend — React 19 + TypeScript + Vitest (336 unit tests across 78 suites)
+## 2. WebUI Frontend — React 19 + TypeScript + Vitest (340 unit tests across 79 suites)
 
 | Module                      | Test Suite File                                                                       | Test Cases | Status |
 | :-------------------------- | :------------------------------------------------------------------------------------ | :--------- | :----- |
@@ -368,7 +368,7 @@
 | Clone Pair Diff Modal       | `webui/src/components/ClonePairDiffModal.test.tsx`                                    | 4 tests    | PASS   |
 | Code Editor Modal           | `webui/src/components/CodeEditorModal.test.tsx`                                       | 5 tests    | PASS   |
 | Coverage Correlation Modal  | `webui/src/components/CoverageCorrelationModal.test.tsx`                              | 4 tests    | PASS   |
-| Dead Code Explorer Modal    | `webui/src/components/DeadCodeExplorerModal.test.tsx`                                 | 7 tests    | PASS   |
+| Dead Code Explorer Modal    | `webui/src/components/DeadCodeExplorerModal.test.tsx`                                 | 8 tests    | PASS   |
 | Diff Scan Results Modal     | `webui/src/components/DiffScanResultsModal.test.tsx`                                  | 6 tests    | PASS   |
 | Diff Viewer                 | `webui/src/components/DiffViewer.test.tsx`                                            | 3 tests    | PASS   |
 | Duplication Treemap         | `webui/src/components/DuplicationTreemap.test.tsx`                                    | 3 tests    | PASS   |
@@ -394,8 +394,9 @@
 | Cache Pack Card             | `webui/src/components/config/CachePackCard.test.tsx`                                  | 2 tests    | PASS   |
 | Editor Surface              | `webui/src/components/editor/EditorSurface.test.tsx`                                  | 3 tests    | PASS   |
 | Editor Toolbar              | `webui/src/components/editor/EditorToolbar.test.tsx`                                  | 4 tests    | PASS   |
+| Quality Gates Panel         | `webui/src/components/policy/QualityGatesPanel.test.tsx`                              | 2 tests    | PASS   |
 | Extract Module Tab          | `webui/src/components/sandbox/ExtractModuleTab.test.tsx`                              | 3 tests    | PASS   |
-| Dead Code Studio View       | `webui/src/components/scan-results/DeadCodeStudioView.test.tsx`                       | 4 tests    | PASS   |
+| Dead Code Studio View       | `webui/src/components/scan-results/DeadCodeStudioView.test.tsx`                       | 5 tests    | PASS   |
 | Policy Violations Banner    | `webui/src/components/scan-results/PolicyViolationsBanner.test.tsx`                   | 2 tests    | PASS   |
 | Summary Banner              | `webui/src/components/scan-results/SummaryBanner.test.tsx`                            | 3 tests    | PASS   |
 | Cross Language Explorer Tab | `webui/src/components/semantic/CrossLanguageExplorerTab.test.tsx`                     | 3 tests    | PASS   |
@@ -443,7 +444,7 @@
 
 ---
 
-## 3. Repository Scripts & MCP Protocol — Bun Test Suites (263 tests across 68 suites)
+## 3. Repository Scripts & MCP Protocol — Bun Test Suites (266 tests across 68 suites)
 
 ### Repository Tooling & Automation Suites
 
@@ -491,12 +492,12 @@
 | MCP Dynamic Discovery               | `tests/mcp/discovery.test.ts`                      | 6 tests    | PASS   |
 | Tool: cddm_apply_cluster_refactor   | `tests/mcp/tools/apply-cluster-refactor.test.ts`   | 3 tests    | PASS   |
 | Tool: cddm_ast_refactor             | `tests/mcp/tools/ast-refactor.test.ts`             | 2 tests    | PASS   |
-| Tool: cddm_check_policies           | `tests/mcp/tools/check-policies.test.ts`           | 5 tests    | PASS   |
+| Tool: cddm_check_policies           | `tests/mcp/tools/check-policies.test.ts`           | 6 tests    | PASS   |
 | Tool: cddm_check_suppression        | `tests/mcp/tools/check-suppression.test.ts`        | 2 tests    | PASS   |
 | Tool: cddm_compare_semantic_graphs  | `tests/mcp/tools/compare-semantic-graphs.test.ts`  | 2 tests    | PASS   |
 | Tool: cddm_correlate_coverage       | `tests/mcp/tools/correlate-coverage.test.ts`       | 3 tests    | PASS   |
 | Tool: cddm_detect_dead_clones       | `tests/mcp/tools/detect-dead-clones.test.ts`       | 2 tests    | PASS   |
-| Tool: cddm_detect_dead_code         | `tests/mcp/tools/detect-dead-code.test.ts`         | 5 tests    | PASS   |
+| Tool: cddm_detect_dead_code         | `tests/mcp/tools/detect-dead-code.test.ts`         | 6 tests    | PASS   |
 | Tool: cddm_detect_overlap           | `tests/mcp/tools/detect-overlap.test.ts`           | 3 tests    | PASS   |
 | Tool: cddm_diff_matrix              | `tests/mcp/tools/diff-matrix.test.ts`              | 3 tests    | PASS   |
 | Tool: cddm_diff_scan                | `tests/mcp/tools/diff-scan.test.ts`                | 3 tests    | PASS   |
@@ -512,7 +513,7 @@
 | Tool: cddm_heal_refactor            | `tests/mcp/tools/heal-refactor.test.ts`            | 3 tests    | PASS   |
 | Tool: cddm_import_cache_pack        | `tests/mcp/tools/import-cache-pack.test.ts`        | 2 tests    | PASS   |
 | Tool: cddm_prune_dead_clones        | `tests/mcp/tools/prune-dead-clones.test.ts`        | 2 tests    | PASS   |
-| Tool: cddm_scan_codebase            | `tests/mcp/tools/scan-codebase.test.ts`            | 8 tests    | PASS   |
+| Tool: cddm_scan_codebase            | `tests/mcp/tools/scan-codebase.test.ts`            | 9 tests    | PASS   |
 | Tool: cddm_scan_cross_language      | `tests/mcp/tools/scan-cross-language.test.ts`      | 2 tests    | PASS   |
 | Tool: cddm_scan_hub                 | `tests/mcp/tools/scan-hub.test.ts`                 | 3 tests    | PASS   |
 | Tool: cddm_scan_monorepo            | `tests/mcp/tools/scan-monorepo.test.ts`            | 4 tests    | PASS   |

@@ -24,8 +24,10 @@ use ratatui::Terminal;
 use ratatui::backend::CrosstermBackend;
 use ratatui::layout::{Constraint, Direction, Layout};
 
+use cddm_core::dead_code::{DeadCodeConfig, run_dead_code_detection};
 use cddm_core::detector::run_scan;
 use cddm_core::types::ScanConfig;
+use cddm_core::{DeadCodeGate, PolicyEngine, apply_dead_code_gate};
 
 use crate::tui::app::TuiApp;
 use crate::tui::components::help_modal::render_help_modal;
@@ -39,6 +41,7 @@ pub async fn run_tui(
     min_tokens: usize,
     watch: bool,
     fail_threshold: Option<f64>,
+    min_dry_score: Option<f64>,
     languages: Vec<String>,
     ignore: Vec<String>,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -76,8 +79,21 @@ pub async fn run_tui(
     let initial_res = run_scan(config.clone(), tx, cancel.clone()).await;
 
     let mut app = TuiApp::new(directory.clone(), config.clone(), fail_threshold, watch);
+    app.min_dry_score = min_dry_score;
     if let Ok(res) = initial_res {
         app.set_scan_result(res);
+    }
+
+    let dc_config = DeadCodeConfig {
+        directory: directory.display().to_string(),
+        ..Default::default()
+    };
+    if let Ok(mut dc_summary) = run_dead_code_detection(dc_config).await {
+        let engine = PolicyEngine::discover(&directory, None);
+        if let Some(gate) = DeadCodeGate::resolve(false, None, engine.config().dead_code.as_ref()) {
+            apply_dead_code_gate(&mut dc_summary, &gate);
+        }
+        app.dead_code_summary = Some(dc_summary);
     }
 
     // 4. Start Event Stream

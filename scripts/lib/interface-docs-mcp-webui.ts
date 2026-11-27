@@ -29,7 +29,8 @@ export const MCP_TOOLS_CATALOG: McpToolDef[] = [
     name: "scan_codebase",
     category: "Core Scan",
     summary: "Runs full polyglot duplicate code clone detection & DRY scoring",
-    keyParams: "directory, min_tokens, languages, ignore_patterns, ignore_tests, ignore_mocks",
+    keyParams:
+      "directory, min_tokens, languages, ignore_patterns, ignore_tests, ignore_mocks, min_dry_score, max_duplication_pct",
   },
   {
     name: "cddm_diff_scan",
@@ -198,7 +199,7 @@ export const MCP_TOOLS_CATALOG: McpToolDef[] = [
     name: "cddm_detect_dead_code",
     category: "Dead Code",
     summary: "Detects unreferenced functions, dead blocks, and orphan clones",
-    keyParams: "directory, min_tokens, static_only",
+    keyParams: "directory, min_tokens, static_only, fail_on_findings, max_items",
   },
   {
     name: "cddm_prune_dead_clones",

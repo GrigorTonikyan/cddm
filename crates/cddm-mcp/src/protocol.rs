@@ -121,6 +121,10 @@ pub mod mcp_tools {
     pub const PARAM_BRANCH_NAME: &str = "branch_name";
     pub const PARAM_CREATE_BRANCH: &str = "create_branch";
     pub const PARAM_INCLUDE_WIDGET: &str = "include_widget";
+    pub const PARAM_MIN_DRY_SCORE: &str = "min_dry_score";
+    pub const PARAM_MAX_DUPLICATION_PCT: &str = "max_duplication_pct";
+    pub const PARAM_FAIL_ON_FINDINGS: &str = "fail_on_findings";
+    pub const PARAM_MAX_ITEMS: &str = "max_items";
 }
 
 macro_rules! define_mcp_constants {

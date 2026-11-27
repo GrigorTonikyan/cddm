@@ -1,9 +1,12 @@
 #![forbid(unsafe_code)]
 
 use cddm_core::dead_code::{DeadCodeConfig, run_dead_code_detection};
+use cddm_core::{DeadCodeGate, PolicyEngine, apply_dead_code_gate};
 use serde_json::Value;
 
-use crate::protocol::{JsonRpcResponse, make_error_response, make_text_response, rpc_errors};
+use crate::protocol::{
+    JsonRpcResponse, make_error_response, make_text_response, mcp_tools, rpc_errors,
+};
 
 /// Handle tool `cddm_detect_dead_code`: finds unreferenced functions, unreachable blocks, and dead clones.
 pub async fn handle_detect_dead_code(id: Option<Value>, args: Option<&Value>) -> JsonRpcResponse {
@@ -15,6 +18,16 @@ pub async fn handle_detect_dead_code(id: Option<Value>, args: Option<&Value>) ->
     let include_ignored = args
         .and_then(|a| a.get("include_ignored"))
         .and_then(|b| b.as_bool());
+    let fail_on_findings =
+        crate::tools::helpers::get_bool_param(args, mcp_tools::PARAM_FAIL_ON_FINDINGS, false);
+    let max_items = crate::tools::helpers::get_usize_arg(args, mcp_tools::PARAM_MAX_ITEMS);
+
+    let engine = PolicyEngine::discover(std::path::Path::new(directory), None);
+    let gate = DeadCodeGate::resolve(
+        fail_on_findings,
+        max_items,
+        engine.config().dead_code.as_ref(),
+    );
 
     let config = DeadCodeConfig {
         directory: directory.to_string(),
@@ -28,7 +41,10 @@ pub async fn handle_detect_dead_code(id: Option<Value>, args: Option<&Value>) ->
     };
 
     match run_dead_code_detection(config).await {
-        Ok(summary) => {
+        Ok(mut summary) => {
+            if let Some(ref gate_spec) = gate {
+                apply_dead_code_gate(&mut summary, gate_spec);
+            }
             if crate::tools::helpers::is_summary_requested(args) {
                 let compact = cddm_core::CompactDeadCodeSummary::from_summary(&summary, 5);
                 crate::tools::helpers::make_json_payload_response(id, &compact)

@@ -4,6 +4,7 @@ pub mod clone;
 pub mod compact;
 pub mod diff;
 pub mod policy;
+pub mod quality_gates;
 pub mod refactor;
 pub mod scan;
 pub mod suppression;
@@ -20,6 +21,7 @@ pub use policy::{
     PolicyEvaluationOptions, PolicyEvaluationResult, PolicySeverity, PolicyViolation,
     ProhibitedPatternRule, RouteDocsPolicy, SyncRule, TokenBudgetRule, ZeroDuplicationRule,
 };
+pub use quality_gates::{DeadCodeGateResult, DeadCodePolicy, ScanPolicy};
 pub use refactor::{
     ApplyRefactorBranchRequest, ApplyRefactorBranchResult, AstRewriteResult, AstRewrittenFile,
     InferredParameter, RefactorSandboxRequest, RefactorSandboxResult, VerifyRefactorRequest,
@@ -399,6 +401,8 @@ mod tests {
         assert_serde_roundtrip(&limit);
 
         let config = PolicyConfig {
+            scan: None,
+            dead_code: None,
             boundaries: vec![boundary],
             zero_duplication: vec![zero_dup],
             limits: vec![limit],

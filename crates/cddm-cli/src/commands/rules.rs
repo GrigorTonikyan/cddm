@@ -3,28 +3,12 @@
 use crate::formatters::print_sarif_report;
 use crate::types::{OutputFormat, RulesAction};
 use cddm_core::{
-    DEFAULT_RULES_FILE, PolicyEngine, PolicyEvaluationOptions, PolicySeverity, ScanConfig,
-    find_workspace_root, run_scan,
+    PolicyEngine, PolicyEvaluationOptions, PolicySeverity, ScanConfig, evaluate_dead_code_policy,
+    run_scan,
 };
 use std::fs;
-use std::path::Path;
 use std::sync::{Arc, atomic::AtomicBool};
 use tokio::sync::mpsc;
-
-fn load_rules_engine(rules: Option<&Path>, directory: &Path) -> PolicyEngine {
-    if let Some(p) = rules {
-        return PolicyEngine::from_file(p).unwrap_or_else(|_| PolicyEngine::empty());
-    }
-    let root_p = directory.join(DEFAULT_RULES_FILE);
-    if root_p.exists() {
-        return PolicyEngine::from_file(&root_p).unwrap_or_else(|_| PolicyEngine::empty());
-    }
-    let ws_p = find_workspace_root(directory).join(DEFAULT_RULES_FILE);
-    if ws_p.exists() {
-        return PolicyEngine::from_file(&ws_p).unwrap_or_else(|_| PolicyEngine::empty());
-    }
-    PolicyEngine::empty()
-}
 
 pub async fn run_rules_command(action: RulesAction) -> Result<(), Box<dyn std::error::Error>> {
     match action {
@@ -65,7 +49,7 @@ pub async fn run_rules_command(action: RulesAction) -> Result<(), Box<dyn std::e
             no_ignore_mocks,
             ignore_generated,
         } => {
-            let engine = load_rules_engine(rules.as_deref(), &directory);
+            let engine = PolicyEngine::discover(&directory, rules.as_deref());
             let force_ignore_tests = if no_ignore_tests {
                 Some(false)
             } else {
@@ -79,16 +63,16 @@ pub async fn run_rules_command(action: RulesAction) -> Result<(), Box<dyn std::e
             let force_include_ignored = include_ignored.then_some(true);
 
             let effective_ignore_tests = force_ignore_tests
-                .or(engine.config().ignore_tests)
+                .or(engine.config().effective_ignore_tests())
                 .unwrap_or(true);
             let effective_ignore_mocks = force_ignore_mocks
-                .or(engine.config().ignore_mocks)
+                .or(engine.config().effective_ignore_mocks())
                 .unwrap_or(true);
             let effective_include_ignored = force_include_ignored
                 .or(engine.config().include_ignored)
                 .unwrap_or(false);
 
-            let config = ScanConfig {
+            let mut config = ScanConfig {
                 directory: directory.to_string_lossy().to_string(),
                 min_tokens,
                 rules_path: rules.as_ref().map(|p| p.to_string_lossy().to_string()),
@@ -99,10 +83,20 @@ pub async fn run_rules_command(action: RulesAction) -> Result<(), Box<dyn std::e
                 include_ignored: effective_include_ignored,
                 ..Default::default()
             };
+            if let Some(ref scan_policy) = engine.config().scan {
+                scan_policy.apply_to(&mut config);
+            }
 
             let (tx, _rx) = mpsc::channel(100);
             let cancel_flag = Arc::new(AtomicBool::new(false));
-            let result = run_scan(config, tx, cancel_flag).await?;
+            let mut result = run_scan(config.clone(), tx, cancel_flag).await?;
+            let dead_violations = evaluate_dead_code_policy(
+                &config.directory,
+                engine.config(),
+                effective_include_ignored,
+            )
+            .await?;
+            result.policy_violations.extend(dead_violations.clone());
 
             match format {
                 OutputFormat::Console => {
@@ -166,7 +160,8 @@ pub async fn run_rules_command(action: RulesAction) -> Result<(), Box<dyn std::e
                         force_ignore_mocks,
                         force_include_ignored,
                     };
-                    let eval_res = engine.evaluate_with_options(&result, &eval_opts);
+                    let mut eval_res = engine.evaluate_with_options(&result, &eval_opts);
+                    eval_res.push_violations(dead_violations);
                     if summary {
                         let compact = cddm_core::CompactPolicyResult::from_evaluation(&eval_res, 5);
                         println!("{}", serde_json::to_string_pretty(&compact)?);

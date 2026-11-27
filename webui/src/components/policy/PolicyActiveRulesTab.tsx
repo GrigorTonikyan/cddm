@@ -1,6 +1,7 @@
 import React from "react";
 import type { PolicyConfig, PolicySeverity } from "../../types/cddm-types";
 import { PolicyBudgetSection } from "./PolicyBudgetSection";
+import { QualityGatesPanel } from "./QualityGatesPanel";
 import { Ban, BookOpen, FileX, Layers, RefreshCw, ShieldCheck, Sliders, Smile } from "lucide-react";
 
 export interface PolicyActiveRulesTabProps {
@@ -18,6 +19,8 @@ export const PolicyActiveRulesTab: React.FC<PolicyActiveRulesTabProps> = ({
 }) => {
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-6">
+      <QualityGatesPanel policyConfig={policyConfig} />
+
       <div>
         <h3 className="text-sm font-semibold text-slate-200 flex items-center gap-2 mb-3">
           <Layers className="w-4 h-4 text-indigo-400" />

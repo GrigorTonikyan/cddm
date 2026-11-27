@@ -6,22 +6,62 @@ use super::helpers::{
 use crate::protocol::{
     JsonRpcResponse, make_error_response, make_text_response, mcp_tools, rpc_errors,
 };
-use cddm_core::{ScanConfig, generate_sarif_json, run_diff_scan};
+use cddm_core::{
+    PolicySeverity, QualityGateThresholds, ScanConfig, evaluate_quality_gates, generate_sarif_json,
+    run_diff_scan, validate_percentage,
+};
 use std::path::Path;
 use std::sync::{Arc, atomic::AtomicBool};
 use tokio::sync::mpsc;
+
+fn parse_optional_percentage(
+    args: Option<&serde_json::Value>,
+    key: &str,
+) -> Result<Option<f64>, String> {
+    let Some(val) = args.and_then(|a| a.get(key)) else {
+        return Ok(None);
+    };
+    if val.is_null() {
+        return Ok(None);
+    }
+    let num = val
+        .as_f64()
+        .ok_or_else(|| format!("Invalid '{key}': expected number between 0.0 and 100.0"))?;
+    validate_percentage(key, num).map(Some)
+}
 
 pub async fn handle_scan_codebase(
     id: Option<serde_json::Value>,
     args: Option<&serde_json::Value>,
 ) -> JsonRpcResponse {
+    let min_dry_score = match parse_optional_percentage(args, mcp_tools::PARAM_MIN_DRY_SCORE) {
+        Ok(v) => v,
+        Err(msg) => return make_error_response(id, rpc_errors::INVALID_PARAMS, msg),
+    };
+    let max_duplication_pct =
+        match parse_optional_percentage(args, mcp_tools::PARAM_MAX_DUPLICATION_PCT) {
+            Ok(v) => v,
+            Err(msg) => return make_error_response(id, rpc_errors::INVALID_PARAMS, msg),
+        };
+
     let git_blame = args
         .and_then(|a| a.get(mcp_tools::PARAM_ENABLE_GIT_BLAME))
         .and_then(|b| b.as_bool())
         .unwrap_or(false);
 
     match run_scan_from_mcp_args(args, git_blame).await {
-        Ok(scan_res) => {
+        Ok(mut scan_res) => {
+            if min_dry_score.is_some() || max_duplication_pct.is_some() {
+                let thresholds = QualityGateThresholds {
+                    max_duplication_pct,
+                    min_dry_score,
+                    severity: PolicySeverity::Error,
+                    remediation: None,
+                };
+                scan_res
+                    .policy_violations
+                    .extend(evaluate_quality_gates(&scan_res, &thresholds));
+            }
             if crate::tools::helpers::is_summary_requested(args) {
                 let compact = cddm_core::CompactScanResult::from_scan_result(&scan_res, 5);
                 make_json_payload_response(id, &compact)

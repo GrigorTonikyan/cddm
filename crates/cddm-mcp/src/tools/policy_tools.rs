@@ -5,8 +5,8 @@ use crate::protocol::{
     JsonRpcResponse, make_error_response, make_text_response, mcp_tools, rpc_errors,
 };
 use cddm_core::{
-    DEFAULT_RULES_FILE, PolicyEngine, PolicyEvaluationOptions, ScanConfig, SuppressionEngine,
-    find_workspace_root, run_scan,
+    PolicyEngine, PolicyEvaluationOptions, ScanConfig, SuppressionEngine,
+    evaluate_dead_code_policy, run_scan,
 };
 use serde_json::json;
 use std::path::Path;
@@ -93,21 +93,7 @@ pub async fn handle_check_policies(
         .map(|s| s.to_string());
 
     let dir_path = Path::new(dir);
-    let engine = if let Some(ref p) = rules_path {
-        PolicyEngine::from_file(Path::new(p)).unwrap_or_else(|_| PolicyEngine::empty())
-    } else {
-        let root_path = dir_path.join(DEFAULT_RULES_FILE);
-        if root_path.exists() {
-            PolicyEngine::from_file(&root_path).unwrap_or_else(|_| PolicyEngine::empty())
-        } else {
-            let ws_path = find_workspace_root(dir_path).join(DEFAULT_RULES_FILE);
-            if ws_path.exists() {
-                PolicyEngine::from_file(&ws_path).unwrap_or_else(|_| PolicyEngine::empty())
-            } else {
-                PolicyEngine::empty()
-            }
-        }
-    };
+    let engine = PolicyEngine::discover(dir_path, rules_path.as_deref().map(Path::new));
 
     let explicit_ignore_tests = args
         .and_then(|a| a.get(mcp_tools::PARAM_IGNORE_TESTS))
@@ -121,16 +107,16 @@ pub async fn handle_check_policies(
     let ignore_generated = get_bool_arg(args, mcp_tools::PARAM_IGNORE_GENERATED, true);
 
     let effective_ignore_tests = explicit_ignore_tests
-        .or(engine.config().ignore_tests)
+        .or(engine.config().effective_ignore_tests())
         .unwrap_or(true);
     let effective_ignore_mocks = explicit_ignore_mocks
-        .or(engine.config().ignore_mocks)
+        .or(engine.config().effective_ignore_mocks())
         .unwrap_or(true);
     let effective_include_ignored = explicit_include_ignored
         .or(engine.config().include_ignored)
         .unwrap_or(false);
 
-    let config = ScanConfig {
+    let mut config = ScanConfig {
         directory: dir.to_string(),
         min_tokens,
         rules_path: rules_path.clone(),
@@ -141,6 +127,9 @@ pub async fn handle_check_policies(
         include_ignored: effective_include_ignored,
         ..Default::default()
     };
+    if let Some(ref scan_policy) = engine.config().scan {
+        scan_policy.apply_to(&mut config);
+    }
 
     let eval_opts = PolicyEvaluationOptions {
         ignore_tests: effective_ignore_tests,
@@ -156,7 +145,17 @@ pub async fn handle_check_policies(
 
     match run_scan(config, tx, cancel_flag).await {
         Ok(res) => {
-            let eval = engine.evaluate_with_options(&res, &eval_opts);
+            let mut eval = engine.evaluate_with_options(&res, &eval_opts);
+            match evaluate_dead_code_policy(dir, engine.config(), effective_include_ignored).await {
+                Ok(dead_violations) => eval.push_violations(dead_violations),
+                Err(err) => {
+                    return make_error_response(
+                        id,
+                        rpc_errors::INTERNAL_ERROR,
+                        format!("Dead code policy check failed during policy evaluation: {err}"),
+                    );
+                }
+            }
             if crate::tools::helpers::is_summary_requested(args) {
                 let compact = cddm_core::CompactPolicyResult::from_evaluation(&eval, 5);
                 crate::tools::helpers::make_json_payload_response(id, &compact)

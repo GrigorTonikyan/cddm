@@ -78,6 +78,7 @@ async fn run_app(cli: Cli) -> Result<(), Box<dyn std::error::Error>> {
                 args.output,
                 args.summary,
                 args.fail_threshold,
+                args.min_dry_score,
                 args.languages,
                 args.ignore,
                 args.git_blame,
@@ -275,6 +276,7 @@ async fn run_app(cli: Cli) -> Result<(), Box<dyn std::error::Error>> {
                 args.min_tokens,
                 args.watch,
                 args.fail_threshold,
+                args.min_dry_score,
                 args.languages,
                 args.ignore,
             )

@@ -5,6 +5,7 @@ use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use cddm_core::dead_code::{DeadCodeConfig, run_dead_code_detection};
+use cddm_core::{DeadCodeGate, PolicyEngine, apply_dead_code_gate};
 use serde_json::json;
 
 use super::types::{AppState, DeadCodePruneRequest, DeadCodeScanRequest};
@@ -57,8 +58,16 @@ pub async fn dead_code_scan_handler(
         "Received REST request for dead code scan"
     );
 
+    let directory = payload.directory.unwrap_or_else(|| ".".to_string());
+    let engine = PolicyEngine::discover(std::path::Path::new(&directory), None);
+    let gate = DeadCodeGate::resolve(
+        payload.fail_on_findings.unwrap_or(false),
+        payload.max_items,
+        engine.config().dead_code.as_ref(),
+    );
+
     let config = DeadCodeConfig {
-        directory: payload.directory.unwrap_or_else(|| ".".to_string()),
+        directory,
         min_tokens: payload.min_tokens.unwrap_or(30),
         static_only: payload.static_only.unwrap_or(false),
         report_path: payload.report_path,
@@ -68,12 +77,16 @@ pub async fn dead_code_scan_handler(
         include_ignored: payload.include_ignored,
     };
 
-    let summary = run_dead_code_detection(config).await.map_err(|err| {
+    let mut summary = run_dead_code_detection(config).await.map_err(|err| {
         (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(json!({ "error": format!("Dead code detection failed: {err}") })),
         )
     })?;
+
+    if let Some(ref gate_spec) = gate {
+        apply_dead_code_gate(&mut summary, gate_spec);
+    }
 
     Ok((StatusCode::OK, Json(summary)))
 }
@@ -89,12 +102,18 @@ pub async fn dead_code_get_handler(
         ..Default::default()
     };
 
-    let summary = run_dead_code_detection(config).await.map_err(|err| {
+    let mut summary = run_dead_code_detection(config).await.map_err(|err| {
         (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(json!({ "error": format!("Dead code analysis failed: {err}") })),
         )
     })?;
+
+    let engine = PolicyEngine::discover(std::path::Path::new("."), None);
+    if let Some(gate_spec) = DeadCodeGate::resolve(false, None, engine.config().dead_code.as_ref())
+    {
+        apply_dead_code_gate(&mut summary, &gate_spec);
+    }
 
     Ok((StatusCode::OK, Json(summary)))
 }

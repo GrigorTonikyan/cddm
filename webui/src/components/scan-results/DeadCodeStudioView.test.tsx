@@ -137,4 +137,22 @@ describe("DeadCodeStudioView", () => {
       }),
     );
   });
+
+  it("renders DeadCodeGateBadge when gate metadata is present", () => {
+    useCDDMStore.setState({
+      deadCodeSummary: {
+        ...mockDeadCodeSummary,
+        gate: {
+          passed: false,
+          total_dead_items: 3,
+          max_items: 0,
+          message: "Dead code gate failed: 3 item(s) exceed maximum 0",
+        },
+      },
+      isDeadCodeLoading: false,
+    });
+
+    render(<DeadCodeStudioView />);
+    expect(screen.getByText("[FAIL] Dead Code Gate (3 / 0)")).toBeDefined();
+  });
 });

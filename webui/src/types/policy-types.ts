@@ -168,9 +168,37 @@ export interface RouteDocsPolicy {
 }
 
 /**
+ * Repository-wide scan quality thresholds and detection toggles under `[scan]`.
+ */
+export interface ScanPolicy {
+  max_duplication_pct?: number;
+  min_dry_score?: number;
+  detect_type3?: boolean;
+  detect_type4?: boolean;
+  ignore_tests?: boolean;
+  ignore_mocks?: boolean;
+  severity?: PolicySeverity;
+  remediation?: string;
+}
+
+/**
+ * Dead-code failure gate configuration under `[dead_code]`.
+ */
+export interface DeadCodePolicy {
+  fail_on_findings?: boolean;
+  max_items?: number;
+  min_tokens?: number;
+  static_only?: boolean;
+  severity?: PolicySeverity;
+  remediation?: string;
+}
+
+/**
  * Complete architectural policy configuration.
  */
 export interface PolicyConfig {
+  scan?: ScanPolicy;
+  dead_code?: DeadCodePolicy;
   boundaries: BoundaryRule[];
   zero_duplication: ZeroDuplicationRule[];
   limits: LimitRule[];

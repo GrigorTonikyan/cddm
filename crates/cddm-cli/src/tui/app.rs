@@ -96,11 +96,13 @@ pub struct TuiApp {
     pub directory: PathBuf,
     pub config: ScanConfig,
     pub fail_threshold: Option<f64>,
+    pub min_dry_score: Option<f64>,
     pub watch_mode: bool,
 
     // Data Cache
     pub scan_result: Option<ScanResult>,
     pub clusters: Vec<CloneCluster>,
+    pub dead_code_summary: Option<cddm_core::dead_code::DeadCodeSummary>,
 
     // Navigation & Selection
     pub active_tab: TuiTab,
@@ -136,9 +138,11 @@ impl TuiApp {
             directory,
             config,
             fail_threshold,
+            min_dry_score: None,
             watch_mode,
             scan_result: None,
             clusters: Vec::new(),
+            dead_code_summary: None,
             active_tab: TuiTab::Overview,
             clone_view_mode: CloneViewMode::Pairwise,
             diff_mode: DiffMode::Split,

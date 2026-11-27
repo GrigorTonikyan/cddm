@@ -232,6 +232,18 @@ pub struct DeadCodeArgs {
     /// Include files and directories ignored by .gitignore
     #[arg(long, default_value_t = false, alias = "no-ignore")]
     pub include_ignored: bool,
+
+    /// Exit with non-zero status code if any dead code items are found
+    #[arg(long, default_value_t = false)]
+    pub fail_on_findings: bool,
+
+    /// Exit with non-zero status code if dead code items exceed maximum allowed count
+    #[arg(long)]
+    pub max_items: Option<usize>,
+
+    /// Path to custom architectural policy rules (.cddmrules.toml)
+    #[arg(long)]
+    pub rules: Option<PathBuf>,
 }
 
 /// CLI Arguments for `cddm prune`

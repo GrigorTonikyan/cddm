@@ -17,8 +17,11 @@ cddm tui
 cddm tui ./src --min-tokens 40 --watch
 
 # Launch with automated CI threshold gate
-cddm tui . --fail-threshold 10.0
+cddm tui . --fail-threshold 10.0 --min-dry-score 90.0
 ```
+
+- **Tab 1 (`Overview`)**: Displays `Quality Gate: DRY Health Score X.XX (min Y.YY) [PASS]/[FAIL]` when `--min-dry-score` is provided.
+- **Tab 12 (`Dead Code`)**: Displays `Gate: [PASS]/[FAIL] (N/max)` when `[dead_code]` in `.cddmrules.toml` configures a dead-code gate.
 
 ---
 

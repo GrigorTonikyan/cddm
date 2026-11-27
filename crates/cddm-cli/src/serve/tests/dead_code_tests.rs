@@ -66,3 +66,33 @@ fn dead_unused_fn() {
     let response = res.unwrap().into_response();
     assert_eq!(response.status(), axum::http::StatusCode::OK);
 }
+
+#[tokio::test]
+async fn test_dead_code_scan_handler_with_gate() {
+    let temp = tempdir().unwrap();
+    fs::write(
+        temp.path().join("unused.ts"),
+        "function neverCalled(x: number): number {\n  const a = x * 2;\n  const b = a + 3;\n  return b;\n}\n",
+    )
+    .unwrap();
+
+    let (state, _) = super::super::build_app();
+    let req = DeadCodeScanRequest {
+        directory: Some(temp.path().to_string_lossy().to_string()),
+        min_tokens: Some(1),
+        static_only: Some(true),
+        fail_on_findings: Some(true),
+        ..Default::default()
+    };
+    let res = dead_code_scan_handler(State(state), axum::Json(req)).await;
+    assert!(res.is_ok());
+    let response = res.unwrap().into_response();
+    assert_eq!(response.status(), axum::http::StatusCode::OK);
+    let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+        .await
+        .unwrap();
+    let parsed: cddm_core::DeadCodeSummary = serde_json::from_slice(&body).unwrap();
+    let gate = parsed.gate.expect("expected dead-code gate in response");
+    assert!(!gate.passed);
+    assert_eq!(gate.max_items, 0);
+}

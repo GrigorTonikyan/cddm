@@ -1,7 +1,7 @@
 #![forbid(unsafe_code)]
 
 use super::compiled::{
-    CompiledBoundary, CompiledLimit, CompiledZeroDuplication, path_matches_glob,
+    CompiledBoundary, CompiledLimit, CompiledZeroDuplication, path_matches_glob_rooted,
 };
 use crate::types::{PolicyEvaluationResult, PolicySeverity, PolicyViolation, ScanResult};
 use std::path::Path;
@@ -14,6 +14,7 @@ pub fn evaluate_scan_policies(
     compiled_limits: &[CompiledLimit],
 ) -> PolicyEvaluationResult {
     let mut violations = Vec::new();
+    let root = scan_result.target_directory.as_deref();
 
     // 1. Evaluate Boundary Rules across clone pairs
     for pair in &scan_result.clone_pairs {
@@ -26,7 +27,7 @@ pub fn evaluate_scan_policies(
              boundary: &CompiledBoundary,
              violations: &mut Vec<PolicyViolation>| {
                 for (idx, target_matcher) in boundary.target_matchers.iter().enumerate() {
-                    if path_matches_glob(target_matcher, Path::new(target_file)) {
+                    if path_matches_glob_rooted(target_matcher, Path::new(target_file), root) {
                         let target_pattern = boundary
                             .rule
                             .forbidden_targets
@@ -63,8 +64,8 @@ pub fn evaluate_scan_policies(
             };
 
         for boundary in compiled_boundaries {
-            let a_matches_src = path_matches_glob(&boundary.source_matcher, path_a);
-            let b_matches_src = path_matches_glob(&boundary.source_matcher, path_b);
+            let a_matches_src = path_matches_glob_rooted(&boundary.source_matcher, path_a, root);
+            let b_matches_src = path_matches_glob_rooted(&boundary.source_matcher, path_b, root);
 
             if a_matches_src {
                 check_boundary_direction(&pair.file_a, &pair.file_b, boundary, &mut violations);
@@ -75,8 +76,8 @@ pub fn evaluate_scan_policies(
 
         // 2. Evaluate Zero Duplication Rules
         for zero_dup in compiled_zero_duplication {
-            let a_matches = path_matches_glob(&zero_dup.matcher, path_a);
-            let b_matches = path_matches_glob(&zero_dup.matcher, path_b);
+            let a_matches = path_matches_glob_rooted(&zero_dup.matcher, path_a, root);
+            let b_matches = path_matches_glob_rooted(&zero_dup.matcher, path_b, root);
 
             if a_matches || b_matches {
                 let offending_file = if a_matches {
@@ -109,8 +110,8 @@ pub fn evaluate_scan_policies(
 
         // 3. Evaluate Limits on Clone Pairs
         for limit in compiled_limits {
-            let a_matches = path_matches_glob(&limit.matcher, path_a);
-            let b_matches = path_matches_glob(&limit.matcher, path_b);
+            let a_matches = path_matches_glob_rooted(&limit.matcher, path_a, root);
+            let b_matches = path_matches_glob_rooted(&limit.matcher, path_b, root);
 
             if (a_matches || b_matches)
                 && let Some(max_tokens) = limit.rule.max_tokens
@@ -147,7 +148,7 @@ pub fn evaluate_scan_policies(
         for occ in &cluster.occurrences {
             let path = Path::new(&occ.file);
             for limit in compiled_limits {
-                if path_matches_glob(&limit.matcher, path) {
+                if path_matches_glob_rooted(&limit.matcher, path, root) {
                     cluster_matches = true;
                     if let Some(max_occ) = limit.rule.max_occurrences
                         && cluster.occurrences.len() > max_occ

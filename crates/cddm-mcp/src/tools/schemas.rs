@@ -27,6 +27,8 @@ pub fn get_tool_definitions() -> Vec<serde_json::Value> {
                     mcp_tools::PARAM_IGNORE_GENERATED: { "type": "boolean", "description": "Exclude auto-generated files with generator headers (default: true)" },
                     mcp_tools::PARAM_INCLUDE_IGNORED: { "type": "boolean", "description": "Include files and directories ignored by .gitignore (default: false)" },
                     mcp_tools::PARAM_RULES: { "type": "string", "description": "Optional custom path to .cddmrules.toml policy rules file" },
+                    mcp_tools::PARAM_MIN_DRY_SCORE: { "type": "number", "description": "Minimum required DRY Health Score (0.0-100.0); emits a quality_gate violation if below" },
+                    mcp_tools::PARAM_MAX_DUPLICATION_PCT: { "type": "number", "description": "Maximum allowed duplication percentage (0.0-100.0); emits a quality_gate violation if exceeded" },
                     "summary_only": { "type": "boolean", "description": "When true, returns aggregate metrics and top 5 clusters to conserve agent context tokens" },
                     "detail_level": { "type": "string", "enum": ["summary", "compact", "full"], "description": "Response detail level: 'summary' or 'compact' preserves AI context tokens" }
                 }),

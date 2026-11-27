@@ -71,7 +71,11 @@ pub use logging::*;
 pub use monorepo::*;
 pub use neural::*;
 pub use overlap::*;
-pub use policy::PolicyEngine;
+pub use policy::{
+    DeadCodeGate, PolicyEngine, QualityGateThresholds, apply_dead_code_gate,
+    dead_code_gate_violation, evaluate_dead_code_policy, evaluate_quality_gates,
+    validate_percentage,
+};
 pub use pr_comment::generate_pr_markdown_comment;
 pub use query::*;
 pub use refactor::*;

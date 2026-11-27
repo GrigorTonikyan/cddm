@@ -7,6 +7,9 @@ pub mod engine;
 pub mod eval;
 pub mod forbidden_files;
 pub mod patterns;
+pub mod quality_gates;
+#[cfg(test)]
+mod quality_gates_tests;
 pub mod route_docs;
 pub mod sync;
 pub mod walk;
@@ -17,13 +20,19 @@ pub use budgets::{
 };
 pub use compiled::{
     CompiledBoundary, CompiledLimit, CompiledProhibitedPattern, CompiledZeroDuplication,
-    path_matches_glob,
+    path_matches_glob, path_matches_glob_rooted,
 };
 pub use emoji::{evaluate_zero_emoji, is_emoji_char};
 pub use engine::PolicyEngine;
 pub use eval::evaluate_scan_policies;
 pub use forbidden_files::{CompiledForbiddenFile, evaluate_forbidden_files};
 pub use patterns::{CompiledProhibitedPattern as ProhibitedPattern, evaluate_prohibited_patterns};
+pub use quality_gates::{
+    DeadCodeGate, MAX_PERCENTAGE, QualityGateThresholds, RULE_DEAD_CODE_MAX_ITEMS,
+    RULE_MAX_DUPLICATION, RULE_MIN_DRY_SCORE, RULE_TYPE_DEAD_CODE, RULE_TYPE_QUALITY_GATE,
+    apply_dead_code_gate, dead_code_gate_violation, evaluate_dead_code_policy,
+    evaluate_quality_gates, validate_percentage,
+};
 pub use route_docs::evaluate_route_docs_policies;
 pub use sync::evaluate_sync_rules;
 

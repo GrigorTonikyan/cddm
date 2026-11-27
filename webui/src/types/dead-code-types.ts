@@ -54,6 +54,13 @@ export interface DeadCodeItem {
   cross_package_callers?: string[];
 }
 
+export interface DeadCodeGateResult {
+  passed: boolean;
+  total_dead_items: number;
+  max_items: number;
+  message: string;
+}
+
 export interface DeadCodeSummary {
   total_dead_items: number;
   dead_functions: number;
@@ -64,6 +71,7 @@ export interface DeadCodeSummary {
   estimated_savings_pct: number;
   items: DeadCodeItem[];
   reachability_summary?: CrossPackageReachabilitySummary;
+  gate?: DeadCodeGateResult;
 }
 
 export interface DeadCodeScanRequest {
@@ -74,6 +82,8 @@ export interface DeadCodeScanRequest {
   report_content?: string;
   languages?: string[];
   ignore?: string[];
+  fail_on_findings?: boolean;
+  max_items?: number;
 }
 
 export type PruneActionStatus = "pruned" | "dry_run_pruned" | "skipped_unsafe" | "failed";

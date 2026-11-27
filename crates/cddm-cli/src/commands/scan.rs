@@ -5,7 +5,7 @@ use crate::formatters::{
     format_markdown_report, format_sarif_report, format_structured_json_output,
 };
 use crate::types::OutputFormat;
-use cddm_core::{PolicySeverity, ScanConfig, run_scan};
+use cddm_core::{PolicySeverity, ScanConfig, run_scan, validate_percentage};
 use std::fs;
 use std::path::PathBuf;
 use std::sync::{Arc, atomic::AtomicBool};
@@ -19,6 +19,7 @@ pub async fn run_scan_command(
     output: Option<PathBuf>,
     summary: bool,
     fail_threshold: Option<f64>,
+    min_dry_score: Option<f64>,
     languages: Vec<String>,
     ignore: Vec<String>,
     git_blame: bool,
@@ -38,6 +39,10 @@ pub async fn run_scan_command(
     include_ignored: bool,
     threads: Option<usize>,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    if let Some(min_score) = min_dry_score {
+        validate_percentage("min-dry-score", min_score)?;
+    }
+
     let cache_path = cache_dir.as_ref().map(|p| p.to_string_lossy().to_string());
 
     if clear_cache {
@@ -116,6 +121,16 @@ pub async fn run_scan_command(
         eprintln!(
             "Error: Duplication percentage {:.2}% exceeds failure threshold {:.2}%",
             result.duplication_percentage, threshold
+        );
+        std::process::exit(1);
+    }
+
+    if let Some(min_score) = min_dry_score
+        && result.dry_health_score < min_score
+    {
+        eprintln!(
+            "Error: DRY Health Score {:.2} is below minimum {:.2}",
+            result.dry_health_score, min_score
         );
         std::process::exit(1);
     }

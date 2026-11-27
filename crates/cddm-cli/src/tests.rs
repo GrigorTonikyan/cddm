@@ -448,3 +448,35 @@ fn test_emit_report_output_writes_file_and_creates_parents() {
     let written = std::fs::read_to_string(&nested_path).expect("read written report");
     assert_eq!(written, "{\"version\":\"2.1.0\"}\n");
 }
+
+#[test]
+fn test_cli_parses_quality_gate_and_dead_code_flags() {
+    let scan_cli = Cli::try_parse_from(["cddm", "scan", ".", "--min-dry-score", "90.5"])
+        .expect("parse scan --min-dry-score");
+    match scan_cli.command {
+        Commands::Scan(args) => {
+            assert_eq!(args.min_dry_score, Some(90.5));
+        }
+        _ => panic!("expected Scan command"),
+    }
+
+    let dc_cli = Cli::try_parse_from([
+        "cddm",
+        "dead-code",
+        ".",
+        "--fail-on-findings",
+        "--max-items",
+        "3",
+        "--rules",
+        "custom.toml",
+    ])
+    .expect("parse dead-code flags");
+    match dc_cli.command {
+        Commands::DeadCode(args) => {
+            assert!(args.fail_on_findings);
+            assert_eq!(args.max_items, Some(3));
+            assert_eq!(args.rules, Some(PathBuf::from("custom.toml")));
+        }
+        _ => panic!("expected DeadCode command"),
+    }
+}
