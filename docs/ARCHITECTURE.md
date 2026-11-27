@@ -313,12 +313,18 @@ CDDM provides in-process architectural policy enforcement and governance across 
 9. **Route Documentation Drift & Living Completeness (`[route_docs_sync]` / `[[route_docs]]`)**:
    - Scans framework route roots (Next.js App Router `src/app/**/page.tsx`, Astro `src/pages/**`, route handlers) and verifies that all discovered routes are documented in project Markdown files (e.g. `README.md`).
 
-10. **4-Pillar Cross-Interface Parity**:
+10. **Quality Gates & Detection Toggles (`[scan]` & `[dead_code]`)**:
 
-- **CLI**: `cddm rules check` executes policy evaluation with formatted console, Markdown, JSON, and SARIF summaries.
-- **MCP Server**: `cddm_check_policies` returns structured violations (file, line, pattern, snippet, remediation) and updates `cddm://workspace/policies`.
-- **WebUI Studio**: `PolicyRulesModal` provides dedicated inspection tabs for Active Policies, Violations Inspector, and `.cddmrules.toml` editor.
-- **TUI Studio**: Tab 6 displays real-time compliance status for boundaries, zero duplication, prohibited patterns, zero-emoji, token budgets, forbidden files, SSoT sync, and route documentation.
+- `[scan]` configures repository-wide `max_duplication_pct`, `min_dry_score`, `detect_type3`, `detect_type4`, `ignore_tests`, and `ignore_mocks` thresholds/toggles evaluated by `cddm rules check` and `cddm_check_policies`.
+- `[dead_code]` configures `fail_on_findings`, `max_items`, `min_tokens`, and `static_only` limits enforced by `cddm dead-code`, `cddm rules check`, MCP, WebUI, and TUI.
+- **Root-Anchored Globs**: Policy globs starting with `/` (e.g. `/*.js`, `/src/components/*.tsx`) match strictly relative to the workspace/scan root instead of matching arbitrary nested suffixes, while unanchored globs preserve suffix matching.
+
+11. **4-Pillar Cross-Interface Parity**:
+
+- **CLI**: `cddm rules check` executes policy evaluation with formatted console, Markdown, JSON, and SARIF summaries; `cddm scan --min-dry-score` and `cddm dead-code --fail-on-findings --max-items` enforce native exit gates.
+- **MCP Server**: `scan_codebase` accepts `min_dry_score` / `max_duplication_pct`, `cddm_detect_dead_code` accepts `fail_on_findings` / `max_items`, and `cddm_check_policies` evaluates `[scan]` and `[dead_code]` policies.
+- **WebUI Studio**: `PolicyRulesModal` displays `[scan]` / `[dead_code]` summaries via `QualityGatesPanel`, and `DeadCodeStudioView` / `DeadCodeExplorerModal` render `DeadCodeGateBadge`.
+- **TUI Studio**: Tab 1 displays the `--min-dry-score` Quality Gate status, Tab 6 honors effective policy toggles, and Tab 12 displays the dead-code gate status.
 
 ---
 

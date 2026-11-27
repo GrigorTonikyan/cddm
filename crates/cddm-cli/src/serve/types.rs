@@ -371,6 +371,10 @@ pub struct DeadCodeScanRequest {
     pub languages: Option<Vec<String>>,
     pub ignore: Option<Vec<String>>,
     pub include_ignored: Option<bool>,
+    #[serde(default)]
+    pub fail_on_findings: Option<bool>,
+    #[serde(default)]
+    pub max_items: Option<usize>,
 }
 
 /// Request payload for running dead clone cluster pruning.

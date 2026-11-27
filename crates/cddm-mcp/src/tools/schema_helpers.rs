@@ -157,6 +157,8 @@ pub fn dead_code_schema() -> serde_json::Value {
             "report_path": { "type": "string", "description": "Path to optional coverage report file (e.g. lcov.info)" },
             "report_content": { "type": "string", "description": "Optional raw coverage report string content" },
             "include_ignored": { "type": "boolean", "description": "Include files and directories ignored by .gitignore (default: false)" },
+            mcp_tools::PARAM_FAIL_ON_FINDINGS: { "type": "boolean", "description": "Evaluate dead-code gate with max_items = 0 when true" },
+            mcp_tools::PARAM_MAX_ITEMS: { "type": "integer", "description": "Maximum allowed dead code findings before gate failure" },
             "summary_only": { "type": "boolean", "description": "When true, returns aggregate dead code metrics and top 5 items to preserve AI context tokens (default: false)" },
             "detail_level": { "type": "string", "enum": ["summary", "compact", "full"], "description": "Response detail level: 'summary' or 'compact' preserves AI context tokens" }
         }),

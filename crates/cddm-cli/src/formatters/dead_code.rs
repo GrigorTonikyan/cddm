@@ -242,6 +242,7 @@ mod tests {
             estimated_savings_pct: 5.2,
             items: vec![item],
             reachability_summary: None,
+            gate: None,
         };
 
         let console_res = format_dead_code_report(&summary, "console").unwrap();

@@ -352,6 +352,8 @@ async fn test_policy_rules_get_and_post_handlers() {
     assert!(cfg.boundaries.is_empty() || !cfg.boundaries.is_empty());
 
     let new_cfg = cddm_core::PolicyConfig {
+        scan: None,
+        dead_code: None,
         boundaries: vec![cddm_core::BoundaryRule {
             name: "test-boundary".to_string(),
             description: None,

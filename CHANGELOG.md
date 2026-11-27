@@ -5,6 +5,12 @@ All notable changes to **CDDM** (_Code De-Duplication Meister_) will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.14.0] - 2026-11-27
+
+### Features
+
+- **policy**: add native quality gates, dead-code fail gates, scan policy, and anchored globs (`67da59b`)
+
 ## [4.13.1] - 2026-11-26
 
 ### Bug Fixes

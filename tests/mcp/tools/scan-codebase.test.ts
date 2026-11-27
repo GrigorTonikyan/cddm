@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { executeTool } from "../helpers";
+import { assertToolError, executeTool, RPC_ERRORS } from "../helpers";
 
 describe("MCP Tool: scan_codebase", () => {
   it("should perform polyglot code duplication scan on directory", async () => {
@@ -145,6 +145,40 @@ describe("MCP Tool: scan_codebase", () => {
       expect(res.policy_violations[0].rule_type).toBe("line_budget");
       expect(res.policy_violations[0].line_count).toBe(10);
       expect(res.policy_violations[0].max_lines).toBe(5);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }, 30000);
+
+  it("should enforce min_dry_score quality gate and reject out-of-range thresholds", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "cddm-mcp-scan-qg-"));
+    try {
+      mkdirSync(join(dir, "src"), { recursive: true });
+      const block = Array.from({ length: 12 }, (_, i) => `  const item${i} = n + ${i};`).join("\n");
+      writeFileSync(
+        join(dir, "src", "a.ts"),
+        `export function fnA(n: number) {\n${block}\n  return item11;\n}\n`,
+      );
+      writeFileSync(
+        join(dir, "src", "b.ts"),
+        `export function fnB(n: number) {\n${block}\n  return item11;\n}\n`,
+      );
+
+      const res = await executeTool("scan_codebase", {
+        directory: dir,
+        min_tokens: 10,
+        min_dry_score: 100.0,
+      });
+      expect(Array.isArray(res.policy_violations)).toBe(true);
+      expect(
+        res.policy_violations.some((v: { rule_type: string }) => v.rule_type === "quality_gate"),
+      ).toBe(true);
+
+      await assertToolError(
+        "scan_codebase",
+        { directory: dir, min_dry_score: 150 },
+        RPC_ERRORS.INVALID_PARAMS,
+      );
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

@@ -21,7 +21,16 @@ pub fn render_dead_code_view(frame: &mut Frame, app: &TuiApp, area: Rect) {
         .split(area);
 
     // Top: Codebase Cleanliness Gauge Bar
-    let (pct, label) = if let Some(res) = &app.scan_result {
+    let (pct, mut label) = if let Some(ref dc) = app.dead_code_summary {
+        let reach_pct = (100.0 - dc.estimated_savings_pct).clamp(0.0, 100.0);
+        (
+            reach_pct.round() as u16,
+            format!(
+                "{:.1}% Reachable ({} dead items / {} dead lines)",
+                reach_pct, dc.total_dead_items, dc.total_dead_lines
+            ),
+        )
+    } else if let Some(res) = &app.scan_result {
         (
             res.dry_health_score.round().clamp(0.0, 100.0) as u16,
             format!(
@@ -32,6 +41,15 @@ pub fn render_dead_code_view(frame: &mut Frame, app: &TuiApp, area: Rect) {
     } else {
         (94, "94.2% Reachable (Cleanliness baseline)".to_string())
     };
+    if let Some(ref dc) = app.dead_code_summary
+        && let Some(ref gate) = dc.gate
+    {
+        let badge = if gate.passed { "[PASS]" } else { "[FAIL]" };
+        label.push_str(&format!(
+            " | Gate: {badge} ({}/{})",
+            gate.total_dead_items, gate.max_items
+        ));
+    }
 
     let gauge = Gauge::default()
         .block(create_titled_block(
@@ -59,32 +77,51 @@ pub fn render_dead_code_view(frame: &mut Frame, app: &TuiApp, area: Rect) {
         ])
         .split(vertical_sections[1]);
 
+    let (funcs_val, blocks_val, clones_val, loc_val) = if let Some(ref dc) = app.dead_code_summary {
+        (
+            format!("{} Functions (0 callers)", dc.dead_functions),
+            format!("{} Statements", dc.unreachable_blocks),
+            format!("{} Duplicate Pairs", dc.dead_clones),
+            format!(
+                "{} LOC (~{:.1}%)",
+                dc.total_dead_lines, dc.estimated_savings_pct
+            ),
+        )
+    } else {
+        (
+            "8 Functions (0 callers)".to_string(),
+            "4 Statements".to_string(),
+            "6 Duplicate Pairs".to_string(),
+            "640 LOC (~5.8%)".to_string(),
+        )
+    };
+
     render_kpi_card(
         frame,
         kpi_columns[0],
         "Unreferenced Funcs",
-        "8 Functions (0 callers)",
+        &funcs_val,
         Color::Yellow,
     );
     render_kpi_card(
         frame,
         kpi_columns[1],
         "Unreachable Blocks",
-        "4 Statements",
+        &blocks_val,
         Color::Red,
     );
     render_kpi_card(
         frame,
         kpi_columns[2],
         "Dead Clones",
-        "6 Duplicate Pairs",
+        &clones_val,
         Color::Magenta,
     );
     render_kpi_card(
         frame,
         kpi_columns[3],
         "Removable Lines",
-        "640 LOC (~5.8%)",
+        &loc_val,
         Color::Green,
     );
 

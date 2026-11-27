@@ -109,6 +109,8 @@ export const PolicyRulesModal: React.FC<PolicyRulesModalProps> = ({ isOpen, onCl
     setSaveSuccess(false);
     try {
       const updatedConfig: PolicyConfig = {
+        scan: policyConfig?.scan,
+        dead_code: policyConfig?.dead_code,
         boundaries: policyConfig?.boundaries || [],
         zero_duplication: policyConfig?.zero_duplication || [],
         limits: policyConfig?.limits || [],

@@ -86,3 +86,10 @@ CDDM Studio exposes Prometheus-compatible metrics at `/metrics` (and `/api/metri
 | `cddm_scan_duration_seconds`  | `histogram` | Duration of CDDM workspace deduplication scans in seconds           |
 | `cddm_sse_clients_active`     | `gauge`     | Number of currently connected Server-Sent Events client connections |
 | `cddm_scans_total`            | `counter`   | Cumulative count of completed workspace deduplication scans         |
+
+---
+
+## 5. Quality Gates & Dead-Code Gate UI
+
+- **`QualityGatesPanel`** inside `PolicyRulesModal` displays a read-only summary of `[scan]` (`max_duplication_pct`, `min_dry_score`, `detect_type4`) and `[dead_code]` (`fail_on_findings`, `max_items`, `static_only`) from `.cddmrules.toml`.
+- **`DeadCodeGateBadge`** inside `DeadCodeStudioView` and `DeadCodeExplorerModal` renders `[PASS]` / `[FAIL] Dead Code Gate (N / max)` when a dead-code gate is active.

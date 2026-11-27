@@ -10,6 +10,7 @@ pub async fn run_tui_command(
     min_tokens: usize,
     watch: bool,
     fail_threshold: Option<f64>,
+    min_dry_score: Option<f64>,
     languages: Vec<String>,
     ignore: Vec<String>,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -20,6 +21,7 @@ pub async fn run_tui_command(
         min_tokens,
         watch,
         fail_threshold,
+        min_dry_score,
         languages,
         ignore,
     )

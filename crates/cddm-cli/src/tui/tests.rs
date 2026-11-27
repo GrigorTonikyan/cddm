@@ -411,3 +411,34 @@ fn test_render_policy_tab_surfaces_line_budget_and_test_enforcement() {
     assert!(rendered.contains("550/500 lines"));
     assert!(rendered.contains("Tests: ENFORCED"));
 }
+
+#[test]
+fn test_render_overview_and_dead_code_quality_gates() {
+    let backend = TestBackend::new(140, 40);
+    let mut terminal = Terminal::new(backend).expect("Backend init");
+
+    let mut app = TuiApp::new(PathBuf::from("."), ScanConfig::default(), Some(5.0), false);
+    app.min_dry_score = Some(92.0);
+    app.set_scan_result(make_sample_scan_result(Vec::new(), 2.0, 88.5));
+    draw_test_frame(&mut terminal, &app);
+    let overview_rendered = buffer_to_string(&terminal);
+    assert!(overview_rendered.contains("Quality Gate: DRY Health Score 88.50 (min 92.00) [FAIL]"));
+
+    app.dead_code_summary = Some(cddm_core::dead_code::DeadCodeSummary {
+        total_dead_items: 2,
+        dead_functions: 2,
+        total_dead_lines: 18,
+        estimated_savings_pct: 4.5,
+        gate: Some(cddm_core::DeadCodeGateResult {
+            passed: false,
+            total_dead_items: 2,
+            max_items: 0,
+            message: "Dead code gate failed: 2 item(s) exceed maximum 0".to_string(),
+        }),
+        ..Default::default()
+    });
+    app.active_tab = TuiTab::DeadCode;
+    draw_test_frame(&mut terminal, &app);
+    let dc_rendered = buffer_to_string(&terminal);
+    assert!(dc_rendered.contains("Gate: [FAIL] (2/0)"));
+}

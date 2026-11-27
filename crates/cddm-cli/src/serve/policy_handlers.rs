@@ -199,21 +199,30 @@ pub async fn policy_evaluate_handler(
         }
     };
 
-    let current_scan_cfg = state.current_config.read().await.clone();
-    let eval_opts = cddm_core::PolicyEvaluationOptions::from_scan_config(&current_scan_cfg);
+    let mut scan_config = state.current_config.read().await.clone();
+    if let Some(ign_tests) = engine.config().effective_ignore_tests() {
+        scan_config.ignore_tests = ign_tests;
+    }
+    if let Some(ign_mocks) = engine.config().effective_ignore_mocks() {
+        scan_config.ignore_mocks = ign_mocks;
+    }
+    if let Some(ref scan_policy) = engine.config().scan {
+        scan_policy.apply_to(&mut scan_config);
+    }
+    let eval_opts = cddm_core::PolicyEvaluationOptions::from_scan_config(&scan_config);
 
     let latest_lock = state.latest_result.read().await;
     let scan_result = if let Some(latest) = latest_lock.as_ref() {
         latest.clone()
     } else {
         drop(latest_lock);
-        let mut scan_config = current_scan_cfg;
+        let mut run_cfg = scan_config.clone();
         if let Some(dir) = directory {
-            scan_config.directory = dir;
+            run_cfg.directory = dir;
         }
         let (tx, _rx) = tokio::sync::mpsc::channel(100);
         let cancel_flag = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
-        if let Ok(res) = cddm_core::run_scan(scan_config, tx, cancel_flag).await {
+        if let Ok(res) = cddm_core::run_scan(run_cfg, tx, cancel_flag).await {
             *state.latest_result.write().await = Some(res.clone());
             res
         } else {
@@ -221,5 +230,19 @@ pub async fn policy_evaluate_handler(
         }
     };
 
-    Ok(Json(engine.evaluate_with_options(&scan_result, &eval_opts)))
+    let mut eval = engine.evaluate_with_options(&scan_result, &eval_opts);
+    let target_dir = scan_result
+        .target_directory
+        .as_deref()
+        .unwrap_or(&scan_config.directory);
+    if let Ok(dead_violations) = cddm_core::evaluate_dead_code_policy(
+        target_dir,
+        engine.config(),
+        scan_config.include_ignored,
+    )
+    .await
+    {
+        eval.push_violations(dead_violations);
+    }
+    Ok(Json(eval))
 }

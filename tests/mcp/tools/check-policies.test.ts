@@ -146,4 +146,39 @@ severity = "info"
       rmSync(dir, { recursive: true, force: true });
     }
   });
+
+  it("should enforce [scan] quality gate thresholds in cddm_check_policies", async () => {
+    const { mkdirSync, mkdtempSync, rmSync, writeFileSync } = await import("node:fs");
+    const { tmpdir } = await import("node:os");
+    const { join } = await import("node:path");
+
+    const dir = mkdtempSync(join(tmpdir(), "cddm-mcp-scan-gate-"));
+    try {
+      mkdirSync(join(dir, "src"), { recursive: true });
+      const block = Array.from({ length: 12 }, (_, i) => `  const v${i} = x + ${i};`).join("\n");
+      writeFileSync(
+        join(dir, "src", "a.ts"),
+        `export function fA(x: number) {\n${block}\n  return v11;\n}\n`,
+      );
+      writeFileSync(
+        join(dir, "src", "b.ts"),
+        `export function fB(x: number) {\n${block}\n  return v11;\n}\n`,
+      );
+
+      const rulesPath = join(dir, ".cddmrules.toml");
+      writeFileSync(rulesPath, `[scan]\nmin_dry_score = 100.0\nmax_duplication_pct = 1.0\n`);
+
+      const res = await executeTool("cddm_check_policies", {
+        directory: dir,
+        rules: rulesPath,
+        min_tokens: 10,
+      });
+      expect(res.passed).toBe(false);
+      expect(
+        res.violations.some((v: { rule_type: string }) => v.rule_type === "quality_gate"),
+      ).toBe(true);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
 });

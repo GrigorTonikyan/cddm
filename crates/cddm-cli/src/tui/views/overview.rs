@@ -135,36 +135,53 @@ fn render_overview_table(frame: &mut Frame, title: &str, rows: Vec<Row>, area: R
 }
 
 fn render_config_summary(frame: &mut Frame, app: &TuiApp, area: Rect) {
-    let lines = vec![
-        Line::from(vec![
-            Span::styled("Target Directory: ", Style::default().fg(Color::Cyan)),
-            Span::raw(app.directory.display().to_string()),
-            Span::raw(" | "),
-            Span::styled("Min Tokens: ", Style::default().fg(Color::Cyan)),
-            Span::raw(app.config.min_tokens.to_string()),
-            Span::raw(" | "),
-            Span::styled("Type-3: ", Style::default().fg(Color::Cyan)),
-            Span::raw(if app.config.detect_type3 {
-                "Active"
-            } else {
-                "Disabled"
-            }),
-            Span::raw(" | "),
-            Span::styled("Type-4: ", Style::default().fg(Color::Cyan)),
-            Span::raw(if app.config.detect_type4 {
-                "Active"
-            } else {
-                "Disabled"
-            }),
-            Span::raw(" | "),
-            Span::styled("Watch Mode: ", Style::default().fg(Color::Cyan)),
-            Span::raw(if app.watch_mode { "Active" } else { "Disabled" }),
-        ]),
-        Line::from(vec![Span::styled(
-            "Tip: Switch to Tab [2] to inspect split diffs or Tab [4] to auto-refactor.",
-            Style::default().fg(Color::DarkGray),
-        )]),
-    ];
+    let mut lines = vec![Line::from(vec![
+        Span::styled("Target Directory: ", Style::default().fg(Color::Cyan)),
+        Span::raw(app.directory.display().to_string()),
+        Span::raw(" | "),
+        Span::styled("Min Tokens: ", Style::default().fg(Color::Cyan)),
+        Span::raw(app.config.min_tokens.to_string()),
+        Span::raw(" | "),
+        Span::styled("Type-3: ", Style::default().fg(Color::Cyan)),
+        Span::raw(if app.config.detect_type3 {
+            "Active"
+        } else {
+            "Disabled"
+        }),
+        Span::raw(" | "),
+        Span::styled("Type-4: ", Style::default().fg(Color::Cyan)),
+        Span::raw(if app.config.detect_type4 {
+            "Active"
+        } else {
+            "Disabled"
+        }),
+        Span::raw(" | "),
+        Span::styled("Watch Mode: ", Style::default().fg(Color::Cyan)),
+        Span::raw(if app.watch_mode { "Active" } else { "Disabled" }),
+    ])];
+
+    if let Some(min_score) = app.min_dry_score {
+        let actual = app
+            .scan_result
+            .as_ref()
+            .map(|r| r.dry_health_score)
+            .unwrap_or(100.0);
+        let passed = actual >= min_score;
+        let badge = if passed { "[PASS]" } else { "[FAIL]" };
+        let color = if passed { Color::Green } else { Color::Red };
+        lines.push(Line::from(vec![
+            Span::styled("Quality Gate: ", Style::default().fg(Color::Cyan)),
+            Span::styled(
+                format!("DRY Health Score {actual:.2} (min {min_score:.2}) {badge}"),
+                Style::default().fg(color).add_modifier(Modifier::BOLD),
+            ),
+        ]));
+    }
+
+    lines.push(Line::from(vec![Span::styled(
+        "Tip: Switch to Tab [2] to inspect split diffs or Tab [4] to auto-refactor.",
+        Style::default().fg(Color::DarkGray),
+    )]));
 
     let block = create_titled_block(" Active Configuration & Workspace Environment ", false);
     frame.render_widget(Paragraph::new(lines).block(block), area);

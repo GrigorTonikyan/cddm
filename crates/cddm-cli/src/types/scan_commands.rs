@@ -35,6 +35,10 @@ pub struct ScanArgs {
     #[arg(long)]
     pub fail_threshold: Option<f64>,
 
+    /// Exit with non-zero status code if DRY Health Score falls below this minimum (0-100)
+    #[arg(long)]
+    pub min_dry_score: Option<f64>,
+
     /// Specific language(s) to scan (e.g. Rust, TypeScript, Python)
     #[arg(short, long)]
     pub languages: Vec<String>,

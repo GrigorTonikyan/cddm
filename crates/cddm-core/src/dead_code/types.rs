@@ -1,5 +1,6 @@
 #![forbid(unsafe_code)]
 
+use crate::types::DeadCodeGateResult;
 use serde::{Deserialize, Serialize};
 
 /// Classification of dead code items detected in the codebase.
@@ -136,6 +137,8 @@ pub struct DeadCodeSummary {
     pub items: Vec<DeadCodeItem>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub reachability_summary: Option<CrossPackageReachabilitySummary>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub gate: Option<DeadCodeGateResult>,
 }
 
 /// Compact representation of an individual dead code item.
@@ -163,6 +166,8 @@ pub struct CompactDeadCodeSummary {
     pub total_dead_lines: usize,
     pub estimated_savings_pct: f64,
     pub top_items: Vec<CompactDeadCodeItem>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub gate: Option<DeadCodeGateResult>,
 }
 
 impl CompactDeadCodeSummary {
@@ -199,6 +204,7 @@ impl CompactDeadCodeSummary {
             total_dead_lines: summary.total_dead_lines,
             estimated_savings_pct: summary.estimated_savings_pct,
             top_items,
+            gate: summary.gate.clone(),
         }
     }
 }

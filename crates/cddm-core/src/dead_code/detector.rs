@@ -196,6 +196,7 @@ pub async fn run_dead_code_detection(config: DeadCodeConfig) -> Result<DeadCodeS
         estimated_savings_pct,
         items,
         reachability_summary: Some(reachability_summary),
+        gate: None,
     };
 
     tracing::info!(

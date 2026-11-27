@@ -1,5 +1,6 @@
 #![forbid(unsafe_code)]
 
+use super::quality_gates::{DeadCodePolicy, ScanPolicy};
 use serde::{Deserialize, Serialize};
 
 fn default_error_severity() -> PolicySeverity {
@@ -302,8 +303,14 @@ pub struct RouteDocsPolicy {
 }
 
 /// Complete architectural policies configuration.
-#[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 pub struct PolicyConfig {
+    /// Scan quality thresholds and detection toggles (`[scan]`)
+    #[serde(default)]
+    pub scan: Option<ScanPolicy>,
+    /// Dead-code failure gate settings (`[dead_code]`)
+    #[serde(default)]
+    pub dead_code: Option<DeadCodePolicy>,
     /// Boundary rules preventing cross-layer duplication
     #[serde(default)]
     pub boundaries: Vec<BoundaryRule>,

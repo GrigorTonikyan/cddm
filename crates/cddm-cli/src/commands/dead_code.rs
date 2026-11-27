@@ -3,6 +3,7 @@
 use std::error::Error;
 
 use cddm_core::dead_code::{DeadCodeConfig, run_dead_code_detection};
+use cddm_core::{DeadCodeGate, PolicyEngine, apply_dead_code_gate};
 
 use crate::formatters::format_dead_code_report;
 use crate::types::commands::DeadCodeArgs;
@@ -17,6 +18,13 @@ pub async fn run_dead_code_command(args: DeadCodeArgs) -> Result<(), Box<dyn Err
         "Executing cddm dead-code command"
     );
 
+    let engine = PolicyEngine::discover(&args.directory, args.rules.as_deref());
+    let gate = DeadCodeGate::resolve(
+        args.fail_on_findings,
+        args.max_items,
+        engine.config().dead_code.as_ref(),
+    );
+
     let config = DeadCodeConfig {
         directory: args.directory.to_string_lossy().to_string(),
         min_tokens: args.min_tokens,
@@ -28,7 +36,10 @@ pub async fn run_dead_code_command(args: DeadCodeArgs) -> Result<(), Box<dyn Err
         include_ignored: Some(args.include_ignored),
     };
 
-    let summary = run_dead_code_detection(config).await?;
+    let mut summary = run_dead_code_detection(config).await?;
+    if let Some(ref gate_spec) = gate {
+        apply_dead_code_gate(&mut summary, gate_spec);
+    }
 
     if args.summary {
         if args.format.eq_ignore_ascii_case("json") {
@@ -44,9 +55,17 @@ pub async fn run_dead_code_command(args: DeadCodeArgs) -> Result<(), Box<dyn Err
             println!("Uncovered Test Items:    {}", compact.uncovered_items);
             println!("Total Dead Code Lines:   {}", compact.total_dead_lines);
             println!(
-                "Estimated Line Savings:  {:.2}%\n",
+                "Estimated Line Savings:  {:.2}%",
                 compact.estimated_savings_pct
             );
+            if let Some(ref gate_res) = compact.gate {
+                let badge = if gate_res.passed { "[PASS]" } else { "[FAIL]" };
+                println!(
+                    "Dead Code Gate:          {badge} ({}/{})",
+                    gate_res.total_dead_items, gate_res.max_items
+                );
+            }
+            println!();
             if !compact.top_items.is_empty() {
                 println!("--- Top Dead Code Candidates (Showing Top 5) ---");
                 for (idx, item) in compact.top_items.iter().enumerate() {
@@ -66,6 +85,13 @@ pub async fn run_dead_code_command(args: DeadCodeArgs) -> Result<(), Box<dyn Err
     } else {
         let output = format_dead_code_report(&summary, &args.format)?;
         print!("{output}");
+    }
+
+    if let Some(ref gate_res) = summary.gate
+        && !gate_res.passed
+    {
+        eprintln!("Error: {}", gate_res.message);
+        std::process::exit(1);
     }
 
     Ok(())

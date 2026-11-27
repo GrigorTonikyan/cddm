@@ -14,6 +14,7 @@ import { useCDDMStore } from "../../store/cddm-store";
 import type { DeadCodeItem, DeadCodeKind } from "../../types/dead-code-types";
 import { getEditorDisplayName, getIdeDeeplink } from "../../utils/ide-links";
 import { parsePath } from "../../utils/path-utils";
+import { DeadCodeGateBadge } from "./DeadCodeGateBadge";
 
 export interface DeadCodeStudioViewProps {
   className?: string;
@@ -113,10 +114,13 @@ export const DeadCodeStudioView: React.FC<DeadCodeStudioViewProps> = ({ classNam
               Codebase Reachability & Cleanliness
             </span>
           </div>
-          <div className="text-slate-400">
-            <span className="font-bold text-cyan-300">{cleanlinessPct}% Reachable</span> (
-            {deadCodeSummary?.total_dead_items ?? 0} dead items / ~
-            {deadCodeSummary?.total_dead_lines ?? 0} removable lines)
+          <div className="flex flex-wrap items-center gap-2 text-slate-400">
+            <DeadCodeGateBadge gate={deadCodeSummary?.gate} />
+            <span>
+              <span className="font-bold text-cyan-300">{cleanlinessPct}% Reachable</span> (
+              {deadCodeSummary?.total_dead_items ?? 0} dead items / ~
+              {deadCodeSummary?.total_dead_lines ?? 0} removable lines)
+            </span>
           </div>
         </div>
         <div className="w-full bg-slate-950 rounded-full h-2.5 border border-slate-800/80 overflow-hidden">

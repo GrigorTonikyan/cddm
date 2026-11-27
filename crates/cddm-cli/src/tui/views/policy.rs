@@ -51,8 +51,12 @@ fn render_policy_rules(frame: &mut Frame, app: &TuiApp, policy_cfg: &PolicyConfi
         let min_limit = max_line_limits.iter().min().copied().unwrap_or(500);
         format!("<= {min_limit} lines ({} rule(s))", max_line_limits.len())
     };
-    let eff_ignore_tests = policy_cfg.ignore_tests.unwrap_or(app.config.ignore_tests);
-    let eff_ignore_mocks = policy_cfg.ignore_mocks.unwrap_or(app.config.ignore_mocks);
+    let eff_ignore_tests = policy_cfg
+        .effective_ignore_tests()
+        .unwrap_or(app.config.ignore_tests);
+    let eff_ignore_mocks = policy_cfg
+        .effective_ignore_mocks()
+        .unwrap_or(app.config.ignore_mocks);
     let test_scope_status = if !eff_ignore_tests && !eff_ignore_mocks {
         "Tests & Mocks ENFORCED".to_string()
     } else if !eff_ignore_tests {
@@ -205,8 +209,12 @@ fn render_suppression_rules(
         .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
         .split(area);
 
-    let eff_ignore_tests = policy_cfg.ignore_tests.unwrap_or(app.config.ignore_tests);
-    let eff_ignore_mocks = policy_cfg.ignore_mocks.unwrap_or(app.config.ignore_mocks);
+    let eff_ignore_tests = policy_cfg
+        .effective_ignore_tests()
+        .unwrap_or(app.config.ignore_tests);
+    let eff_ignore_mocks = policy_cfg
+        .effective_ignore_mocks()
+        .unwrap_or(app.config.ignore_mocks);
     let tests_label = if eff_ignore_tests {
         "Tests: IGNORED"
     } else {

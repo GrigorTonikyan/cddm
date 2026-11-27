@@ -1,4 +1,5 @@
-import { mkdirSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "bun:test";
 import { executeTool } from "../helpers";
@@ -87,5 +88,49 @@ describe("MCP Tool: cddm_detect_dead_code", () => {
 
     expect(res).toBeDefined();
     expect(typeof res.total_dead_items).toBe("number");
+  }, 30000);
+
+  it("should evaluate fail_on_findings gate and omit gate when unrequested", async () => {
+    const tmpDir = mkdtempSync(join(tmpdir(), "cddm-mcp-dc-gate-"));
+    try {
+      await Bun.write(
+        join(tmpDir, "dead.ts"),
+        [
+          "function usedHelper(x: number): number {",
+          "  return x + 1;",
+          "}",
+          "",
+          "function unusedHelper(y: number): number {",
+          "  const a = y * 2;",
+          "  const b = a + 3;",
+          "  const c = b * 4;",
+          "  const d = c - 5;",
+          "  const e = d + 6;",
+          "  return e;",
+          "}",
+          "",
+          "export const value = usedHelper(41);",
+        ].join("\n"),
+      );
+
+      const defaultRes = await executeTool("cddm_detect_dead_code", {
+        directory: tmpDir,
+        min_tokens: 1,
+        static_only: true,
+      });
+      expect(defaultRes.gate).toBeUndefined();
+
+      const gatedRes = await executeTool("cddm_detect_dead_code", {
+        directory: tmpDir,
+        min_tokens: 1,
+        static_only: true,
+        fail_on_findings: true,
+      });
+      expect(gatedRes.gate).toBeDefined();
+      expect(gatedRes.gate.passed).toBe(false);
+      expect(gatedRes.gate.max_items).toBe(0);
+    } finally {
+      rmSync(tmpDir, { recursive: true, force: true });
+    }
   }, 30000);
 });

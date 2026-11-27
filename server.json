@@ -8,12 +8,12 @@
     "url": "https://github.com/GrigorTonikyan/cddm",
     "source": "github"
   },
-  "version": "4.13.1",
+  "version": "4.14.0",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "cddm",
-      "version": "4.13.1",
+      "version": "4.14.0",
       "runtimeHint": "npx",
       "packageArguments": [
         {
@@ -28,7 +28,7 @@
     },
     {
       "registryType": "oci",
-      "identifier": "git.gt-web-dev.com/gt-dev/cddm:v4.13.1",
+      "identifier": "git.gt-web-dev.com/gt-dev/cddm:v4.14.0",
       "transport": {
         "type": "stdio"
       }

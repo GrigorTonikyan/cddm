@@ -202,4 +202,26 @@ describe("DeadCodeExplorerModal Component with Win2xWindow", () => {
     expect(screen.getByText("Polyglot Dead Code Explorer & Safe Pruner")).toBeDefined();
     expect(screen.getByText(/0 dead items \/ ~0 removable lines/)).toBeDefined();
   });
+
+  it("renders passing dead code gate badge inside modal", async () => {
+    useCDDMStore.setState({
+      deadCodeSummary: {
+        ...mockDeadCodeSummary,
+        total_dead_items: 0,
+        items: [],
+        gate: {
+          passed: true,
+          total_dead_items: 0,
+          max_items: 0,
+          message: "Dead code gate passed: 0 item(s) within maximum 0",
+        },
+      },
+      isDeadCodeLoading: false,
+      deadCodeError: null,
+      lastPruneResult: null,
+    });
+
+    await renderAsyncWithWin2x(<DeadCodeExplorerModal isOpen={true} onClose={vi.fn()} />);
+    expect(screen.getByText("[PASS] Dead Code Gate (0 / 0)")).toBeDefined();
+  });
 });
